@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useSearchParams } from 'next/navigation'
 import { Check, Eye, EyeOff, AlertCircle } from 'lucide-react'
 
@@ -14,6 +15,7 @@ interface FormErrors {
 }
 
 export default function SignupPage() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const plan = searchParams.get('plan') || 'starter'
   const [agreed, setAgreed] = useState(false)
@@ -26,6 +28,16 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly')
   const [errors, setErrors] = useState<FormErrors>({})
+  const [isDevMode, setIsDevMode] = useState(false)
+
+  useEffect(() => {
+    // Check if we're in development mode
+    setIsDevMode(
+      process.env.NEXT_PUBLIC_DEV_MODE === 'true' ||
+      process.env.NODE_ENV === 'development' ||
+      window.location.hostname === 'localhost'
+    )
+  }, [])
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {}
@@ -73,11 +85,107 @@ export default function SignupPage() {
 
     setLoading(true)
     try {
-      // TODO: Create user account first, then redirect to Stripe Checkout
-      // For now, redirect to Stripe Checkout with email
-      window.location.href = `/api/checkout?plan=${plan}&email=${encodeURIComponent(email)}&billing=${billing}&name=${encodeURIComponent(name)}`
-    } catch (error) {
+      // Import Supabase client dynamically
+      const { createClient } = await import('@/lib/supabase/client')
+      const supabase = createClient()
+
+      // Sign up user with Supabase
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+          data: {
+            name: name,
+            plan: plan,
+            billing: billing,
+          },
+        },
+      })
+
+      if (error) {
+        // Check if user already exists
+        if (error.message.includes('already registered') || error.message.includes('User already registered')) {
+          setErrors({ 
+            email: 'This email is already registered. Please sign in instead.' 
+          })
+          // Redirect to login after 2 seconds
+          setTimeout(() => {
+            router.push('/login')
+          }, 2000)
+          setLoading(false)
+          return
+        }
+        
+        setErrors({ email: error.message })
+        setLoading(false)
+        return
+      }
+
+      if (data.user) {
+        // Wait a bit for auth.users to be committed
+        await new Promise(resolve => setTimeout(resolve, 300))
+        
+        // Create user profile via API route (bypasses RLS)
+        let profileCreated = false
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            const profileResponse = await fetch('/api/users/create', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId: data.user.id,
+                email: data.user.email || email,
+                name: name,
+                plan: plan,
+                billingPeriod: billing,
+              }),
+            })
+            
+            const profileResult = await profileResponse.json()
+            if (profileResponse.ok || profileResult.warning) {
+              profileCreated = true
+              console.log('User profile created/updated successfully:', profileResult)
+              break
+            } else {
+              console.warn(`Profile creation attempt ${attempt + 1} failed:`, profileResult)
+              if (attempt < 2) {
+                await new Promise(resolve => setTimeout(resolve, 500))
+              }
+            }
+          } catch (e) {
+            console.warn(`Profile creation attempt ${attempt + 1} error:`, e)
+            if (attempt < 2) {
+              await new Promise(resolve => setTimeout(resolve, 500))
+            }
+          }
+        }
+        
+        if (!profileCreated && isDevMode) {
+          console.warn('Profile creation failed, but continuing in dev mode')
+        } else if (!profileCreated) {
+          setErrors({ 
+            email: 'Account created but profile setup failed. Please try logging in.' 
+          })
+          setTimeout(() => {
+            router.push('/login')
+          }, 2000)
+          setLoading(false)
+          return
+        }
+
+        // Development mode: skip Stripe Checkout and go directly to observations page
+        if (isDevMode) {
+          // Redirect directly to observation creation page for testing
+          router.push('/dashboard/observations/new')
+        } else {
+          // Production: Redirect to Stripe Checkout
+          window.location.href = `/api/checkout?plan=${plan}&email=${encodeURIComponent(email)}&billing=${billing}&name=${encodeURIComponent(name)}`
+        }
+      }
+    } catch (error: any) {
       console.error('Signup error:', error)
+      setErrors({ email: error.message || 'An error occurred during signup' })
       setLoading(false)
     }
   }

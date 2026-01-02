@@ -2,17 +2,32 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Settings, CreditCard, LogOut, Camera, AlertCircle } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function DashboardPage() {
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [subscriptionStatus, setSubscriptionStatus] = useState('active') // active, canceling, canceled
+  const { signOut } = useAuth()
+  const router = useRouter()
 
   const handleCancelSubscription = async () => {
     // TODO: Implement cancellation API call
     setSubscriptionStatus('canceling')
     setShowCancelModal(false)
     alert('Subscription will be canceled at the end of the current billing period.')
+  }
+
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+      router.push('/')
+      router.refresh()
+    } catch (error) {
+      console.error('Logout failed:', error)
+      window.location.href = '/'
+    }
   }
 
   return (
@@ -31,7 +46,11 @@ export default function DashboardPage() {
               <Link href="/dashboard/observations" className="text-gray-600 hover:text-gray-900">
                 Observations
               </Link>
-              <button className="text-gray-600 hover:text-gray-900">
+              <button 
+                onClick={handleSignOut}
+                className="text-gray-600 hover:text-gray-900 inline-flex items-center"
+                title="Sign out"
+              >
                 <LogOut className="h-5 w-5" />
               </button>
             </div>
