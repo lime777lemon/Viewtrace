@@ -104,3 +104,4 @@ SQLスクリプトは以下の順序で実行してください：
 1. `clean-fix.sql` を実行（セキュリティ修正とメール確認）
 2. `check-user-password.sql` を実行（確認用）
 
+

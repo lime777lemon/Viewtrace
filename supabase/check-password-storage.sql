@@ -45,3 +45,4 @@ SELECT
   COUNT(CASE WHEN email_confirmed_at IS NOT NULL THEN 1 END) as confirmed_users
 FROM auth.users;
 
+

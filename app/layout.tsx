@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import { AuthProvider } from '@/contexts/AuthContext'
+import AuthProvider from '@/contexts/AuthContext'
 
 export const metadata: Metadata = {
   title: 'Viewtrace - Visual Observations for Geo-Targeted Campaigns',
@@ -20,5 +20,3 @@ export default function RootLayout({
     </html>
   )
 }
-
-

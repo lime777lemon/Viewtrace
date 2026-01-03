@@ -176,7 +176,7 @@ export default function Home() {
       <section id="pricing" className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-4xl font-bold text-gray-900 text-center mb-12">Pricing</h2>
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             <div className="bg-white border-2 border-gray-200 rounded-lg p-8">
               <h3 className="text-2xl font-bold text-gray-900 mb-2">Starter</h3>
               <div className="mb-6">
@@ -194,7 +194,7 @@ export default function Home() {
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                  <span className="text-gray-600">Screenshot retention: 7 days</span>
+                  <span className="text-gray-600">7 days retention</span>
                 </li>
               </ul>
               <Link href="/signup?plan=starter" className="block w-full bg-blue-600 text-white text-center px-6 py-3 rounded-lg font-semibold hover:bg-blue-700">
@@ -205,6 +205,34 @@ export default function Home() {
               <div className="absolute top-0 right-0 bg-blue-500 text-white px-4 py-1 rounded-bl-lg text-sm font-semibold">
                 Popular
               </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Custom</h3>
+              <div className="mb-6">
+                <span className="text-4xl font-bold text-gray-900">$49+</span>
+                <span className="text-gray-600"> / month</span>
+              </div>
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                  <span className="text-gray-600">Choose observations (50-1000+)</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                  <span className="text-gray-600">Flexible retention (7-365 days)</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                  <span className="text-gray-600">All regions available</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                  <span className="text-gray-600">Pay only for what you need</span>
+                </li>
+              </ul>
+              <Link href="/signup/plan-config" className="block w-full bg-blue-600 text-white text-center px-6 py-3 rounded-lg font-semibold hover:bg-blue-700">
+                Configure Plan
+              </Link>
+            </div>
+            <div className="bg-white border-2 border-gray-200 rounded-lg p-8">
               <h3 className="text-2xl font-bold text-gray-900 mb-2">Pro</h3>
               <div className="mb-6">
                 <span className="text-4xl font-bold text-gray-900">$99</span>
@@ -221,7 +249,7 @@ export default function Home() {
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                  <span className="text-gray-600">History & comparison</span>
+                  <span className="text-gray-600">90 days retention</span>
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
@@ -234,7 +262,7 @@ export default function Home() {
             </div>
           </div>
           <p className="text-center text-gray-600 mt-8">
-            Annual plans available (2 months free)
+            Usage-based pricing available • Annual plans save 2 months (17% off)
           </p>
         </div>
       </section>

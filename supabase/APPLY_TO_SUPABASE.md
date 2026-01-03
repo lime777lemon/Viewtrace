@@ -97,3 +97,4 @@ ORDER BY tgname;
    - `schema.sql` を実行（テーブル作成）
    - `clean-fix.sql` を実行（関数修正 + メール確認）
 
+

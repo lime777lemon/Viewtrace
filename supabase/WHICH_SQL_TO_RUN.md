@@ -116,3 +116,4 @@ WHERE proname = 'update_updated_at_column'
 - `is_security_definer`: `true`
 - `search_path_config`: `{search_path=pg_catalog}`
 
+

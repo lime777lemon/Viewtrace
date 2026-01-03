@@ -52,3 +52,4 @@ WHERE email = 'yuki.ikeda7887@gmail.com'
 GROUP BY email
 HAVING COUNT(*) > 1;
 
+

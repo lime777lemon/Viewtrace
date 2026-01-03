@@ -64,7 +64,7 @@ export default function NewObservationPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const [url, setUrl] = useState('')
-  const [region, setRegion] = useState('US-CA')
+  const [selectedRegion, setSelectedRegion] = useState<string>('US-CA')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -89,6 +89,12 @@ export default function NewObservationPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    
+    if (!selectedRegion) {
+      setError('Please select a region')
+      return
+    }
+    
     setLoading(true)
 
     try {
@@ -97,21 +103,21 @@ export default function NewObservationPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ url, region }),
+        body: JSON.stringify({ url, regions: [selectedRegion] }),
       })
 
       const data = await response.json()
 
       if (!response.ok) {
-        setError(data.error || 'Failed to create observation')
+        setError(data.error || 'Failed to create observations')
         setLoading(false)
         return
       }
 
-      // Redirect to observation detail page
-      router.push(`/dashboard/observations/${data.observation.id}`)
+      // Redirect to observations list page to see all created observations
+      router.push('/dashboard/observations')
     } catch (err) {
-      console.error('Error creating observation:', err)
+      console.error('Error creating observations:', err)
       setError('An unexpected error occurred')
       setLoading(false)
     }
@@ -162,9 +168,9 @@ export default function NewObservationPage() {
               </label>
               <select
                 id="region"
-                value={region}
-                onChange={(e) => setRegion(e.target.value)}
-                className="w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400"
+                value={selectedRegion}
+                onChange={(e) => setSelectedRegion(e.target.value)}
+                className="w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
                 required
               >
                 {US_STATES.map((state) => (
@@ -174,7 +180,7 @@ export default function NewObservationPage() {
                 ))}
               </select>
               <p className="mt-2 text-sm text-gray-500">
-                Select the geographic region for the observation
+                Select a geographic region to check. Only one region can be selected at a time for faster processing.
               </p>
             </div>
 
@@ -206,4 +212,3 @@ export default function NewObservationPage() {
     </DashboardLayout>
   )
 }
-

@@ -179,8 +179,8 @@ export default function SignupPage() {
           // Redirect directly to observation creation page for testing
           router.push('/dashboard/observations/new')
         } else {
-          // Production: Redirect to Stripe Checkout
-          window.location.href = `/api/checkout?plan=${plan}&email=${encodeURIComponent(email)}&billing=${billing}&name=${encodeURIComponent(name)}`
+          // Production: Redirect to Stripe Checkout with userId in metadata
+          window.location.href = `/api/checkout?plan=${plan}&email=${encodeURIComponent(email)}&billing=${billing}&name=${encodeURIComponent(name)}&userId=${data.user.id}`
         }
       }
     } catch (error: any) {

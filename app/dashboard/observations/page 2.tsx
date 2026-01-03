@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Clock, CheckCircle, XCircle, Loader, Plus, Globe, Ban } from 'lucide-react'
+import { Clock, CheckCircle, XCircle, Loader, Plus, Globe } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import DashboardLayout from '@/components/DashboardLayout'
 
@@ -11,7 +11,7 @@ interface Observation {
   id: string
   url: string
   region: string
-  status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
+  status: 'pending' | 'running' | 'completed' | 'failed'
   result_status: string | null
   screenshot_url: string | null
   captured_at: string | null
@@ -23,7 +23,6 @@ const STATUS_CONFIG = {
   running: { label: 'Running', icon: Loader, color: 'text-blue-600 bg-blue-100' },
   completed: { label: 'Succeeded', icon: CheckCircle, color: 'text-green-600 bg-green-100' },
   failed: { label: 'Failed', icon: XCircle, color: 'text-red-600 bg-red-100' },
-  cancelled: { label: 'Cancelled', icon: Ban, color: 'text-gray-600 bg-gray-100' },
 }
 
 const RESULT_STATUS_CONFIG = {
@@ -64,13 +63,11 @@ export default function ObservationsPage() {
         setObservations(data.observations || [])
         setError(null)
       } else {
-        const errorData = await response.json().catch(() => ({ error: `HTTP ${response.status}` }))
-        console.error('Failed to fetch observations:', response.status, errorData)
-        setError(`Failed to fetch observations: ${errorData.error || response.statusText}`)
+        setError('Failed to fetch observations')
       }
     } catch (err) {
       console.error('Error fetching observations:', err)
-      setError(`Failed to fetch observations: ${err instanceof Error ? err.message : 'Network error'}`)
+      setError('Failed to fetch observations')
     } finally {
       setLoading(false)
     }
@@ -92,7 +89,7 @@ export default function ObservationsPage() {
     const Icon = config.icon
     return (
       <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${config.color}`}>
-        <Icon className={`h-3 w-3 mr-1 ${status === 'running' ? 'animate-spin' : ''}`} />
+        <Icon className="h-3 w-3 mr-1 ${status === 'running' ? 'animate-spin' : ''}" />
         {config.label}
       </span>
     )
@@ -221,3 +218,5 @@ export default function ObservationsPage() {
     </DashboardLayout>
   )
 }
+
+

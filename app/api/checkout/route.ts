@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2024-06-20',
+  apiVersion: '2023-10-16',
 })
 
 const plans = {
@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
     const plan = searchParams.get('plan') || 'starter'
     const email = searchParams.get('email') || ''
     const billing = searchParams.get('billing') || 'monthly' // monthly or annual
+    const userId = searchParams.get('userId') || '' // Supabase user ID
 
     const priceId = plans[plan as keyof typeof plans]?.[billing as 'monthly' | 'annual'] || plans.starter.monthly
 
@@ -29,6 +30,8 @@ export async function GET(request: NextRequest) {
       payment_method_types: ['card'],
       mode: 'subscription',
       customer_email: email,
+      // Pass Supabase user ID in metadata so webhook can link Stripe customer to Supabase user
+      client_reference_id: userId || undefined,
       line_items: [
         {
           price: priceId,
@@ -40,6 +43,7 @@ export async function GET(request: NextRequest) {
       metadata: {
         plan,
         billing,
+        userId: userId || '', // Also include in metadata as backup
       },
     })
 

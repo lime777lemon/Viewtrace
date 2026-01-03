@@ -61,3 +61,4 @@ FROM auth.users au
 LEFT JOIN public.users pu ON au.id = pu.id
 WHERE au.email = 'yuki.ikeda7887@gmail.com';
 
+
