@@ -173,12 +173,27 @@ export default function Home() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-20">
+      <section id="pricing" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-4xl font-bold text-gray-900 text-center mb-12">Pricing</h2>
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          {/* Hero Copy */}
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Know how your website actually looks — by location.
+            </h2>
+            <p className="text-xl text-gray-600 mb-2">
+              Verified visual records, not just automated checks.
+            </p>
+            <p className="text-lg text-gray-500">
+              Each observation captures how your site appeared, at a specific time, from a specific place.
+            </p>
+          </div>
+
+          {/* Pricing Plans */}
+          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-12">
+            {/* Standard Coverage */}
             <div className="bg-white border-2 border-gray-200 rounded-lg p-8">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Starter</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Standard Coverage</h3>
+              <p className="text-sm text-gray-500 mb-4">Key regions visibility</p>
               <div className="mb-6">
                 <span className="text-4xl font-bold text-gray-900">$49</span>
                 <span className="text-gray-600"> / month</span>
@@ -190,50 +205,36 @@ export default function Home() {
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                  <span className="text-gray-600">US + major countries</span>
+                  <span className="text-gray-600">U.S. + major countries</span>
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
                   <span className="text-gray-600">7 days retention</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                  <span className="text-gray-600">Full-page visual snapshots</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                  <span className="text-gray-600">Status history (success / failure)</span>
                 </li>
               </ul>
               <Link href="/signup?plan=starter" className="block w-full bg-blue-600 text-white text-center px-6 py-3 rounded-lg font-semibold hover:bg-blue-700">
                 Get Started
               </Link>
             </div>
-            <div className="bg-blue-50 border-2 border-blue-500 rounded-lg p-8 relative">
-              <div className="absolute top-0 right-0 bg-blue-500 text-white px-4 py-1 rounded-bl-lg text-sm font-semibold">
-                Popular
+
+            {/* Full Coverage - Popular */}
+            <div className="bg-white border-2 border-blue-500 rounded-lg p-8 relative">
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-medium">
+                  ⭐ Most popular
+                </span>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Custom</h3>
-              <div className="mb-6">
-                <span className="text-4xl font-bold text-gray-900">$49+</span>
-                <span className="text-gray-600"> / month</span>
-              </div>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                  <span className="text-gray-600">Choose observations (50-1000+)</span>
-                </li>
-                <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                  <span className="text-gray-600">Flexible retention (7-365 days)</span>
-                </li>
-                <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                  <span className="text-gray-600">All regions available</span>
-                </li>
-                <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                  <span className="text-gray-600">Pay only for what you need</span>
-                </li>
-              </ul>
-              <Link href="/signup/plan-config" className="block w-full bg-blue-600 text-white text-center px-6 py-3 rounded-lg font-semibold hover:bg-blue-700">
-                Configure Plan
-              </Link>
-            </div>
-            <div className="bg-white border-2 border-gray-200 rounded-lg p-8">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Pro</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2 mt-2">Full Coverage</h3>
+              <p className="text-sm text-gray-500 mb-1">Complete U.S. visibility with extended records</p>
+              <p className="text-xs text-gray-400 mb-4">Chosen by teams that need full U.S. coverage and records.</p>
               <div className="mb-6">
                 <span className="text-4xl font-bold text-gray-900">$99</span>
                 <span className="text-gray-600"> / month</span>
@@ -245,7 +246,7 @@ export default function Home() {
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                  <span className="text-gray-600">US all states</span>
+                  <span className="text-gray-600">All U.S. states</span>
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
@@ -253,17 +254,36 @@ export default function Home() {
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                  <span className="text-gray-600">CSV export</span>
+                  <span className="text-gray-600">Full-page visual snapshots</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                  <span className="text-gray-600 font-semibold">CSV export</span>
                 </li>
               </ul>
+              <p className="text-xs text-gray-500 mb-4 italic">Ideal for audits, reporting, and accountability</p>
               <Link href="/signup?plan=pro" className="block w-full bg-blue-600 text-white text-center px-6 py-3 rounded-lg font-semibold hover:bg-blue-700">
                 Get Started
               </Link>
             </div>
           </div>
-          <p className="text-center text-gray-600 mt-8">
-            Usage-based pricing available • Annual plans save 2 months (17% off)
-          </p>
+
+          {/* Observation Tooltip */}
+          <div className="max-w-3xl mx-auto mb-12">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+              <p className="text-sm text-gray-700 text-center">
+                <strong>An observation</strong> is a verified visual record of how your website appeared, at a specific time, from a specific location.
+              </p>
+            </div>
+          </div>
+
+          {/* Price Justification Copy */}
+          <div className="max-w-3xl mx-auto">
+            <p className="text-center text-gray-600 text-lg italic">
+              We don't just detect changes.<br />
+              We document what your users actually see — by location.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -282,10 +302,10 @@ export default function Home() {
             </div>
             <div className="bg-white p-6 rounded-lg shadow-sm">
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Is this legal?
+                What do we provide?
               </h3>
               <p className="text-gray-600">
-                Yes. We do not provide IP access or proxies. We deliver recorded observations.
+                Unlike simple checks, observations show what users actually saw. We provide verified visual records of how your website appeared, at a specific time, from a specific location.
               </p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-sm">
