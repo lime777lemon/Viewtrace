@@ -1,6 +1,12 @@
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
+import { Menu, X as XIcon } from 'lucide-react'
 
 export default function AcceptableUsePage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white border-b border-gray-200">
@@ -9,11 +15,43 @@ export default function AcceptableUsePage() {
             <Link href="/" className="text-2xl font-bold text-gray-900">
               Viewtrace
             </Link>
-            <Link href="/" className="text-gray-600 hover:text-gray-900">
-              Back to Home
-            </Link>
+            <div className="hidden md:block">
+              <Link href="/" className="text-gray-600 hover:text-gray-900">
+                Back to Home
+              </Link>
+            </div>
+            {/* Mobile menu button */}
+            <div className="md:hidden">
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                aria-expanded="false"
+              >
+                <span className="sr-only">Open main menu</span>
+                {mobileMenuOpen ? (
+                  <XIcon className="block h-6 w-6" aria-hidden="true" />
+                ) : (
+                  <Menu className="block h-6 w-6" aria-hidden="true" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* Mobile menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden">
+            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-gray-200">
+              <Link
+                href="/"
+                className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-md"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Back to Home
+              </Link>
+            </div>
+          </div>
+        )}
       </nav>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
