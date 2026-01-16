@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Check, Eye, EyeOff, AlertCircle } from 'lucide-react'
 
 interface FormErrors {
@@ -14,7 +13,7 @@ interface FormErrors {
   terms?: string
 }
 
-export default function SignupPage() {
+function SignupForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const plan = searchParams.get('plan') || 'starter'
@@ -467,3 +466,16 @@ export default function SignupPage() {
   )
 }
 
+export default function SignupPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-lg text-gray-600">Loading...</div>
+        </div>
+      </div>
+    }>
+      <SignupForm />
+    </Suspense>
+  )
+}
