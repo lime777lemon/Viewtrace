@@ -215,6 +215,8 @@ export const copy = {
       subtitle: "月額プランのお申し込み（デモ）。内容を確認のうえ、テストカード情報でお試しください。",
       demoBanner:
         "これはデモの決済画面です。実際の課金は発生せず、Stripe 等の決済プロバイダは未接続です。",
+      stripeLiveBanner:
+        "Stripe が接続されています。以下から Stripe Checkout に進むと、テストモード／本番モードに応じて実際の決済処理が行われます。",
       orderSummary: "ご注文内容",
       planLabel: "プラン",
       monthly: "月額",
@@ -230,6 +232,9 @@ export const copy = {
       expiryPlaceholder: "MM / YY",
       cvc: "CVC",
       payButton: "カードで支払う（デモ）",
+      payWithStripe: "Stripe Checkout に進む",
+      stripePayPending: "Stripe へ移動中…",
+      stripeCheckoutError: "Stripe Checkout の開始に失敗しました。環境変数と Stripe ダッシュボードの設定を確認してください。",
       payPending: "処理中…",
       back: "料金ページに戻る",
       termsAgree: "お支払いにより",
@@ -241,6 +246,9 @@ export const copy = {
       errorCvc: "CVC を3桁以上で入力してください。",
       successTitle: "デモ決済が完了しました",
       successSubtitle: "本番ではここでサブスクリプションが有効化され、ダッシュボードへ案内されます。",
+      stripeSuccessTitle: "Stripe Checkout が完了しました",
+      stripeSuccessSubtitle:
+        "サブスクリプションの反映は数分かかることがあります。Stripe ダッシュボードで状態を確認できます。",
       successCtaLogin: "ログイン",
       successCtaHome: "サイトトップへ",
       langJa: "日本語",
@@ -481,6 +489,8 @@ export const copy = {
         "Subscribe to a monthly plan (demo). Review your order and use test card details.",
       demoBanner:
         "This is a demo checkout. No real charges are made; no payment provider is connected yet.",
+      stripeLiveBanner:
+        "Stripe is connected. Continuing to Stripe Checkout will run real payment flows (test mode or live, depending on your Stripe keys).",
       orderSummary: "Order summary",
       planLabel: "Plan",
       monthly: "Monthly",
@@ -496,6 +506,10 @@ export const copy = {
       expiryPlaceholder: "MM / YY",
       cvc: "CVC",
       payButton: "Pay with card (demo)",
+      payWithStripe: "Continue to Stripe Checkout",
+      stripePayPending: "Redirecting to Stripe…",
+      stripeCheckoutError:
+        "Could not start Stripe Checkout. Check environment variables and your Stripe Dashboard configuration.",
       payPending: "Processing…",
       back: "Back to pricing",
       termsAgree: "By paying you agree to the ",
@@ -508,6 +522,9 @@ export const copy = {
       successTitle: "Demo payment complete",
       successSubtitle:
         "In production your subscription would activate here and you’d be sent to the dashboard.",
+      stripeSuccessTitle: "Stripe Checkout complete",
+      stripeSuccessSubtitle:
+        "Subscription activation may take a few minutes. You can verify status in the Stripe Dashboard.",
       successCtaLogin: "Log in",
       successCtaHome: "Back to site",
       langJa: "日本語",

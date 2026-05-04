@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { CheckoutClient } from "@/components/checkout/CheckoutClient";
 import { parsePlanId } from "@/lib/plans";
+import { isStripeCheckoutConfigured } from "@/lib/stripe";
 
 export const metadata: Metadata = {
   title: "お支払い | Viewtrace",
-  description: "Viewtrace 月額プランのお申し込み（デモ決済）。",
+  description: "Viewtrace 月額プランのお申し込み（Stripe / デモ）。",
   robots: { index: false, follow: false },
 };
 
@@ -15,6 +16,7 @@ type Props = {
 export default async function CheckoutPage({ searchParams }: Props) {
   const { plan: raw } = await searchParams;
   const planId = parsePlanId(raw);
+  const stripeLive = isStripeCheckoutConfigured();
 
-  return <CheckoutClient planId={planId} />;
+  return <CheckoutClient planId={planId} stripeLive={stripeLive} />;
 }
