@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-noto-sans-jp), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-sora), var(--font-noto-sans-jp), ui-sans-serif, system-ui,
+    sans-serif;
+
+  --color-ink: #0c1222;
+  --color-ink-muted: #3d4a63;
+  --color-surface: #f6f4ef;
+  --color-surface-elevated: #fffcf7;
+  --color-accent: #1a6b5c;
+  --color-accent-hover: #145548;
+  --color-accent-soft: #d4ebe4;
+  --color-border: #e2ddd4;
+  --color-warn: #8b5a2b;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-[var(--color-surface)] text-[var(--color-ink)] antialiased;
+}
+
+::selection {
+  background: var(--color-accent-soft);
+  color: var(--color-ink);
+}
+
+.prose-custom h2 {
+  @apply font-display text-xl font-semibold text-[var(--color-ink)] pt-2;
+}
+
+.prose-custom h3 {
+  @apply text-base font-semibold text-[var(--color-ink)] pt-1;
+}
+
+.prose-custom p,
+.prose-custom li {
+  @apply text-[15px] leading-relaxed text-[var(--color-ink-muted)];
+}
+
+.prose-custom ul {
+  @apply list-disc space-y-2 pl-5;
+}
+
+.prose-custom ol {
+  @apply list-decimal space-y-2 pl-5;
+}
+
+.prose-custom strong {
+  @apply font-semibold text-[var(--color-ink)];
+}
+
+.prose-custom a {
+  @apply font-medium text-[var(--color-accent)] underline underline-offset-2 hover:text-[var(--color-accent-hover)];
+}
+
+.prose-custom .callout {
+  @apply rounded-xl border border-[var(--color-warn)]/35 bg-[var(--color-warn)]/10 p-4 text-[var(--color-ink)];
+}
+
+.prose-custom .callout p {
+  @apply text-[var(--color-ink)] text-sm leading-relaxed;
+}
+
+.prose-custom .muted-box {
+  @apply rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4;
+}
