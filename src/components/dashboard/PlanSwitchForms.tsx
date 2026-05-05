@@ -1,11 +1,19 @@
 import { switchPlanAction } from "@/app/actions/auth";
+import { copy, type Locale } from "@/lib/i18n";
 import { PLANS, type PlanId } from "@/lib/plans";
 
-export function PlanSwitchForms({ currentPlan }: { currentPlan: PlanId }) {
+export function PlanSwitchForms({
+  currentPlan,
+  locale,
+}: {
+  currentPlan: PlanId;
+  locale: Locale;
+}) {
+  const t = copy[locale].dashboardSettings;
   return (
     <div className="mt-6 space-y-4">
       <p className="text-xs font-medium uppercase tracking-wider text-[var(--color-ink-muted)]">
-        デモ：プランを切り替え
+        {t.demoSwitchTitle}
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
         {(["starter", "pro"] as const).map((id) => {
@@ -25,13 +33,20 @@ export function PlanSwitchForms({ currentPlan }: { currentPlan: PlanId }) {
               >
                 <span className="font-display font-semibold text-[var(--color-ink)]">{p.name}</span>
                 {active ? (
-                  <span className="mt-1 block text-xs font-medium text-[var(--color-accent)]">現在のプラン</span>
+                  <span className="mt-1 block text-xs font-medium text-[var(--color-accent)]">
+                    {t.currentPlanBadge}
+                  </span>
                 ) : (
-                  <span className="mt-1 block text-xs text-[var(--color-ink-muted)]">このプランに切り替え</span>
+                  <span className="mt-1 block text-xs text-[var(--color-ink-muted)]">
+                    {t.switchToPlan}
+                  </span>
                 )}
                 <span className="mt-1 block text-xs text-[var(--color-ink-muted)]">
-                  {p.priceLabel} · 月{p.monthlyObservations}回 · {p.retentionDays}日 ·{" "}
-                  {p.csvExport ? "CSVあり" : "CSVなし"}
+                  {t.planCardMeta
+                    .replace("{price}", p.priceLabel)
+                    .replace("{limit}", String(p.monthlyObservations))
+                    .replace("{days}", String(p.retentionDays))
+                    .replace("{csv}", p.csvExport ? t.csvYes : t.csvNo)}
                 </span>
               </button>
             </form>

@@ -5,11 +5,18 @@ import { authFormAction } from "@/app/actions/auth";
 
 type Mode = "signin" | "signup";
 
-export function LoginForm({ nextPath }: { nextPath?: string }) {
+export function LoginForm({
+  nextPath,
+  initialMode = "signup",
+}: {
+  nextPath?: string;
+  initialMode?: Mode;
+}) {
   const [state, formAction, pending] = useActionState(authFormAction, null);
   const [showPassword, setShowPassword] = useState(false);
-  const [mode, setMode] = useState<Mode>("signup");
+  const [mode, setMode] = useState<Mode>(initialMode);
   const passwordId = useId();
+  const passwordConfirmId = useId();
   const safeNext =
     nextPath?.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "";
 
@@ -45,7 +52,11 @@ export function LoginForm({ nextPath }: { nextPath?: string }) {
 
       {mode === "signup" ? (
         <p className="text-xs leading-relaxed text-[var(--color-ink-muted)]">
-          メールアドレスとパスワードだけで登録できます。会社名などはログイン後に任意で入力できます。
+          メールアドレスとパスワードだけで登録できます。パスワードは半角英字・数字のみ（8文字以上、記号は使えません）。
+          <span className="font-medium text-[var(--color-ink)]">
+            登録後に届くメールのリンクでアドレス確認が完了するまで、ログインはできません。
+          </span>
+          会社名などはログイン後に任意で入力できます。
         </p>
       ) : null}
 
@@ -83,13 +94,38 @@ export function LoginForm({ nextPath }: { nextPath?: string }) {
           autoComplete={mode === "signup" ? "new-password" : "current-password"}
           required
           minLength={mode === "signup" ? 8 : undefined}
-          placeholder={mode === "signup" ? "8文字以上" : "パスワード"}
+          placeholder={mode === "signup" ? "半角英数字8文字以上" : "パスワード"}
           className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm outline-none ring-[var(--color-accent)]/25 transition placeholder:text-[var(--color-ink-muted)]/60 focus:border-[var(--color-accent)]/40 focus:ring-2"
         />
         {mode === "signup" ? (
-          <p className="mt-1 text-xs text-[var(--color-ink-muted)]">8文字以上で設定してください。</p>
+          <p className="mt-1 text-xs text-[var(--color-ink-muted)]">
+            半角英字・数字のみ、8文字以上で設定してください。
+          </p>
         ) : null}
       </div>
+      {mode === "signup" ? (
+        <div>
+          <label
+            htmlFor={passwordConfirmId}
+            className="block text-sm font-medium text-[var(--color-ink)]"
+          >
+            パスワード（確認）
+          </label>
+          <input
+            id={passwordConfirmId}
+            name="passwordConfirm"
+            type={showPassword ? "text" : "password"}
+            autoComplete="new-password"
+            required
+            minLength={8}
+            placeholder="もう一度入力"
+            className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm outline-none ring-[var(--color-accent)]/25 transition placeholder:text-[var(--color-ink-muted)]/60 focus:border-[var(--color-accent)]/40 focus:ring-2"
+          />
+          <p className="mt-1 text-xs text-[var(--color-ink-muted)]">
+            上と同じパスワードを入力してください。
+          </p>
+        </div>
+      ) : null}
       {state?.error ? (
         <p
           role="alert"
@@ -101,7 +137,7 @@ export function LoginForm({ nextPath }: { nextPath?: string }) {
       {state?.message ? (
         <p
           role="status"
-          className="rounded-xl border border-emerald-200/80 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-900"
+          className="whitespace-pre-line rounded-xl border border-emerald-200/80 bg-emerald-50 px-3 py-2.5 text-sm leading-relaxed text-emerald-900"
         >
           {state.message}
         </p>

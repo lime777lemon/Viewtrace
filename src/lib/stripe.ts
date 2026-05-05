@@ -3,6 +3,16 @@ import type { PlanId } from "@/lib/plans";
 
 let stripe: Stripe | null = null;
 
+export type StripeMode = "none" | "test" | "live";
+
+export function getStripeMode(): StripeMode {
+  const key = process.env.STRIPE_SECRET_KEY?.trim();
+  if (!key) return "none";
+  if (key.startsWith("sk_test_")) return "test";
+  if (key.startsWith("sk_live_")) return "live";
+  return "test";
+}
+
 export function getStripe(): Stripe | null {
   const key = process.env.STRIPE_SECRET_KEY?.trim();
   if (!key) return null;

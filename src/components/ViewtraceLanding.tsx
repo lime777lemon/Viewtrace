@@ -1,8 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { RegionSearchSection } from "@/components/RegionSearchSection";
-import { TrialSignupForm } from "@/components/TrialSignupForm";
 import { copy, type Locale } from "@/lib/i18n";
 
 export function ViewtraceLanding() {
@@ -65,12 +65,12 @@ export function ViewtraceLanding() {
                   ja
                 </button>
               </div>
-              <a
-                href="#trial"
+              <Link
+                href="/login"
                 className="hidden rounded-full bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--color-accent-hover)] sm:inline-flex"
               >
                 {t.nav.trial}
-              </a>
+              </Link>
             </div>
           </div>
           <nav className="flex flex-wrap gap-4 text-xs font-medium text-[var(--color-ink-muted)] lg:hidden">
@@ -110,13 +110,13 @@ export function ViewtraceLanding() {
             <p className="mt-4 max-w-2xl text-sm font-medium text-[var(--color-warn)]">
               {t.hero.disclaimer}
             </p>
-            <div id="trial" className="mt-10 flex flex-wrap gap-3">
-              <a
-                href="#signup"
+            <div className="mt-10 flex flex-wrap gap-3">
+              <Link
+                href="/login"
                 className="inline-flex items-center justify-center rounded-full bg-[var(--color-accent)] px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[var(--color-accent-hover)]"
               >
                 {t.hero.trial}
-              </a>
+              </Link>
               <a
                 href="#sample"
                 className="inline-flex items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-6 py-3 text-sm font-semibold text-[var(--color-ink)] transition hover:border-[var(--color-ink-muted)]/40"
@@ -313,8 +313,8 @@ export function ViewtraceLanding() {
                       </li>
                     ))}
                   </ul>
-                  <a
-                    href="#signup"
+                  <Link
+                    href={`/checkout?plan=${plan.name === "Pro" ? "pro" : "starter"}`}
                     className={`mt-8 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold transition ${
                       plan.badge
                         ? "bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)]"
@@ -322,7 +322,7 @@ export function ViewtraceLanding() {
                     }`}
                   >
                     {plan.cta}
-                  </a>
+                  </Link>
                 </article>
               ))}
             </div>
@@ -386,9 +386,25 @@ export function ViewtraceLanding() {
           <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
             <div className="mx-auto max-w-xl rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-8 shadow-sm">
               <h2 className="font-display text-xl font-semibold text-[var(--color-ink)]">
-                {t.trialSignup.title}
+                {t.accountSignup.title}
               </h2>
-              <TrialSignupForm locale={locale} copy={t.trialSignup} />
+              <p className="mt-4 text-sm leading-relaxed text-[var(--color-ink-muted)]">
+                {t.accountSignup.intro}
+              </p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                <Link
+                  href="/login"
+                  className="inline-flex flex-1 items-center justify-center rounded-full bg-[var(--color-accent)] px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[var(--color-accent-hover)] sm:min-w-[12rem]"
+                >
+                  {t.accountSignup.ctaPrimary}
+                </Link>
+                <Link
+                  href="/login?mode=signin"
+                  className="inline-flex flex-1 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-6 py-3 text-sm font-semibold text-[var(--color-ink)] transition hover:border-[var(--color-ink-muted)]/40 sm:min-w-[12rem]"
+                >
+                  {t.accountSignup.ctaSecondary}
+                </Link>
+              </div>
             </div>
           </div>
         </section>

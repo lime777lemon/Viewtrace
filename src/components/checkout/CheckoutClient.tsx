@@ -6,10 +6,15 @@ import { demoCheckoutAction } from "@/app/actions/checkout";
 import { copy, type Locale } from "@/lib/i18n";
 import type { PlanId } from "@/lib/plans";
 import { getPlan } from "@/lib/plans";
+import type { StripeMode } from "@/lib/stripe";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-export function CheckoutClient({ planId, stripeLive }: { planId: PlanId; stripeLive: boolean }) {
+export function CheckoutClient({
+  planId,
+  stripeMode,
+}: {
+  planId: PlanId;
+  stripeMode: StripeMode;
+}) {
   const [locale, setLocale] = useState<Locale>("ja");
   const t = copy[locale].checkout;
   const plan = getPlan(planId);
@@ -38,21 +43,24 @@ export function CheckoutClient({ planId, stripeLive }: { planId: PlanId; stripeL
 
   async function startStripeCheckout() {
     setStripeError(null);
-    const trimmed = email.trim();
-    if (!EMAIL_RE.test(trimmed)) {
-      setStripeError(t.errorEmail);
-      return;
-    }
     setStripePending(true);
     try {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ plan: planId, email: trimmed, locale }),
+        body: JSON.stringify({ plan: planId, locale }),
       });
       const json = (await res.json()) as { ok?: boolean; url?: string; error?: string };
       if (!res.ok || !json.ok || !json.url) {
-        setStripeError(json.error ?? t.stripeCheckoutError);
+        if (json.error === "login_required") {
+          setStripeError(
+            locale === "ja"
+              ? "Stripe 決済を開始するにはログインが必要です。"
+              : "Please log in to start Stripe checkout.",
+          );
+        } else {
+          setStripeError(json.error ?? t.stripeCheckoutError);
+        }
         return;
       }
       window.location.href = json.url;
@@ -98,13 +106,17 @@ export function CheckoutClient({ planId, stripeLive }: { planId: PlanId; stripeL
       </header>
 
       <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
-        {stripeLive ? (
-          <div className="mb-8 rounded-xl border border-emerald-300/60 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
-            {t.stripeLiveBanner}
-          </div>
-        ) : (
+        {stripeMode === "none" ? (
           <div className="mb-8 rounded-xl border border-[var(--color-warn)]/35 bg-[var(--color-warn)]/10 px-4 py-3 text-sm text-[var(--color-ink)]">
             {t.demoBanner}
+          </div>
+        ) : (
+          <div className="mb-8 rounded-xl border border-emerald-300/60 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
+            {stripeMode === "test"
+              ? locale === "ja"
+                ? "Stripe（テストモード）が接続されています。テストカードで決済フローを確認できます。"
+                : "Stripe (test mode) is connected. You can verify the flow using test cards."
+              : t.stripeLiveBanner}
           </div>
         )}
 
@@ -164,23 +176,13 @@ export function CheckoutClient({ planId, stripeLive }: { planId: PlanId; stripeL
             <h2 className="font-display text-lg font-semibold">{t.payment}</h2>
             <p className="mt-1 text-sm text-[var(--color-ink-muted)]">{t.stripeNote}</p>
 
-            {stripeLive ? (
+            {stripeMode !== "none" ? (
               <div className="mt-6 space-y-4">
-                <div>
-                  <label htmlFor={emailId} className="block text-sm font-medium">
-                    {t.email}
-                  </label>
-                  <input
-                    id={emailId}
-                    name="email"
-                    type="email"
-                    required
-                    autoComplete="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm outline-none ring-[var(--color-accent)]/25 focus:ring-2"
-                  />
-                </div>
+                <p className="text-sm text-[var(--color-ink-muted)]">
+                  {locale === "ja"
+                    ? "請求先メールはログイン中のアカウントのメールアドレスが使われます。"
+                    : "Billing email will use your signed-in account email."}
+                </p>
 
                 {stripeError ? (
                   <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900">

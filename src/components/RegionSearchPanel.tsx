@@ -228,12 +228,12 @@ export function RegionSearchPanel({
             {labels.submit}
           </button>
           {mode === "marketing" ? (
-            <a
-              href="#signup"
+            <Link
+              href="/login"
               className="text-sm font-semibold text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
             >
-              {locale === "ja" ? "無料トライアルへ →" : "Free trial →"}
-            </a>
+              {locale === "ja" ? "無料で始める →" : "Start for free →"}
+            </Link>
           ) : (
             <Link
               href="/dashboard/observations/new"

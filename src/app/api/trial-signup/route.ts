@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { normalizeSupabaseUrl } from "@/lib/supabase/url";
 
 export const runtime = "nodejs";
 
@@ -22,13 +23,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "invalid_email" }, { status: 400 });
   }
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !anonKey) {
+  if (!rawUrl || !anonKey) {
     return NextResponse.json({ ok: false, error: "server_config" }, { status: 503 });
   }
 
-  const supabase = createClient(url, anonKey);
+  const url = normalizeSupabaseUrl(rawUrl);
+  const supabase = createClient(url, anonKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
   const { error } = await supabase.from("trial_signups").insert({
     email,
     locale,
@@ -39,7 +44,31 @@ export async function POST(req: Request) {
     if (error.code === "23505") {
       return NextResponse.json({ ok: true, duplicate: true });
     }
-    console.error("trial_signups insert", error.message, error.code);
+    const msg = error.message ?? "";
+    const isNetwork =
+      /fetch failed|Failed to fetch|NetworkError|ECONNREFUSED|ETIMEDOUT|ENOTFOUND|getaddrinfo/i.test(
+        msg,
+      );
+    try {
+      const host = new URL(url).host;
+      console.error("trial_signups insert", { host, code: error.code, message: msg });
+    } catch {
+      console.error("trial_signups insert", error.code, msg);
+    }
+    if (isNetwork) {
+      return NextResponse.json({ ok: false, error: "supabase_unreachable" }, { status: 503 });
+    }
+    if (
+      error.code === "42P01" ||
+      error.code === "PGRST205" ||
+      /relation ["']?public\.trial_signups["']? does not exist/i.test(msg) ||
+      /could not find the table ['"]public\.trial_signups['"]/i.test(msg)
+    ) {
+      return NextResponse.json({ ok: false, error: "trial_signups_not_found" }, { status: 503 });
+    }
+    if (error.code === "42501") {
+      return NextResponse.json({ ok: false, error: "trial_signups_forbidden" }, { status: 403 });
+    }
     return NextResponse.json({ ok: false, error: "save_failed" }, { status: 500 });
   }
 

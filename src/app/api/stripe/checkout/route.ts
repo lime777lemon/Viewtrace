@@ -2,10 +2,45 @@ import { NextResponse } from "next/server";
 import { siteOrigin } from "@/lib/site";
 import { getStripe, isStripeCheckoutConfigured, stripePriceIdForPlan } from "@/lib/stripe";
 import { parsePlanId } from "@/lib/plans";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+function trimTrailingSlash(s: string): string {
+  return s.replace(/\/+$/, "");
+}
+
+function isAllowedRedirectOrigin(origin: string): boolean {
+  try {
+    const u = new URL(origin);
+    if (u.protocol !== "http:" && u.protocol !== "https:") return false;
+    const host = u.host;
+    if (host === "viewtrace.net" || host.endsWith(".viewtrace.net")) return true;
+    if (host === "localhost" || host.startsWith("localhost:")) return true;
+    if (host.startsWith("127.0.0.1:")) return true;
+    if (host.endsWith(".vercel.app")) return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+function resolveRequestOrigin(req: Request): string {
+  const origin = req.headers.get("origin");
+  if (origin && isAllowedRedirectOrigin(origin)) return trimTrailingSlash(origin);
+
+  const referer = req.headers.get("referer");
+  if (referer) {
+    try {
+      const o = new URL(referer).origin;
+      if (isAllowedRedirectOrigin(o)) return trimTrailingSlash(o);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  return siteOrigin;
+}
 
 /**
  * Stripe Checkout（サブスクリプション）セッションを作成し、リダイレクト URL を返します。
@@ -27,13 +62,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "invalid_json" }, { status: 400 });
   }
 
-  const b = body as { plan?: unknown; email?: unknown; locale?: unknown };
+  const b = body as { plan?: unknown; locale?: unknown };
   const plan = parsePlanId(typeof b.plan === "string" ? b.plan : "");
-  const email = typeof b.email === "string" ? b.email.trim() : "";
   const locale = typeof b.locale === "string" && b.locale === "en" ? "en" : "ja";
 
-  if (!EMAIL_RE.test(email) || email.length > 320) {
-    return NextResponse.json({ ok: false, error: "invalid_email" }, { status: 400 });
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user?.id || !user.email) {
+    return NextResponse.json({ ok: false, error: "login_required" }, { status: 401 });
   }
 
   const priceId = stripePriceIdForPlan(plan);
@@ -41,19 +79,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "missing_price_id" }, { status: 503 });
   }
 
-  const origin = siteOrigin;
+  // Use the environment the user is currently on (local/preview/prod).
+  // Avoid hard-binding to a stale Vercel deployment URL which can cause DEPLOYMENT_NOT_FOUND.
+  const origin = resolveRequestOrigin(req);
 
   try {
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       locale: locale === "en" ? "en" : "ja",
-      customer_email: email,
+      customer_email: user.email,
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${origin}/checkout/success?plan=${plan}&session_id={CHECKOUT_SESSION_ID}&locale=${locale}`,
       cancel_url: `${origin}/checkout?plan=${plan}`,
-      metadata: { plan_id: plan },
+      metadata: { plan_id: plan, user_id: user.id },
       subscription_data: {
-        metadata: { plan_id: plan },
+        metadata: { plan_id: plan, user_id: user.id },
       },
       allow_promotion_codes: true,
     });

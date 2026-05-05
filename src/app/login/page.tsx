@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/auth/LoginForm";
+import { ResendConfirmationForm } from "@/components/auth/ResendConfirmationForm";
+import { getAuthEmailRedirectTo } from "@/lib/auth/callback-url";
 import { getSession } from "@/lib/auth/session";
-import { siteDomain, siteOrigin } from "@/lib/site";
+import { siteDomain } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "ログイン | Viewtrace",
@@ -13,11 +15,13 @@ export const metadata: Metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; mode?: string }>;
 }) {
   const sp = await searchParams;
   const nextParam = sp.next?.trim() ?? "";
   const nextPath = nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : undefined;
+  const modeParam = sp.mode?.trim().toLowerCase();
+  const initialMode = modeParam === "signin" ? ("signin" as const) : ("signup" as const);
 
   const session = await getSession();
   if (session) {
@@ -25,7 +29,7 @@ export default async function LoginPage({
     redirect("/dashboard");
   }
 
-  const callbackUrl = `${siteOrigin}/auth/callback`;
+  const callbackUrl = await getAuthEmailRedirectTo();
   const productionCallbackUrl = `https://${siteDomain}/auth/callback`;
 
   return (
@@ -101,7 +105,11 @@ export default async function LoginPage({
             <div className="mt-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-left text-sm text-[var(--color-ink-muted)]">
               <p className="font-medium text-[var(--color-ink)]">メールアドレスでサインイン</p>
               <p className="mt-2 leading-relaxed">
-                「無料で始める」でアカウントを作成するか、「ログイン」で既存のアカウントに入れます。メール確認をオンにしている場合は、登録後に届くメールのリンクから有効化してからログインしてください。
+                「無料で始める」でアカウントを作成するか、「ログイン」で既存のアカウントに入れます。
+                <strong className="font-semibold text-[var(--color-ink)]">
+                  新規登録後は確認メールのリンクでアドレス確認を済ませるまでログインできません。
+                </strong>
+                メールが届いたらリンクを開き、確認後にパスワードでログインしてください。
               </p>
               <p className="mt-2">
                 うまくいかない場合は
@@ -116,19 +124,25 @@ export default async function LoginPage({
                 </summary>
                 <div className="mt-3 space-y-2 leading-relaxed">
                   <p>
-                    Supabase ダッシュボードの Authentication → Providers で Email を有効にし、Redirect
-                    URLs にコールバック URL を追加してください。
+                    Supabase の Authentication → Providers で Email を有効にし、Authentication → URL
+                    configuration の Redirect URLs に次のコールバックを必ず追加してください（未登録だとメール内リンクが失敗します）。
                   </p>
-                  <p className="text-[var(--color-ink)]">この環境（NEXT_PUBLIC_SITE_URL ベース）</p>
+                  <p className="text-[var(--color-ink)]">このページを開いている環境で使うコールバック（目安）</p>
                   <p className="break-all font-mono text-[11px] text-[var(--color-ink)]">{callbackUrl}</p>
                   <p className="text-[var(--color-ink)]">本番の例</p>
                   <p className="break-all font-mono text-[11px] text-[var(--color-ink)]">{productionCallbackUrl}</p>
                   <p>
-                    ローカルでは、ブラウザで実際に開いているオリジンも登録します（例:{" "}
-                    <span className="whitespace-nowrap font-mono text-[11px] text-[var(--color-ink)]">
-                      http://localhost:3000/auth/callback
+                    ローカルでは <span className="font-mono text-[11px]">NEXT_PUBLIC_SITE_URL</span>{" "}
+                    を実際のオリジン（例{" "}
+                    <span className="whitespace-nowrap font-mono text-[11px]">
+                      http://localhost:3001
                     </span>
-                    。別ポートの場合はその URL）。
+                    ）に合わせ、同じ URL の <span className="font-mono text-[11px]">/auth/callback</span>{" "}
+                    を Redirect URLs に登録してください。
+                  </p>
+                  <p>
+                    確認メールが届かない場合は、Project Settings → Auth → SMTP で Resend 等のカスタム SMTP
+                    を設定すると到達率が上がることがあります。デフォルトの送信は迷惑メールに入りやすい場合があります。
                   </p>
                   <p>
                     ローカルですぐ試す場合は、Authentication の「Confirm email」をオフにすると確認メールなしでログインできます。
@@ -137,7 +151,9 @@ export default async function LoginPage({
               </details>
             </div>
 
-            <LoginForm nextPath={nextPath} />
+            <LoginForm nextPath={nextPath} initialMode={initialMode} />
+
+            <ResendConfirmationForm />
 
             <div className="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-1 border-t border-[var(--color-border)] pt-6 text-center text-xs text-[var(--color-ink-muted)]">
               <Link href="/terms" className="hover:text-[var(--color-ink)]">

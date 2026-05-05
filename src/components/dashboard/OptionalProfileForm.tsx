@@ -3,17 +3,21 @@
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useId } from "react";
 import { saveOptionalProfileAction } from "@/app/actions/auth";
+import type { Locale } from "@/lib/i18n";
+import { copy } from "@/lib/i18n";
 
 type Props = {
+  locale: Locale;
   initialCompanyName: string | null;
   initialUseCase: string | null;
 };
 
-export function OptionalProfileForm({ initialCompanyName, initialUseCase }: Props) {
+export function OptionalProfileForm({ locale, initialCompanyName, initialUseCase }: Props) {
   const [state, formAction, pending] = useActionState(saveOptionalProfileAction, null);
   const router = useRouter();
   const companyId = useId();
   const useCaseId = useId();
+  const t = copy[locale].dashboardSettings;
 
   useEffect(() => {
     if (state?.message) router.refresh();
@@ -22,11 +26,11 @@ export function OptionalProfileForm({ initialCompanyName, initialUseCase }: Prop
   return (
     <form action={formAction} className="mt-4 space-y-4">
       <p className="text-xs text-[var(--color-ink-muted)]">
-        登録時には聞いていません。必要なときだけ入力して保存してください。
+        {t.profileHint}
       </p>
       <div>
         <label htmlFor={companyId} className="block text-sm font-medium text-[var(--color-ink)]">
-          会社名（任意）
+          {t.companyLabel}
         </label>
         <input
           id={companyId}
@@ -34,21 +38,21 @@ export function OptionalProfileForm({ initialCompanyName, initialUseCase }: Prop
           type="text"
           autoComplete="organization"
           defaultValue={initialCompanyName ?? ""}
-          placeholder="例：株式会社〇〇"
+          placeholder={t.companyPlaceholder}
           maxLength={200}
           className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm outline-none ring-[var(--color-accent)]/25 focus:border-[var(--color-accent)]/40 focus:ring-2"
         />
       </div>
       <div>
         <label htmlFor={useCaseId} className="block text-sm font-medium text-[var(--color-ink)]">
-          用途（任意）
+          {t.useCaseLabel}
         </label>
         <textarea
           id={useCaseId}
           name="useCase"
           rows={3}
           defaultValue={initialUseCase ?? ""}
-          placeholder="例：広告キャンペーンの表示確認、監査用の記録…"
+          placeholder={t.useCasePlaceholder}
           maxLength={500}
           className="mt-1.5 w-full resize-y rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm outline-none ring-[var(--color-accent)]/25 focus:border-[var(--color-accent)]/40 focus:ring-2"
         />
@@ -68,7 +72,7 @@ export function OptionalProfileForm({ initialCompanyName, initialUseCase }: Prop
         disabled={pending}
         className="rounded-full bg-[var(--color-ink)] px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
       >
-        {pending ? "保存中…" : "保存する"}
+        {pending ? t.saving : t.save}
       </button>
     </form>
   );

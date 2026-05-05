@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { redirect } from "next/navigation";
 import { RegionSearchPanel } from "@/components/RegionSearchPanel";
 import { getSession } from "@/lib/auth/session";
@@ -13,7 +14,8 @@ export default async function DashboardRegionSearchPage() {
   const session = await getSession();
   if (!session) redirect("/login");
 
-  const labels = copy.ja.regionSearch;
+  const locale = await getRequestLocale();
+  const labels = copy[locale].regionSearch;
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
@@ -24,7 +26,7 @@ export default async function DashboardRegionSearchPage() {
         <p className="mt-2 text-sm leading-relaxed text-[var(--color-ink-muted)]">{labels.dashboardIntro}</p>
       </div>
       <RegionSearchPanel
-        locale="ja"
+        locale={locale}
         labels={labels}
         mode="dashboard"
         defaultPlanId={session.plan}

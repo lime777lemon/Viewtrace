@@ -1,20 +1,22 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { normalizeSupabaseUrl } from "@/lib/supabase/url";
 
 /**
  * Server Component / Server Action / Route Handler 用。
  * Cookie 経由で Auth セッションをやり取りします。
  */
 export async function createSupabaseServerClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!url || !anonKey) {
+  if (!rawUrl || !anonKey) {
     throw new Error(
       "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY. Copy .env.example to .env.local.",
     );
   }
 
+  const url = normalizeSupabaseUrl(rawUrl);
   const cookieStore = await cookies();
 
   return createServerClient(url, anonKey, {
