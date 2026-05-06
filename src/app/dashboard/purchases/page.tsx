@@ -16,7 +16,8 @@ export default async function DashboardPurchasesPage() {
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase
     .from("subscriptions")
-    .select("stripe_subscription_id,plan_id,status,mode,updated_at")
+    .select("stripe_subscription_id,plan_id,status,mode,created_at,updated_at")
+    .order("created_at", { ascending: false, nullsFirst: false })
     .order("updated_at", { ascending: false })
     .limit(50);
 

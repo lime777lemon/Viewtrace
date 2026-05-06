@@ -291,6 +291,9 @@ export const copy = {
       purchaseTitle: "購入履歴",
       purchaseCta: "プランを申し込む →",
       purchaseEmpty: "購入履歴がありません。",
+      purchaseTablePurchaseDate: "購入日（JST）",
+      purchaseTablePurchaseDateFallbackHint: "created_at 未保存のため参考表示",
+      purchaseTableLastUpdated: "最終更新（JST）",
       noticeTitle: "参照用の記録です",
       noticeBody:
         "表示は取得時点の観測です。法的証拠としての完全性・正確性や、広告配信の正常性は保証しません。",
@@ -669,6 +672,9 @@ export const copy = {
       purchaseTitle: "Purchase history",
       purchaseCta: "Subscribe →",
       purchaseEmpty: "No purchase history yet.",
+      purchaseTablePurchaseDate: "Purchased (JST)",
+      purchaseTablePurchaseDateFallbackHint: "Approximate (created_at missing)",
+      purchaseTableLastUpdated: "Last updated (JST)",
       noticeTitle: "For reference only",
       noticeBody:
         "Displays reflect the state at capture time. We do not guarantee completeness, accuracy, or ad delivery health.",

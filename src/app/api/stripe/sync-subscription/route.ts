@@ -48,12 +48,15 @@ export async function POST() {
   const billingPeriod = price?.recurring?.interval ?? "month";
   const status = typeof sub.status === "string" ? sub.status : "unknown";
 
+  const subscriptionCreatedAt = toIsoFromUnixSeconds(sub.created);
+
   const { error } = await admin.from("subscriptions").upsert(
     {
       user_id: user.id,
       stripe_subscription_id: subscriptionId,
       stripe_price_id: stripePriceId,
       plan: planId,
+      plan_id: planId,
       billing_period: billingPeriod,
       status,
       stripe_customer_id: typeof meta.stripe_customer_id === "string" ? meta.stripe_customer_id : null,
@@ -63,6 +66,7 @@ export async function POST() {
       current_period_end: toIsoFromUnixSeconds(sub.current_period_end),
       cancel_at_period_end: typeof sub.cancel_at_period_end === "boolean" ? sub.cancel_at_period_end : null,
       mode: process.env.STRIPE_SECRET_KEY?.startsWith("sk_live_") ? "live" : "test",
+      ...(subscriptionCreatedAt ? { created_at: subscriptionCreatedAt } : {}),
       updated_at: new Date().toISOString(),
     },
     { onConflict: "stripe_subscription_id" },

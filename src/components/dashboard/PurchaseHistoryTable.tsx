@@ -1,11 +1,13 @@
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
-import type { Locale } from "@/lib/i18n";
+import { copy, type Locale } from "@/lib/i18n";
 
 export type PurchaseRecord = {
   stripe_subscription_id: string | null;
   plan_id: string | null;
   status: string | null;
   mode: "test" | "live" | null;
+  /** Stripe Subscription.created を Webhook / sync で保存した購入日時 */
+  created_at: string | null;
   updated_at: string | null;
 };
 
@@ -53,6 +55,8 @@ export function PurchaseHistoryTable({
   locale: Locale;
   emptyMessage?: string;
 }) {
+  const th = copy[locale].dashboardHome;
+
   if (rows.length === 0) {
     return (
       <p className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-4 py-8 text-center text-sm text-[var(--color-ink-muted)]">
@@ -64,10 +68,11 @@ export function PurchaseHistoryTable({
   return (
     <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)]">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[720px] text-left text-sm">
+        <table className="w-full min-w-[880px] text-left text-sm">
           <thead className="border-b border-[var(--color-border)] bg-[var(--color-surface)] text-xs font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">
             <tr>
-              <th className="px-4 py-3">{locale === "ja" ? "更新日時（JST）" : "Updated (JST)"}</th>
+              <th className="px-4 py-3">{th.purchaseTablePurchaseDate}</th>
+              <th className="px-4 py-3">{th.purchaseTableLastUpdated}</th>
               <th className="px-4 py-3">{locale === "ja" ? "プラン" : "Plan"}</th>
               <th className="px-4 py-3">{locale === "ja" ? "ステータス" : "Status"}</th>
               <th className="px-4 py-3">{locale === "ja" ? "モード" : "Mode"}</th>
@@ -76,18 +81,37 @@ export function PurchaseHistoryTable({
           </thead>
           <tbody className="divide-y divide-[var(--color-border)]">
             {rows.map((row, i) => {
-              const ts = row.updated_at;
+              const purchaseTs = row.created_at ?? row.updated_at;
+              const purchaseIsFallback = !row.created_at && Boolean(row.updated_at);
+              const updatedTs = row.updated_at;
               return (
                 <tr
                   key={`${row.stripe_subscription_id ?? "no-sub"}-${i}`}
                   className="hover:bg-[var(--color-surface)]/80"
                 >
                   <td className="px-4 py-3 align-top text-[var(--color-ink-muted)]">
-                    {ts ? (
+                    {purchaseTs ? (
                       <>
-                        <span className="text-[var(--color-ink)]">{formatJaDateTime(ts)}</span>
+                        <span className="text-[var(--color-ink)]">{formatJaDateTime(purchaseTs)}</span>
                         <span className="mt-0.5 block text-[11px] text-[var(--color-ink-muted)]">
-                          {formatUtcLabel(ts)}
+                          {formatUtcLabel(purchaseTs)}
+                        </span>
+                        {purchaseIsFallback ? (
+                          <span className="mt-1 block text-[10px] italic text-[var(--color-ink-muted)]">
+                            {th.purchaseTablePurchaseDateFallbackHint}
+                          </span>
+                        ) : null}
+                      </>
+                    ) : (
+                      "-"
+                    )}
+                  </td>
+                  <td className="px-4 py-3 align-top text-[var(--color-ink-muted)]">
+                    {updatedTs ? (
+                      <>
+                        <span className="text-[var(--color-ink)]">{formatJaDateTime(updatedTs)}</span>
+                        <span className="mt-0.5 block text-[11px] text-[var(--color-ink-muted)]">
+                          {formatUtcLabel(updatedTs)}
                         </span>
                       </>
                     ) : (

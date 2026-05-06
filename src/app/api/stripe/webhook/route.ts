@@ -131,6 +131,8 @@ export async function POST(req: Request) {
         let currentPeriodStart: string | null = null;
         let currentPeriodEnd: string | null = null;
         let cancelAtPeriodEnd: boolean | null = null;
+        /** Stripe Subscription.created（購入日・サブスク開始の公式時刻） */
+        let subscriptionCreatedAt: string | null = null;
 
         try {
           // Stripe types can differ by API version; treat as unknown and narrow by usage.
@@ -150,6 +152,9 @@ export async function POST(req: Request) {
             : null;
           cancelAtPeriodEnd = sub.cancel_at_period_end ?? null;
           status = sub.status ?? status;
+          if (typeof sub.created === "number" && Number.isFinite(sub.created) && sub.created > 0) {
+            subscriptionCreatedAt = new Date(sub.created * 1000).toISOString();
+          }
         } catch (e) {
           console.warn("[stripe webhook] failed to retrieve subscription details for db upsert", subscriptionId, e);
         }
@@ -172,6 +177,7 @@ export async function POST(req: Request) {
               current_period_end: currentPeriodEnd,
               cancel_at_period_end: cancelAtPeriodEnd,
               mode: process.env.STRIPE_SECRET_KEY?.startsWith("sk_live_") ? "live" : "test",
+              ...(subscriptionCreatedAt ? { created_at: subscriptionCreatedAt } : {}),
               updated_at: new Date().toISOString(),
             },
             { onConflict: "stripe_subscription_id" },
