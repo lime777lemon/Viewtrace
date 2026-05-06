@@ -25,7 +25,7 @@ export default async function ObservationsListPage() {
         <div>
           <h1 className="font-display text-2xl font-semibold tracking-tight">オブザベーション</h1>
           <p className="mt-1 text-sm text-[var(--color-ink-muted)]">
-            タイムスタンプ付きの記録一覧（デモ）。Web
+            タイムスタンプ付きの記録一覧。Web
             確認から保存したオブザベーションは先頭付近に表示されます（このブラウザのクッキー）。
             {plan ? ` 現在のプラン：${plan.name}。` : ""}
           </p>

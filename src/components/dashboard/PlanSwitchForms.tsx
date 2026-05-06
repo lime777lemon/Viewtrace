@@ -12,9 +12,6 @@ export function PlanSwitchForms({
   const t = copy[locale].dashboardSettings;
   return (
     <div className="mt-6 space-y-4">
-      <p className="text-xs font-medium uppercase tracking-wider text-[var(--color-ink-muted)]">
-        {t.demoSwitchTitle}
-      </p>
       <div className="grid gap-3 sm:grid-cols-2">
         {(["starter", "pro"] as const).map((id) => {
           const p = PLANS[id];

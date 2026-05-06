@@ -110,9 +110,6 @@ export default async function SettingsPage() {
         ) : (
           <p className="mt-3 text-sm text-[var(--color-ink-muted)]">セッションを確認できません。</p>
         )}
-        <p className="mt-6 text-xs text-[var(--color-ink-muted)]">
-          {t.footerNote}
-        </p>
       </section>
     </div>
   );
