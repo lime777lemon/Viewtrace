@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import type { Observation } from "@/lib/demo/observations";
 import { appendUserObservation } from "@/lib/demo/user-observations";
+import { getPlan } from "@/lib/plans";
 import { getRegionOptions } from "@/lib/regions";
 import { normalizeUserUrlInput } from "@/lib/url-preview";
 
@@ -82,11 +83,18 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
         at: capturedAt,
         kind: "status",
         label: "オブザベーション登録",
-        detail: "成功（デモ・クッキー保存）",
+        detail: "成功（クッキー保存）",
       },
     ],
   };
 
-  await appendUserObservation(obs);
+  const plan = getPlan(session.plan);
+  const saved = await appendUserObservation(obs, {
+    retentionDays: plan.retentionDays,
+    monthlyLimit: plan.monthlyObservations,
+  });
+  if (!saved.ok && saved.code === "monthly_limit") {
+    redirect("/dashboard/observations/new?error=limit");
+  }
   redirect(`/dashboard/observations/${id}`);
 }

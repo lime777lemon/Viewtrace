@@ -8,6 +8,10 @@ export const USER_OBSERVATIONS_COOKIE = "viewtrace_user_obs";
 const MAX_ITEMS = 35;
 const MAX_COOKIE_BYTES = 4200;
 
+function sortByCapturedAtDesc(list: Observation[]): Observation[] {
+  return list.slice().sort((a, b) => new Date(b.capturedAt).getTime() - new Date(a.capturedAt).getTime());
+}
+
 function isHistoryEvent(x: unknown): x is ObservationHistoryEvent {
   if (!x || typeof x !== "object") return false;
   const o = x as Record<string, unknown>;
@@ -65,7 +69,7 @@ export async function readUserObservations(): Promise<Observation[]> {
 }
 
 export async function writeUserObservations(list: Observation[]): Promise<void> {
-  const trimmed = trimToFitCookie(list);
+  const trimmed = trimToFitCookie(sortByCapturedAtDesc(list));
   const json = JSON.stringify(trimmed);
   (await cookies()).set(USER_OBSERVATIONS_COOKIE, json, {
     httpOnly: true,
@@ -76,15 +80,22 @@ export async function writeUserObservations(list: Observation[]): Promise<void> 
   });
 }
 
-export async function appendUserObservation(obs: Observation): Promise<void> {
-  const cur = await readUserObservations();
-  await writeUserObservations([obs, ...cur]);
-}
+export async function appendUserObservation(
+  obs: Observation,
+  opts: { retentionDays: number; monthlyLimit: number },
+): Promise<{ ok: true } | { ok: false; code: "monthly_limit" }> {
+  const curRaw = await readUserObservations();
+  const cur = filterObservationsByRetention(curRaw, opts.retentionDays);
 
-export function mergeObservationsSorted(user: Observation[], demo: Observation[]): Observation[] {
-  return [...user, ...demo].sort(
-    (a, b) => new Date(b.capturedAt).getTime() - new Date(a.capturedAt).getTime(),
-  );
+  const usedThisMonth = countUserObservationsThisUtcMonth(cur);
+  if (usedThisMonth >= opts.monthlyLimit) {
+    // 保存前に古い記録を落としておく（自動削除）
+    if (cur.length !== curRaw.length) await writeUserObservations(cur);
+    return { ok: false, code: "monthly_limit" };
+  }
+
+  await writeUserObservations([obs, ...cur]);
+  return { ok: true };
 }
 
 /** プランの保持日数より古い記録を除外（一覧・CSV・参照用） */
@@ -98,7 +109,7 @@ export function filterObservationsByRetention(
 
 export async function getMergedObservationsSorted(): Promise<Observation[]> {
   const user = await readUserObservations();
-  return user;
+  return sortByCapturedAtDesc(user);
 }
 
 /** ログイン中プランの保持期間でフィルタした一覧 */

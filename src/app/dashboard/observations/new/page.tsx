@@ -34,7 +34,9 @@ export default async function NewObservationPage({
         </p>
         {sp.error ? (
           <p className="mt-2 text-sm font-medium text-red-700" role="alert">
-            入力を確認してください（URL または地域が無効です）。
+            {sp.error === "limit"
+              ? `今月の上限（${plan.monthlyObservations}件）に達しました。翌月以降に再度お試しください。`
+              : "入力を確認してください（URL または地域が無効です）。"}
           </p>
         ) : null}
         <p className="mt-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-3 py-2 text-xs text-[var(--color-ink-muted)]">

@@ -100,10 +100,6 @@ export default async function ObservationDetailPage({ params }: Props) {
         displayImageUrl={displayImageUrl}
         resolvedCanonical={resolvedCanonical}
       />
-
-      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4 text-sm text-[var(--color-ink-muted)]">
-        本画面の内容はデモです。記録の法的証拠性・広告表示の保証は行いません。
-      </div>
     </div>
   );
 }
