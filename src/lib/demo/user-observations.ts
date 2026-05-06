@@ -1,6 +1,5 @@
 import { cookies } from "next/headers";
 import type { Observation, ObservationHistoryEvent } from "@/lib/demo/observations";
-import { demoObservations } from "@/lib/demo/observations";
 import type { PlanId } from "@/lib/plans";
 import { getPlan } from "@/lib/plans";
 
@@ -99,7 +98,7 @@ export function filterObservationsByRetention(
 
 export async function getMergedObservationsSorted(): Promise<Observation[]> {
   const user = await readUserObservations();
-  return mergeObservationsSorted(user, demoObservations);
+  return user;
 }
 
 /** ログイン中プランの保持期間でフィルタした一覧 */
@@ -111,7 +110,7 @@ export async function getMergedObservationsForPlan(planId: PlanId): Promise<Obse
 
 export async function getObservationMerged(id: string): Promise<Observation | undefined> {
   const user = await readUserObservations();
-  return user.find((o) => o.id === id) ?? demoObservations.find((o) => o.id === id);
+  return user.find((o) => o.id === id);
 }
 
 export async function getObservationMergedForPlan(
