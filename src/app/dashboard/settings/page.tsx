@@ -108,12 +108,6 @@ export default async function SettingsPage() {
                 >
                   {t.checkoutStarter}
                 </Link>
-                <Link
-                  href="/checkout?plan=pro"
-                  className="inline-flex rounded-full bg-[var(--color-accent)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--color-accent-hover)]"
-                >
-                  {t.checkoutPro}
-                </Link>
               </div>
             </div>
 
