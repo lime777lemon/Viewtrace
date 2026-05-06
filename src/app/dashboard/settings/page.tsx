@@ -89,9 +89,6 @@ export default async function SettingsPage() {
                       ? t.snapshotFullPage
                       : t.snapshotViewport}
                   </li>
-                  <li>
-                    {t.overageNote.replace("{price}", String(OVERAGE_PER_OBSERVATION_USD))}
-                  </li>
                 </>
               )}
             </ul>
