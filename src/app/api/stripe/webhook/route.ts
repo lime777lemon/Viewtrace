@@ -133,10 +133,11 @@ export async function POST(req: Request) {
         let cancelAtPeriodEnd: boolean | null = null;
 
         try {
-          const subResp = await stripe.subscriptions.retrieve(subscriptionId, {
+          // Stripe types can differ by API version; treat as unknown and narrow by usage.
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const sub: any = await stripe.subscriptions.retrieve(subscriptionId, {
             expand: ["items.data.price"],
           });
-          const sub = subResp as unknown as Stripe.Subscription;
           const firstItem = sub.items.data[0];
           const price = firstItem?.price as Stripe.Price | undefined;
           stripePriceId = price?.id ?? null;
