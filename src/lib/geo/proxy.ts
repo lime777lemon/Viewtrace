@@ -1,3 +1,4 @@
+import tls, { type ConnectionOptions } from "node:tls";
 import { ProxyAgent } from "undici";
 
 function parseRegion(regionValue: string): { country: string; state: string | null } {
@@ -23,7 +24,22 @@ function fillTemplate(
  *   - 例: `http://user-country-{country}-state-{state}:{password}@proxy.example.com:10000`
  *   - `US-CA` → country=US, state=CA / `GB`・`JP` など → country のみ（state は空文字）
  *   - `{region}` は生の値（例 `US-CA`, `GB`）
+ *
+ * TLS（プロキシ経由で origin の証明書チェーンが独自 CA になる場合）:
+ * - `VIEWTRACE_GEO_PROXY_CA_PEM`: Bright Data 等から入手した PEM を **そのまま**（複数行可）
+ *   - Vercel では 1 行にしたい場合は `\n` で改行をエスケープしても可
+ * - Node のデフォルトルート CA に **追記**して検証する（通常の HTTPS も壊しにくい）
  */
+function requestTlsWithOptionalProxyCa(): ConnectionOptions | undefined {
+  const raw = process.env.VIEWTRACE_GEO_PROXY_CA_PEM?.trim();
+  if (!raw) return undefined;
+  const pem = raw.replace(/\\n/g, "\n").trim();
+  if (!pem.includes("BEGIN")) return undefined;
+  const ca: Buffer[] = tls.rootCertificates.map((c) => Buffer.from(c, "utf8"));
+  ca.push(Buffer.from(pem, "utf8"));
+  return { ca };
+}
+
 export function getGeoProxyAgent(regionValue: string): {
   dispatcher: ProxyAgent;
   proxyUrl: string;
@@ -47,6 +63,11 @@ export function getGeoProxyAgent(regionValue: string): {
     return null;
   }
 
-  return { dispatcher: new ProxyAgent(proxyUrl), proxyUrl };
+  const requestTls = requestTlsWithOptionalProxyCa();
+  const dispatcher = requestTls
+    ? new ProxyAgent({ uri: proxyUrl, requestTls })
+    : new ProxyAgent(proxyUrl);
+
+  return { dispatcher, proxyUrl };
 }
 
