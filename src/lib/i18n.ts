@@ -208,11 +208,11 @@ export const copy = {
     checkout: {
       metaTitle: "お支払い | Viewtrace",
       title: "お支払い",
-      subtitle: "月額プランのお申し込み（デモ）。内容を確認のうえ、テストカード情報でお試しください。",
+      subtitle: "月額プランのお申し込みです。内容を確認のうえ、お支払いにお進みください。",
       demoBanner:
         "これはデモの決済画面です。実際の課金は発生せず、Stripe 等の決済プロバイダは未接続です。",
       stripeLiveBanner:
-        "Stripe が接続されています。以下から Stripe Checkout に進むと、テストモード／本番モードに応じて実際の決済処理が行われます。",
+        "Stripe が接続されています。以下から Stripe Checkout に進むと決済処理が行われます。",
       orderSummary: "ご注文内容",
       planLabel: "プラン",
       monthly: "月額",
@@ -227,7 +227,7 @@ export const copy = {
       expiry: "有効期限",
       expiryPlaceholder: "MM / YY",
       cvc: "CVC",
-      payButton: "カードで支払う（デモ）",
+      payButton: "カードで支払う",
       payWithStripe: "Stripe Checkout に進む",
       stripePayPending: "Stripe へ移動中…",
       stripeCheckoutError: "Stripe Checkout の開始に失敗しました。環境変数と Stripe ダッシュボードの設定を確認してください。",
@@ -237,7 +237,7 @@ export const copy = {
       termsLink: "利用規約",
       termsAgreeEnd: "に同意したものとみなされます。",
       errorEmail: "有効なメールアドレスを入力してください。",
-      errorCard: "テスト用に 4242424242424242 など16桁の番号を入力してください。",
+      errorCard: "カード番号を入力してください。",
       errorExpiry: "有効期限を MM / YY 形式で入力してください。",
       errorCvc: "CVC を3桁以上で入力してください。",
       successTitle: "デモ決済が完了しました",

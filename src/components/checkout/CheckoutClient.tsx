@@ -114,8 +114,8 @@ export function CheckoutClient({
           <div className="mb-8 rounded-xl border border-emerald-300/60 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
             {stripeMode === "test"
               ? locale === "ja"
-                ? "Stripe（テストモード）が接続されています。テストカードで決済フローを確認できます。"
-                : "Stripe (test mode) is connected. You can verify the flow using test cards."
+                ? "Stripe（テストモード）が接続されています。"
+                : "Stripe (test mode) is connected."
               : t.stripeLiveBanner}
           </div>
         )}

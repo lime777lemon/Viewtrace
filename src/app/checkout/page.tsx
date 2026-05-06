@@ -5,7 +5,7 @@ import { getStripeMode, isStripeCheckoutConfigured } from "@/lib/stripe";
 
 export const metadata: Metadata = {
   title: "お支払い | Viewtrace",
-  description: "Viewtrace 月額プランのお申し込み（Stripe / デモ）。",
+  description: "Viewtrace 月額プランのお申し込み（Stripe）。",
   robots: { index: false, follow: false },
 };
 
