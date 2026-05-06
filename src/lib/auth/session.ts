@@ -53,7 +53,9 @@ export async function getSession(): Promise<SessionPayload | null> {
       ? meta.trial_started_at.trim()
       : null;
   const trialEnded = meta?.trial_active === false;
-  const trialEligible = !!trialStartedAtRaw && !trialEnded;
+  // If a user has an active Stripe subscription, they are not considered "in trial"
+  // even if trial_started_at is present (the signup flow always stamps it).
+  const trialEligible = !!trialStartedAtRaw && !trialEnded && !stripeSubscriptionId;
 
   let trialEndsAt: string | null = null;
   let trialExpired = false;
