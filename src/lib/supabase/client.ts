@@ -1,4 +1,5 @@
 import { createBrowserClient } from "@supabase/ssr";
+import { supabaseCookieOptions } from "@/lib/supabase/cookie-options";
 import { normalizeSupabaseUrl } from "@/lib/supabase/url";
 
 /**
@@ -14,5 +15,10 @@ export function createSupabaseBrowserClient() {
     );
   }
 
-  return createBrowserClient(normalizeSupabaseUrl(rawUrl), anonKey);
+  const host = typeof window !== "undefined" ? window.location.hostname : "localhost";
+  const isHttps = typeof window !== "undefined" && window.location.protocol === "https:";
+
+  return createBrowserClient(normalizeSupabaseUrl(rawUrl), anonKey, {
+    cookieOptions: supabaseCookieOptions(host, isHttps),
+  });
 }

@@ -30,7 +30,7 @@ create policy "trial_signups_insert_public"
   for insert
   to anon, authenticated
   with check (
-    source = 'landing'
+    source in ('landing', 'auth')
     and email is not null
     and char_length(trim(email)) >= 3
     and char_length(trim(email)) <= 320

@@ -111,6 +111,12 @@ export default async function LoginPage({
                 </strong>
                 メールが届いたらリンクを開き、確認後にパスワードでログインしてください。
               </p>
+              <p className="mt-2 rounded-lg border border-amber-200/80 bg-amber-50/90 px-3 py-2 text-xs leading-relaxed text-amber-950">
+                ブラウザで「このサイトにアクセスできません」と出ることがあります。多くは確認メールの先が{" "}
+                <span className="font-mono">localhost</span> や開発用URLのままになっているためです。登録したのと同じPCのブラウザでリンクを開くか、本番の{" "}
+                <span className="font-mono break-all">{productionCallbackUrl}</span> が Supabase の Site
+                URL・Redirect URLs に含まれているかを確認してください。
+              </p>
               <p className="mt-2">
                 うまくいかない場合は
                 <Link href="/contact" className="font-medium text-[var(--color-accent)] underline underline-offset-2">
@@ -125,7 +131,11 @@ export default async function LoginPage({
                 <div className="mt-3 space-y-2 leading-relaxed">
                   <p>
                     Supabase の Authentication → Providers で Email を有効にし、Authentication → URL
-                    configuration の Redirect URLs に次のコールバックを必ず追加してください（未登録だとメール内リンクが失敗します）。
+                    configuration で <strong className="font-medium text-[var(--color-ink)]">Site URL</strong>{" "}
+                    を実際にユーザーが開く本番オリジン（例{" "}
+                    <span className="font-mono text-[11px]">https://viewtrace.net</span>）に合わせ、
+                    Redirect URLs に次のコールバックを必ず追加してください（Site URL が{" "}
+                    <span className="font-mono text-[11px]">localhost</span> のままだと、本番で届くメールのリンクが開発環境を指し、スマホでは開けません）。
                   </p>
                   <p className="text-[var(--color-ink)]">このページを開いている環境で使うコールバック（目安）</p>
                   <p className="break-all font-mono text-[11px] text-[var(--color-ink)]">{callbackUrl}</p>
@@ -151,9 +161,13 @@ export default async function LoginPage({
               </details>
             </div>
 
-            <LoginForm nextPath={nextPath} initialMode={initialMode} />
+            <LoginForm
+              nextPath={nextPath}
+              initialMode={initialMode}
+              authCallbackUrl={callbackUrl}
+            />
 
-            <ResendConfirmationForm />
+            <ResendConfirmationForm authCallbackUrl={callbackUrl} />
 
             <div className="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-1 border-t border-[var(--color-border)] pt-6 text-center text-xs text-[var(--color-ink-muted)]">
               <Link href="/terms" className="hover:text-[var(--color-ink)]">

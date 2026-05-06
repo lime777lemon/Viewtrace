@@ -2,17 +2,31 @@
 
 import { useActionState, useId, useState } from "react";
 import { authFormAction } from "@/app/actions/auth";
+import {
+  isSignupPasswordOk,
+  isValidEmail,
+  mapAuthError,
+} from "@/lib/auth/form-helpers";
+import { TRIAL_CONFIG } from "@/lib/plans";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type Mode = "signin" | "signup";
 
 export function LoginForm({
   nextPath,
   initialMode = "signup",
+  authCallbackUrl,
 }: {
   nextPath?: string;
   initialMode?: Mode;
+  /** メール確認・PKCE 用。サーバーが決めた `/auth/callback` の絶対 URL（オリジン一致必須） */
+  authCallbackUrl: string;
 }) {
-  const [state, formAction, pending] = useActionState(authFormAction, null);
+  const [signInState, signInAction, signInPending] = useActionState(authFormAction, null);
+  const [signupFeedback, setSignupFeedback] = useState<{ error?: string; message?: string } | null>(
+    null,
+  );
+  const [signupPending, setSignupPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [mode, setMode] = useState<Mode>(initialMode);
   const passwordId = useId();
@@ -20,15 +34,100 @@ export function LoginForm({
   const safeNext =
     nextPath?.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "";
 
+  async function submitSignup(fd: FormData) {
+    setSignupFeedback(null);
+    const email = String(fd.get("email") ?? "").trim();
+    const password = String(fd.get("password") ?? "");
+    const passwordConfirm = String(fd.get("passwordConfirm") ?? "");
+
+    if (!email || !isValidEmail(email)) {
+      setSignupFeedback({ error: "有効なメールアドレスを入力してください。" });
+      return;
+    }
+    if (!isSignupPasswordOk(password)) {
+      setSignupFeedback({
+        error: "パスワードは半角英字・数字のみで、8文字以上で入力してください。",
+      });
+      return;
+    }
+    if (password !== passwordConfirm) {
+      setSignupFeedback({ error: "パスワードが一致しません。もう一度入力してください。" });
+      return;
+    }
+
+    setSignupPending(true);
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const trialStartedAt = new Date().toISOString();
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: authCallbackUrl,
+          data: {
+            plan: "starter" as const,
+            trial_active: true,
+            trial_started_at: trialStartedAt,
+            trial_free_observations: TRIAL_CONFIG.freeObservations,
+            trial_days: TRIAL_CONFIG.trialDays,
+          },
+        },
+      });
+
+      if (error) {
+        setSignupFeedback({ error: mapAuthError(error.message) });
+        return;
+      }
+
+      if (!data.user) {
+        setSignupFeedback({
+          error:
+            "登録を完了できませんでした。メールアドレスを確認するか、しばらくしてから再度お試しください。",
+        });
+        return;
+      }
+
+      if (data.session) {
+        window.location.assign(safeNext || "/dashboard");
+        return;
+      }
+
+      const emailDomain = email.includes("@") ? email.split("@")[1] : "";
+      console.info("[auth] signup confirmation email requested (browser)", {
+        userId: data.user.id,
+        emailDomain,
+        redirectUrl: authCallbackUrl,
+      });
+
+      setSignupFeedback({
+        message:
+          "登録用の確認メールの送信をリクエストしました。メール内のリンクでアドレス確認が完了するまでログインできません。\n\n届かないとき: 迷惑メール・プロモーションを確認 → 画面下の「確認メールを再送」→ 繰り返し届かない場合は、Supabase の Project Settings → Auth → SMTP で Resend 等を設定してください（未設定だと既定の送信が受信拒否されやすいです）。",
+      });
+    } finally {
+      setSignupPending(false);
+    }
+  }
+
   return (
-    <form action={formAction} className="mt-8 space-y-5">
-      <input type="hidden" name="intent" value={mode} />
+    <form
+      action={mode === "signin" ? signInAction : undefined}
+      onSubmit={(e) => {
+        if (mode === "signup") {
+          e.preventDefault();
+          void submitSignup(new FormData(e.currentTarget));
+        }
+      }}
+      className="mt-8 space-y-5"
+    >
       {safeNext ? <input type="hidden" name="next" value={safeNext} /> : null}
 
       <div className="flex rounded-xl border border-[var(--color-border)] p-1 text-sm font-medium">
         <button
           type="button"
-          onClick={() => setMode("signup")}
+          onClick={() => {
+            setMode("signup");
+            setSignupFeedback(null);
+          }}
           className={`flex-1 rounded-lg py-2 transition ${
             mode === "signup"
               ? "bg-[var(--color-accent)] text-white shadow-sm"
@@ -39,7 +138,10 @@ export function LoginForm({
         </button>
         <button
           type="button"
-          onClick={() => setMode("signin")}
+          onClick={() => {
+            setMode("signin");
+            setSignupFeedback(null);
+          }}
           className={`flex-1 rounded-lg py-2 transition ${
             mode === "signin"
               ? "bg-[var(--color-accent)] text-white shadow-sm"
@@ -126,34 +228,50 @@ export function LoginForm({
           </p>
         </div>
       ) : null}
-      {state?.error ? (
+      {mode === "signin" && signInState?.error ? (
         <p
           role="alert"
           className="rounded-xl border border-red-200/80 bg-red-50 px-3 py-2.5 text-sm text-red-900"
         >
-          {state.error}
+          {signInState.error}
         </p>
       ) : null}
-      {state?.message ? (
+      {mode === "signin" && signInState?.message ? (
         <p
           role="status"
           className="whitespace-pre-line rounded-xl border border-emerald-200/80 bg-emerald-50 px-3 py-2.5 text-sm leading-relaxed text-emerald-900"
         >
-          {state.message}
+          {signInState.message}
+        </p>
+      ) : null}
+      {mode === "signup" && signupFeedback?.error ? (
+        <p
+          role="alert"
+          className="rounded-xl border border-red-200/80 bg-red-50 px-3 py-2.5 text-sm text-red-900"
+        >
+          {signupFeedback.error}
+        </p>
+      ) : null}
+      {mode === "signup" && signupFeedback?.message ? (
+        <p
+          role="status"
+          className="whitespace-pre-line rounded-xl border border-emerald-200/80 bg-emerald-50 px-3 py-2.5 text-sm leading-relaxed text-emerald-900"
+        >
+          {signupFeedback.message}
         </p>
       ) : null}
       <button
         type="submit"
-        disabled={pending}
+        disabled={mode === "signin" ? signInPending : signupPending}
         className="w-full rounded-full bg-[var(--color-accent)] py-3.5 text-sm font-semibold text-white shadow-md shadow-[var(--color-accent)]/20 transition hover:bg-[var(--color-accent-hover)] disabled:opacity-60"
       >
-        {pending
-          ? mode === "signup"
+        {mode === "signin"
+          ? signInPending
+            ? "ログイン中…"
+            : "ログイン"
+          : signupPending
             ? "登録中…"
-            : "ログイン中…"
-          : mode === "signup"
-            ? "無料で始める"
-            : "ログイン"}
+            : "無料で始める"}
       </button>
     </form>
   );

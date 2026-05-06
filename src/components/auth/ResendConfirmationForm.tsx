@@ -1,14 +1,50 @@
 "use client";
 
-import { useActionState, useId } from "react";
-import { resendSignupConfirmationAction } from "@/app/actions/auth";
+import { useId, useState } from "react";
+import { isValidEmail, mapAuthError } from "@/lib/auth/form-helpers";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
-export function ResendConfirmationForm() {
-  const [state, formAction, pending] = useActionState(resendSignupConfirmationAction, null);
+export function ResendConfirmationForm({ authCallbackUrl }: { authCallbackUrl: string }) {
+  const [state, setState] = useState<{ error?: string; message?: string } | null>(null);
+  const [pending, setPending] = useState(false);
   const emailId = useId();
 
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setState(null);
+    const fd = new FormData(e.currentTarget);
+    const email = String(fd.get("email") ?? "").trim();
+    if (!email || !isValidEmail(email)) {
+      setState({ error: "有効なメールアドレスを入力してください。" });
+      return;
+    }
+
+    setPending(true);
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: { emailRedirectTo: authCallbackUrl },
+      });
+      if (error) {
+        setState({ error: mapAuthError(error.message) });
+        return;
+      }
+      setState({
+        message:
+          "確認メールを再送しました。届かない場合は迷惑メールフォルダやドメイン受信設定をご確認ください。",
+      });
+    } finally {
+      setPending(false);
+    }
+  }
+
   return (
-    <form action={formAction} className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-left">
+    <form
+      onSubmit={onSubmit}
+      className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-left"
+    >
       <p className="text-xs font-medium text-[var(--color-ink)]">確認メールが届かない場合</p>
       <p className="mt-1 text-xs leading-relaxed text-[var(--color-ink-muted)]">
         登録したメールアドレスを入力して再送できます（短時間に繰り返すと制限されることがあります）。

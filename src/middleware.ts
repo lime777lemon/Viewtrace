@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 import { SESSION_COOKIE } from "@/lib/auth/constants";
+import { supabaseCookieOptions } from "@/lib/supabase/cookie-options";
 import { normalizeSupabaseUrl } from "@/lib/supabase/url";
 
 export async function middleware(request: NextRequest) {
@@ -17,16 +18,23 @@ export async function middleware(request: NextRequest) {
   }
 
   const supabase = createServerClient(url, anonKey, {
+    cookieOptions: supabaseCookieOptions(
+      request.nextUrl.hostname,
+      request.nextUrl.protocol === "https:",
+    ),
     cookies: {
       getAll() {
         return request.cookies.getAll();
       },
-      setAll(cookiesToSet) {
+      setAll(cookiesToSet, headers) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
         supabaseResponse = NextResponse.next({ request });
         cookiesToSet.forEach(({ name, value, options }) =>
           supabaseResponse.cookies.set(name, value, options),
         );
+        if (headers) {
+          Object.entries(headers).forEach(([key, value]) => supabaseResponse.headers.set(key, value));
+        }
       },
     },
   });
