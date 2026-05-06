@@ -9,6 +9,12 @@ export function ResendConfirmationForm({ authCallbackUrl }: { authCallbackUrl: s
   const [pending, setPending] = useState(false);
   const emailId = useId();
 
+  function buildEmailRedirectTo(): string {
+    const u = new URL(authCallbackUrl);
+    u.searchParams.set("next", "/login?mode=signin&verified=1");
+    return u.toString();
+  }
+
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setState(null);
@@ -25,7 +31,7 @@ export function ResendConfirmationForm({ authCallbackUrl }: { authCallbackUrl: s
       const { error } = await supabase.auth.resend({
         type: "signup",
         email,
-        options: { emailRedirectTo: authCallbackUrl },
+        options: { emailRedirectTo: buildEmailRedirectTo() },
       });
       if (error) {
         setState({ error: mapAuthError(error.message) });

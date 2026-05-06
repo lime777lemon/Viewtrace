@@ -15,13 +15,14 @@ export const metadata: Metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; mode?: string }>;
+  searchParams: Promise<{ next?: string; mode?: string; verified?: string }>;
 }) {
   const sp = await searchParams;
   const nextParam = sp.next?.trim() ?? "";
   const nextPath = nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : undefined;
   const modeParam = sp.mode?.trim().toLowerCase();
-  const initialMode = modeParam === "signin" ? ("signin" as const) : ("signup" as const);
+  const verified = sp.verified === "1";
+  const initialMode = verified || modeParam === "signin" ? ("signin" as const) : ("signup" as const);
 
   const session = await getSession();
   if (session) {
@@ -111,6 +112,11 @@ export default async function LoginPage({
                 </strong>
                 メールが届いたらリンクを開き、確認後にパスワードでログインしてください。
               </p>
+              {verified ? (
+                <p className="mt-3 rounded-lg border border-emerald-200/80 bg-emerald-50/90 px-3 py-2 text-xs leading-relaxed text-emerald-950">
+                  メールアドレスの確認が完了しました。続けてこのページでパスワードを入力してログインしてください。
+                </p>
+              ) : null}
               <p className="mt-2 rounded-lg border border-amber-200/80 bg-amber-50/90 px-3 py-2 text-xs leading-relaxed text-amber-950">
                 ブラウザで「このサイトにアクセスできません」と出ることがあります。多くは確認メールの先が{" "}
                 <span className="font-mono">localhost</span> や開発用URLのままになっているためです。登録したのと同じPCのブラウザでリンクを開くか、本番の{" "}

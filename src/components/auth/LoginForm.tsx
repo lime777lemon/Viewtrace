@@ -34,6 +34,14 @@ export function LoginForm({
   const safeNext =
     nextPath?.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "";
 
+  function buildEmailRedirectTo(): string {
+    // メール確認後はいったんログインページへ戻し、そこでパスワード入力でログインさせる。
+    // これにより「認証したのにダッシュボードへ行けない」などの混乱を減らす。
+    const u = new URL(authCallbackUrl);
+    u.searchParams.set("next", "/login?mode=signin&verified=1");
+    return u.toString();
+  }
+
   async function submitSignup(fd: FormData) {
     setSignupFeedback(null);
     const email = String(fd.get("email") ?? "").trim();
@@ -63,7 +71,7 @@ export function LoginForm({
         email,
         password,
         options: {
-          emailRedirectTo: authCallbackUrl,
+          emailRedirectTo: buildEmailRedirectTo(),
           data: {
             plan: "starter" as const,
             trial_active: true,
