@@ -20,20 +20,14 @@ export function PlanSwitchForms({
           const p = PLANS[id];
           const active = currentPlan === id;
           const href = `/checkout?plan=${id}`;
-          return (
-            <Link
-              key={id}
-              href={active ? "/dashboard/settings" : href}
-              aria-disabled={active}
-              className={`block w-full rounded-xl border px-4 py-3 text-left text-sm transition ${
-                active
-                  ? "cursor-default border-[var(--color-accent)] bg-[var(--color-accent-soft)]/50 ring-2 ring-[var(--color-accent)]/25"
-                  : "border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-accent)]/40"
-              }`}
-              onClick={(e) => {
-                if (active) e.preventDefault();
-              }}
-            >
+          const className = `block w-full rounded-xl border px-4 py-3 text-left text-sm transition ${
+            active
+              ? "cursor-default border-[var(--color-accent)] bg-[var(--color-accent-soft)]/50 ring-2 ring-[var(--color-accent)]/25"
+              : "border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-accent)]/40"
+          }`;
+
+          const body = (
+            <>
               <span className="font-display font-semibold text-[var(--color-ink)]">{p.name}</span>
               {active ? (
                 <span className="mt-1 block text-xs font-medium text-[var(--color-accent)]">
@@ -51,6 +45,16 @@ export function PlanSwitchForms({
                   .replace("{days}", String(p.retentionDays))
                   .replace("{csv}", p.csvExport ? t.csvYes : t.csvNo)}
               </span>
+            </>
+          );
+
+          return active ? (
+            <div key={id} className={className} aria-disabled="true">
+              {body}
+            </div>
+          ) : (
+            <Link key={id} href={href} className={className}>
+              {body}
             </Link>
           );
         })}
