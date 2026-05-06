@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Locale } from "@/lib/i18n";
 import { copy } from "@/lib/i18n";
 
@@ -14,6 +14,12 @@ export function BillingActions({ locale, hasCustomer, hasSubscription }: Props) 
   const t = copy[locale].dashboardBilling;
   const [loading, setLoading] = useState<"portal" | "cancel" | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!hasSubscription) return;
+    // Best-effort backfill for purchase history
+    void fetch("/api/stripe/sync-subscription", { method: "POST" });
+  }, [hasSubscription]);
 
   async function openPortal() {
     setMessage(null);
