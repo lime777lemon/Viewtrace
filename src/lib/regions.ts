@@ -101,5 +101,6 @@ export function getRegionOptions(planId: PlanId): RegionOption[] {
   if (planId === "pro") {
     return [...PRO_US, ...MAJOR_COUNTRIES];
   }
+  /** Starter: 代表州 + 主要国（UI の地域欄と一致） */
   return [...STARTER_US, ...MAJOR_COUNTRIES];
 }

@@ -7,6 +7,7 @@ import { appendUserObservation } from "@/lib/demo/user-observations";
 import { getPlan } from "@/lib/plans";
 import { getRegionOptions } from "@/lib/regions";
 import { normalizeUserUrlInput } from "@/lib/url-preview";
+import { runUrlPreviewFetch } from "@/lib/url-preview-fetch";
 
 function coerceRecordingUrl(urlRaw: string): string | null {
   const n = normalizeUserUrlInput(urlRaw);
@@ -52,43 +53,55 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
   if (verifiedTitle) noteParts.push(`確認時タイトル: ${verifiedTitle.slice(0, 200)}`);
 
   const snapshotImageUrl =
-    /^https?:\/\//i.test(verifiedImageUrl) && verifiedImageUrl.length < 2048
-      ? verifiedImageUrl
-      : undefined;
+    /^https?:\/\//i.test(verifiedImageUrl) && verifiedImageUrl.length < 2048 ? verifiedImageUrl : undefined;
 
   const capturedAt = new Date().toISOString();
+
+  const plan = getPlan(session.plan);
+  const preview = await runUrlPreviewFetch(url, {
+    screenshotFallback: true,
+    fullPageScreenshot: plan.snapshotFullPage,
+    regionValue,
+  });
+
+  const ok = preview.ok;
+  const pageTitle = ok && preview.title ? preview.title.slice(0, 300) : undefined;
+  const previewImage =
+    ok && preview.image && /^https?:\/\//i.test(preview.image) ? preview.image.slice(0, 2048) : undefined;
+
   const obs: Observation = {
     id,
     url,
     regionLabel,
     capturedAt,
-    status: "success",
-    note: noteParts.join(" — "),
-    pageTitle: verifiedTitle ? verifiedTitle.slice(0, 300) : undefined,
-    snapshotImageUrl,
+    status: ok ? "success" : "failure",
+    note: ok ? noteParts.join(" — ") : `取得に失敗しました（${preview.error}）`,
+    pageTitle: pageTitle ?? (verifiedTitle ? verifiedTitle.slice(0, 300) : undefined),
+    snapshotImageUrl: snapshotImageUrl ?? previewImage,
     events: [
       {
         at: capturedAt,
         kind: "processing",
-        label: "Web での表示を確認",
-        detail: "プレビューに基づき記録を作成",
+        label: "地域別アクセスで取得",
+        detail: ok
+          ? `region=${regionValue} status=${preview.status} proxy=${preview.viaProxy ? "on" : "off"}`
+          : `region=${regionValue} error=${preview.error}`,
       },
       {
         at: capturedAt,
         kind: "capture",
         label: "メタ情報・プレビュー画像を保存",
-        detail: snapshotImageUrl ? "OG 画像 URL を紐づけ" : "画像なし",
+        detail: (snapshotImageUrl ?? previewImage) ? "プレビュー画像 URL を紐づけ" : "画像なし",
       },
       {
         at: capturedAt,
         kind: "status",
         label: "オブザベーション登録",
-        detail: "成功（クッキー保存）",
+        detail: `${ok ? "成功" : "失敗"}（クッキー保存）`,
       },
     ],
   };
 
-  const plan = getPlan(session.plan);
   const saved = await appendUserObservation(obs, {
     retentionDays: plan.retentionDays,
     monthlyLimit: plan.monthlyObservations,

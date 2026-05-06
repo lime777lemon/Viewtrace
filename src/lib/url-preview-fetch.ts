@@ -4,9 +4,19 @@ import {
   isBlockedPreviewHost,
   readHtmlHeadForPreview,
 } from "@/lib/url-preview";
+import { getGeoProxyAgent } from "@/lib/geo/proxy";
 
 export type UrlPreviewResult =
-  | { ok: true; canonicalUrl: string; title: string | null; image: string | null; html: boolean }
+  | {
+      ok: true;
+      canonicalUrl: string;
+      title: string | null;
+      image: string | null;
+      html: boolean;
+      status: number;
+      headers: Record<string, string>;
+      viaProxy: boolean;
+    }
   | { ok: false; error: string };
 
 export type UrlPreviewFetchOptions = {
@@ -17,6 +27,8 @@ export type UrlPreviewFetchOptions = {
   screenshotFallback?: boolean;
   /** true のとき Microlink のフルページキャプチャ（Pro 向け・遅くなりがち） */
   fullPageScreenshot?: boolean;
+  /** 例: `US-CA`。設定された地理プロキシを使って取得する */
+  regionValue?: string;
 };
 
 /** サーバー側で HTML を取得し OG / title を解決（API ルートと詳細ページで共用） */
@@ -26,6 +38,7 @@ export async function runUrlPreviewFetch(
 ): Promise<UrlPreviewResult> {
   const screenshotFallback = options.screenshotFallback === true;
   const fullPageScreenshot = options.fullPageScreenshot === true;
+  const regionValue = options.regionValue?.trim();
   let parsed: URL;
   try {
     parsed = new URL(target);
@@ -45,9 +58,11 @@ export async function runUrlPreviewFetch(
   const timer = setTimeout(() => ac.abort(), 14_000);
 
   try {
+    const proxy = regionValue ? getGeoProxyAgent(regionValue) : null;
     const res = await fetch(target, {
       redirect: "follow",
       signal: ac.signal,
+      ...(proxy ? { dispatcher: proxy.dispatcher } : {}),
       headers: {
         Accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Viewtrace-UrlPreview/1.0 (+https://viewtrace.net)",
@@ -73,6 +88,24 @@ export async function runUrlPreviewFetch(
     const ct = res.headers.get("content-type") ?? "";
     const htmlish = ct.includes("text/html") || ct.includes("application/xhtml");
 
+    const headersOut: Record<string, string> = {};
+    for (const [k, v] of res.headers.entries()) {
+      const key = k.toLowerCase();
+      // サイズ上限のため、重要ヘッダのみ保持
+      if (
+        key === "content-type" ||
+        key === "content-language" ||
+        key === "cache-control" ||
+        key === "content-security-policy" ||
+        key === "set-cookie" ||
+        key === "x-frame-options" ||
+        key === "x-robots-tag" ||
+        key === "location"
+      ) {
+        headersOut[key] = v.slice(0, 500);
+      }
+    }
+
     if (!htmlish) {
       return {
         ok: true,
@@ -80,6 +113,9 @@ export async function runUrlPreviewFetch(
         title: null,
         image: null,
         html: false,
+        status: res.status,
+        headers: headersOut,
+        viaProxy: Boolean(proxy),
       };
     }
 
@@ -99,6 +135,9 @@ export async function runUrlPreviewFetch(
       title,
       image: imageOut,
       html: true,
+      status: res.status,
+      headers: headersOut,
+      viaProxy: Boolean(proxy),
     };
   } catch {
     return { ok: false, error: "network_error" };
