@@ -227,7 +227,7 @@ export const copy = {
       expiryPlaceholder: "MM / YY",
       cvc: "CVC",
       payButton: "カードで支払う",
-      payWithStripe: "Stripe Checkout に進む",
+      payWithStripe: "決済に進む",
       stripePayPending: "Stripe へ移動中…",
       stripeCheckoutError: "Stripe Checkout の開始に失敗しました。環境変数と Stripe ダッシュボードの設定を確認してください。",
       payPending: "処理中…",
@@ -598,7 +598,7 @@ export const copy = {
       expiryPlaceholder: "MM / YY",
       cvc: "CVC",
       payButton: "Pay with card (demo)",
-      payWithStripe: "Continue to Stripe Checkout",
+      payWithStripe: "Proceed to payment",
       stripePayPending: "Redirecting to Stripe…",
       stripeCheckoutError:
         "Could not start Stripe Checkout. Check environment variables and your Stripe Dashboard configuration.",
