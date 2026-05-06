@@ -124,16 +124,51 @@ export async function POST(req: Request) {
 
       // Write audit row into public.subscriptions (best-effort)
       if (subscriptionId) {
+        // subscriptions テーブルは stripe_price_id / plan / billing_period / status が NOT NULL のため、
+        // subscription を取得して必要項目を埋めて保存する。
+        let stripePriceId: string | null = null;
+        let billingPeriod: string | null = null;
+        let currentPeriodStart: string | null = null;
+        let currentPeriodEnd: string | null = null;
+        let cancelAtPeriodEnd: boolean | null = null;
+
+        try {
+          const sub = await stripe.subscriptions.retrieve(subscriptionId, {
+            expand: ["items.data.price"],
+          });
+          const firstItem = sub.items.data[0];
+          const price = firstItem?.price as Stripe.Price | undefined;
+          stripePriceId = price?.id ?? null;
+          billingPeriod = price?.recurring?.interval ?? null;
+          currentPeriodStart = sub.current_period_start
+            ? new Date(sub.current_period_start * 1000).toISOString()
+            : null;
+          currentPeriodEnd = sub.current_period_end
+            ? new Date(sub.current_period_end * 1000).toISOString()
+            : null;
+          cancelAtPeriodEnd = sub.cancel_at_period_end ?? null;
+          status = (sub as unknown as Stripe.Subscription).status ?? status;
+        } catch (e) {
+          console.warn("[stripe webhook] failed to retrieve subscription details for db upsert", subscriptionId, e);
+        }
+
         const { error: subErr } = await admin
           .from("subscriptions")
           .upsert(
             {
               user_id: userId,
+              // keep both columns for compatibility with existing schema
               plan_id: planId,
+              plan: planId,
               stripe_customer_id: session.customer ?? null,
               stripe_subscription_id: subscriptionId,
+              stripe_price_id: stripePriceId ?? "unknown",
+              billing_period: billingPeriod ?? "month",
               stripe_checkout_session_id: session.id,
-              status,
+              status: status ?? "unknown",
+              current_period_start: currentPeriodStart,
+              current_period_end: currentPeriodEnd,
+              cancel_at_period_end: cancelAtPeriodEnd,
               mode: process.env.STRIPE_SECRET_KEY?.startsWith("sk_live_") ? "live" : "test",
               updated_at: new Date().toISOString(),
             },
