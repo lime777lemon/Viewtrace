@@ -109,7 +109,7 @@ export function LoginForm({
 
       setSignupFeedback({
         message:
-          "登録用の確認メールの送信をリクエストしました。メール内のリンクでアドレス確認が完了するまでログインできません。\n\n届かないとき: 迷惑メール・プロモーションを確認 → 画面下の「確認メールを再送」→ 繰り返し届かない場合は、Supabase の Project Settings → Auth → SMTP で Resend 等を設定してください（未設定だと既定の送信が受信拒否されやすいです）。",
+          "登録用の確認メールの送信をリクエストしました。メール内のリンクでアドレス確認が完了するまでログインできません。",
       });
     } finally {
       setSignupPending(false);
