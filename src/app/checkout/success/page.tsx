@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { copy } from "@/lib/i18n";
 import { getPlan, parsePlanId } from "@/lib/plans";
+import { getStripe } from "@/lib/stripe";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const metadata: Metadata = {
   title: "ご注文ありがとうございます | Viewtrace",
@@ -16,9 +19,56 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
   const sp = await searchParams;
   const planId = parsePlanId(sp.plan);
   const plan = getPlan(planId);
-  const isStripe = Boolean(typeof sp.session_id === "string" && sp.session_id.trim());
+  const sessionId = typeof sp.session_id === "string" ? sp.session_id.trim() : "";
+  const isStripe = Boolean(sessionId);
   const locale = sp.locale === "en" ? "en" : "ja";
   const t = copy[locale].checkout;
+
+  // Best-effort: reflect the purchased plan immediately.
+  // Webhook will also update, but can lag for a short time.
+  if (isStripe) {
+    try {
+      const stripe = getStripe();
+      const supabase = await createSupabaseServerClient();
+      const admin = createSupabaseAdminClient();
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (stripe && admin && user?.id && user.email) {
+        const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+        const metadataUserId = session.metadata?.user_id ?? "";
+        const metadataPlanId = session.metadata?.plan_id ?? "";
+        const customerEmail = session.customer_email ?? session.customer_details?.email ?? "";
+        const isComplete = session.status === "complete";
+
+        if (
+          isComplete &&
+          metadataUserId === user.id &&
+          customerEmail &&
+          customerEmail.toLowerCase() === user.email.toLowerCase() &&
+          metadataPlanId
+        ) {
+          const subscriptionId = typeof session.subscription === "string" ? session.subscription : "";
+
+          await admin.auth.admin.updateUserById(user.id, {
+            user_metadata: {
+              ...(user.user_metadata ?? {}),
+              plan: metadataPlanId,
+              trial_active: false,
+              stripe_customer_id: session.customer ?? null,
+              stripe_subscription_id: subscriptionId || null,
+              stripe_checkout_session_id: session.id,
+            },
+          });
+        }
+      }
+    } catch {
+      // Ignore; dashboard will be updated by webhook eventually.
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[var(--color-surface)] text-[var(--color-ink)]">
