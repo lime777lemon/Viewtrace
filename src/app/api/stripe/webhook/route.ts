@@ -55,11 +55,19 @@ export async function POST(req: Request) {
     if (evtErr) {
       // Unique violation → already processed
       if (evtErr.code === "23505") {
-        return NextResponse.json({ received: true, duplicate: true });
+        // Allow safe re-processing on retries/resends.
+        // This is important when prior deliveries happened while the server was misconfigured
+        // (e.g. missing SUPABASE_SERVICE_ROLE_KEY), so the event was recorded but side-effects
+        // (user metadata / subscriptions upsert) did not apply.
+        console.info("[stripe webhook] duplicate event id; re-processing", {
+          event_id: event.id,
+          event_type: event.type,
+        });
+      } else {
+        console.error("[stripe webhook] failed to record event id", evtErr);
+        // Fail closed: if we cannot guarantee idempotency, better to retry later
+        return NextResponse.json({ ok: false, error: "idempotency_write_failed" }, { status: 503 });
       }
-      console.error("[stripe webhook] failed to record event id", evtErr);
-      // Fail closed: if we cannot guarantee idempotency, better to retry later
-      return NextResponse.json({ ok: false, error: "idempotency_write_failed" }, { status: 503 });
     }
   }
 
