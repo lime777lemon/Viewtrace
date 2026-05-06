@@ -42,8 +42,6 @@ export function getGeoProxyAgent(regionValue: string): {
 
   if (!proxyUrl) return null;
   try {
-    // validate
-    // eslint-disable-next-line no-new
     new URL(proxyUrl);
   } catch {
     return null;
