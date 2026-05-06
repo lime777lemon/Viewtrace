@@ -98,18 +98,6 @@ export default async function SettingsPage() {
             {session && !session.trialEligible ? (
               <PlanSwitchForms currentPlan={session.plan} locale={locale} />
             ) : null}
-            <div className="mt-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
-              <p className="text-sm font-medium text-[var(--color-ink)]">{t.checkoutBoxTitle}</p>
-              <p className="mt-1 text-xs text-[var(--color-ink-muted)]">{t.checkoutBoxBody}</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Link
-                  href="/checkout?plan=starter"
-                  className="inline-flex rounded-full border border-[var(--color-border)] px-4 py-2 text-xs font-semibold text-[var(--color-ink)] hover:border-[var(--color-accent)]/40"
-                >
-                  {t.checkoutStarter}
-                </Link>
-              </div>
-            </div>
 
             {session ? (
               <BillingActions
