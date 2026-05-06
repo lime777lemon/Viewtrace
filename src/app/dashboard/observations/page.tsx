@@ -3,8 +3,9 @@ import Link from "next/link";
 import { ObservationsCsvExport } from "@/components/dashboard/ObservationsCsvExport";
 import { ObservationsTable } from "@/components/dashboard/ObservationsTable";
 import { getSession } from "@/lib/auth/session";
-import { getMergedObservationsForPlan } from "@/lib/demo/user-observations";
+import { getMergedObservationsForPlan, readUserObservations } from "@/lib/demo/user-observations";
 import { getPlan } from "@/lib/plans";
+import { shouldHideNewObservationForTrial } from "@/lib/trial-observation-access";
 
 export const metadata: Metadata = {
   title: "オブザベーション | Viewtrace",
@@ -18,6 +19,11 @@ export default async function ObservationsListPage() {
 
   const planId = session?.plan ?? "starter";
   const rows = await getMergedObservationsForPlan(planId);
+
+  const userObsForTrial = session ? await readUserObservations() : [];
+  const hideNewObservationButton = session
+    ? shouldHideNewObservationForTrial(session, userObsForTrial)
+    : false;
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -44,12 +50,14 @@ export default async function ObservationsListPage() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {showCsv ? <ObservationsCsvExport rows={rows} /> : null}
-          <Link
-            href="/dashboard/observations/new"
-            className="inline-flex shrink-0 rounded-full bg-[var(--color-accent)] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[var(--color-accent-hover)]"
-          >
-            新規オブザベーション
-          </Link>
+          {hideNewObservationButton ? null : (
+            <Link
+              href="/dashboard/observations/new"
+              className="inline-flex shrink-0 rounded-full bg-[var(--color-accent)] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[var(--color-accent-hover)]"
+            >
+              新規オブザベーション
+            </Link>
+          )}
         </div>
       </div>
 

@@ -40,28 +40,50 @@ function requestTlsWithOptionalProxyCa(): ConnectionOptions | undefined {
   return { ca };
 }
 
+/**
+ * Bright Data 等のプロキシ URL（HTTP CONNECT 用）。
+ * - テンプレのみ: `regionValue` 必須（例 US-CA）
+ * - 固定 URL のみ: `regionValue` 省略可
+ */
+export function resolveGeoProxyUrl(regionValue: string | undefined): string | null {
+  const template = process.env.VIEWTRACE_GEO_PROXY_URL_TEMPLATE?.trim();
+  const fixed = process.env.VIEWTRACE_GEO_PROXY_URL?.trim();
+
+  if (template) {
+    const rv = regionValue?.trim();
+    if (!rv) return null;
+    const { country, state } = parseRegion(rv);
+    const proxyUrl = fillTemplate(template, {
+      region: rv,
+      country,
+      state: state ?? "",
+    }).trim();
+    try {
+      new URL(proxyUrl);
+      return proxyUrl;
+    } catch {
+      return null;
+    }
+  }
+
+  if (fixed) {
+    try {
+      new URL(fixed);
+      return fixed;
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+}
+
 export function getGeoProxyAgent(regionValue: string): {
   dispatcher: ProxyAgent;
   proxyUrl: string;
 } | null {
-  const template = process.env.VIEWTRACE_GEO_PROXY_URL_TEMPLATE?.trim();
-  const fixed = process.env.VIEWTRACE_GEO_PROXY_URL?.trim();
-
-  const { country, state } = parseRegion(regionValue);
-  const proxyUrl = template
-    ? fillTemplate(template, {
-        region: regionValue,
-        country,
-        state: state ?? "",
-      }).trim()
-    : fixed ?? "";
-
+  const proxyUrl = resolveGeoProxyUrl(regionValue);
   if (!proxyUrl) return null;
-  try {
-    new URL(proxyUrl);
-  } catch {
-    return null;
-  }
 
   const requestTls = requestTlsWithOptionalProxyCa();
   const dispatcher = requestTls

@@ -68,6 +68,16 @@ export async function readUserObservations(): Promise<Observation[]> {
   }
 }
 
+/** `trial_started_at` 以降に記録されたオブザベーション数（無料トライアル枠の集計用） */
+export function countObservationsSinceTrialStart(
+  observations: Observation[],
+  trialStartedAtIso: string,
+): number {
+  const t = Date.parse(trialStartedAtIso);
+  if (Number.isNaN(t)) return observations.length;
+  return observations.filter((o) => new Date(o.capturedAt).getTime() >= t).length;
+}
+
 export async function writeUserObservations(list: Observation[]): Promise<void> {
   const trimmed = trimToFitCookie(sortByCapturedAtDesc(list));
   const json = JSON.stringify(trimmed);

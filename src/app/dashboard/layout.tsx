@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { getSession } from "@/lib/auth/session";
-import { readUserObservations } from "@/lib/demo/user-observations";
+import { countObservationsSinceTrialStart, readUserObservations } from "@/lib/demo/user-observations";
 import { getPlan, TRIAL_CONFIG } from "@/lib/plans";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { getPlanLabels, getTrialPlanUi } from "@/lib/plans/labels";
@@ -17,7 +17,10 @@ export default async function DashboardLayout({
 
   const plan = getPlan(session.plan);
   const userObservations = await readUserObservations();
-  const trialUsed = userObservations.length;
+  const trialUsed =
+    session.trialStartedAt && session.trialEligible
+      ? countObservationsSinceTrialStart(userObservations, session.trialStartedAt)
+      : userObservations.length;
   const trialLimitReached =
     session.trialEligible && trialUsed >= TRIAL_CONFIG.freeObservations;
   const trialExpired = session.trialEligible && session.trialExpired;

@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { NewObservationForm } from "@/components/dashboard/NewObservationForm";
 import { getSession } from "@/lib/auth/session";
-import { getPlan } from "@/lib/plans";
+import {
+  countObservationsSinceTrialStart,
+  readUserObservations,
+} from "@/lib/demo/user-observations";
+import { getPlan, TRIAL_CONFIG } from "@/lib/plans";
 import { getRegionOptions } from "@/lib/regions";
 
 export const metadata: Metadata = {
@@ -17,6 +21,19 @@ export default async function NewObservationPage({
 }) {
   const session = await getSession();
   if (!session) redirect("/login?next=/dashboard/observations/new");
+
+  if (session.trialEligible) {
+    if (session.trialExpired) {
+      redirect("/checkout?plan=starter&reason=trial_expired");
+    }
+    const existing = await readUserObservations();
+    const trialUsed = session.trialStartedAt
+      ? countObservationsSinceTrialStart(existing, session.trialStartedAt)
+      : existing.length;
+    if (trialUsed >= TRIAL_CONFIG.freeObservations) {
+      redirect("/checkout?plan=starter&reason=trial_observation_limit");
+    }
+  }
 
   const plan = getPlan(session.plan);
   const regions = getRegionOptions(session.plan);

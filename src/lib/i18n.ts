@@ -244,6 +244,10 @@ export const copy = {
       stripeSuccessTitle: "Stripe Checkout が完了しました",
       stripeSuccessSubtitle:
         "Viewtraceのダッシュボードで状態を確認できます。",
+      trialRedirectExpired:
+        "無料トライアルの期間が終了しています。オブザベーションを続けるには、下記から Starter または Pro へお申し込みください。",
+      trialRedirectObservationLimit:
+        "無料トライアルのオブザベーション回数（20回）に達しています。続けるにはプランへのお申し込みが必要です。",
       successCtaLogin: "ログイン",
       successCtaHome: "サイトトップへ",
       langJa: "日本語",
@@ -617,6 +621,10 @@ export const copy = {
       stripeSuccessTitle: "Stripe Checkout complete",
       stripeSuccessSubtitle:
         "Subscription activation may take a few minutes. You can verify status in the Stripe Dashboard.",
+      trialRedirectExpired:
+        "Your free trial period has ended. Subscribe to Starter or Pro below to keep recording observations.",
+      trialRedirectObservationLimit:
+        "You’ve used all 20 free trial observations. Subscribe to a plan below to continue.",
       successCtaLogin: "Log in",
       successCtaHome: "Back to site",
       langJa: "日本語",

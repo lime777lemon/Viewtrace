@@ -3,12 +3,13 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ObservationsTable } from "@/components/dashboard/ObservationsTable";
 import { getSession } from "@/lib/auth/session";
-import { getMergedObservationsForPlan } from "@/lib/demo/user-observations";
+import { getMergedObservationsForPlan, readUserObservations } from "@/lib/demo/user-observations";
 import { getDemoUsageThisMonth } from "@/lib/demo/usage";
 import { copy } from "@/lib/i18n";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { getPlanLabels } from "@/lib/plans/labels";
 import { getPlan, OVERAGE_PER_OBSERVATION_USD } from "@/lib/plans";
+import { shouldHideNewObservationForTrial } from "@/lib/trial-observation-access";
 
 export const metadata: Metadata = {
   title: "ダッシュボード | Viewtrace",
@@ -28,6 +29,9 @@ export default async function DashboardHomePage() {
 
   const all = await getMergedObservationsForPlan(session.plan);
   const recent = all.slice(0, 5);
+
+  const userObsForTrial = await readUserObservations();
+  const hideNewObservationButton = shouldHideNewObservationForTrial(session, userObsForTrial);
 
   const pct = Math.min(100, (usage.used / usage.limit) * 100);
 
@@ -104,12 +108,14 @@ export default async function DashboardHomePage() {
       <section className="space-y-4">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <h2 className="font-display text-lg font-semibold">{t.recentTitle}</h2>
-          <Link
-            href="/dashboard/observations/new"
-            className="inline-flex rounded-full bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--color-accent-hover)]"
-          >
-            {t.newObservation}
-          </Link>
+          {hideNewObservationButton ? null : (
+            <Link
+              href="/dashboard/observations/new"
+              className="inline-flex rounded-full bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--color-accent-hover)]"
+            >
+              {t.newObservation}
+            </Link>
+          )}
         </div>
         <ObservationsTable rows={recent} />
       </section>

@@ -104,3 +104,13 @@ export function getRegionOptions(planId: PlanId): RegionOption[] {
   /** Starter: 代表州 + 主要国（UI の地域欄と一致） */
   return [...STARTER_US, ...MAJOR_COUNTRIES];
 }
+
+const ALL_OBSERVATION_REGION_VALUES = new Set([
+  ...getRegionOptions("starter").map((r) => r.value),
+  ...getRegionOptions("pro").map((r) => r.value),
+]);
+
+/** API 等で渡される region 値（US-CA, GB など）が UI と一致するか */
+export function isValidObservationRegion(value: string): boolean {
+  return ALL_OBSERVATION_REGION_VALUES.has(value.trim());
+}

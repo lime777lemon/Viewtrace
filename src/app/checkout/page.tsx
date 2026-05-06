@@ -10,14 +10,16 @@ export const metadata: Metadata = {
 };
 
 type Props = {
-  searchParams: Promise<{ plan?: string }>;
+  searchParams: Promise<{ plan?: string; reason?: string }>;
 };
 
 export default async function CheckoutPage({ searchParams }: Props) {
-  const { plan: raw } = await searchParams;
+  const { plan: raw, reason: reasonRaw } = await searchParams;
   const planId = parsePlanId(raw);
+  const trialBlockReason =
+    reasonRaw === "trial_expired" || reasonRaw === "trial_observation_limit" ? reasonRaw : undefined;
   const stripeConfigured = isStripeCheckoutConfigured();
   const stripeMode = stripeConfigured ? getStripeMode() : "none";
 
-  return <CheckoutClient planId={planId} stripeMode={stripeMode} />;
+  return <CheckoutClient planId={planId} stripeMode={stripeMode} trialBlockReason={trialBlockReason} />;
 }

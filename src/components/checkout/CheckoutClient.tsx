@@ -11,9 +11,12 @@ import type { StripeMode } from "@/lib/stripe";
 export function CheckoutClient({
   planId,
   stripeMode,
+  trialBlockReason,
 }: {
   planId: PlanId;
   stripeMode: StripeMode;
+  /** 無料トライアル終了・枠切れからのリダイレクト時のみ */
+  trialBlockReason?: "trial_expired" | "trial_observation_limit";
 }) {
   const [locale, setLocale] = useState<Locale>("ja");
   const t = copy[locale].checkout;
@@ -71,6 +74,13 @@ export function CheckoutClient({
     }
   }
 
+  const trialNotice =
+    trialBlockReason === "trial_expired"
+      ? t.trialRedirectExpired
+      : trialBlockReason === "trial_observation_limit"
+        ? t.trialRedirectObservationLimit
+        : null;
+
   return (
     <div className="min-h-screen bg-[var(--color-surface)] text-[var(--color-ink)]">
       <header className="border-b border-[var(--color-border)] bg-[var(--color-surface-elevated)]/90 backdrop-blur-md">
@@ -124,6 +134,12 @@ export function CheckoutClient({
           </>
         )}
 
+        {trialNotice ? (
+          <div className="mb-8 rounded-xl border border-sky-300/80 bg-sky-50 px-4 py-3 text-sm leading-relaxed text-sky-950">
+            {trialNotice}
+          </div>
+        ) : null}
+
         <h1 className="font-display text-3xl font-semibold tracking-tight">{t.title}</h1>
         <p className="mt-2 max-w-2xl text-[var(--color-ink-muted)]">{t.subtitle}</p>
 
@@ -134,7 +150,7 @@ export function CheckoutClient({
             return (
               <Link
                 key={id}
-                href={`/checkout?plan=${id}`}
+                href={`/checkout?plan=${id}${trialBlockReason ? `&reason=${trialBlockReason}` : ""}`}
                 className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                   active
                     ? "bg-[var(--color-ink)] text-white"
