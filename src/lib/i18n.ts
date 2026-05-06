@@ -275,10 +275,10 @@ export const copy = {
     },
     dashboardHome: {
       title: "概要",
-      subtitle: "{plan} プランの利用状況と直近のオブザベーションです（デモデータ）。",
+      subtitle: "現在のプラン: {plan}（{price}） · 保持 {days} 日 · 月 {limit} オブザベーションまで",
       cardPlanLabel: "プラン",
       cardPlanMeta: "保持 {days} 日 · 月 {limit} オブザベーションまで",
-      cardPlanChange: "プランを変更（デモ） →",
+      cardPlanChange: "プランを変更 →",
       cardMonthlyLabel: "今月のオブザベーション",
       cardMonthlyAll: "すべて見る →",
       cardMonthlyOverage:
@@ -648,10 +648,11 @@ export const copy = {
     },
     dashboardHome: {
       title: "Overview",
-      subtitle: "Usage and recent observations for the {plan} plan (demo data).",
+      subtitle:
+        "Current plan: {plan} ({price}) · {days}-day retention · Up to {limit} observations / month",
       cardPlanLabel: "Plan",
       cardPlanMeta: "{days}-day retention · Up to {limit} observations / month",
-      cardPlanChange: "Change plan (demo) →",
+      cardPlanChange: "Change plan →",
       cardMonthlyLabel: "Observations this month",
       cardMonthlyAll: "View all →",
       cardMonthlyOverage:

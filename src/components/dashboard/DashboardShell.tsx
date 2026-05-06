@@ -32,9 +32,7 @@ type DashboardShellProps = {
 
 export function DashboardShell({
   email,
-  planId,
   planName,
-  planPriceLabel,
   locale = "ja",
   trialExpired = false,
   trialEndsAt = null,
@@ -70,15 +68,6 @@ export function DashboardShell({
             <p className="mt-1 text-[10px] font-medium uppercase tracking-wider text-[var(--color-ink-muted)]">
               {t.productLabel}
             </p>
-            <p className="mt-2 text-xs font-semibold text-[var(--color-ink)]">
-              {planName}
-              <span className="block font-normal text-[var(--color-ink-muted)]">{planPriceLabel}</span>
-            </p>
-            {planId === "pro" ? (
-              <span className="mt-2 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900">
-                Pro
-              </span>
-            ) : null}
           </div>
           <nav className="flex flex-1 flex-col gap-0.5 p-3">
             {nav.map((item) => {

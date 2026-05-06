@@ -37,7 +37,7 @@ export default async function ObservationsListPage() {
             <p className="mt-2 text-xs text-[var(--color-ink-muted)]">
               CSV エクスポートは Pro プランの機能です。
               <Link href="/dashboard/settings" className="ml-1 font-medium text-[var(--color-accent)]">
-                設定でプランを変更（デモ）
+                設定でプランを変更
               </Link>
             </p>
           )}

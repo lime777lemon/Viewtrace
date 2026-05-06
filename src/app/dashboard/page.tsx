@@ -36,7 +36,11 @@ export default async function DashboardHomePage() {
       <div>
         <h1 className="font-display text-2xl font-semibold tracking-tight">{t.title}</h1>
         <p className="mt-1 text-sm text-[var(--color-ink-muted)]">
-          {t.subtitle.replace("{plan}", plan.name)}
+          {t.subtitle
+            .replace("{plan}", plan.name)
+            .replace("{price}", planLabels.priceLabel)
+            .replace("{days}", String(plan.retentionDays))
+            .replace("{limit}", String(plan.monthlyObservations))}
         </p>
       </div>
 
