@@ -18,10 +18,21 @@ function getOriginFromHeaders(h: Headers): string | null {
   return null;
 }
 
-export default async function AuthCodeErrorPage() {
+export default async function AuthCodeErrorPage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const h = await headers();
   const origin = getOriginFromHeaders(h);
   const callbackUrl = origin ? `${origin.replace(/\/+$/, "")}/auth/callback` : null;
+  const sp = (await searchParams) ?? {};
+  const reasonRaw = sp.reason;
+  const reason = typeof reasonRaw === "string" ? reasonRaw : null;
+  const errorCodeRaw = sp.error_code ?? sp.errorCode;
+  const errorCode = typeof errorCodeRaw === "string" ? errorCodeRaw : null;
+  const errorDescRaw = sp.error_description ?? sp.errorDescription;
+  const errorDescription = typeof errorDescRaw === "string" ? errorDescRaw : null;
 
   return (
     <div className="mx-auto flex min-h-[60vh] max-w-md flex-col justify-center px-4 py-16 text-center">
@@ -29,6 +40,22 @@ export default async function AuthCodeErrorPage() {
       <p className="mt-3 text-sm text-ink-muted">
         リンクの有効期限切れ、または設定の不整合の可能性があります。もう一度ログインまたは登録をお試しください。
       </p>
+      {reason || errorCode || errorDescription ? (
+        <div className="mt-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-left text-xs leading-relaxed text-ink-muted">
+          <p className="font-medium text-ink">エラー詳細</p>
+          {errorCode ? (
+            <p className="mt-2">
+              <span className="font-mono text-[11px] text-ink">{errorCode}</span>
+            </p>
+          ) : null}
+          {errorDescription ? (
+            <p className="mt-2 break-words font-mono text-[11px] text-ink">{errorDescription}</p>
+          ) : null}
+          {reason ? (
+            <p className="mt-2 break-words font-mono text-[11px] text-ink">{reason}</p>
+          ) : null}
+        </div>
+      ) : null}
       <div className="mt-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4 text-left text-xs leading-relaxed text-ink-muted">
         <p className="font-medium text-ink">よくある原因</p>
         <ul className="mt-2 list-disc space-y-1 pl-5">
