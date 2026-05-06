@@ -244,7 +244,7 @@ export const copy = {
       successSubtitle: "本番ではここでサブスクリプションが有効化され、ダッシュボードへ案内されます。",
       stripeSuccessTitle: "Stripe Checkout が完了しました",
       stripeSuccessSubtitle:
-        "サブスクリプションの反映は数分かかることがあります。Stripe ダッシュボードで状態を確認できます。",
+        "Viewtraceのダッシュボードで状態を確認できます。",
       successCtaLogin: "ログイン",
       successCtaHome: "サイトトップへ",
       langJa: "日本語",
