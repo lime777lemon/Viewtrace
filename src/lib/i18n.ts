@@ -211,15 +211,14 @@ export const copy = {
       subtitle: "月額プランのお申し込みです。内容を確認のうえ、お支払いにお進みください。",
       demoBanner:
         "これはデモの決済画面です。実際の課金は発生せず、Stripe 等の決済プロバイダは未接続です。",
-      stripeLiveBanner:
-        "Stripe が接続されています。以下から Stripe Checkout に進むと決済処理が行われます。",
+      stripeLiveBanner: "",
       orderSummary: "ご注文内容",
       planLabel: "プラン",
       monthly: "月額",
       billedMonthly: "毎月自動更新",
       taxNote: "消費税・為替・決済手数料は本番の決済画面で表示されます。",
       payment: "お支払い方法",
-      stripeNote: "本番では Stripe などのPCI準拠のプロバイダで処理する想定です。",
+      stripeNote: "",
       email: "請求先メール",
       cardholder: "カード名義",
       cardNumber: "カード番号",

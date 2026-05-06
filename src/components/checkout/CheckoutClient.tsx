@@ -111,13 +111,17 @@ export function CheckoutClient({
             {t.demoBanner}
           </div>
         ) : (
-          <div className="mb-8 rounded-xl border border-emerald-300/60 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
-            {stripeMode === "test"
-              ? locale === "ja"
-                ? "Stripe（テストモード）が接続されています。"
-                : "Stripe (test mode) is connected."
-              : t.stripeLiveBanner}
-          </div>
+          <>
+            {stripeMode === "test" ? (
+              <div className="mb-8 rounded-xl border border-emerald-300/60 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
+                {locale === "ja" ? "Stripe（テストモード）が接続されています。" : "Stripe (test mode) is connected."}
+              </div>
+            ) : t.stripeLiveBanner ? (
+              <div className="mb-8 rounded-xl border border-emerald-300/60 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
+                {t.stripeLiveBanner}
+              </div>
+            ) : null}
+          </>
         )}
 
         <h1 className="font-display text-3xl font-semibold tracking-tight">{t.title}</h1>
@@ -174,7 +178,9 @@ export function CheckoutClient({
 
           <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-6 sm:p-8">
             <h2 className="font-display text-lg font-semibold">{t.payment}</h2>
-            <p className="mt-1 text-sm text-[var(--color-ink-muted)]">{t.stripeNote}</p>
+            {t.stripeNote ? (
+              <p className="mt-1 text-sm text-[var(--color-ink-muted)]">{t.stripeNote}</p>
+            ) : null}
 
             {stripeMode !== "none" ? (
               <div className="mt-6 space-y-4">
