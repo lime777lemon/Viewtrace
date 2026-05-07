@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { OptionalProfileForm } from "@/components/dashboard/OptionalProfileForm";
 import { PlanSwitchForms } from "@/components/dashboard/PlanSwitchForms";
 import { BillingActions } from "@/components/dashboard/BillingActions";
 import { getSession } from "@/lib/auth/session";
-import { OVERAGE_PER_OBSERVATION_USD, TRIAL_CONFIG, getPlan } from "@/lib/plans";
+import { TRIAL_CONFIG, getPlan } from "@/lib/plans";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { getPlanLabels, getTrialPlanUi } from "@/lib/plans/labels";
 import { copy } from "@/lib/i18n";

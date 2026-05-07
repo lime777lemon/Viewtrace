@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useId, useMemo, useState } from "react";
 import { recordWebVerifiedObservationAction } from "@/app/actions/observations";
 import type { Locale } from "@/lib/i18n";
@@ -287,14 +288,14 @@ export function RegionSearchPanel({
                       <p className="text-sm font-semibold text-[var(--color-ink)]">{livePreview.title}</p>
                     ) : null}
                     {livePreview.image ? (
-                      <img
+                      <Image
                         src={livePreview.image}
                         alt=""
+                        width={768}
+                        height={384}
                         className="max-h-48 w-full max-w-lg rounded-lg border border-[var(--color-border)] object-cover object-top"
                         loading="lazy"
-                        onError={(ev) => {
-                          ev.currentTarget.style.display = "none";
-                        }}
+                        unoptimized
                       />
                     ) : null}
                     <p className="text-xs leading-relaxed text-[var(--color-ink-muted)]">{labels.previewLiveNote}</p>

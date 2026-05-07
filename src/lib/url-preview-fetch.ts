@@ -85,7 +85,7 @@ export async function runUrlPreviewFetch(
   }
 
   function classifyNetworkError(err: unknown): "timeout" | "network_error" {
-    if (typeof err === "object" && err && "name" in err && (err as any).name === "AbortError") {
+    if (err instanceof Error && err.name === "AbortError") {
       return "timeout";
     }
     return "network_error";
@@ -98,12 +98,12 @@ export async function runUrlPreviewFetch(
       res = await attemptFetch(proxy?.dispatcher);
     } catch (err) {
       const kind = classifyNetworkError(err);
-      const errName =
-        typeof err === "object" && err && "name" in err ? String((err as any).name) : "UnknownError";
+      const errName = err instanceof Error ? err.name : "UnknownError";
       const errCode =
-        typeof err === "object" && err && "code" in err ? String((err as any).code) : undefined;
-      const errMsg =
-        typeof err === "object" && err && "message" in err ? String((err as any).message) : String(err);
+        err instanceof Error && "code" in err && typeof (err as { code: unknown }).code === "string"
+          ? (err as { code: string }).code
+          : undefined;
+      const errMsg = err instanceof Error ? err.message : String(err);
 
       // NOTE: proxy URL には資格情報が含まれるため絶対にログしない
       console.warn("[url-preview] fetch failed", {
@@ -200,11 +200,12 @@ export async function runUrlPreviewFetch(
     };
   } catch (err) {
     const kind = classifyNetworkError(err);
-    const errName =
-      typeof err === "object" && err && "name" in err ? String((err as any).name) : "UnknownError";
-    const errCode = typeof err === "object" && err && "code" in err ? String((err as any).code) : undefined;
-    const errMsg =
-      typeof err === "object" && err && "message" in err ? String((err as any).message) : String(err);
+    const errName = err instanceof Error ? err.name : "UnknownError";
+    const errCode =
+      err instanceof Error && "code" in err && typeof (err as { code: unknown }).code === "string"
+        ? (err as { code: string }).code
+        : undefined;
+    const errMsg = err instanceof Error ? err.message : String(err);
     console.warn("[url-preview] unexpected failure", {
       kind,
       region: regionValue ?? null,
