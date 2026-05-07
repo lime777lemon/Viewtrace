@@ -4,6 +4,7 @@ import { runBrowserlessScreenshot } from "@/lib/browserless-screenshot";
 import { uploadObservationSnapshotPng } from "@/lib/observation-snapshot-storage";
 import pixelmatch from "pixelmatch";
 import { PNG } from "pngjs";
+import { sendResendEmail } from "@/lib/resend";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -84,6 +85,7 @@ export async function POST(req: Request) {
   }
 
   let ran = 0;
+  let notified = 0;
   for (const w of watches ?? []) {
     ran += 1;
     const row = w as unknown as Record<string, unknown>;
@@ -153,13 +155,32 @@ export async function POST(req: Request) {
     const ratio = await computePngDiffRatio(a.snapshot_image_url, b.snapshot_image_url);
     await admin.from("observation_watches").update({ last_diff_ratio: ratio }).eq("id", watchId);
 
-    // TODO(email-notify): send email when ratio >= threshold
-    void threshold;
     if (ratio !== null && ratio >= threshold) {
-      // no-op for now
+      const subject = `Viewtrace: 変化を検知しました（${Math.round(ratio * 1000) / 10}%）`;
+      const text = [
+        "差分が大きい変更を検知しました。",
+        "",
+        `URL: ${url}`,
+        `地域: ${region}`,
+        `差分率: ${Math.round(ratio * 1000) / 10}%`,
+        "",
+        `最新スナップショット: ${a.snapshot_image_url}`,
+        `前回スナップショット: ${b.snapshot_image_url}`,
+      ].join("\n");
+
+      const res = await sendResendEmail({ to: userEmail, subject, text });
+      if (res.ok) {
+        notified += 1;
+        await admin
+          .from("observation_watches")
+          .update({ last_notified_at: new Date().toISOString() })
+          .eq("id", watchId);
+      } else {
+        console.warn("[cron] email failed", { watchId, error: res.error });
+      }
     }
   }
 
-  return okJson({ ran });
+  return okJson({ ran, notified });
 }
 
