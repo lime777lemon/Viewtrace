@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useId, useMemo, useState } from "react";
+import { useFormStatus } from "react-dom";
 import { recordWebVerifiedObservationAction } from "@/app/actions/observations";
 import type { Locale } from "@/lib/i18n";
 import type { PlanId } from "@/lib/plans";
@@ -140,6 +141,36 @@ export function RegionSearchPanel({
       : "2026-05-04 14:32 UTC (example)";
 
   const hintText = mode === "marketing" ? labels.hint : labels.dashboardHint;
+  const recordPendingText = locale === "ja" ? "記録中…" : "Saving…";
+
+  function RecordAsObservationSubmitButton() {
+    const { pending } = useFormStatus();
+    return (
+      <button
+        type="submit"
+        disabled={pending}
+        aria-disabled={pending}
+        aria-busy={pending}
+        className={`inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--color-ink)] px-5 py-3 text-sm font-semibold text-white shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface)] sm:w-auto ${
+          pending
+            ? "cursor-not-allowed opacity-80"
+            : "hover:-translate-y-[1px] hover:bg-[color-mix(in_oklab,var(--color-ink)_92%,white)] hover:shadow-md active:translate-y-0 active:shadow-sm"
+        }`}
+      >
+        {pending ? (
+          <>
+            <span
+              aria-hidden
+              className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
+            />
+            <span>{recordPendingText}</span>
+          </>
+        ) : (
+          labels.recordAsObservation
+        )}
+      </button>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -314,12 +345,7 @@ export function RegionSearchPanel({
                         <input type="hidden" name="regionLabel" value={selectedLabel} />
                         <input type="hidden" name="verifiedTitle" value={livePreview.title ?? ""} />
                         <input type="hidden" name="verifiedImageUrl" value={livePreview.image ?? ""} />
-                        <button
-                          type="submit"
-                          className="inline-flex w-full justify-center rounded-full bg-[var(--color-ink)] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-[1px] hover:bg-[color-mix(in_oklab,var(--color-ink)_92%,white)] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface)] active:translate-y-0 active:shadow-sm sm:w-auto"
-                        >
-                          {labels.recordAsObservation}
-                        </button>
+                        <RecordAsObservationSubmitButton />
                         <p className="text-xs leading-relaxed text-[var(--color-ink-muted)]">
                           {labels.recordAsObservationHint}
                         </p>
