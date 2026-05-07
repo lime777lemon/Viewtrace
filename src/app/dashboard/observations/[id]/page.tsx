@@ -30,7 +30,7 @@ export default async function ObservationDetailPage({ params }: Props) {
 
   const live =
     obs.status === "success" && (!obs.snapshotImageUrl || !obs.pageTitle)
-      ? await getCachedUrlPreviewForObservation(obs.url)
+      ? await getCachedUrlPreviewForObservation(obs.url, obs.regionValue)
       : null;
 
   const displayTitle = obs.pageTitle ?? live?.title ?? null;
