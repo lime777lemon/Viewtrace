@@ -42,7 +42,7 @@ export const copy = {
         "送信しても実際の取得は行われません。「新規オブザベーション」から同様の条件で実行できます。",
       dashboardCta: "新規オブザベーションへ →",
       previewLiveNote:
-        "※ 実ページから取得したタイトル・画像です。選択した地域経由のスナップショットではありません。",
+        "※ 選択した地域経由で取得したタイトル・画像です。",
       previewLoading: "ページ情報・スナップショットを取得しています…（OG 画像が無いサイトは数十秒かかることがあります）",
       previewError: "ページ情報を取得できませんでした。URLを確認するか、下のリンクから直接開いてください。",
       previewOpenLive: "新しいタブで開いて確認",
@@ -418,7 +418,7 @@ export const copy = {
         "Nothing is fetched here. Use New observation to run a capture with the same kind of setup.",
       dashboardCta: "New observation →",
       previewLiveNote:
-        "Title and image are fetched from the live page—not a geo-routed snapshot.",
+        "Title and image are fetched via the selected region.",
       previewLoading: "Fetching page info and snapshot… (sites without OG images may take up to a minute)",
       previewError: "Could not fetch page info. Check the URL or open it directly below.",
       previewOpenLive: "Open in new tab to verify",
