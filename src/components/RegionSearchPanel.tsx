@@ -316,7 +316,7 @@ export function RegionSearchPanel({
                         <input type="hidden" name="verifiedImageUrl" value={livePreview.image ?? ""} />
                         <button
                           type="submit"
-                          className="inline-flex w-full justify-center rounded-full bg-[var(--color-ink)] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 sm:w-auto"
+                          className="inline-flex w-full justify-center rounded-full bg-[var(--color-ink)] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-[1px] hover:bg-[color-mix(in_oklab,var(--color-ink)_92%,white)] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface)] active:translate-y-0 active:shadow-sm sm:w-auto"
                         >
                           {labels.recordAsObservation}
                         </button>
