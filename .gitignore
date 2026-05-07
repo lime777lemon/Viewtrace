@@ -21,6 +21,8 @@
 # misc
 .DS_Store
 *.pem
+ipinfo-us.png
+test.png
 
 # debug
 npm-debug.log*
