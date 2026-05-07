@@ -4,9 +4,11 @@ import { supportEmail } from "@/lib/site";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 
 export const metadata: Metadata = {
-  title: "プライバシーポリシー | Viewtrace",
+  title: "プライバシーポリシー",
   description:
     "Viewtraceにおける個人情報の取得項目、利用目的、第三者提供、保存期間、セキュリティについて。",
+  alternates: { canonical: "/privacy" },
+  robots: { index: true, follow: true },
 };
 
 export default async function PrivacyPage() {

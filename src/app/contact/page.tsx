@@ -5,8 +5,10 @@ import { contactEmail } from "@/lib/site";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 
 export const metadata: Metadata = {
-  title: "お問い合わせ | Viewtrace",
+  title: "お問い合わせ",
   description: "Viewtraceへのお問い合わせ窓口です。",
+  alternates: { canonical: "/contact" },
+  robots: { index: true, follow: true },
 };
 
 export default async function ContactPage() {

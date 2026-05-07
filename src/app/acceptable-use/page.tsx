@@ -4,9 +4,11 @@ import { LegalDocShell } from "@/components/legal/LegalDocShell";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 
 export const metadata: Metadata = {
-  title: "許容される利用方針 | Viewtrace",
+  title: "許容される利用方針",
   description:
     "Viewtraceの許容される利用方針。禁止事項と適正利用の要点。利用規約第3条と併せてご確認ください。",
+  alternates: { canonical: "/acceptable-use" },
+  robots: { index: true, follow: true },
 };
 
 export default async function AcceptableUsePage() {

@@ -54,9 +54,6 @@ export function ObservationDetailSnapshotSection({
 
       <section>
         <h2 className="font-display text-lg font-semibold text-[var(--color-ink)]">履歴</h2>
-        <p className="mt-1 text-sm text-[var(--color-ink-muted)]">
-          取得パイプラインの主要イベントです。本番では再試行・警告もここに積み上がります。
-        </p>
         <ol className="mt-4 space-y-0 border-l-2 border-[var(--color-accent)]/35 pl-4">
           {[...history].reverse().map((ev, i) => (
             <li key={`${ev.at}-${i}`} className="relative pb-6 last:pb-0">

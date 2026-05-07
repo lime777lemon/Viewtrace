@@ -21,9 +21,10 @@ function fillTemplate(
  *
  * - `VIEWTRACE_GEO_PROXY_URL`: 全地域共通のプロキシURL
  * - `VIEWTRACE_GEO_PROXY_URL_TEMPLATE`: 地域変数を埋め込めるテンプレート
- *   - 例: `http://user-country-{country}-state-{state}:{password}@proxy.example.com:10000`
- *   - `US-CA` → country=US, state=CA / `GB`・`JP` など → country のみ（state は空文字）
+ *   - 例: `http://user{countryTag}{stateTag}:{password}@proxy.example.com:10000`
+ *   - `US-CA` → country=US, state=CA / `GB`・`JP` など → country のみ（state は null）
  *   - `{region}` は生の値（例 `US-CA`, `GB`）
+ *   - `{countryTag}` / `{stateTag}` は `-country-US` / `-state-CA` のような **プレフィックス込み**（未指定なら空文字）
  *
  * TLS（プロキシ経由で origin の証明書チェーンが独自 CA になる場合）:
  * - `VIEWTRACE_GEO_PROXY_CA_PEM`: Bright Data 等から入手した PEM を **そのまま**（複数行可）
@@ -53,10 +54,14 @@ export function resolveGeoProxyUrl(regionValue: string | undefined): string | nu
     const rv = regionValue?.trim();
     if (!rv) return null;
     const { country, state } = parseRegion(rv);
+    const countryTag = country ? `-country-${country}` : "";
+    const stateTag = state ? `-state-${state}` : "";
     const proxyUrl = fillTemplate(template, {
       region: rv,
       country,
       state: state ?? "",
+      countryTag,
+      stateTag,
     }).trim();
     try {
       new URL(proxyUrl);

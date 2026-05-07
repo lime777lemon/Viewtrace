@@ -29,6 +29,11 @@ export type UrlPreviewFetchOptions = {
   fullPageScreenshot?: boolean;
   /** 例: `US-CA`。設定された地理プロキシを使って取得する */
   regionValue?: string;
+  /**
+   * true のとき、地域プロキシで失敗した場合に直アクセスで 1 回だけ再試行する。
+   * - 取得成功率は上がるが「地域別アクセス」の保証はできないため、デフォルトは false。
+   */
+  retryWithoutProxyOnFailure?: boolean;
 };
 
 /** サーバー側で HTML を取得し OG / title を解決（API ルートと詳細ページで共用） */
@@ -39,6 +44,7 @@ export async function runUrlPreviewFetch(
   const screenshotFallback = options.screenshotFallback === true;
   const fullPageScreenshot = options.fullPageScreenshot === true;
   const regionValue = options.regionValue?.trim();
+  const retryWithoutProxyOnFailure = options.retryWithoutProxyOnFailure === true;
   let parsed: URL;
   try {
     parsed = new URL(target);
@@ -54,20 +60,73 @@ export async function runUrlPreviewFetch(
     return { ok: false, error: "forbidden_host" };
   }
 
-  const ac = new AbortController();
-  const timer = setTimeout(() => ac.abort(), 14_000);
+  const deadlineMs = 14_000;
+  const startedAt = Date.now();
+  const remainingMs = () => Math.max(1_000, deadlineMs - (Date.now() - startedAt));
+
+  const proxy = regionValue ? getGeoProxyAgent(regionValue) : null;
+
+  async function attemptFetch(dispatcher?: unknown): Promise<Response> {
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), remainingMs());
+    try {
+      return await fetch(target, {
+        redirect: "follow",
+        signal: ac.signal,
+        ...(dispatcher ? { dispatcher } : {}),
+        headers: {
+          Accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
+          "User-Agent": "Viewtrace-UrlPreview/1.0 (+https://viewtrace.net)",
+        },
+      });
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  function classifyNetworkError(err: unknown): "timeout" | "network_error" {
+    if (typeof err === "object" && err && "name" in err && (err as any).name === "AbortError") {
+      return "timeout";
+    }
+    return "network_error";
+  }
 
   try {
-    const proxy = regionValue ? getGeoProxyAgent(regionValue) : null;
-    const res = await fetch(target, {
-      redirect: "follow",
-      signal: ac.signal,
-      ...(proxy ? { dispatcher: proxy.dispatcher } : {}),
-      headers: {
-        Accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
-        "User-Agent": "Viewtrace-UrlPreview/1.0 (+https://viewtrace.net)",
-      },
-    });
+    let res: Response;
+    let usedProxy = Boolean(proxy);
+    try {
+      res = await attemptFetch(proxy?.dispatcher);
+    } catch (err) {
+      const kind = classifyNetworkError(err);
+      const errName =
+        typeof err === "object" && err && "name" in err ? String((err as any).name) : "UnknownError";
+      const errCode =
+        typeof err === "object" && err && "code" in err ? String((err as any).code) : undefined;
+      const errMsg =
+        typeof err === "object" && err && "message" in err ? String((err as any).message) : String(err);
+
+      // NOTE: proxy URL には資格情報が含まれるため絶対にログしない
+      console.warn("[url-preview] fetch failed", {
+        kind,
+        region: regionValue ?? null,
+        viaProxy: Boolean(proxy),
+        errName,
+        errCode,
+        errMsg: errMsg.slice(0, 300),
+      });
+
+      // プロキシ経由だけが落ちるケースの救済（ただし地域保証はできない）
+      if (proxy && retryWithoutProxyOnFailure && remainingMs() > 1_500) {
+        try {
+          res = await attemptFetch(undefined);
+          usedProxy = false;
+        } catch {
+          return { ok: false, error: kind };
+        }
+      } else {
+        return { ok: false, error: kind };
+      }
+    }
 
     const finalUrl = res.url;
     let finalParsed: URL;
@@ -137,11 +196,23 @@ export async function runUrlPreviewFetch(
       html: true,
       status: res.status,
       headers: headersOut,
-      viaProxy: Boolean(proxy),
+      viaProxy: usedProxy,
     };
-  } catch {
-    return { ok: false, error: "network_error" };
-  } finally {
-    clearTimeout(timer);
+  } catch (err) {
+    const kind = classifyNetworkError(err);
+    const errName =
+      typeof err === "object" && err && "name" in err ? String((err as any).name) : "UnknownError";
+    const errCode = typeof err === "object" && err && "code" in err ? String((err as any).code) : undefined;
+    const errMsg =
+      typeof err === "object" && err && "message" in err ? String((err as any).message) : String(err);
+    console.warn("[url-preview] unexpected failure", {
+      kind,
+      region: regionValue ?? null,
+      viaProxy: Boolean(proxy),
+      errName,
+      errCode,
+      errMsg: errMsg.slice(0, 300),
+    });
+    return { ok: false, error: kind };
   }
 }

@@ -4,9 +4,11 @@ import { LegalDocShell } from "@/components/legal/LegalDocShell";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 
 export const metadata: Metadata = {
-  title: "利用規約 | Viewtrace",
+  title: "利用規約",
   description:
     "Viewtrace（ビュートレース）の利用規約。サービスは観測時点の記録を提供し、保証や法的証拠性を主張しません。",
+  alternates: { canonical: "/terms" },
+  robots: { index: true, follow: true },
 };
 
 export default async function TermsPage() {

@@ -5,9 +5,11 @@ import { siteEmail } from "@/lib/site";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 
 export const metadata: Metadata = {
-  title: "特定商取引法に基づく表記 | Viewtrace",
+  title: "特定商取引法に基づく表記",
   description:
     "Viewtraceの特定商取引法に基づく表記（事業者情報・代金・支払・返品等）。",
+  alternates: { canonical: "/tokushoho" },
+  robots: { index: true, follow: true },
 };
 
 export default async function TokushohoPage() {

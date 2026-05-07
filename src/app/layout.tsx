@@ -19,20 +19,35 @@ const sora = Sora({
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin),
-  title: "Viewtrace — 地域ターゲット向けビジュアル記録",
+  title: {
+    default: "Viewtrace — 地域ターゲット向けビジュアル記録",
+    template: "%s | Viewtrace",
+  },
   description:
     "特定の地域・時刻における広告とLPの表示を、タイムスタンプ付きで記録。参照用のスナップショットです。",
+  applicationName: "Viewtrace",
   alternates: {
     canonical: "/",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
   },
   openGraph: {
     type: "website",
     locale: "ja_JP",
     url: "/",
     siteName: "Viewtrace",
-    title: "Viewtrace",
+    title: "Viewtrace — 地域ターゲット向けビジュアル記録",
     description:
-      "Geo-targeted campaigns: timestamped visual records of ads and landing pages.",
+      "特定の地域・時刻における広告とLPの表示を、タイムスタンプ付きで記録。参照用のスナップショットです。",
+  },
+  twitter: {
+    card: "summary",
+    title: "Viewtrace — 地域ターゲット向けビジュアル記録",
+    description:
+      "特定の地域・時刻における広告とLPの表示を、タイムスタンプ付きで記録。参照用のスナップショットです。",
   },
 };
 
