@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { runBrowserlessScreenshot } from "@/lib/browserless-screenshot";
 import { uploadObservationSnapshotPng } from "@/lib/observation-snapshot-storage";
+import pixelmatch from "pixelmatch";
+import { PNG } from "pngjs";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -31,6 +33,35 @@ export async function POST(req: Request) {
   }
 
   const threshold = Number(process.env.OBS_DIFF_THRESHOLD ?? 0.07);
+
+  async function computePngDiffRatio(aUrl: string, bUrl: string): Promise<number | null> {
+    try {
+      const [aRes, bRes] = await Promise.all([fetch(aUrl), fetch(bUrl)]);
+      if (!aRes.ok || !bRes.ok) return null;
+      const [aBuf, bBuf] = await Promise.all([aRes.arrayBuffer(), bRes.arrayBuffer()]);
+      const aPng = PNG.sync.read(Buffer.from(aBuf));
+      const bPng = PNG.sync.read(Buffer.from(bBuf));
+      const width = Math.min(aPng.width, bPng.width);
+      const height = Math.min(aPng.height, bPng.height);
+      if (width <= 0 || height <= 0) return null;
+
+      // Crop both to the same dimensions (top-left) for minimal viable diff.
+      const aCropped = new PNG({ width, height });
+      const bCropped = new PNG({ width, height });
+      PNG.bitblt(aPng, aCropped, 0, 0, width, height, 0, 0);
+      PNG.bitblt(bPng, bCropped, 0, 0, width, height, 0, 0);
+
+      const diff = new PNG({ width, height });
+      const diffPixels = pixelmatch(aCropped.data, bCropped.data, diff.data, width, height, {
+        threshold: 0.1,
+      });
+      const total = width * height;
+      return total > 0 ? diffPixels / total : null;
+    } catch (e) {
+      console.warn("[cron] diff failed", e);
+      return null;
+    }
+  }
 
   function getString(o: Record<string, unknown>, k: string): string {
     const v = o[k];
@@ -119,16 +150,14 @@ export async function POST(req: Request) {
     const [a, b] = recent;
     if (!a.snapshot_image_url || !b.snapshot_image_url) continue;
 
-    // Diff is implemented in a later todo; placeholder: do not notify.
-    void threshold;
-    void a;
-    void b;
+    const ratio = await computePngDiffRatio(a.snapshot_image_url, b.snapshot_image_url);
+    await admin.from("observation_watches").update({ last_diff_ratio: ratio }).eq("id", watchId);
 
-    // TODO(diff-engine): compute ratio and notify if >= threshold
-    await admin
-      .from("observation_watches")
-      .update({ last_diff_ratio: null })
-      .eq("id", watchId);
+    // TODO(email-notify): send email when ratio >= threshold
+    void threshold;
+    if (ratio !== null && ratio >= threshold) {
+      // no-op for now
+    }
   }
 
   return okJson({ ran });
