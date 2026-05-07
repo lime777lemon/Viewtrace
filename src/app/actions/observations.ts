@@ -67,7 +67,8 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
     }
   }
 
-  const id = `obs_u_${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`;
+  // Persisted in Postgres `uuid` column; keep as UUID string.
+  const id = crypto.randomUUID();
   const noteParts = ["Webサイト確認に基づく記録"];
   if (verifiedTitle) noteParts.push(`確認時タイトル: ${verifiedTitle.slice(0, 200)}`);
 
@@ -156,6 +157,7 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
   const obs: Observation = {
     id,
     url,
+    regionValue,
     regionLabel,
     capturedAt,
     status: ok ? "success" : "failure",

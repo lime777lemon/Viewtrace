@@ -10,6 +10,8 @@ export type ObservationHistoryEvent = {
 export type Observation = {
   id: string;
   url: string;
+  /** 例: `US-WA`。DB などの保存用の地域値 */
+  regionValue?: string;
   regionLabel: string;
   capturedAt: string;
   status: ObservationStatus;
