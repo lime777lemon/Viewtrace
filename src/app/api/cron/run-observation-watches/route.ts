@@ -19,13 +19,15 @@ function okJson(extra?: Record<string, unknown>) {
 
 function getBearer(req: Request): string | null {
   const h = req.headers.get("authorization")?.trim() ?? "";
-  const m = h.match(/^Bearer\\s+(.+)$/i);
+  const m = h.match(/^Bearer\s+(.+)$/i);
   return m ? m[1] : null;
 }
 
 export async function POST(req: Request) {
   const secret = process.env.CRON_SECRET?.trim();
-  if (!secret) return unauthorized();
+  if (!secret) {
+    return NextResponse.json({ ok: false, error: "cron_secret_missing" }, { status: 503 });
+  }
   if (getBearer(req) !== secret) return unauthorized();
 
   const admin = createSupabaseAdminClient();
@@ -102,8 +104,19 @@ export async function POST(req: Request) {
     if (!url || !region || !watchId || !userId) continue;
 
     // Capture screenshot via Browserless (fullPage=true for Pro watches)
-    const shot = await runBrowserlessScreenshot({ url, region, fullPage: true });
+    let shot = await runBrowserlessScreenshot({ url, region, fullPage: true });
+    if (
+      !shot.ok &&
+      shot.error === "browserless_error" &&
+      typeof shot.detail === "string" &&
+      /third-party proxy/i.test(shot.detail)
+    ) {
+      // Some Browserless plans do not allow external proxy. Fail open by capturing without proxy.
+      shot = await runBrowserlessScreenshot({ url, fullPage: true, disableProxy: true });
+    }
+
     if (!shot.ok) {
+      console.warn("[cron] screenshot failed", { watchId, url, region, error: shot.error, detail: shot.detail });
       await admin
         .from("observation_watches")
         .update({ last_run_at: new Date().toISOString() })

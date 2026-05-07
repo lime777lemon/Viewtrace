@@ -38,6 +38,7 @@ export async function runBrowserlessScreenshot(params: {
   url: string;
   region?: string;
   fullPage: boolean;
+  disableProxy?: boolean;
 }): Promise<BrowserlessScreenshotResult> {
   const endpoint = browserlessScreenshotEndpointWithToken();
   if (!endpoint) {
@@ -64,10 +65,11 @@ export async function runBrowserlessScreenshot(params: {
   const hasGeoTemplate = Boolean(process.env.VIEWTRACE_GEO_PROXY_URL_TEMPLATE?.trim());
   const hasGeoFixed = Boolean(process.env.VIEWTRACE_GEO_PROXY_URL?.trim());
   const wantsGeoProxy = hasGeoTemplate || hasGeoFixed;
+  const disableProxy = params.disableProxy === true;
 
   const regionRaw = params.region?.trim() ?? "";
 
-  if (hasGeoTemplate) {
+  if (hasGeoTemplate && !disableProxy) {
     if (!regionRaw) {
       return { ok: false, error: "region_required" };
     }
@@ -76,8 +78,10 @@ export async function runBrowserlessScreenshot(params: {
     }
   }
 
-  const geoProxyForBrowserless = resolveGeoProxyUrl(hasGeoTemplate ? regionRaw : regionRaw || undefined);
-  if (wantsGeoProxy && !geoProxyForBrowserless) {
+  const geoProxyForBrowserless = disableProxy
+    ? null
+    : resolveGeoProxyUrl(hasGeoTemplate ? regionRaw : regionRaw || undefined);
+  if (wantsGeoProxy && !disableProxy && !geoProxyForBrowserless) {
     return { ok: false, error: "geo_proxy_misconfigured" };
   }
 
