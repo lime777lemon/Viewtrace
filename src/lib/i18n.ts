@@ -37,9 +37,9 @@ export const copy = {
       mockSnapshot: "スナップショット",
       mockEmptyQuery: "（URL を入力するとここに表示イメージが出ます）",
       dashboardIntro:
-        "ログイン中の環境です。プランに応じた観測ポイントと URL を組み合わせ、条件を確認できます（この画面ではスナップショットは取得しません）。",
+        "ログイン中の環境です。プランに応じた観測ポイントと URL を組み合わせ、条件を確認できます。",
       dashboardHint:
-        "送信しても実際の取得は行われません。「新規オブザベーション」から同様の条件で実行できます。",
+        "",
       dashboardCta: "新規オブザベーションへ →",
       previewLiveNote:
         "※ 選択した地域経由で取得したタイトル・画像です。",
@@ -413,9 +413,9 @@ export const copy = {
       mockSnapshot: "Snapshot",
       mockEmptyQuery: "(Enter a URL to see a preview line here)",
       dashboardIntro:
-        "You’re signed in. Combine a plan’s observation points with a URL to sanity-check your setup—no snapshots are taken on this screen.",
+        "You’re signed in. Combine a plan’s observation points with a URL to sanity-check your setup.",
       dashboardHint:
-        "Nothing is fetched here. Use New observation to run a capture with the same kind of setup.",
+        "",
       dashboardCta: "New observation →",
       previewLiveNote:
         "Title and image are fetched via the selected region.",
