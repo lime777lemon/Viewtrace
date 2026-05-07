@@ -90,6 +90,7 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
   let uploadedBrowserlessUrl: string | null = null;
   let browserlessDetail = "";
 
+  let browserlessShotOk = false;
   if (browserlessOn) {
     const shot = await runBrowserlessScreenshot({
       url,
@@ -97,6 +98,7 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
       fullPage: plan.snapshotFullPage,
     });
     if (shot.ok) {
+      browserlessShotOk = true;
       uploadedBrowserlessUrl = await uploadObservationSnapshotPng(id, shot.png);
       if (uploadedBrowserlessUrl) {
         snapshotImageUrl = snapshotImageUrl ?? uploadedBrowserlessUrl;
@@ -128,8 +130,18 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
         ? "Browserless スナップショット（Vercel Blob）"
         : "プレビュー画像（OG / Microlink 等）";
 
-  const ok = preview.ok;
-  const pageTitle = ok && preview.title ? preview.title.slice(0, 300) : undefined;
+  const userVerifiedCapture = Boolean(
+    verifiedSnap && snapshotImageUrl && snapshotImageUrl === verifiedSnap,
+  );
+  /** サーバー側 HTML プレビューが落ちても、Browserless 成功 or フォーム確認画像なら記録は成立とみなす */
+  const ok = preview.ok || browserlessShotOk || userVerifiedCapture;
+  const pageTitle =
+    preview.ok && preview.title ? preview.title.slice(0, 300) : undefined;
+
+  const processingDetailPreviewFailed =
+    !preview.ok && ok
+      ? `region=${regionValue} error=${preview.error} · プレビュー取得は失敗（${browserlessShotOk ? "Browserless でスクショ取得" : "フォームの確認画像で記録"}）${browserlessDetail ? ` · ${browserlessDetail}` : ""}`
+      : null;
 
   const obs: Observation = {
     id,
@@ -137,7 +149,10 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
     regionLabel,
     capturedAt,
     status: ok ? "success" : "failure",
-    note: ok ? noteParts.join(" — ") : `取得に失敗しました（${preview.error}）`,
+    note: ok
+      ? noteParts.join(" — ") +
+        (!preview.ok ? " — サーバー側の HTML プレビューは未取得（スクショまたは確認画像で補完）" : "")
+      : `取得に失敗しました（${preview.error}）`,
     pageTitle: pageTitle ?? (verifiedTitle ? verifiedTitle.slice(0, 300) : undefined),
     snapshotImageUrl,
     events: [
@@ -145,9 +160,12 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
         at: capturedAt,
         kind: "processing",
         label: "地域別アクセスで取得",
-        detail: ok
-          ? `region=${regionValue} status=${preview.status} proxy=${preview.viaProxy ? "on" : "off"}${browserlessDetail ? ` · ${browserlessDetail}` : ""}`
-          : `region=${regionValue} error=${preview.error}`,
+        detail: !ok
+          ? `region=${regionValue} error=${preview.error}`
+          : processingDetailPreviewFailed ??
+            (preview.ok
+              ? `region=${regionValue} status=${preview.status} proxy=${preview.viaProxy ? "on" : "off"}${browserlessDetail ? ` · ${browserlessDetail}` : ""}`
+              : `region=${regionValue} error=${preview.error}`),
       },
       {
         at: capturedAt,
