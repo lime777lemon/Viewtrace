@@ -90,11 +90,6 @@ export function ObservationSnapshotVisuals({
     <>
       <section>
         <h2 className="font-display text-lg font-semibold text-[var(--color-ink)]">スナップショット</h2>
-        <p className="mt-1 text-sm text-[var(--color-ink-muted)]">
-          取得時点のビジュアル記録です。          OG 画像がある場合はそれを表示し、無い場合は Microlink でスクリーンショットを取得します。Pro
-          ではログインセッションに基づきフルページキャプチャを試み、Starter
-          はビューポート相当です。本番では CDN 上のフルページ画像を配信し、ズーム・比較に使います。
-        </p>
         {displayTitle ? (
           <p className="mt-3 text-sm font-medium text-[var(--color-ink)]">{displayTitle}</p>
         ) : null}

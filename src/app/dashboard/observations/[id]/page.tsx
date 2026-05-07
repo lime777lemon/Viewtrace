@@ -50,7 +50,6 @@ export default async function ObservationDetailPage({ params }: Props) {
 
       <div>
         <h1 className="font-display text-2xl font-semibold tracking-tight">オブザベーション詳細</h1>
-        <p className="mt-1 font-mono text-xs text-[var(--color-ink-muted)]">{obs.id}</p>
       </div>
 
       <dl className="grid gap-4 sm:grid-cols-2">
