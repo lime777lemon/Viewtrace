@@ -3,9 +3,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ObservationDetailSnapshotSection } from "@/components/dashboard/ObservationDetailSnapshotSection";
 import { getSession } from "@/lib/auth/session";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCachedUrlPreviewForObservation } from "@/lib/demo/observation-snapshot";
 import { getObservationMergedForPlan } from "@/lib/demo/user-observations";
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
+import { setObservationWatchEnabledAction } from "@/app/actions/observation-watches";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -27,6 +29,24 @@ export default async function ObservationDetailPage({ params }: Props) {
   if (!session) notFound();
   const obs = await getObservationMergedForPlan(id, session.plan);
   if (!obs) notFound();
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user?.id) notFound();
+
+  const { data: watchRow } =
+    session.plan === "pro" && obs.regionValue
+      ? await supabase
+          .from("observation_watches")
+          .select("enabled")
+          .eq("user_id", user.id)
+          .eq("url", obs.url)
+          .eq("region", obs.regionValue)
+          .maybeSingle()
+      : { data: null as { enabled: boolean } | null };
+  const watchEnabled = Boolean(watchRow?.enabled);
 
   const live =
     obs.status === "success" && (!obs.snapshotImageUrl || !obs.pageTitle)
@@ -91,6 +111,33 @@ export default async function ObservationDetailPage({ params }: Props) {
             {obs.note ? ` — ${obs.note}` : ""}
           </dd>
         </div>
+        {session.plan === "pro" && obs.regionValue ? (
+          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4 sm:col-span-2">
+            <dt className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
+              継続監視
+            </dt>
+            <dd className="mt-2 flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-[var(--color-ink)]">
+                このURL（{obs.regionLabel}）を1日1回自動で観測し、差分が大きいときにメール通知します。
+              </p>
+              <form action={setObservationWatchEnabledAction}>
+                <input type="hidden" name="url" value={obs.url} />
+                <input type="hidden" name="region" value={obs.regionValue} />
+                <input type="hidden" name="enabled" value={String(!watchEnabled)} />
+                <button
+                  type="submit"
+                  className={`inline-flex rounded-full px-5 py-2.5 text-sm font-semibold text-white transition ${
+                    watchEnabled
+                      ? "bg-emerald-600 hover:bg-emerald-700"
+                      : "bg-[var(--color-ink)] hover:opacity-90"
+                  }`}
+                >
+                  {watchEnabled ? "監視中（停止）" : "監視を開始"}
+                </button>
+              </form>
+            </dd>
+          </div>
+        ) : null}
       </dl>
 
       <ObservationDetailSnapshotSection
