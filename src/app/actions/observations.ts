@@ -138,10 +138,20 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
   const pageTitle =
     preview.ok && preview.title ? preview.title.slice(0, 300) : undefined;
 
-  const processingDetailPreviewFailed =
+  const processingDetailWithoutPreview =
     !preview.ok && ok
-      ? `region=${regionValue} error=${preview.error} · プレビュー取得は失敗（${browserlessShotOk ? "Browserless でスクショ取得" : "フォームの確認画像で記録"}）${browserlessDetail ? ` · ${browserlessDetail}` : ""}`
+      ? browserlessShotOk
+        ? `region=${regionValue} · スクリーンショットで確認済み${browserlessDetail ? `（${browserlessDetail}）` : ""}`
+        : `region=${regionValue} · 確認画像で記録済み`
       : null;
+
+  const successNote = (() => {
+    if (!ok) return `取得に失敗しました（${preview.error}）`;
+    if (preview.ok) return noteParts.join(" — ");
+    if (browserlessShotOk) return `${noteParts.join(" — ")} — スクリーンショットで確認済み`;
+    if (userVerifiedCapture) return `${noteParts.join(" — ")} — 確認画像で記録済み`;
+    return noteParts.join(" — ");
+  })();
 
   const obs: Observation = {
     id,
@@ -149,10 +159,7 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
     regionLabel,
     capturedAt,
     status: ok ? "success" : "failure",
-    note: ok
-      ? noteParts.join(" — ") +
-        (!preview.ok ? " — サーバー側の HTML プレビューは未取得（スクショまたは確認画像で補完）" : "")
-      : `取得に失敗しました（${preview.error}）`,
+    note: successNote,
     pageTitle: pageTitle ?? (verifiedTitle ? verifiedTitle.slice(0, 300) : undefined),
     snapshotImageUrl,
     events: [
@@ -162,7 +169,7 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
         label: "地域別アクセスで取得",
         detail: !ok
           ? `region=${regionValue} error=${preview.error}`
-          : processingDetailPreviewFailed ??
+          : processingDetailWithoutPreview ??
             (preview.ok
               ? `region=${regionValue} status=${preview.status} proxy=${preview.viaProxy ? "on" : "off"}${browserlessDetail ? ` · ${browserlessDetail}` : ""}`
               : `region=${regionValue} error=${preview.error}`),
