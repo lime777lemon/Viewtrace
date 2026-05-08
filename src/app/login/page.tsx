@@ -76,7 +76,7 @@ export default async function LoginPage({
             ダッシュボードにログイン
           </h1>
           <p className="mt-4 max-w-md text-base leading-relaxed text-[var(--color-ink-muted)]">
-            オブザベーションの取得・一覧・設定はログイン後のダッシュボードで行います。記録は取得時点の観測であり、保証や法的証拠性を主張するものではありません。
+            オブザベーションの取得・一覧・設定はログイン後のダッシュボードで行います。記録は取得時点の観測であり、完全性や正確性を保証するものではありません。
           </p>
           <ul className="mt-8 space-y-3 text-sm text-[var(--color-ink-muted)]">
             <li className="flex gap-2">

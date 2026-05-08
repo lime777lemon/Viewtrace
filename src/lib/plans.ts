@@ -49,7 +49,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     retentionDays: 60,
     locationsKey: "all_us_states_major_countries",
     coverageLabel: "米国全州＋主要国",
-    audienceLabel: "本番運用・代理店・監査用途向け",
+    audienceLabel: "本番運用・代理店・報告・記録整理向け",
     csvExport: true,
     allUsStates: true,
     snapshotFullPage: true,

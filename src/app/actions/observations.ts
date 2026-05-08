@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { appendAuditEvent, AUDIT_ACTION } from "@/lib/audit-log";
 import { getSession } from "@/lib/auth/session";
 import { isBrowserlessConfigured, runBrowserlessScreenshot } from "@/lib/browserless-screenshot";
 import type { Observation } from "@/lib/demo/observations";
@@ -9,11 +10,23 @@ import {
   countObservationsSinceTrialStart,
   readUserObservations,
 } from "@/lib/demo/user-observations";
-import { uploadObservationSnapshotPng } from "@/lib/observation-snapshot-storage";
+import {
+  type ObservationSnapshotUploadResult,
+  uploadObservationSnapshotPng,
+} from "@/lib/observation-snapshot-storage";
 import { getPlan, TRIAL_CONFIG } from "@/lib/plans";
 import { getRegionOptions } from "@/lib/regions";
 import { normalizeUserUrlInput } from "@/lib/url-preview";
 import { runUrlPreviewFetch } from "@/lib/url-preview-fetch";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+function observationUrlHost(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return "";
+  }
+}
 
 function coerceRecordingUrl(urlRaw: string): string | null {
   const n = normalizeUserUrlInput(urlRaw);
@@ -90,6 +103,12 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
 
   let uploadedBrowserlessUrl: string | null = null;
   let browserlessDetail = "";
+  let blobUploadResult: ObservationSnapshotUploadResult | null = null;
+  /** Blob アップロード直前のバイト列ハッシュ（外部プレビュー URL のみのときは未設定） */
+  let snapshotBinarySha256: string | undefined;
+  let snapshotPhash: string | undefined;
+  let snapshotBytes: number | undefined;
+  let snapshotContentType: string | undefined;
 
   let browserlessShotOk = false;
   if (browserlessOn) {
@@ -100,12 +119,30 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
     });
     if (shot.ok) {
       browserlessShotOk = true;
-      uploadedBrowserlessUrl = await uploadObservationSnapshotPng(id, shot.png);
-      if (uploadedBrowserlessUrl) {
+      // Keep text/UI readable: Starter is slightly more compressed, Pro keeps higher quality.
+      const webpQuality = session.plan === "starter" ? 78 : 86;
+      blobUploadResult = await uploadObservationSnapshotPng(id, shot.png, {
+        format: "webp",
+        webpQuality,
+        includePerceptualHash: session.plan === "pro",
+      });
+      if (blobUploadResult.ok) {
+        uploadedBrowserlessUrl = blobUploadResult.url;
+        snapshotBinarySha256 = blobUploadResult.snapshotSha256;
+        snapshotBytes = blobUploadResult.snapshotBytes;
+        snapshotContentType = blobUploadResult.snapshotContentType;
+        if (blobUploadResult.snapshotPhash) {
+          snapshotPhash = blobUploadResult.snapshotPhash;
+        }
         snapshotImageUrl = snapshotImageUrl ?? uploadedBrowserlessUrl;
-        browserlessDetail = "Browserless→Blob 成功";
+        browserlessDetail = "Browserless→Blob 保存成功";
+      } else if (blobUploadResult.code === "token_missing") {
+        browserlessDetail =
+          "Browserless 成功・BLOB_READ_WRITE_TOKEN 未設定のため Vercel Blob に保存できません（環境変数を設定してください）";
+      } else if (blobUploadResult.code === "url_too_long") {
+        browserlessDetail = "Browserless 成功・Blob の返却URLが長すぎるため snapshot_image_url に保存できませんでした";
       } else {
-        browserlessDetail = "Browserless 成功・BLOB_READ_WRITE_TOKEN 未設定のため URL 未保存";
+        browserlessDetail = `Browserless 成功・Blob 保存失敗${blobUploadResult.message ? `: ${blobUploadResult.message}` : ""}`;
       }
     } else {
       browserlessDetail = `Browserless 失敗: ${shot.error}`;
@@ -123,13 +160,34 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
     }
   }
 
-  const captureDetail = !snapshotImageUrl
-    ? "画像なし"
-    : verifiedSnap && snapshotImageUrl === verifiedSnap
-      ? "フォームの確認画像"
-      : uploadedBrowserlessUrl && snapshotImageUrl === uploadedBrowserlessUrl
-        ? "Browserless スナップショット（Vercel Blob）"
-        : "プレビュー画像（OG / Microlink 等）";
+  const captureDetail = (() => {
+    if (snapshotImageUrl) {
+      if (verifiedSnap && snapshotImageUrl === verifiedSnap) return "フォームの確認画像";
+      if (uploadedBrowserlessUrl && snapshotImageUrl === uploadedBrowserlessUrl) {
+        return "Browserless スナップショット（Vercel Blob）";
+      }
+      return "プレビュー画像（OG / Microlink 等）";
+    }
+    if (blobUploadResult && !blobUploadResult.ok) {
+      if (blobUploadResult.code === "token_missing") {
+        return "snapshot_image_url なし — BLOB_READ_WRITE_TOKEN が未設定のため Vercel Blob にアップロードできません";
+      }
+      if (blobUploadResult.code === "url_too_long") {
+        return "snapshot_image_url なし — Blob の公開URLが長すぎるため保存をスキップしました";
+      }
+      return `snapshot_image_url なし — Vercel Blob アップロード失敗${blobUploadResult.message ? `（${blobUploadResult.message}）` : ""}`;
+    }
+    if (browserlessShotOk) {
+      return "snapshot_image_url なし — Browserless は成功しましたが画像URLが確定しませんでした";
+    }
+    if (browserlessOn && !browserlessShotOk) {
+      return "snapshot_image_url なし — Browserless キャプチャに失敗し、プレビューからも画像URLを得られませんでした";
+    }
+    if (!preview.ok) {
+      return `snapshot_image_url なし — プレビュー取得失敗（${preview.error}）`;
+    }
+    return "snapshot_image_url なし — スクリーンショット・プレビューのいずれからも画像URLを取得できませんでした";
+  })();
 
   const userVerifiedCapture = Boolean(
     verifiedSnap && snapshotImageUrl && snapshotImageUrl === verifiedSnap,
@@ -164,6 +222,10 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
     note: successNote,
     pageTitle: pageTitle ?? (verifiedTitle ? verifiedTitle.slice(0, 300) : undefined),
     snapshotImageUrl,
+    snapshotSha256: snapshotBinarySha256,
+    snapshotPhash,
+    snapshotBytes,
+    snapshotContentType,
     events: [
       {
         at: capturedAt,
@@ -179,24 +241,51 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
       {
         at: capturedAt,
         kind: "capture",
-        label: "スナップショット・メタ情報",
+        label: "スナップショットを記録",
         detail: captureDetail,
       },
       {
         at: capturedAt,
         kind: "status",
         label: "オブザベーション登録",
-        detail: `${ok ? "成功" : "失敗"}（クッキー保存）`,
+        detail: `${ok ? "成功" : "失敗"} — 確認情報をDBに保存`,
       },
     ],
   };
 
+  const supabase = await createSupabaseServerClient();
   const saved = await appendUserObservation(obs, {
     retentionDays: plan.retentionDays,
     monthlyLimit: plan.monthlyObservations,
   });
   if (!saved.ok && saved.code === "monthly_limit") {
+    await appendAuditEvent(supabase, {
+      action: AUDIT_ACTION.OBSERVATION_RECORD,
+      resourceType: "observation",
+      resourceId: id,
+      meta: {
+        result: "monthly_limit",
+        urlHost: observationUrlHost(url),
+        region: regionValue,
+      },
+    });
     redirect("/dashboard/observations/new?error=limit");
   }
+
+  if (saved.ok) {
+    await appendAuditEvent(supabase, {
+      action: AUDIT_ACTION.OBSERVATION_RECORD,
+      resourceType: "observation",
+      resourceId: id,
+      meta: {
+        result: "saved",
+        status: obs.status,
+        urlHost: observationUrlHost(url),
+        region: regionValue,
+        browserless: browserlessOn,
+      },
+    });
+  }
+
   redirect(`/dashboard/observations/${id}`);
 }

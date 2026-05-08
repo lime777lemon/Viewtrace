@@ -39,7 +39,15 @@ export default function AuthCallbackFragmentPage() {
               refresh_token: refreshToken,
             });
             if (error) throw error;
-            if (!cancelled) window.location.replace(nextPath);
+            if (!cancelled) {
+              await fetch("/api/audit/auth-sign-in", {
+                method: "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ method: "oauth_implicit" }),
+              });
+              window.location.replace(nextPath);
+            }
             return;
           }
         }
@@ -69,7 +77,15 @@ export default function AuthCallbackFragmentPage() {
           console.warn("[auth] trial_signups insert skipped", e);
         }
 
-        if (!cancelled) window.location.replace(nextPath);
+        if (!cancelled) {
+          await fetch("/api/audit/auth-sign-in", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ method: "oauth_implicit" }),
+          });
+          window.location.replace(nextPath);
+        }
       } catch (e) {
         if (cancelled) return;
         const msg = e instanceof Error ? e.message : "unknown_error";

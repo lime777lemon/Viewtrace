@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
+import { appendAuditEvent, AUDIT_ACTION } from "@/lib/audit-log";
 import { supabaseCookieOptions } from "@/lib/supabase/cookie-options";
 import { normalizeSupabaseUrl } from "@/lib/supabase/url";
 
@@ -104,6 +105,13 @@ export async function GET(request: NextRequest) {
   const email = user?.email ?? null;
   if (email) {
     await recordTrialSignup(supabase, email, locale);
+  }
+
+  if (user?.id) {
+    await appendAuditEvent(supabase, {
+      action: AUDIT_ACTION.AUTH_SIGN_IN,
+      meta: { method: "oauth" },
+    });
   }
 
   return redirectResponse;

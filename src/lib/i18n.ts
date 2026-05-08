@@ -18,6 +18,13 @@ export const copy = {
       trial: "無料で始める",
       sample: "サンプルを見る",
     },
+    heroTrust: {
+      items: [
+        "表示確認を記録として保存",
+        "履歴・ログで後から追跡可能",
+        "ハッシュで整合性チェック",
+      ],
+    },
     regionSearch: {
       title: "地域を選んで、確認したいページを探す",
       subtitle:
@@ -50,37 +57,46 @@ export const copy = {
         "URL 形式（例: theestablish.jp）で入力すると、タイトルや画像をここに表示できます。",
       recordAsObservation: "このWeb確認をオブザベーションに記録",
       recordAsObservationHint:
-        "いま取得したタイトル・URL・地域を一覧に保存します（デモ・このブラウザのクッキー）。",
+        "いま取得したタイトル・URL・地域を、アカウントのオブザベーション一覧に保存します。",
       recordAsObservationLogin: "登録して記録する",
       recordAsObservationLoginSuffix: "（ダッシュボードの一覧に保存）",
     },
-    painIntro: "地域ターゲット広告は、静かに失敗することがある。",
-    pains: [
-      {
-        title: "承認されたのに表示されない",
-        body: "審査は通っても、対象地域のユーザーには表示されないことがあります。",
-      },
-      {
-        title: "国や言語が誤って誘導される",
-        body: "ジオターゲティングの不具合で、意図しないページへ送られることがあります。",
-      },
-      {
-        title: "州ごとのコンテンツが読み込まれない",
-        body: "地域別の表示が正しく出ないことがあります。",
-      },
-      {
-        title: "クリック後のリダイレクトや404",
-        body: "リンク切れは広告費と信頼の両方を損ないます。",
-      },
-    ],
-    painFooter:
-      "こうした表示の問題に気づかないままでも、クリックのたびに課金される広告では、その分の費用は積み上がります。",
-    value: {
-      title: "実ユーザーが見ていたであろう表示を記録する。",
-      body:
-        "選択した地域条件のもとで、広告・LPがどう表示されていたかをタイムスタンプ付きで取得します。",
-      bullets:
-        "プロキシ操作なし。推測なし。保証ではなく、記録された結果だけです。",
+    pitch: {
+      problemTitle: "「ちゃんと確認した」は、あとから証明できますか？",
+      problemPoints: [
+        {
+          title: "海外表示が違っていた",
+          body: "現地では別の見え方・挙動になっていて、気づくのが遅れる。",
+        },
+        {
+          title: "クライアントに説明できない",
+          body: "口頭やチャットだけでは、いつ・どこで・何を見たかが残らない。",
+        },
+        {
+          title: "スクショが散らばっている",
+          body: "フォルダやスレッドに散在し、時系列や条件が追いづらい。",
+        },
+      ],
+      solutionTitle: "Viewtrace なら、確認作業をそのまま記録にできます。",
+      solutionBullets: [
+        "ワンクリックで記録",
+        "自動で履歴化",
+        "URL・時刻・地域をセットで保存",
+      ],
+      benefits: [
+        {
+          title: "記録",
+          body: "表示状態をそのまま保存",
+        },
+        {
+          title: "追跡",
+          body: "いつ・どこで・何を確認したかを履歴で確認",
+        },
+        {
+          title: "整合性チェック",
+          body: "ハッシュにより記録の一致を検証可能",
+        },
+      ],
     },
     howTitle: "仕組み",
     steps: [
@@ -120,6 +136,18 @@ export const copy = {
       body:
         "各オブザベーションは、特定の時刻・特定の場所から見た表示を記録します。",
     },
+    trustBand: {
+      title: "確認記録と観測履歴（アプリ内）",
+      subtitle:
+        "鑑定や裁判手続きの代替ではなく、運用での確認記録・整合性チェックと、アプリケーションレベルの監査ログを補う仕組みです。",
+      items: [
+        "サーバー記録のタイムスタンプと、アプリケーションレベルの監査ログ（本人のみ閲覧）",
+        "オブザベーション主要項目のコンテンツハッシュ（整合性チェックの補助）",
+        "Blob 画像の SHA-256、Pro では知覚ハッシュ（CDN でバイトが変わる場合の近似確認）",
+        "月額枠超過は従量（$0.75/回）で取得を継続しやすい設計",
+        "印刷用レポートで確認記録をまとめて出力可能",
+      ],
+    },
     pricingTitle: "料金",
     pricingSubtitle:
       "機能の有無ではなく、用途（試す／本番で回す）の違いで選べる2プランです。選択肢を絞り、迷いを減らす設計にしています。",
@@ -144,6 +172,7 @@ export const copy = {
           "7日間の保持",
           "フルページのビジュアルスナップショット",
           "ステータス履歴",
+          "サーバー記録・コンテンツハッシュ（整合性チェックの補助）",
           "追加オブザベーション：$0.75 / 回",
         ],
         cta: "このコースに申し込む",
@@ -153,7 +182,7 @@ export const copy = {
         badge: "人気",
         price: "$99",
         period: "/ 月",
-        description: "本番運用・代理店・監査用途向け",
+        description: "本番運用・代理店・報告・記録整理向け",
         subdescription: "記録数が多く、保持期間とレポートが重要なチーム向け。",
         features: [
           "月250回のオブザベーション",
@@ -163,8 +192,9 @@ export const copy = {
           "継続監視（毎日）",
           "差分検知（画像）",
           "メール通知（閾値超え）",
-          "CSVエクスポート",
-          "監査・レポート用途向け",
+          "CSVエクスポート・印刷用レポート",
+          "アプリ内監査ログ・スナップショットハッシュ（SHA-256 / 知覚ハッシュ）",
+          "確認記録・レポート用途向け",
           "追加オブザベーション：$0.75 / 回",
         ],
         cta: "このコースに申し込む",
@@ -185,7 +215,7 @@ export const copy = {
     faqs: [
       {
         q: "Starter と Pro はどう使い分けますか？",
-        a: "試す・軽い検証用途なら Starter。本番運用・代理店・監査用途で、より多くのオブザベーション・長い保持・CSVが必要なら Pro を想定しています。",
+        a: "試す・軽い検証用途なら Starter。本番運用・代理店・報告・記録整理で、より多くのオブザベーション・長い保持・CSVが必要なら Pro を想定しています。",
       },
       {
         q: "無料トライアルはどのくらい使えますか？",
@@ -261,6 +291,7 @@ export const copy = {
         overview: "概要",
         regionSearch: "地域で試す",
         observations: "オブザベーション",
+        auditLog: "監査ログ",
         purchases: "購入履歴",
         settings: "設定",
       },
@@ -279,12 +310,61 @@ export const copy = {
         "このままでは追加の無料枠はありません。継続してオブザベーションを行うには、Starter または Pro へのお申し込み（課金）が必要です。クレジットカード登録はチェックアウト画面で行います。",
       trialUsageNote: "実行済み回数（このブラウザの記録）: {used} / {limit}",
     },
+    dashboardAudit: {
+      back: "概要へ",
+      title: "監査ログ",
+      subtitle:
+        "ログイン中のアカウントに紐づく操作・記録の履歴です（追記のみ・本人のみ閲覧）。アプリケーションレベルの監査ログであり、外部の監査制度への適合を意味するものではありません。",
+      empty: "まだイベントがありません。",
+      loadError: "監査ログの読み込みに失敗しました。",
+      colAt: "日時",
+      colAction: "操作",
+      colResource: "リソース",
+      colMeta: "メタ",
+      colChain: "チェーン",
+    },
+    observationSeal: {
+      brand: "Viewtrace",
+      title: "確認記録シール",
+      recordId: "記録 ID",
+      timestamp: "サーバー記録時刻",
+      contentHash: "コンテンツハッシュ",
+      snapshotSha: "画像 SHA-256",
+      perceptual: "知覚ハッシュ",
+      disclaimer:
+        "参照用の確認記録です。第三者による専門的な検証や、特別な証明手続の代替にはなりません。",
+    },
+    observationReport: {
+      back: "詳細へ戻る",
+      openReport: "印刷用レポート",
+      title: "記録レポート（印刷用）",
+      print: "印刷 / PDF 保存",
+      printHint: "ブラウザの印刷から「PDF に保存」を選べます。",
+      disclaimer:
+        "取得時点の記録です。表示の継続性や広告配信の健全性を保証するものではありません。",
+      sectionMeta: "メタデータ",
+      sectionUrl: "URL",
+      sectionRegion: "地域",
+      sectionStatus: "ステータス",
+      sectionNote: "メモ",
+      sectionHashes: "ハッシュ（整合性チェック）",
+      sectionEvents: "観測履歴",
+      reportCaptured: "記録日時",
+      reportTitle: "ページタイトル",
+      reportSnapshotUrl: "スナップショット URL",
+      reportIntegrity: "コンテンツ整合性チェック",
+      hashContent: "コンテンツハッシュ",
+      hashSnapshot: "スナップショット SHA-256",
+      hashPerceptual: "知覚ハッシュ",
+      hashBytesType: "バイト数 / 形式",
+    },
     dashboardHome: {
       title: "概要",
       subtitle: "現在のプラン: {plan}（{price}） · 保持 {days} 日 · 月 {limit} オブザベーションまで",
       cardPlanLabel: "プラン",
       cardPlanMeta: "保持 {days} 日 · 月 {limit} オブザベーションまで",
       cardPlanChange: "プランを変更 →",
+      auditLogLink: "監査ログ →",
       cardMonthlyLabel: "今月のオブザベーション",
       cardMonthlyAll: "すべて見る →",
       cardMonthlyOverage:
@@ -299,7 +379,7 @@ export const copy = {
       purchaseTableLastUpdated: "最終更新（JST）",
       noticeTitle: "参照用の記録です",
       noticeBody:
-        "表示は取得時点の観測です。法的証拠としての完全性・正確性や、広告配信の正常性は保証しません。",
+        "表示は取得時点の観測です。確認記録としての完全性・正確性や、広告配信の正常性は保証しません。",
     },
     dashboardBilling: {
       title: "請求・解約",
@@ -325,7 +405,7 @@ export const copy = {
       companyLabel: "会社名（任意）",
       companyPlaceholder: "例：株式会社〇〇",
       useCaseLabel: "用途（任意）",
-      useCasePlaceholder: "例：広告キャンペーンの表示確認、監査用の記録…",
+      useCasePlaceholder: "例：広告キャンペーンの表示確認、社内の確認記録の保管…",
       save: "保存する",
       saving: "保存中…",
       sectionPlan: "現在のプラン",
@@ -375,7 +455,7 @@ export const copy = {
         contact: "お問い合わせ",
       },
       disclaimer:
-        "結果は取得時点の観測を表し、継続的な表示・正確性・パフォーマンスを保証するものではありません。記録は参考情報であり、法的証拠としての完全性・正確性を保証するものではありません。広告配信の正常性を保証するものではなく、観測時点の状態のみを記録します。",
+        "結果は取得時点の観測を表し、継続的な表示・正確性・パフォーマンスを保証するものではありません。記録は参考情報であり、確認記録としての完全性・正確性を保証するものではありません。広告配信の正常性を保証するものではなく、観測時点の状態のみを記録します。",
       rights: "© 2026 Viewtrace. All rights reserved.",
     },
   },
@@ -396,6 +476,13 @@ export const copy = {
         "Not a guarantee. Snapshot records for reference only.",
       trial: "Start for free",
       sample: "View sample",
+    },
+    heroTrust: {
+      items: [
+        "Save what you saw as a real record—not a one-off screenshot",
+        "Rewind history: who checked what, when, and from where",
+        "Hashes for quick consistency checks on stored captures",
+      ],
     },
     regionSearch: {
       title: "Pick a region, then search what to verify",
@@ -428,37 +515,46 @@ export const copy = {
       previewNotUrl: "Enter a URL (e.g. theestablish.jp) to show title and image here.",
       recordAsObservation: "Save this web check as an observation",
       recordAsObservationHint:
-        "Stores the fetched title, URL, and region in your list (demo; cookie in this browser).",
+        "Saves the fetched title, URL, and region to your account’s observation list.",
       recordAsObservationLogin: "Sign up to record",
       recordAsObservationLoginSuffix: " (saved to your dashboard list)",
     },
-    painIntro: "Geo-targeted ads can fail quietly.",
-    pains: [
-      {
-        title: "Approved but not showing",
-        body: "Even after review, users in the target region may never see the ad.",
-      },
-      {
-        title: "Wrong country or language",
-        body: "Geo bugs can send people to pages you did not intend.",
-      },
-      {
-        title: "State-level content missing",
-        body: "Regional variations may not load as expected.",
-      },
-      {
-        title: "Post-click redirects and 404s",
-        body: "Broken links cost spend and trust.",
-      },
-    ],
-    painFooter:
-      "If these display issues go unnoticed, click-based ads still charge for every click—so spend keeps adding up.",
-    value: {
-      title: "Record what real users likely saw.",
-      body:
-        "Under the region you choose, capture how ads and landing pages rendered—with timestamps.",
-      bullets:
-        "No proxy tricks. No guessing. Not a guarantee—just recorded results.",
+    pitch: {
+      problemTitle: "You ran the geo check—can you show your work next week?",
+      problemPoints: [
+        {
+          title: "Overseas, it didn’t match what you expected",
+          body: "The real region renders differently. By the time it surfaces in a meeting, you’re reconstructing from memory.",
+        },
+        {
+          title: "Clients hear a story, not a replay",
+          body: "Slack threads and ad-hoc screenshots don’t carry URL, timestamp, and vantage point in one place.",
+        },
+        {
+          title: "Your ‘proof’ is ten files named screenshot-final-v2",
+          body: "Drive folders, DMs, and desktop grabs—no single timeline when someone asks “what did we actually see?”",
+        },
+      ],
+      solutionTitle: "Viewtrace turns every check into a timestamped, traceable record.",
+      solutionBullets: [
+        "Capture in one click—same URL, region, and moment, every time",
+        "History and app logs build as you work—no manual filing",
+        "URL, timestamp, and region stored together—always",
+      ],
+      benefits: [
+        {
+          title: "Record",
+          body: "Keep the rendered state you saw—not a vague recap",
+        },
+        {
+          title: "Trace",
+          body: "Reopen exactly when, where, and what the team inspected",
+        },
+        {
+          title: "Integrity check",
+          body: "Use hashes to sanity-check that a record still matches what you stored",
+        },
+      ],
     },
     howTitle: "How it works",
     steps: [
@@ -498,6 +594,18 @@ export const copy = {
       body:
         "Every observation records the view from a specific time and location.",
     },
+    trustBand: {
+      title: "Confirmation records & observation history (in-app)",
+      subtitle:
+        "Lightweight in-app tools—not a substitute for expert review or formal proceedings. Includes integrity checks and an application-level audit log.",
+      items: [
+        "Server timestamps and an application-level audit log (visible only to you)",
+        "Content hash over key observation fields (integrity check aid)",
+        "Snapshot SHA-256 for Blob files; Pro adds a perceptual hash for CDN byte drift",
+        "Metered overage ($0.75/observation) so work can continue past quota",
+        "Printable report to bundle confirmation records",
+      ],
+    },
     pricingTitle: "Pricing",
     pricingSubtitle:
       "Two plans differentiated by how you use Viewtrace—not by locking core features. Fewer choices, clearer fit, better conversion.",
@@ -522,6 +630,7 @@ export const copy = {
           "7-day retention",
           "Full-page visual snapshots",
           "Status history",
+          "Server timestamps & content hash (integrity check aid)",
           "Additional observations: $0.75 each",
         ],
         cta: "Subscribe to this plan",
@@ -531,7 +640,7 @@ export const copy = {
         badge: "Popular",
         price: "$99",
         period: "/ month",
-        description: "Production, agencies & audit use",
+        description: "Production, agencies & reporting workflows",
         subdescription:
           "Higher volume, longer retention, and exports for teams that run this in workflows and reporting.",
         features: [
@@ -542,8 +651,9 @@ export const copy = {
           "Daily monitoring",
           "Pixel-based diff detection",
           "Email notifications (on threshold)",
-          "CSV export",
-          "Built for audit & reporting",
+          "CSV export & printable report",
+          "Application-level audit log & snapshot hashes (SHA-256 / perceptual)",
+          "Confirmation records, exports & reporting",
           "Additional observations: $0.75 each",
         ],
         cta: "Subscribe to this plan",
@@ -564,7 +674,7 @@ export const copy = {
     faqs: [
       {
         q: "How do I choose between Starter and Pro?",
-        a: "Starter fits try-it-out and light validation. Pro fits production use, agencies, and audits—more observations, longer retention, and CSV when you need it.",
+        a: "Starter fits try-it-out and light validation. Pro fits production use, agencies, and reporting workflows—more observations, longer retention, and CSV when you need it.",
       },
       {
         q: "How does the free trial work?",
@@ -644,6 +754,7 @@ export const copy = {
         overview: "Overview",
         regionSearch: "Try by region",
         observations: "Observations",
+        auditLog: "Audit log",
         purchases: "Purchase history",
         settings: "Settings",
       },
@@ -662,6 +773,54 @@ export const copy = {
         "No additional free quota is available. To keep running observations, please upgrade to Starter or Pro. Add a card on the checkout screen.",
       trialUsageNote: "Used (this browser): {used} / {limit}",
     },
+    dashboardAudit: {
+      back: "Overview",
+      title: "Audit log",
+      subtitle:
+        "Append-only history of actions tied to your signed-in account (visible only to you). This is an application-level audit log—not a certification against external audit regimes.",
+      empty: "No events yet.",
+      loadError: "Could not load audit log.",
+      colAt: "Time",
+      colAction: "Action",
+      colResource: "Resource",
+      colMeta: "Meta",
+      colChain: "Chain",
+    },
+    observationSeal: {
+      brand: "Viewtrace",
+      title: "Confirmation record seal",
+      recordId: "Record ID",
+      timestamp: "Server record time",
+      contentHash: "Content hash",
+      snapshotSha: "Image SHA-256",
+      perceptual: "Perceptual hash",
+      disclaimer:
+        "Reference confirmation records only—not a substitute for independent expert review or formal proof procedures.",
+    },
+    observationReport: {
+      back: "Back to detail",
+      openReport: "Printable report",
+      title: "Observation report (print)",
+      print: "Print / Save as PDF",
+      printHint: "Use your browser print dialog and choose “Save as PDF”.",
+      disclaimer:
+        "Snapshot at capture time only. Does not guarantee ongoing rendering or ad health.",
+      sectionMeta: "Metadata",
+      sectionUrl: "URL",
+      sectionRegion: "Region",
+      sectionStatus: "Status",
+      sectionNote: "Note",
+      sectionHashes: "Hashes (integrity checks)",
+      sectionEvents: "Observation history",
+      reportCaptured: "Recorded at",
+      reportTitle: "Page title",
+      reportSnapshotUrl: "Snapshot URL",
+      reportIntegrity: "Content integrity check",
+      hashContent: "Content hash",
+      hashSnapshot: "Snapshot SHA-256",
+      hashPerceptual: "Perceptual hash",
+      hashBytesType: "Bytes / type",
+    },
     dashboardHome: {
       title: "Overview",
       subtitle:
@@ -669,6 +828,7 @@ export const copy = {
       cardPlanLabel: "Plan",
       cardPlanMeta: "{days}-day retention · Up to {limit} observations / month",
       cardPlanChange: "Change plan →",
+      auditLogLink: "Audit log →",
       cardMonthlyLabel: "Observations this month",
       cardMonthlyAll: "View all →",
       cardMonthlyOverage:
@@ -683,7 +843,7 @@ export const copy = {
       purchaseTableLastUpdated: "Last updated (JST)",
       noticeTitle: "For reference only",
       noticeBody:
-        "Displays reflect the state at capture time. We do not guarantee completeness, accuracy, or ad delivery health.",
+        "Displays reflect the state at capture time. We do not guarantee completeness or accuracy as confirmation records, or ad delivery health.",
     },
     dashboardBilling: {
       title: "Billing & cancellation",
@@ -709,7 +869,7 @@ export const copy = {
       companyLabel: "Company (optional)",
       companyPlaceholder: "e.g. Acme Inc.",
       useCaseLabel: "Use case (optional)",
-      useCasePlaceholder: "e.g. campaign QA, audit records…",
+      useCasePlaceholder: "e.g. campaign QA, internal confirmation records…",
       save: "Save",
       saving: "Saving…",
       sectionPlan: "Current plan",
@@ -760,7 +920,7 @@ export const copy = {
         contact: "Contact",
       },
       disclaimer:
-        "Results reflect observations at capture time and do not guarantee ongoing rendering, accuracy, or performance. Records are for reference only; we do not warrant completeness or accuracy for use as legal evidence. We do not guarantee ad delivery health—only what was observed at capture time.",
+        "Results reflect observations at capture time and do not guarantee ongoing rendering, accuracy, or performance. Records are for reference only; we do not warrant completeness or accuracy for formal proceedings. We do not guarantee ad delivery health—only what was observed at capture time.",
       rights: "© 2026 Viewtrace. All rights reserved.",
     },
   },

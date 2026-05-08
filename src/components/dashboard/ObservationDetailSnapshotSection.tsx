@@ -40,9 +40,20 @@ export function ObservationDetailSnapshotSection({
   const openUrl = resolvedCanonical ?? obs.url;
   const metaLine = `snapshot · ${obs.regionLabel} · ${formatUtcLabel(obs.capturedAt)}`;
   const fetchSnapshot = obs.status === "success";
+  const captureEventDetail = obs.events?.find((e) => e.kind === "capture")?.detail;
+  const showPersistedSnapshotWarning = !obs.snapshotImageUrl && Boolean(captureEventDetail?.trim());
 
   return (
     <div className="space-y-10">
+      {showPersistedSnapshotWarning ? (
+        <div
+          role="status"
+          className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-[var(--color-ink)]"
+        >
+          <p className="font-semibold text-amber-900 dark:text-amber-100">保存されたスナップショット画像（snapshot_image_url）がありません</p>
+          <p className="mt-1 text-[var(--color-ink-muted)]">{captureEventDetail}</p>
+        </div>
+      ) : null}
       <ObservationSnapshotVisuals
         observationUrl={obs.url}
         serverImageUrl={displayImageUrl}

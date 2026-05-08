@@ -107,9 +107,25 @@ export function ViewtraceLanding() {
             <p className="mt-6 max-w-2xl text-lg text-[var(--color-ink-muted)]">
               {t.hero.subtitle}
             </p>
-            <p className="mt-4 max-w-2xl text-sm font-medium text-[var(--color-warn)]">
-              {t.hero.disclaimer}
-            </p>
+            <ul
+              className="mt-8 flex max-w-3xl flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-x-10 sm:gap-y-3"
+              aria-label={locale === "ja" ? "信頼補強の要点" : "Trust highlights"}
+            >
+              {t.heroTrust.items.map((line) => (
+                <li
+                  key={line}
+                  className="flex items-start gap-2.5 text-sm font-semibold text-[var(--color-ink)]"
+                >
+                  <span
+                    className="mt-0.5 shrink-0 text-base leading-none text-[var(--color-accent)]"
+                    aria-hidden
+                  >
+                    ✓
+                  </span>
+                  <span>{line}</span>
+                </li>
+              ))}
+            </ul>
             <div className="mt-10 flex flex-wrap gap-3">
               <Link
                 href="/login"
@@ -124,6 +140,9 @@ export function ViewtraceLanding() {
                 {t.hero.sample}
               </a>
             </div>
+            <p className="mt-6 max-w-2xl text-sm font-medium text-[var(--color-warn)]">
+              {t.hero.disclaimer}
+            </p>
           </div>
         </section>
 
@@ -131,11 +150,11 @@ export function ViewtraceLanding() {
 
         <section className="border-b border-[var(--color-border)] bg-[var(--color-surface-elevated)]">
           <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-            <h2 className="font-display max-w-2xl text-2xl font-semibold text-[var(--color-ink)] sm:text-3xl">
-              {t.painIntro}
+            <h2 className="font-display max-w-3xl text-2xl font-semibold leading-snug text-[var(--color-ink)] sm:text-3xl">
+              {t.pitch.problemTitle}
             </h2>
-            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {t.pains.map((item) => (
+            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {t.pitch.problemPoints.map((item) => (
                 <article
                   key={item.title}
                   className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-sm"
@@ -149,9 +168,6 @@ export function ViewtraceLanding() {
                 </article>
               ))}
             </div>
-            <p className="mt-10 text-center text-sm font-semibold text-[var(--color-ink)]">
-              {t.painFooter}
-            </p>
           </div>
         </section>
 
@@ -160,14 +176,33 @@ export function ViewtraceLanding() {
             <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
               <div>
                 <h2 className="font-display text-2xl font-semibold text-[var(--color-ink)] sm:text-3xl">
-                  {t.value.title}
+                  {t.pitch.solutionTitle}
                 </h2>
-                <p className="mt-4 text-[var(--color-ink-muted)] leading-relaxed">
-                  {t.value.body}
-                </p>
-                <p className="mt-6 rounded-xl border border-[var(--color-accent-soft)] bg-[var(--color-accent-soft)]/40 px-4 py-3 text-sm font-medium text-[var(--color-ink)]">
-                  {t.value.bullets}
-                </p>
+                <ul className="mt-6 space-y-2 text-sm font-medium text-[var(--color-ink)]">
+                  {t.pitch.solutionBullets.map((line) => (
+                    <li key={line} className="flex gap-2">
+                      <span className="text-[var(--color-accent)]" aria-hidden>
+                        ✓
+                      </span>
+                      <span>{line}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-8 flex flex-col gap-3">
+                  {t.pitch.benefits.map((b) => (
+                    <div
+                      key={b.title}
+                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-4 py-3"
+                    >
+                      <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-accent)]">
+                        {b.title}
+                      </p>
+                      <p className="mt-2 text-sm leading-relaxed text-[var(--color-ink-muted)]">
+                        {b.body}
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </div>
               <div
                 id="sample"
@@ -263,6 +298,25 @@ export function ViewtraceLanding() {
             <p className="mt-6 max-w-2xl text-sm leading-relaxed text-[var(--color-surface)]/70">
               {t.midCta.body}
             </p>
+          </div>
+        </section>
+
+        <section className="border-b border-[var(--color-border)] bg-[var(--color-surface-elevated)]">
+          <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
+            <h2 className="font-display text-xl font-semibold text-[var(--color-ink)] sm:text-2xl">
+              {t.trustBand.title}
+            </h2>
+            <p className="mt-3 max-w-3xl text-sm leading-relaxed text-[var(--color-ink-muted)]">
+              {t.trustBand.subtitle}
+            </p>
+            <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+              {t.trustBand.items.map((item) => (
+                <li key={item} className="flex gap-2 text-sm text-[var(--color-ink-muted)]">
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-accent)]" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
 

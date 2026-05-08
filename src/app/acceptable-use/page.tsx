@@ -69,7 +69,7 @@ export default async function AcceptableUsePage() {
           <div className="callout space-y-3">
             <p>
               <strong>【参考記録】</strong>
-              本サービスが提供するスナップショットは観測時点の参考情報であり、広告配信の正常性や法的証拠性を保証するものではありません。
+              本サービスが提供するスナップショットは観測時点の参考情報であり、広告配信の正常性や、確認記録としての完全性を保証するものではありません。
             </p>
           </div>
 

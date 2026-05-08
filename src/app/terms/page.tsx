@@ -6,7 +6,7 @@ import { getRequestLocale } from "@/lib/i18n/locale-server";
 export const metadata: Metadata = {
   title: "利用規約",
   description:
-    "Viewtrace（ビュートレース）の利用規約。サービスは観測時点の記録を提供し、保証や法的証拠性を主張しません。",
+    "Viewtrace（ビュートレース）の利用規約。サービスは観測時点の記録を提供し、特別な証明力や完全性を保証するものではありません。",
   alternates: { canonical: "/terms" },
   robots: { index: true, follow: true },
 };
@@ -96,7 +96,7 @@ export default async function TermsPage() {
           <div className="callout space-y-3">
             <p>
               <strong>【法的リスク回避】</strong>
-              本サービスの記録は参考情報であり、法的証拠としての完全性・正確性を保証するものではありません。
+              本サービスの記録は参考情報であり、確認記録としての完全性・正確性を保証するものではありません。
             </p>
             <p>
               <strong>【広告用途向け】</strong>

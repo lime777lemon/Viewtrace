@@ -65,12 +65,20 @@ export default async function DashboardHomePage() {
               .replace("{days}", String(plan.retentionDays))
               .replace("{limit}", String(plan.monthlyObservations))}
           </p>
-          <Link
-            href="/dashboard/settings"
-            className="mt-4 inline-block text-xs font-semibold text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
-          >
-            {t.cardPlanChange}
-          </Link>
+          <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2">
+            <Link
+              href="/dashboard/settings"
+              className="inline-block text-xs font-semibold text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+            >
+              {t.cardPlanChange}
+            </Link>
+            <Link
+              href="/dashboard/audit"
+              className="inline-block text-xs font-semibold text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+            >
+              {t.auditLogLink}
+            </Link>
+          </div>
         </div>
         <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-5 sm:col-span-2 lg:col-span-2">
           <div className="flex flex-wrap items-end justify-between gap-2">

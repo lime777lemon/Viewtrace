@@ -32,7 +32,7 @@ export default async function ObservationsListPage() {
           <h1 className="font-display text-2xl font-semibold tracking-tight">オブザベーション</h1>
           <p className="mt-1 text-sm text-[var(--color-ink-muted)]">
             タイムスタンプ付きの記録一覧。Web
-            確認から保存したオブザベーションは先頭付近に表示されます（このブラウザのクッキー）。
+            確認から保存したオブザベーションは新しい順に表示されます（ログイン中のアカウントに紐づくデータとして保存）。
             {plan ? ` 現在のプラン：${plan.name}。` : ""}
           </p>
           {showCsv ? (
@@ -49,7 +49,7 @@ export default async function ObservationsListPage() {
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {showCsv ? <ObservationsCsvExport rows={rows} /> : null}
+          {showCsv ? <ObservationsCsvExport /> : null}
           {hideNewObservationButton ? null : (
             <Link
               href="/dashboard/observations/new"

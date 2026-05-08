@@ -5,6 +5,7 @@ import type { PlanId } from "@/lib/plans";
 import { getPlan } from "@/lib/plans";
 import { getRegionOptions } from "@/lib/regions";
 import type { PostgrestError } from "@supabase/supabase-js";
+import { computeObservationContentHash } from "@/lib/observation-content-hash";
 
 export const USER_OBSERVATIONS_COOKIE = "viewtrace_user_obs";
 
@@ -46,7 +47,24 @@ function isObservation(x: unknown): x is Observation {
     (o.snapshotImageUrl === undefined ||
       (typeof o.snapshotImageUrl === "string" && o.snapshotImageUrl.length < 2048)) &&
     (o.events === undefined ||
-      (Array.isArray(o.events) && o.events.length <= 24 && o.events.every(isHistoryEvent)))
+      (Array.isArray(o.events) && o.events.length <= 24 && o.events.every(isHistoryEvent))) &&
+    (o.contentHash === undefined ||
+      (typeof o.contentHash === "string" &&
+        o.contentHash.length === 64 &&
+        /^[a-f0-9]+$/i.test(o.contentHash))) &&
+    (o.snapshotSha256 === undefined ||
+      (typeof o.snapshotSha256 === "string" &&
+        o.snapshotSha256.length === 64 &&
+        /^[a-f0-9]+$/i.test(o.snapshotSha256))) &&
+    (o.snapshotPhash === undefined ||
+      (typeof o.snapshotPhash === "string" &&
+        o.snapshotPhash.length >= 8 &&
+        o.snapshotPhash.length <= 128 &&
+        /^[a-f0-9]+$/i.test(o.snapshotPhash))) &&
+    (o.snapshotBytes === undefined ||
+      (typeof o.snapshotBytes === "number" && Number.isFinite(o.snapshotBytes) && o.snapshotBytes >= 0)) &&
+    (o.snapshotContentType === undefined ||
+      (typeof o.snapshotContentType === "string" && o.snapshotContentType.length <= 80))
   );
 }
 
@@ -70,7 +88,7 @@ export async function readUserObservations(): Promise<Observation[]> {
   const { data, error } = await supabase
     .from("observations")
     .select(
-      "id,url,region,region_label,status,note,page_title,snapshot_image_url,captured_at,events",
+      "id,url,region,region_label,status,note,page_title,snapshot_image_url,captured_at,events,content_hash,snapshot_sha256,snapshot_phash,snapshot_bytes,snapshot_content_type",
     )
     .order("captured_at", { ascending: false })
     .limit(200);
@@ -105,6 +123,26 @@ export async function readUserObservations(): Promise<Observation[]> {
         pageTitle: typeof row.page_title === "string" ? row.page_title : undefined,
         snapshotImageUrl: typeof row.snapshot_image_url === "string" ? row.snapshot_image_url : undefined,
         events: Array.isArray(row.events) ? (row.events as ObservationHistoryEvent[]) : undefined,
+        contentHash:
+          typeof row.content_hash === "string" && row.content_hash.length === 64
+            ? row.content_hash.toLowerCase()
+            : undefined,
+        snapshotSha256:
+          typeof row.snapshot_sha256 === "string" && row.snapshot_sha256.length === 64
+            ? row.snapshot_sha256.toLowerCase()
+            : undefined,
+        snapshotPhash:
+          typeof row.snapshot_phash === "string" && row.snapshot_phash.length >= 8
+            ? row.snapshot_phash.toLowerCase()
+            : undefined,
+        snapshotBytes:
+          typeof row.snapshot_bytes === "number" && Number.isFinite(row.snapshot_bytes)
+            ? row.snapshot_bytes
+            : undefined,
+        snapshotContentType:
+          typeof row.snapshot_content_type === "string" && row.snapshot_content_type.trim()
+            ? row.snapshot_content_type.trim()
+            : undefined,
       };
       return isObservation(obs) ? obs : null;
     })
@@ -166,6 +204,8 @@ export async function appendUserObservation(
     .eq("user_id", user.id)
     .lt("captured_at", retentionCutoff);
 
+  const contentHash = computeObservationContentHash(obs);
+
   const payload = {
     id: obs.id,
     user_id: user.id,
@@ -178,6 +218,11 @@ export async function appendUserObservation(
     snapshot_image_url: obs.snapshotImageUrl ?? null,
     captured_at: obs.capturedAt,
     events: obs.events ?? null,
+    content_hash: contentHash,
+    snapshot_sha256: obs.snapshotSha256 ?? null,
+    snapshot_phash: obs.snapshotPhash ?? null,
+    snapshot_bytes: obs.snapshotBytes ?? null,
+    snapshot_content_type: obs.snapshotContentType ?? null,
     updated_at: new Date().toISOString(),
   };
 

@@ -22,6 +22,16 @@ export type Observation = {
   snapshotImageUrl?: string;
   /** ステータス・取得の履歴（デモはサンプル、本番はイベントログ） */
   events?: ObservationHistoryEvent[];
+  /** 記録時の主要フィールドから算出した SHA-256（hex）。整合性検証用 */
+  contentHash?: string;
+  /** Blob に保存したスナップショットのバイト列 SHA-256（hex）。アップロード時のみ付与 */
+  snapshotSha256?: string;
+  /** 知覚ハッシュ（hex）。Pro / 自動観測などで Blob 保存時に付与 */
+  snapshotPhash?: string;
+  /** Blob ファイルサイズ（バイト） */
+  snapshotBytes?: number;
+  /** image/webp 等 */
+  snapshotContentType?: string;
 };
 
 export const demoObservations: Observation[] = [

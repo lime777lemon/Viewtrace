@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { runBrowserlessScreenshot } from "@/lib/browserless-screenshot";
+import type { Observation } from "@/lib/demo/observations";
+import { computeObservationContentHash } from "@/lib/observation-content-hash";
 import { uploadObservationSnapshotPng } from "@/lib/observation-snapshot-storage";
 import pixelmatch from "pixelmatch";
 import { PNG } from "pngjs";
@@ -125,8 +127,45 @@ export async function POST(req: Request) {
     }
 
     const obsId = crypto.randomUUID();
-    const blobUrl = await uploadObservationSnapshotPng(obsId, shot.png);
+    const blobResult = await uploadObservationSnapshotPng(obsId, shot.png, {
+      format: "webp",
+      webpQuality: 86,
+      includePerceptualHash: true,
+    });
+    const blobUrl = blobResult.ok ? blobResult.url : null;
+    const snapshotSha256Stored = blobResult.ok ? blobResult.snapshotSha256 : null;
+    const snapshotPhashStored = blobResult.ok ? blobResult.snapshotPhash : null;
+    const snapshotBytesStored = blobResult.ok ? blobResult.snapshotBytes : null;
+    const snapshotContentTypeStored = blobResult.ok ? blobResult.snapshotContentType : null;
     const capturedAt = new Date().toISOString();
+
+    const blobFailureNote = (() => {
+      if (blobResult.ok) return "";
+      if (blobResult.code === "token_missing") {
+        return " — BLOB_READ_WRITE_TOKEN 未設定のため Blob に保存できません";
+      }
+      if (blobResult.code === "url_too_long") {
+        return " — Blob の返却URLが長すぎるため保存できませんでした";
+      }
+      return blobResult.message ? ` — ${blobResult.message}` : "";
+    })();
+
+    const note = blobUrl
+      ? "自動観測（毎日）"
+      : `自動観測（画像保存に失敗${blobFailureNote}）`;
+
+    const obsForHash: Observation = {
+      id: obsId,
+      url,
+      regionValue: region,
+      regionLabel: region,
+      capturedAt,
+      status: blobUrl ? "success" : "failure",
+      note,
+      snapshotImageUrl: blobUrl ?? undefined,
+      events: undefined,
+    };
+    const contentHash = computeObservationContentHash(obsForHash);
 
     // Record observation row (best-effort)
     await admin.from("observations").insert({
@@ -136,10 +175,15 @@ export async function POST(req: Request) {
       region,
       region_label: region,
       status: blobUrl ? "success" : "failure",
-      note: blobUrl ? "自動観測（毎日）" : "自動観測（画像保存に失敗）",
+      note,
       snapshot_image_url: blobUrl,
       captured_at: capturedAt,
       updated_at: capturedAt,
+      content_hash: contentHash,
+      snapshot_sha256: snapshotSha256Stored,
+      snapshot_phash: snapshotPhashStored,
+      snapshot_bytes: snapshotBytesStored,
+      snapshot_content_type: snapshotContentTypeStored,
     });
 
     await admin

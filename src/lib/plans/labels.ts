@@ -24,7 +24,7 @@ export function getPlanLabels(planId: PlanId, locale: Locale): {
     if (planId === "pro") {
       return {
         priceLabel: "$99/mo",
-        audienceLabel: "Production, agencies & audit use",
+        audienceLabel: "Production, agencies & reporting workflows",
         coverageLabel: "All US states + major countries",
       };
     }
@@ -37,7 +37,7 @@ export function getPlanLabels(planId: PlanId, locale: Locale): {
   if (planId === "pro") {
     return {
       priceLabel: "$99/月",
-      audienceLabel: "本番運用・代理店・監査用途向け",
+      audienceLabel: "本番運用・代理店・報告・記録整理向け",
       coverageLabel: "米国全州＋主要国",
     };
   }

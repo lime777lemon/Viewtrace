@@ -2,12 +2,20 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ObservationDetailSnapshotSection } from "@/components/dashboard/ObservationDetailSnapshotSection";
+import { ObservationDigitalSeal } from "@/components/dashboard/ObservationDigitalSeal";
+import { ObservationSnapshotBinaryPanel } from "@/components/dashboard/ObservationSnapshotBinaryPanel";
 import { getSession } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCachedUrlPreviewForObservation } from "@/lib/demo/observation-snapshot";
 import { getObservationMergedForPlan } from "@/lib/demo/user-observations";
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
+import {
+  OBSERVATION_CONTENT_HASH_VERSION,
+  verifyObservationStoredHash,
+} from "@/lib/observation-content-hash";
 import { setObservationWatchEnabledAction } from "@/app/actions/observation-watches";
+import { copy } from "@/lib/i18n";
+import { getRequestLocale } from "@/lib/i18n/locale-server";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -25,6 +33,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ObservationDetailPage({ params }: Props) {
   const { id } = await params;
+  const locale = await getRequestLocale();
+  const rt = copy[locale].observationReport;
   const session = await getSession();
   if (!session) notFound();
   const obs = await getObservationMergedForPlan(id, session.plan);
@@ -56,6 +66,7 @@ export default async function ObservationDetailPage({ params }: Props) {
   const displayTitle = obs.pageTitle ?? live?.title ?? null;
   const displayImageUrl = obs.snapshotImageUrl ?? live?.image ?? null;
   const resolvedCanonical = live?.canonicalUrl ?? null;
+  const contentIntegrity = verifyObservationStoredHash(obs);
 
   return (
     <div className="mx-auto max-w-4xl space-y-8">
@@ -68,9 +79,17 @@ export default async function ObservationDetailPage({ params }: Props) {
         </Link>
       </div>
 
-      <div>
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="font-display text-2xl font-semibold tracking-tight">オブザベーション詳細</h1>
+        <Link
+          href={`/dashboard/observations/${obs.id}/report`}
+          className="text-sm font-semibold text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+        >
+          {rt.openReport} →
+        </Link>
       </div>
+
+      <ObservationDigitalSeal obs={obs} locale={locale} />
 
       <dl className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4">
@@ -111,6 +130,49 @@ export default async function ObservationDetailPage({ params }: Props) {
             {obs.note ? ` — ${obs.note}` : ""}
           </dd>
         </div>
+        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4 sm:col-span-2">
+          <dt className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
+            コンテンツ整合性チェック
+          </dt>
+          <dd className="mt-1 space-y-2 text-sm text-[var(--color-ink)]">
+            {contentIntegrity === "ok" ? (
+              <>
+                <p>
+                  記録された主要フィールドとハッシュが一致しています（SHA-256、v
+                  {OBSERVATION_CONTENT_HASH_VERSION}）。
+                </p>
+                {obs.contentHash ? (
+                  <p className="break-all font-mono text-xs text-[var(--color-ink-muted)]">
+                    {obs.contentHash}
+                  </p>
+                ) : null}
+              </>
+            ) : contentIntegrity === "missing" ? (
+              <p className="text-[var(--color-ink-muted)]">
+                コンテンツハッシュがありません（この機能追加前の記録の可能性があります）。
+              </p>
+            ) : (
+              <>
+                <p className="font-medium text-amber-800 dark:text-amber-200">
+                  保存内容とハッシュが一致しません。記録内容の更新や、検証方式の変更などが考えられます。
+                </p>
+                {obs.contentHash ? (
+                  <p className="break-all font-mono text-xs text-[var(--color-ink-muted)]">
+                    保存値: {obs.contentHash}
+                  </p>
+                ) : null}
+              </>
+            )}
+          </dd>
+        </div>
+        <ObservationSnapshotBinaryPanel
+          observationId={obs.id}
+          snapshotSha256={obs.snapshotSha256}
+          snapshotPhash={obs.snapshotPhash}
+          snapshotBytes={obs.snapshotBytes}
+          snapshotContentType={obs.snapshotContentType}
+          snapshotImageUrl={obs.snapshotImageUrl}
+        />
         {session.plan === "pro" && obs.regionValue ? (
           <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4 sm:col-span-2">
             <dt className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">

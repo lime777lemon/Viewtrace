@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { appendAuditEvent, AUDIT_ACTION } from "@/lib/audit-log";
 import { isValidEmail, mapAuthError } from "@/lib/auth/form-helpers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSession } from "@/lib/auth/session";
@@ -34,6 +35,11 @@ export async function authFormAction(
     return { error: mapAuthError(error.message) };
   }
 
+  await appendAuditEvent(supabase, {
+    action: AUDIT_ACTION.AUTH_SIGN_IN,
+    meta: { method: "password" },
+  });
+
   const nextRaw = String(formData.get("next") ?? "").trim();
   if (nextRaw.startsWith("/") && !nextRaw.startsWith("//")) {
     redirect(nextRaw);
@@ -43,6 +49,15 @@ export async function authFormAction(
 
 export async function logoutAction(): Promise<void> {
   const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user?.id) {
+    await appendAuditEvent(supabase, {
+      action: AUDIT_ACTION.AUTH_SIGN_OUT,
+      meta: {},
+    });
+  }
   await supabase.auth.signOut();
   redirect("/login");
 }
