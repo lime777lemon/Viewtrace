@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Noto_Sans_JP, Sora } from "next/font/google";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { siteOrigin } from "@/lib/site";
 import "./globals.css";
 
@@ -58,7 +59,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja" className={`${notoSansJp.variable} ${sora.variable}`}>
-      <body className="font-sans">{children}</body>
+      <body className="font-sans">
+        {children}
+        <SpeedInsights />
+      </body>
     </html>
   );
 }
