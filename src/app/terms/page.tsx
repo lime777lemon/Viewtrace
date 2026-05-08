@@ -1,15 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalDocShell } from "@/components/legal/LegalDocShell";
+import { legalPageMetadata } from "@/lib/i18n/legal-page-metadata";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 
-export const metadata: Metadata = {
-  title: "利用規約",
-  description:
-    "Viewtrace（ビュートレース）の利用規約。サービスは観測時点の記録を提供し、特別な証明力や完全性を保証するものではありません。",
-  alternates: { canonical: "/terms" },
-  robots: { index: true, follow: true },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  return legalPageMetadata("/terms", "terms", locale);
+}
 
 export default async function TermsPage() {
   const locale = await getRequestLocale();
@@ -23,12 +21,12 @@ export default async function TermsPage() {
         <>
           <div className="callout space-y-3">
             <p>
-              <strong>Reference-only record.</strong> Captures are provided for reference and do not
-              guarantee completeness, accuracy, or legal evidentiary value.
+              <strong>Reference for verification and sharing.</strong> Outputs are reference
+              information. We do not warrant completeness or accuracy as confirmation records.
             </p>
             <p>
-              <strong>Ad use.</strong> Viewtrace does not guarantee ad delivery health and records
-              only what was observed at the capture time.
+              <strong>Advertising workflows.</strong> Viewtrace does not guarantee ad delivery
+              health; it records only what was observed at capture time.
             </p>
           </div>
 

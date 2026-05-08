@@ -14,7 +14,8 @@ export const copy = {
         "広告とランディングページが、特定の地域・特定の時刻にどう見えていたかを確認する。",
       subtitle:
         "地域ターゲティング向けキャンペーンの、タイムスタンプ付きビジュアル記録。",
-      disclaimer: "保証ではありません。参照用のスナップショット記録です。",
+      disclaimer:
+        "スナップショットは確認・共有用の記録です（サービス利用上の保証は別途規約に従います）。",
       trial: "無料で始める",
       sample: "サンプルを見る",
     },
@@ -473,7 +474,7 @@ export const copy = {
       subtitle:
         "Timestamped visual records for geo-targeted campaigns.",
       disclaimer:
-        "Not a guarantee. Snapshot records for reference only.",
+        "Snapshots are records for verification and sharing. Service warranties and limits are set out in the terms of use.",
       trial: "Start for free",
       sample: "View sample",
     },

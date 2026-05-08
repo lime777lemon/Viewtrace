@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalDocShell } from "@/components/legal/LegalDocShell";
+import { legalPageMetadata } from "@/lib/i18n/legal-page-metadata";
 import { contactEmail } from "@/lib/site";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 
-export const metadata: Metadata = {
-  title: "お問い合わせ",
-  description: "Viewtraceへのお問い合わせ窓口です。",
-  alternates: { canonical: "/contact" },
-  robots: { index: true, follow: true },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  return legalPageMetadata("/contact", "contact", locale);
+}
 
 export default async function ContactPage() {
   const locale = await getRequestLocale();

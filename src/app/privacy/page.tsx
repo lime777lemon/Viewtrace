@@ -1,15 +1,13 @@
 import type { Metadata } from "next";
 import { LegalDocShell } from "@/components/legal/LegalDocShell";
+import { legalPageMetadata } from "@/lib/i18n/legal-page-metadata";
 import { supportEmail } from "@/lib/site";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 
-export const metadata: Metadata = {
-  title: "プライバシーポリシー",
-  description:
-    "Viewtraceにおける個人情報の取得項目、利用目的、第三者提供、保存期間、セキュリティについて。",
-  alternates: { canonical: "/privacy" },
-  robots: { index: true, follow: true },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  return legalPageMetadata("/privacy", "privacy", locale);
+}
 
 export default async function PrivacyPage() {
   const locale = await getRequestLocale();

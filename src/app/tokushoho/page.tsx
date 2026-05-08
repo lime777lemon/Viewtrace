@@ -1,16 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalDocShell } from "@/components/legal/LegalDocShell";
+import { legalPageMetadata } from "@/lib/i18n/legal-page-metadata";
 import { siteEmail } from "@/lib/site";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 
-export const metadata: Metadata = {
-  title: "特定商取引法に基づく表記",
-  description:
-    "Viewtraceの特定商取引法に基づく表記（事業者情報・代金・支払・返品等）。",
-  alternates: { canonical: "/tokushoho" },
-  robots: { index: true, follow: true },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  return legalPageMetadata("/tokushoho", "tokushoho", locale);
+}
 
 export default async function TokushohoPage() {
   const locale = await getRequestLocale();

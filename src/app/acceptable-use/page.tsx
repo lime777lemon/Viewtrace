@@ -1,15 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalDocShell } from "@/components/legal/LegalDocShell";
+import { legalPageMetadata } from "@/lib/i18n/legal-page-metadata";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 
-export const metadata: Metadata = {
-  title: "許容される利用方針",
-  description:
-    "Viewtraceの許容される利用方針。禁止事項と適正利用の要点。利用規約第3条と併せてご確認ください。",
-  alternates: { canonical: "/acceptable-use" },
-  robots: { index: true, follow: true },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  return legalPageMetadata("/acceptable-use", "acceptableUse", locale);
+}
 
 export default async function AcceptableUsePage() {
   const locale = await getRequestLocale();
