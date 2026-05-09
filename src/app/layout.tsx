@@ -21,7 +21,7 @@ const sora = Sora({
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin),
   title: {
-    default: "Viewtrace — 地域ターゲット向けビジュアル記録",
+    default: "Viewtrace — Location-based snapshot records",
     template: "%s | Viewtrace",
   },
   description:
@@ -40,13 +40,13 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "/",
     siteName: "Viewtrace",
-    title: "Viewtrace — 地域ターゲット向けビジュアル記録",
+    title: "Viewtrace — Location-based snapshot records",
     description:
       "Timestamped snapshots of how ads and landing pages rendered in a specific region at a specific time—records for verification and sharing.",
   },
   twitter: {
     card: "summary",
-    title: "Viewtrace — 地域ターゲット向けビジュアル記録",
+    title: "Viewtrace — Location-based snapshot records",
     description:
       "Timestamped snapshots of how ads and landing pages rendered in a specific region at a specific time—records for verification and sharing.",
   },
@@ -58,7 +58,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja" className={`${notoSansJp.variable} ${sora.variable}`}>
+    <html lang="en" className={`${notoSansJp.variable} ${sora.variable}`}>
       <body className="font-sans">
         {children}
         <SpeedInsights />
