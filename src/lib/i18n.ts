@@ -435,6 +435,17 @@ export const copy = {
       actionDetail: "詳細",
       emptyDefault: "オブザベーションがありません。",
     },
+    observationsListPage: {
+      metaTitle: "オブザベーション | Viewtrace",
+      title: "オブザベーション",
+      subtitle:
+        "タイムスタンプ付きの記録一覧。Web 確認から保存したオブザベーションは新しい順に表示されます（ログイン中のアカウントに紐づくデータとして保存）。",
+      planSuffix: " 現在のプラン：{plan}。",
+      csvProHint: "Pro プランでは一覧を CSV でエクスポートできます。",
+      csvUpgradeHint: "CSV エクスポートは Pro プランの機能です。",
+      csvUpgradeLink: "設定でプランを変更",
+      newObservation: "新規オブザベーション",
+    },
     snapshotVisuals: {
       snapshotTitle: "スナップショット",
       loadingTitle: "スナップショットを取得しています…",
@@ -1023,6 +1034,17 @@ export const copy = {
       colActions: "Actions",
       actionDetail: "Details",
       emptyDefault: "No observations yet.",
+    },
+    observationsListPage: {
+      metaTitle: "Observations | Viewtrace",
+      title: "Observations",
+      subtitle:
+        "Timestamped records. Observations you save from web verification appear newest first and are stored for your logged-in account.",
+      planSuffix: " Current plan: {plan}.",
+      csvProHint: "On the Pro plan you can export this list as CSV.",
+      csvUpgradeHint: "CSV export is a Pro plan feature.",
+      csvUpgradeLink: "Change plan in Settings",
+      newObservation: "New observation",
     },
     observationEvent: {
       processingLabel: "Fetched via regional access",
