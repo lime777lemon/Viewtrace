@@ -3,6 +3,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const AUDIT_ACTION = {
   OBSERVATION_RECORD: "observation.record",
+  /** content_hash を現在の行内容に合わせて更新（欠落埋め戻し or 不一致修復） */
+  OBSERVATION_CONTENT_HASH_SYNC: "observation.content_hash_sync",
   OBSERVATIONS_EXPORT_CSV: "observations.export_csv",
   AUTH_SIGN_IN: "auth.sign_in",
   AUTH_SIGN_OUT: "auth.sign_out",

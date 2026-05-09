@@ -9,6 +9,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCachedUrlPreviewForObservation } from "@/lib/demo/observation-snapshot";
 import { getObservationMergedForPlan } from "@/lib/demo/user-observations";
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
+import { reconcileObservationContentHashIfNeeded } from "@/lib/observation-content-hash-repair";
 import {
   OBSERVATION_CONTENT_HASH_VERSION,
   verifyObservationStoredHash,
@@ -47,7 +48,7 @@ export default async function ObservationDetailPage({ params }: Props) {
   const t = copy[locale].observationDetail;
   const session = await getSession();
   if (!session) notFound();
-  const obs = await getObservationMergedForPlan(id, session.plan);
+  let obs = await getObservationMergedForPlan(id, session.plan);
   if (!obs) notFound();
 
   const supabase = await createSupabaseServerClient();
@@ -55,6 +56,8 @@ export default async function ObservationDetailPage({ params }: Props) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user?.id) notFound();
+
+  obs = await reconcileObservationContentHashIfNeeded(supabase, obs);
 
   const { data: watchRow } =
     session.plan === "pro" && obs.regionValue

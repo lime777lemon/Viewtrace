@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { PrintReportButton } from "@/components/dashboard/PrintReportButton";
 import { getSession } from "@/lib/auth/session";
 import { getObservationMergedForPlan } from "@/lib/demo/user-observations";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { reconcileObservationContentHashIfNeeded } from "@/lib/observation-content-hash-repair";
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
 import { copy } from "@/lib/i18n";
 import { localizeObservationNote } from "@/lib/i18n/observation-persisted-copy";
@@ -34,8 +36,11 @@ export default async function ObservationReportPage({ params }: Props) {
 
   const session = await getSession();
   if (!session) notFound();
-  const obs = await getObservationMergedForPlan(id, session.plan);
+  let obs = await getObservationMergedForPlan(id, session.plan);
   if (!obs) notFound();
+
+  const supabase = await createSupabaseServerClient();
+  obs = await reconcileObservationContentHashIfNeeded(supabase, obs);
 
   const integrity = verifyObservationStoredHash(obs);
   const integrityLabel =
