@@ -38,6 +38,8 @@ export default async function SettingsPage() {
         <h2 className="text-sm font-semibold text-[var(--color-ink)]">{t.sectionProfile}</h2>
         <p className="mt-1 text-sm text-[var(--color-ink-muted)]">
           {t.profileIntroPrefix}
+          <span className="font-mono text-xs">full_name</span>・
+          <span className="font-mono text-xs">phone</span>・
           <span className="font-mono text-xs">company_name</span>・
           <span className="font-mono text-xs">use_case</span>
           {t.profileIntroSuffix}
@@ -45,6 +47,8 @@ export default async function SettingsPage() {
         {session ? (
           <OptionalProfileForm
             locale={locale}
+            initialFullName={session.fullName}
+            initialPhone={session.phone}
             initialCompanyName={session.companyName}
             initialUseCase={session.useCase}
           />

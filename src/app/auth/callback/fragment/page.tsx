@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { profileMetaFromUserMetadata } from "@/lib/auth/profile-meta";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type Status = "working" | "error";
@@ -64,10 +65,15 @@ export default function AuthCallbackFragmentPage() {
               typeof navigator !== "undefined" && navigator.language?.toLowerCase().startsWith("ja")
                 ? "ja"
                 : "en";
+            const meta = userData.user?.user_metadata as Record<string, unknown> | undefined;
+            const p = profileMetaFromUserMetadata(meta);
             const { error: insertError } = await supabase.from("trial_signups").insert({
               email,
               locale,
               source: "auth",
+              full_name: p.full_name,
+              company_name: p.company_name,
+              phone: p.phone,
             });
             if (insertError && insertError.code !== "23505") {
               console.warn("[auth] trial_signups insert failed", insertError.code, insertError.message);

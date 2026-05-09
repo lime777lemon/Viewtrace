@@ -97,13 +97,17 @@ export async function saveOptionalProfileAction(
     redirect("/login");
   }
 
+  const fullName = String(formData.get("fullName") ?? "").trim().slice(0, 200);
   const companyName = String(formData.get("companyName") ?? "").trim().slice(0, 200);
+  const phone = String(formData.get("phone") ?? "").trim().slice(0, 40);
   const useCase = String(formData.get("useCase") ?? "").trim().slice(0, 500);
 
   const { error } = await supabase.auth.updateUser({
     data: {
       ...user.user_metadata,
+      full_name: fullName.length > 0 ? fullName : null,
       company_name: companyName.length > 0 ? companyName : null,
+      phone: phone.length > 0 ? phone : null,
       use_case: useCase.length > 0 ? useCase : null,
     },
   });

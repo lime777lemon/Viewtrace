@@ -8,13 +8,23 @@ import { copy } from "@/lib/i18n";
 
 type Props = {
   locale: Locale;
+  initialFullName: string | null;
+  initialPhone: string | null;
   initialCompanyName: string | null;
   initialUseCase: string | null;
 };
 
-export function OptionalProfileForm({ locale, initialCompanyName, initialUseCase }: Props) {
+export function OptionalProfileForm({
+  locale,
+  initialFullName,
+  initialPhone,
+  initialCompanyName,
+  initialUseCase,
+}: Props) {
   const [state, formAction, pending] = useActionState(saveOptionalProfileAction, null);
   const router = useRouter();
+  const fullNameId = useId();
+  const phoneId = useId();
   const companyId = useId();
   const useCaseId = useId();
   const t = copy[locale].dashboardSettings;
@@ -29,6 +39,21 @@ export function OptionalProfileForm({ locale, initialCompanyName, initialUseCase
         {t.profileHint}
       </p>
       <div>
+        <label htmlFor={fullNameId} className="block text-sm font-medium text-[var(--color-ink)]">
+          {t.fullNameLabel}
+        </label>
+        <input
+          id={fullNameId}
+          name="fullName"
+          type="text"
+          autoComplete="name"
+          defaultValue={initialFullName ?? ""}
+          placeholder={t.fullNamePlaceholder}
+          maxLength={200}
+          className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm outline-none ring-[var(--color-accent)]/25 focus:border-[var(--color-accent)]/40 focus:ring-2"
+        />
+      </div>
+      <div>
         <label htmlFor={companyId} className="block text-sm font-medium text-[var(--color-ink)]">
           {t.companyLabel}
         </label>
@@ -40,6 +65,21 @@ export function OptionalProfileForm({ locale, initialCompanyName, initialUseCase
           defaultValue={initialCompanyName ?? ""}
           placeholder={t.companyPlaceholder}
           maxLength={200}
+          className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm outline-none ring-[var(--color-accent)]/25 focus:border-[var(--color-accent)]/40 focus:ring-2"
+        />
+      </div>
+      <div>
+        <label htmlFor={phoneId} className="block text-sm font-medium text-[var(--color-ink)]">
+          {t.phoneLabel}
+        </label>
+        <input
+          id={phoneId}
+          name="phone"
+          type="tel"
+          autoComplete="tel"
+          defaultValue={initialPhone ?? ""}
+          placeholder={t.phonePlaceholder}
+          maxLength={40}
           className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm outline-none ring-[var(--color-accent)]/25 focus:border-[var(--color-accent)]/40 focus:ring-2"
         />
       </div>

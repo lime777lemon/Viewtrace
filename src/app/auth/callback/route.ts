@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent, AUDIT_ACTION } from "@/lib/audit-log";
 import { supabaseCookieOptions } from "@/lib/supabase/cookie-options";
+import { profileMetaFromUserMetadata } from "@/lib/auth/profile-meta";
 import { normalizeSupabaseUrl } from "@/lib/supabase/url";
 
 function resolveNextPath(searchParams: URLSearchParams): string {
@@ -19,11 +20,16 @@ async function recordTrialSignup(
   supabase: SupabaseClient,
   email: string,
   locale: "ja" | "en",
+  meta: Record<string, unknown> | undefined,
 ): Promise<void> {
+  const p = profileMetaFromUserMetadata(meta);
   const { error } = await supabase.from("trial_signups").insert({
     email,
     locale,
     source: "auth",
+    full_name: p.full_name,
+    company_name: p.company_name,
+    phone: p.phone,
   });
   if (error && error.code !== "23505") {
     console.warn("[auth] trial_signups insert failed", error.code, error.message);
@@ -104,7 +110,12 @@ export async function GET(request: NextRequest) {
   } = await supabase.auth.getUser();
   const email = user?.email ?? null;
   if (email) {
-    await recordTrialSignup(supabase, email, locale);
+    await recordTrialSignup(
+      supabase,
+      email,
+      locale,
+      user?.user_metadata as Record<string, unknown> | undefined,
+    );
   }
 
   if (user?.id) {

@@ -109,8 +109,15 @@ export async function POST(req: Request) {
         console.warn("[stripe webhook] failed to retrieve subscription", subscriptionId, e);
       }
 
+      const { data: existingUser, error: getUserErr } = await admin.auth.admin.getUserById(userId);
+      if (getUserErr || !existingUser.user) {
+        console.error("[stripe webhook] getUserById failed", getUserErr);
+        break;
+      }
+
       const { error: updErr } = await admin.auth.admin.updateUserById(userId, {
         user_metadata: {
+          ...(existingUser.user.user_metadata ?? {}),
           plan: planId,
           trial_active: false,
           stripe_customer_id: session.customer ?? null,

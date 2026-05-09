@@ -31,6 +31,9 @@ export function LoginForm({
   const [mode, setMode] = useState<Mode>(initialMode);
   const passwordId = useId();
   const passwordConfirmId = useId();
+  const fullNameId = useId();
+  const companyNameId = useId();
+  const phoneId = useId();
   const safeNext =
     nextPath?.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "";
 
@@ -45,11 +48,18 @@ export function LoginForm({
   async function submitSignup(fd: FormData) {
     setSignupFeedback(null);
     const email = String(fd.get("email") ?? "").trim();
+    const fullName = String(fd.get("fullName") ?? "").trim().slice(0, 200);
+    const companyName = String(fd.get("companyName") ?? "").trim().slice(0, 200);
+    const phone = String(fd.get("phone") ?? "").trim().slice(0, 40);
     const password = String(fd.get("password") ?? "");
     const passwordConfirm = String(fd.get("passwordConfirm") ?? "");
 
     if (!email || !isValidEmail(email)) {
       setSignupFeedback({ error: "有効なメールアドレスを入力してください。" });
+      return;
+    }
+    if (!fullName) {
+      setSignupFeedback({ error: "お名前を入力してください。" });
       return;
     }
     if (!isSignupPasswordOk(password)) {
@@ -78,6 +88,9 @@ export function LoginForm({
             trial_started_at: trialStartedAt,
             trial_free_observations: TRIAL_CONFIG.freeObservations,
             trial_days: TRIAL_CONFIG.trialDays,
+            full_name: fullName,
+            company_name: companyName.length > 0 ? companyName : null,
+            phone: phone.length > 0 ? phone : null,
           },
         },
       });
@@ -162,11 +175,11 @@ export function LoginForm({
 
       {mode === "signup" ? (
         <p className="text-xs leading-relaxed text-[var(--color-ink-muted)]">
-          メールアドレスとパスワードだけで登録できます。パスワードは半角英字・数字のみ（8文字以上、記号は使えません）。
+          お名前（必須）・会社名・電話番号（任意）・メール・パスワードで登録します。パスワードは半角英字・数字のみ（8文字以上、記号は使えません）。
           <span className="font-medium text-[var(--color-ink)]">
             登録後に届くメールのリンクでアドレス確認が完了するまで、ログインはできません。
           </span>
-          会社名などはログイン後に任意で入力できます。
+          プロフィールはログイン後の設定からも編集できます。
         </p>
       ) : null}
 
@@ -184,6 +197,53 @@ export function LoginForm({
           className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm outline-none ring-[var(--color-accent)]/25 transition placeholder:text-[var(--color-ink-muted)]/60 focus:border-[var(--color-accent)]/40 focus:ring-2"
         />
       </div>
+      {mode === "signup" ? (
+        <>
+          <div>
+            <label htmlFor={fullNameId} className="block text-sm font-medium text-[var(--color-ink)]">
+              お名前
+            </label>
+            <input
+              id={fullNameId}
+              name="fullName"
+              type="text"
+              autoComplete="name"
+              required
+              maxLength={200}
+              placeholder="例：山田 太郎"
+              className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm outline-none ring-[var(--color-accent)]/25 transition placeholder:text-[var(--color-ink-muted)]/60 focus:border-[var(--color-accent)]/40 focus:ring-2"
+            />
+          </div>
+          <div>
+            <label htmlFor={companyNameId} className="block text-sm font-medium text-[var(--color-ink)]">
+              会社名（任意）
+            </label>
+            <input
+              id={companyNameId}
+              name="companyName"
+              type="text"
+              autoComplete="organization"
+              maxLength={200}
+              placeholder="例：株式会社〇〇"
+              className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm outline-none ring-[var(--color-accent)]/25 transition placeholder:text-[var(--color-ink-muted)]/60 focus:border-[var(--color-accent)]/40 focus:ring-2"
+            />
+          </div>
+          <div>
+            <label htmlFor={phoneId} className="block text-sm font-medium text-[var(--color-ink)]">
+              電話番号（任意）
+            </label>
+            <input
+              id={phoneId}
+              name="phone"
+              type="tel"
+              autoComplete="tel"
+              maxLength={40}
+              placeholder="例：03-1234-5678"
+              className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm outline-none ring-[var(--color-accent)]/25 transition placeholder:text-[var(--color-ink-muted)]/60 focus:border-[var(--color-accent)]/40 focus:ring-2"
+            />
+          </div>
+        </>
+      ) : null}
       <div>
         <div className="flex items-center justify-between gap-2">
           <label htmlFor={passwordId} className="block text-sm font-medium text-[var(--color-ink)]">

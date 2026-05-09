@@ -6,8 +6,12 @@ export type SessionPayload = {
   plan: PlanId;
   stripeCustomerId: string | null;
   stripeSubscriptionId: string | null;
-  /** user_metadata.company_name（任意・ログイン後に入力） */
+  /** user_metadata.full_name（任意） */
+  fullName: string | null;
+  /** user_metadata.company_name（任意） */
   companyName: string | null;
+  /** user_metadata.phone（任意） */
+  phone: string | null;
   /** user_metadata.use_case（任意） */
   useCase: string | null;
   /**
@@ -42,10 +46,16 @@ export async function getSession(): Promise<SessionPayload | null> {
     typeof meta?.stripe_subscription_id === "string" && meta.stripe_subscription_id.trim()
       ? meta.stripe_subscription_id.trim()
       : null;
+  const fullName =
+    typeof meta?.full_name === "string" && meta.full_name.trim()
+      ? meta.full_name.trim()
+      : null;
   const companyName =
     typeof meta?.company_name === "string" && meta.company_name.trim()
       ? meta.company_name.trim()
       : null;
+  const phone =
+    typeof meta?.phone === "string" && meta.phone.trim() ? meta.phone.trim() : null;
   const useCase =
     typeof meta?.use_case === "string" && meta.use_case.trim() ? meta.use_case.trim() : null;
   const trialStartedAtRaw =
@@ -73,7 +83,9 @@ export async function getSession(): Promise<SessionPayload | null> {
     plan,
     stripeCustomerId,
     stripeSubscriptionId,
+    fullName,
     companyName,
+    phone,
     useCase,
     trialEligible,
     trialStartedAt: trialStartedAtRaw,

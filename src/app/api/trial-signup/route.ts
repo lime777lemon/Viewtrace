@@ -14,10 +14,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "invalid_json" }, { status: 400 });
   }
 
-  const raw = body as { email?: unknown; locale?: unknown };
+  const raw = body as {
+    email?: unknown;
+    locale?: unknown;
+    fullName?: unknown;
+    companyName?: unknown;
+    phone?: unknown;
+  };
   const email = typeof raw.email === "string" ? raw.email.trim() : "";
   const locale =
     raw.locale === "ja" || raw.locale === "en" ? raw.locale : null;
+  const fullName =
+    typeof raw.fullName === "string" ? raw.fullName.trim().slice(0, 200) : "";
+  const companyName =
+    typeof raw.companyName === "string" ? raw.companyName.trim().slice(0, 200) : "";
+  const phone = typeof raw.phone === "string" ? raw.phone.trim().slice(0, 40) : "";
 
   if (!email || !EMAIL_RE.test(email) || email.length > 320) {
     return NextResponse.json({ ok: false, error: "invalid_email" }, { status: 400 });
@@ -38,6 +49,9 @@ export async function POST(req: Request) {
     email,
     locale,
     source: "landing",
+    full_name: fullName.length > 0 ? fullName : null,
+    company_name: companyName.length > 0 ? companyName : null,
+    phone: phone.length > 0 ? phone : null,
   });
 
   if (error) {

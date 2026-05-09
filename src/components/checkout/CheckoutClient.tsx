@@ -25,6 +25,9 @@ export function CheckoutClient({
   const emailId = useId();
 
   const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [phone, setPhone] = useState("");
   const [stripePending, setStripePending] = useState(false);
   const [stripeError, setStripeError] = useState<string | null>(null);
 
@@ -51,7 +54,13 @@ export function CheckoutClient({
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ plan: planId, locale }),
+        body: JSON.stringify({
+          plan: planId,
+          locale,
+          fullName,
+          companyName,
+          phone,
+        }),
       });
       const json = (await res.json()) as { ok?: boolean; url?: string; error?: string };
       if (!res.ok || !json.ok || !json.url) {
@@ -213,6 +222,53 @@ export function CheckoutClient({
                     ? "請求先メールはログイン中のアカウントのメールアドレスが使われます。"
                     : "Billing email will use your signed-in account email."}
                 </p>
+                <p className="text-xs leading-relaxed text-[var(--color-ink-muted)]">{t.billingProfileHint}</p>
+
+                <div>
+                  <label htmlFor="stripe-fullName" className="block text-sm font-medium">
+                    {t.fullName}
+                  </label>
+                  <input
+                    id="stripe-fullName"
+                    type="text"
+                    autoComplete="name"
+                    maxLength={200}
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder={t.fullNamePlaceholder}
+                    className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm outline-none ring-[var(--color-accent)]/25 focus:ring-2"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="stripe-companyName" className="block text-sm font-medium">
+                    {t.companyName}
+                  </label>
+                  <input
+                    id="stripe-companyName"
+                    type="text"
+                    autoComplete="organization"
+                    maxLength={200}
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    placeholder={t.companyNamePlaceholder}
+                    className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm outline-none ring-[var(--color-accent)]/25 focus:ring-2"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="stripe-phone" className="block text-sm font-medium">
+                    {t.phone}
+                  </label>
+                  <input
+                    id="stripe-phone"
+                    type="tel"
+                    autoComplete="tel"
+                    maxLength={40}
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder={t.phonePlaceholder}
+                    className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm outline-none ring-[var(--color-accent)]/25 focus:ring-2"
+                  />
+                </div>
 
                 {stripeError ? (
                   <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900">
@@ -241,6 +297,8 @@ export function CheckoutClient({
               <form action={formAction} className="mt-6 space-y-4">
                 <input type="hidden" name="plan" value={planId} />
 
+                <p className="text-xs leading-relaxed text-[var(--color-ink-muted)]">{t.billingProfileHint}</p>
+
                 <div>
                   <label htmlFor={emailId} className="block text-sm font-medium">
                     {t.email}
@@ -253,6 +311,48 @@ export function CheckoutClient({
                     autoComplete="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm outline-none ring-[var(--color-accent)]/25 focus:ring-2"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="demo-fullName" className="block text-sm font-medium">
+                    {t.fullName}
+                  </label>
+                  <input
+                    id="demo-fullName"
+                    name="fullName"
+                    type="text"
+                    autoComplete="name"
+                    maxLength={200}
+                    placeholder={t.fullNamePlaceholder}
+                    className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm outline-none ring-[var(--color-accent)]/25 focus:ring-2"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="demo-companyName" className="block text-sm font-medium">
+                    {t.companyName}
+                  </label>
+                  <input
+                    id="demo-companyName"
+                    name="companyName"
+                    type="text"
+                    autoComplete="organization"
+                    maxLength={200}
+                    placeholder={t.companyNamePlaceholder}
+                    className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm outline-none ring-[var(--color-accent)]/25 focus:ring-2"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="demo-phone" className="block text-sm font-medium">
+                    {t.phone}
+                  </label>
+                  <input
+                    id="demo-phone"
+                    name="phone"
+                    type="tel"
+                    autoComplete="tel"
+                    maxLength={40}
+                    placeholder={t.phonePlaceholder}
                     className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm outline-none ring-[var(--color-accent)]/25 focus:ring-2"
                   />
                 </div>

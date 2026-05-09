@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { checkoutProfileHasAnyInput, mergeNonEmptyProfileFromRequestBody } from "@/lib/auth/profile-meta";
 import { siteOrigin } from "@/lib/site";
 import { getStripe, isStripeCheckoutConfigured, stripePriceIdForPlan } from "@/lib/stripe";
 import { parsePlanId } from "@/lib/plans";
@@ -62,7 +63,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "invalid_json" }, { status: 400 });
   }
 
-  const b = body as { plan?: unknown; locale?: unknown };
+  const b = body as {
+    plan?: unknown;
+    locale?: unknown;
+    fullName?: unknown;
+    companyName?: unknown;
+    phone?: unknown;
+  };
   const plan = parsePlanId(typeof b.plan === "string" ? b.plan : "");
   const locale = typeof b.locale === "string" && b.locale === "en" ? "en" : "ja";
 
@@ -72,6 +79,17 @@ export async function POST(req: Request) {
   } = await supabase.auth.getUser();
   if (!user?.id || !user.email) {
     return NextResponse.json({ ok: false, error: "login_required" }, { status: 401 });
+  }
+
+  if (checkoutProfileHasAnyInput(b)) {
+    const nextMeta = mergeNonEmptyProfileFromRequestBody(
+      user.user_metadata as Record<string, unknown>,
+      b,
+    );
+    const { error: profileErr } = await supabase.auth.updateUser({ data: nextMeta });
+    if (profileErr) {
+      console.warn("[stripe checkout] profile metadata update failed", profileErr.message);
+    }
   }
 
   const priceId = stripePriceIdForPlan(plan);
