@@ -73,10 +73,6 @@ export default async function LoginPage({
           <h1 className="font-display mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
             Sign in to the dashboard
           </h1>
-          <p className="mt-4 max-w-md text-base leading-relaxed text-[var(--color-ink-muted)]">
-            After you sign in, you can capture, list, and configure observations in the dashboard. Records
-            reflect what we observed at capture time; we do not guarantee completeness or accuracy.
-          </p>
           <ul className="mt-8 space-y-3 text-sm text-[var(--color-ink-muted)]">
             <li className="flex gap-2">
               <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-accent)]" />
@@ -85,10 +81,6 @@ export default async function LoginPage({
             <li className="flex gap-2">
               <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-accent)]" />
               Review observation history with regional targeting
-            </li>
-            <li className="flex gap-2">
-              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-accent)]" />
-              View plan and usage (expanded as we ship more)
             </li>
           </ul>
         </section>
