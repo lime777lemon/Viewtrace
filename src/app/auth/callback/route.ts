@@ -2,8 +2,8 @@ import { createServerClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent, AUDIT_ACTION } from "@/lib/audit-log";
+import { insertTrialSignupRow } from "@/lib/auth/trial-signup-server";
 import { supabaseCookieOptions } from "@/lib/supabase/cookie-options";
-import { profileMetaFromUserMetadata } from "@/lib/auth/profile-meta";
 import { normalizeSupabaseUrl } from "@/lib/supabase/url";
 
 function resolveNextPath(searchParams: URLSearchParams): string {
@@ -16,29 +16,43 @@ function localeFromRequest(request: NextRequest): "ja" | "en" {
   return accept.startsWith("ja") ? "ja" : "en";
 }
 
-async function recordTrialSignup(
+async function finishSessionSideEffects(
   supabase: SupabaseClient,
-  email: string,
-  locale: "ja" | "en",
-  meta: Record<string, unknown> | undefined,
+  request: NextRequest,
 ): Promise<void> {
-  const p = profileMetaFromUserMetadata(meta);
-  const { error } = await supabase.from("trial_signups").insert({
-    email,
-    locale,
-    source: "auth",
-    full_name: p.full_name,
-    company_name: p.company_name,
-    phone: p.phone,
-  });
-  if (error && error.code !== "23505") {
-    console.warn("[auth] trial_signups insert failed", error.code, error.message);
+  const locale = localeFromRequest(request);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const email = user?.email ?? null;
+  if (email) {
+    await insertTrialSignupRow(
+      supabase,
+      email,
+      locale,
+      user?.user_metadata as Record<string, unknown> | undefined,
+    );
+  }
+
+  if (user?.id) {
+    await appendAuditEvent(supabase, {
+      action: AUDIT_ACTION.AUTH_SIGN_IN,
+      meta: { method: "oauth" },
+    });
   }
 }
 
 /**
- * メール確認・OAuth の戻り。PKCE の code はサーバーで Cookie と突き合わせて交換する
- * （クライアントだけだと code verifier が無く失敗することがある）。
+ * メール確認・OAuth の戻り。
+ * PKCE の `code` はブラウザの Cookie に保存された code verifier と突き合わせる必要があるため、
+ * サーバーでは交換せず `/auth/oauth-complete` へ渡してクライアントで exchange する。
+ * `token_hash`（または Supabase 標準リンクの `token`）+ `verifyOtp` はサーバーで処理可能（PKCE verifier 不要）。
+ *
+ * 別端末のメールアプリだけで確認したい場合:
+ * Supabase Dashboard → Authentication → Email Templates → Confirm signup で、
+ * リンクを `{{ .ConfirmationURL }}` ではなく次の形にする（RedirectTo には既に query があるので & で連結）:
+ *   <a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email">...</a>
+ * `type` はプロジェクトによって `signup` の場合あり。公式の ConfirmationURL 例は `type=email`。
  */
 export async function GET(request: NextRequest) {
   const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -52,11 +66,19 @@ export async function GET(request: NextRequest) {
   const redirectTarget = new URL(nextPath, request.url);
 
   const code = request.nextUrl.searchParams.get("code");
-  const tokenHash = request.nextUrl.searchParams.get("token_hash");
+  const tokenHash =
+    request.nextUrl.searchParams.get("token_hash") ?? request.nextUrl.searchParams.get("token");
   const type = request.nextUrl.searchParams.get("type");
 
+  if (code) {
+    const u = new URL("/auth/oauth-complete", request.url);
+    u.searchParams.set("code", code);
+    u.searchParams.set("next", nextPath);
+    return NextResponse.redirect(u);
+  }
+
   // サーバーからは URL の #fragment が見えない。クライアント用に内部パスへ渡す。
-  if (!code && !(tokenHash && type)) {
+  if (!tokenHash || !type) {
     const rewriteUrl = new URL("/auth/callback/fragment", request.url);
     rewriteUrl.searchParams.set("next", nextPath);
     return NextResponse.rewrite(rewriteUrl);
@@ -85,45 +107,17 @@ export async function GET(request: NextRequest) {
     },
   });
 
-  if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (error) {
-      const u = new URL("/auth/auth-code-error", request.url);
-      u.searchParams.set("reason", error.message);
-      return NextResponse.redirect(u);
-    }
-  } else if (tokenHash && type) {
-    const { error } = await supabase.auth.verifyOtp({
-      token_hash: tokenHash,
-      type: type as "signup" | "recovery" | "invite" | "magiclink" | "email_change",
-    });
-    if (error) {
-      const u = new URL("/auth/auth-code-error", request.url);
-      u.searchParams.set("reason", error.message);
-      return NextResponse.redirect(u);
-    }
+  const { error } = await supabase.auth.verifyOtp({
+    token_hash: tokenHash,
+    type: type as "signup" | "email" | "recovery" | "invite" | "magiclink" | "email_change",
+  });
+  if (error) {
+    const u = new URL("/auth/auth-code-error", request.url);
+    u.searchParams.set("reason", error.message);
+    return NextResponse.redirect(u);
   }
 
-  const locale = localeFromRequest(request);
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const email = user?.email ?? null;
-  if (email) {
-    await recordTrialSignup(
-      supabase,
-      email,
-      locale,
-      user?.user_metadata as Record<string, unknown> | undefined,
-    );
-  }
-
-  if (user?.id) {
-    await appendAuditEvent(supabase, {
-      action: AUDIT_ACTION.AUTH_SIGN_IN,
-      meta: { method: "oauth" },
-    });
-  }
+  await finishSessionSideEffects(supabase, request);
 
   return redirectResponse;
 }

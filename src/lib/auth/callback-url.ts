@@ -35,6 +35,9 @@ function isAllowedRedirectOrigin(origin: string): boolean {
 /**
  * サインアップ確認メールの「続きの URL」（/auth/callback）に使うベースオリジン。
  * フォーム送信時の Origin が取れる場合はそれを優先（ローカル別ポート・Preview で emailRedirectTo が本番固定になるのを防ぐ）。
+ *
+ * メールテンプレートは `{{ .RedirectTo }}` をそのまま href のベースにし、
+ * `&token_hash={{ .TokenHash }}&type=email` を付けると別端末でも確認できる（Dashboard の Email Templates を編集）。
  */
 export async function getAuthEmailRedirectTo(): Promise<string> {
   const h = await headers();

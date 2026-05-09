@@ -59,6 +59,13 @@ export default async function AuthCodeErrorPage({
       <div className="mt-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4 text-left text-xs leading-relaxed text-ink-muted">
         <p className="font-medium text-ink">よくある原因</p>
         <ul className="mt-2 list-disc space-y-1 pl-5">
+          <li>
+            メールのリンクが PKCE の <span className="font-mono">code</span> 形式のとき、
+            <strong className="font-medium text-ink">登録したのと同じブラウザ</strong>
+            で開く必要があります。別端末だけで済ませるには、Supabase の確認メールテンプレートで{" "}
+            <span className="font-mono">token_hash</span> リンク（
+            <span className="font-mono">verifyOtp</span>）を使う設定が必要です。
+          </li>
           <li>確認メールのリンクの期限が切れている</li>
           <li>
             ブラウザが「このサイトにアクセスできません」と表示する（メール内の続き先が{" "}
