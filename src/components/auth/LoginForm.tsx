@@ -171,18 +171,6 @@ export function LoginForm({
         </button>
       </div>
 
-      {mode === "signup" ? (
-        <p className="text-xs leading-relaxed text-[var(--color-ink-muted)]">
-          Sign up with name (required), company, phone (optional), email, and password. Passwords are
-          letters and numbers only, at least 8 characters, no symbols.
-          <span className="font-medium text-[var(--color-ink)]">
-            {" "}
-            You cannot sign in until you confirm your email via the link we send.
-          </span>{" "}
-          You can edit your profile later in settings.
-        </p>
-      ) : null}
-
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-[var(--color-ink)]">
           Email
