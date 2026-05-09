@@ -59,7 +59,6 @@ export function ObservationDetailSnapshotSection({
     ? localizeObservationEventDetail(captureEventDetailRaw, locale)
     : undefined;
   const showPersistedSnapshotWarning = !obs.snapshotImageUrl && Boolean(captureEventDetailRaw?.trim());
-  const t = copy[locale].snapshotVisuals;
 
   return (
     <div className="space-y-10">

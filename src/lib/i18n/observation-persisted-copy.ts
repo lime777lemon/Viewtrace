@@ -124,7 +124,7 @@ function localizeObservationEventDetailEn(detail: string): string {
     return `region=${regionCode} · ${en.processingScreenshotVerifiedPrefix}${innerPart}`;
   }
 
-  let s = applyDetailPhraseReplacements(detail);
+  const s = applyDetailPhraseReplacements(detail);
 
   const statusSaved = /^(成功|失敗)\s*[—–－-]\s*確認情報をDBに保存$/.exec(detail);
   if (statusSaved) {
