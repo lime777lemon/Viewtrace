@@ -2,13 +2,19 @@ import { createServerClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent, AUDIT_ACTION } from "@/lib/audit-log";
+import { POST_EMAIL_VERIFY_PATH } from "@/lib/auth/email-verified-copy";
 import { insertTrialSignupRow } from "@/lib/auth/trial-signup-server";
 import { supabaseCookieOptions } from "@/lib/supabase/cookie-options";
 import { normalizeSupabaseUrl } from "@/lib/supabase/url";
 
+/**
+ * メール確認の redirect で `next` が落ちると `/dashboard` へ行き「認証完了」画面を踏めなくなる。
+ * 未指定時はメール確認用の `/auth/email-verified` を既定にする。
+ * ソーシャルログイン等でダッシュボードへ直行したい場合は `?next=/dashboard` を付ける。
+ */
 function resolveNextPath(searchParams: URLSearchParams): string {
-  const nextRaw = searchParams.get("next")?.trim() ?? "/dashboard";
-  return nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "/dashboard";
+  const nextRaw = searchParams.get("next")?.trim() ?? POST_EMAIL_VERIFY_PATH;
+  return nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : POST_EMAIL_VERIFY_PATH;
 }
 
 function localeFromRequest(request: NextRequest): "ja" | "en" {
