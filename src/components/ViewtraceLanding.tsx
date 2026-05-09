@@ -4,9 +4,14 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { RegionSearchSection } from "@/components/RegionSearchSection";
 import { copy, type Locale } from "@/lib/i18n";
+import { LOCALE_COOKIE } from "@/lib/i18n/locale-cookie";
 
-export function ViewtraceLanding() {
-  const [locale, setLocale] = useState<Locale>("ja");
+type Props = {
+  initialLocale: Locale;
+};
+
+export function ViewtraceLanding({ initialLocale }: Props) {
+  const [locale, setLocale] = useState<Locale>(initialLocale);
   const t = useMemo(() => copy[locale], [locale]);
   const [roiPlan, setRoiPlan] = useState<"starter" | "pro">("starter");
   const [roiHourlyRate, setRoiHourlyRate] = useState<number>(120);
@@ -17,6 +22,12 @@ export function ViewtraceLanding() {
   useEffect(() => {
     document.documentElement.lang = locale === "ja" ? "ja" : "en";
   }, [locale]);
+
+  function persistLocale(next: Locale) {
+    const maxAgeDays = 365;
+    document.cookie = `${LOCALE_COOKIE}=${next}; path=/; max-age=${maxAgeDays * 24 * 60 * 60}`;
+    setLocale(next);
+  }
 
   const roiPlanCost = roiPlan === "pro" ? 99 : 49;
   const roiLaborCost = useMemo(() => {
@@ -79,7 +90,7 @@ export function ViewtraceLanding() {
               <div className="flex rounded-full border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-0.5 text-xs font-semibold">
                 <button
                   type="button"
-                  onClick={() => setLocale("en")}
+                  onClick={() => persistLocale("en")}
                   className={`rounded-full px-2.5 py-1 transition ${
                     locale === "en"
                       ? "bg-[var(--color-ink)] text-white shadow-sm"
@@ -91,7 +102,7 @@ export function ViewtraceLanding() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setLocale("ja")}
+                  onClick={() => persistLocale("ja")}
                   className={`rounded-full px-2.5 py-1 transition ${
                     locale === "ja"
                       ? "bg-[var(--color-ink)] text-white shadow-sm"

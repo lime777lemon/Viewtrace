@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     template: "%s | Viewtrace",
   },
   description:
-    "特定の地域・時刻における広告とLPの表示を、タイムスタンプ付きで記録。参照用のスナップショットです。",
+    "Timestamped snapshots of how ads and landing pages rendered in a specific region at a specific time—records for verification and sharing.",
   applicationName: "Viewtrace",
   alternates: {
     canonical: "/",
@@ -37,18 +37,18 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    locale: "ja_JP",
+    locale: "en_US",
     url: "/",
     siteName: "Viewtrace",
     title: "Viewtrace — 地域ターゲット向けビジュアル記録",
     description:
-      "特定の地域・時刻における広告とLPの表示を、タイムスタンプ付きで記録。参照用のスナップショットです。",
+      "Timestamped snapshots of how ads and landing pages rendered in a specific region at a specific time—records for verification and sharing.",
   },
   twitter: {
     card: "summary",
     title: "Viewtrace — 地域ターゲット向けビジュアル記録",
     description:
-      "特定の地域・時刻における広告とLPの表示を、タイムスタンプ付きで記録。参照用のスナップショットです。",
+      "Timestamped snapshots of how ads and landing pages rendered in a specific region at a specific time—records for verification and sharing.",
   },
 };
 
