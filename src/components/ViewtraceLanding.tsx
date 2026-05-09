@@ -8,10 +8,44 @@ import { copy, type Locale } from "@/lib/i18n";
 export function ViewtraceLanding() {
   const [locale, setLocale] = useState<Locale>("ja");
   const t = useMemo(() => copy[locale], [locale]);
+  const [roiPlan, setRoiPlan] = useState<"starter" | "pro">("starter");
+  const [roiHourlyRate, setRoiHourlyRate] = useState<number>(120);
+  const [roiMinutesPerCheck, setRoiMinutesPerCheck] = useState<number>(8);
+  const [roiChecksPerMonth, setRoiChecksPerMonth] = useState<number>(120);
+  const [roiSavingsRate, setRoiSavingsRate] = useState<number>(0.6);
 
   useEffect(() => {
     document.documentElement.lang = locale === "ja" ? "ja" : "en";
   }, [locale]);
+
+  const roiPlanCost = roiPlan === "pro" ? 99 : 49;
+  const roiLaborCost = useMemo(() => {
+    const hours = (Math.max(0, roiMinutesPerCheck) * Math.max(0, roiChecksPerMonth)) / 60;
+    return Math.max(0, roiHourlyRate) * hours;
+  }, [roiChecksPerMonth, roiHourlyRate, roiMinutesPerCheck]);
+
+  const roiSavings = useMemo(() => {
+    const rate = Math.min(0.95, Math.max(0, roiSavingsRate));
+    return roiLaborCost * rate;
+  }, [roiLaborCost, roiSavingsRate]);
+
+  const roiNet = roiSavings - roiPlanCost;
+  const roiRatio = roiPlanCost > 0 ? roiNet / roiPlanCost : 0;
+  const roiBreakevenChecks = useMemo(() => {
+    const minutes = Math.max(0, roiMinutesPerCheck);
+    const rate = Math.min(0.95, Math.max(0, roiSavingsRate));
+    const hourly = Math.max(0, roiHourlyRate);
+    const savedPerCheckUsd = hourly * (minutes / 60) * rate;
+    if (savedPerCheckUsd <= 0) return Infinity;
+    return roiPlanCost / savedPerCheckUsd;
+  }, [roiHourlyRate, roiMinutesPerCheck, roiPlanCost, roiSavingsRate]);
+
+  const fmtUsd = (n: number) =>
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(Math.round(n));
 
   return (
     <div className="min-h-screen">
@@ -30,6 +64,9 @@ export function ViewtraceLanding() {
               </a>
               <a href="#region-search" className="transition hover:text-[var(--color-ink)]">
                 {t.nav.regionSearch}
+              </a>
+              <a href="#roi" className="transition hover:text-[var(--color-ink)]">
+                {t.nav.roi}
               </a>
               <a href="#faq" className="transition hover:text-[var(--color-ink)]">
                 {t.nav.faq}
@@ -80,6 +117,9 @@ export function ViewtraceLanding() {
             <a href="#region-search" className="hover:text-[var(--color-ink)]">
               {t.nav.regionSearch}
             </a>
+            <a href="#roi" className="hover:text-[var(--color-ink)]">
+              {t.nav.roi}
+            </a>
             <a href="#faq" className="hover:text-[var(--color-ink)]">
               {t.nav.faq}
             </a>
@@ -107,6 +147,27 @@ export function ViewtraceLanding() {
             <p className="mt-6 max-w-2xl text-lg text-[var(--color-ink-muted)]">
               {t.hero.subtitle}
             </p>
+            <p className="mt-5 max-w-3xl text-base font-semibold leading-snug text-[var(--color-ink)] sm:text-lg">
+              {t.hero.punch}
+            </p>
+            <div
+              className="mt-8 grid max-w-5xl gap-4 sm:grid-cols-3"
+              aria-label={locale === "ja" ? "主な価値" : "Why teams use Viewtrace"}
+            >
+              {t.valuePillars.map((p) => (
+                <div
+                  key={p.title}
+                  className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-5 py-4 shadow-sm"
+                >
+                  <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-accent)]">
+                    {p.title}
+                  </p>
+                  <p className="mt-2 text-sm font-medium leading-snug text-[var(--color-ink)]">
+                    {p.subtitle}
+                  </p>
+                </div>
+              ))}
+            </div>
             <ul
               className="mt-8 flex max-w-3xl flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-x-10 sm:gap-y-3"
               aria-label={locale === "ja" ? "信頼補強の要点" : "Trust highlights"}
@@ -232,6 +293,161 @@ export function ViewtraceLanding() {
                     {locale === "ja" ? "イメージ図（デモ）" : "Illustrative mockup"}
                   </p>
                 </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="roi" className="border-b border-[var(--color-border)] bg-[var(--color-surface-elevated)]">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+            <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-accent)]">
+              {t.roiSection.kicker}
+            </p>
+            <h2 className="mt-3 font-display max-w-3xl text-2xl font-semibold text-[var(--color-ink)] sm:text-3xl">
+              {t.roiSection.title}
+            </h2>
+            <p className="mt-4 max-w-3xl text-sm leading-relaxed text-[var(--color-ink-muted)]">
+              {t.roiSection.subtitle}
+            </p>
+
+            <div className="mt-10 grid gap-6 lg:grid-cols-2">
+              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-sm">
+                <p className="text-sm font-semibold text-[var(--color-ink)]">{t.roiSection.inputsTitle}</p>
+
+                <div className="mt-5 space-y-4 text-sm">
+                  <label className="block">
+                    <span className="text-[var(--color-ink-muted)]">{t.roiSection.planLabel}</span>
+                    <div className="mt-2 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setRoiPlan("starter")}
+                        className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                          roiPlan === "starter"
+                            ? "bg-[var(--color-ink)] text-white"
+                            : "border border-[var(--color-border)] bg-[var(--color-surface-elevated)] text-[var(--color-ink)] hover:border-[var(--color-ink-muted)]/40"
+                        }`}
+                        aria-pressed={roiPlan === "starter"}
+                      >
+                        {t.roiSection.planStarter} · $49
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setRoiPlan("pro")}
+                        className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                          roiPlan === "pro"
+                            ? "bg-[var(--color-ink)] text-white"
+                            : "border border-[var(--color-border)] bg-[var(--color-surface-elevated)] text-[var(--color-ink)] hover:border-[var(--color-ink-muted)]/40"
+                        }`}
+                        aria-pressed={roiPlan === "pro"}
+                      >
+                        {t.roiSection.planPro} · $99
+                      </button>
+                    </div>
+                  </label>
+
+                  <label className="block">
+                    <span className="text-[var(--color-ink-muted)]">{t.roiSection.hourlyRateLabel}</span>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      min={0}
+                      value={roiHourlyRate}
+                      onChange={(e) => setRoiHourlyRate(Number(e.target.value))}
+                      className="mt-2 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-3 py-2 text-[var(--color-ink)]"
+                    />
+                  </label>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <label className="block">
+                      <span className="text-[var(--color-ink-muted)]">{t.roiSection.minutesPerCheckLabel}</span>
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        min={0}
+                        value={roiMinutesPerCheck}
+                        onChange={(e) => setRoiMinutesPerCheck(Number(e.target.value))}
+                        className="mt-2 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-3 py-2 text-[var(--color-ink)]"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="text-[var(--color-ink-muted)]">{t.roiSection.checksPerMonthLabel}</span>
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        min={0}
+                        value={roiChecksPerMonth}
+                        onChange={(e) => setRoiChecksPerMonth(Number(e.target.value))}
+                        className="mt-2 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-3 py-2 text-[var(--color-ink)]"
+                      />
+                    </label>
+                  </div>
+
+                  <label className="block">
+                    <span className="text-[var(--color-ink-muted)]">
+                      {t.roiSection.savingsRateLabel} ({Math.round(roiSavingsRate * 100)}%)
+                    </span>
+                    <input
+                      type="range"
+                      min={0}
+                      max={0.9}
+                      step={0.05}
+                      value={roiSavingsRate}
+                      onChange={(e) => setRoiSavingsRate(Number(e.target.value))}
+                      className="mt-3 w-full"
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-sm">
+                <p className="text-sm font-semibold text-[var(--color-ink)]">{t.roiSection.resultsTitle}</p>
+
+                <dl className="mt-5 space-y-4 text-sm">
+                  <div className="flex items-baseline justify-between gap-4">
+                    <dt className="text-[var(--color-ink-muted)]">{t.roiSection.laborCostLabel}</dt>
+                    <dd className="font-display text-lg font-semibold text-[var(--color-ink)]">
+                      {fmtUsd(roiLaborCost)}
+                    </dd>
+                  </div>
+                  <div className="flex items-baseline justify-between gap-4">
+                    <dt className="text-[var(--color-ink-muted)]">{t.roiSection.savingsLabel}</dt>
+                    <dd className="font-display text-lg font-semibold text-[var(--color-ink)]">
+                      {fmtUsd(roiSavings)}
+                    </dd>
+                  </div>
+                  <div className="flex items-baseline justify-between gap-4">
+                    <dt className="text-[var(--color-ink-muted)]">{t.roiSection.netLabel}</dt>
+                    <dd
+                      className={`font-display text-xl font-semibold ${
+                        roiNet >= 0 ? "text-emerald-700 dark:text-emerald-300" : "text-rose-700 dark:text-rose-300"
+                      }`}
+                    >
+                      {roiNet >= 0 ? "+" : "−"}
+                      {fmtUsd(Math.abs(roiNet))}
+                    </dd>
+                  </div>
+                  <div className="flex items-baseline justify-between gap-4">
+                    <dt className="text-[var(--color-ink-muted)]">{t.roiSection.roiLabel}</dt>
+                    <dd className="font-display text-lg font-semibold text-[var(--color-ink)]">
+                      {roiPlanCost > 0 ? `${Math.round(roiRatio * 10) / 10}×` : "—"}
+                    </dd>
+                  </div>
+                </dl>
+
+                <div className="mt-6 rounded-xl border border-[var(--color-accent)]/25 bg-[var(--color-accent-soft)]/35 px-4 py-3">
+                  <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-accent)]">
+                    {t.roiSection.breakevenTitle}
+                  </p>
+                  <div className="mt-2 flex items-baseline justify-between gap-4">
+                    <p className="text-sm text-[var(--color-ink-muted)]">{t.roiSection.breakevenLabel}</p>
+                    <p className="font-display text-lg font-semibold text-[var(--color-ink)]">
+                      {Number.isFinite(roiBreakevenChecks) ? Math.ceil(roiBreakevenChecks).toLocaleString() : "—"}
+                    </p>
+                  </div>
+                  <p className="mt-2 text-xs leading-relaxed text-[var(--color-ink-muted)]">{t.roiSection.breakevenHint}</p>
+                </div>
+
+                <p className="mt-6 text-xs leading-relaxed text-[var(--color-ink-muted)]">{t.roiSection.note}</p>
               </div>
             </div>
           </div>

@@ -6,6 +6,7 @@ export const copy = {
       pricing: "料金",
       regionSearch: "地域で試す",
       faq: "よくある質問",
+      roi: "ROI",
       login: "ログイン",
       trial: "無料で始める",
     },
@@ -14,6 +15,8 @@ export const copy = {
         "広告とランディングページが、特定の地域・特定の時刻にどう見えていたかを確認する。",
       subtitle:
         "地域ターゲティング向けキャンペーンの、タイムスタンプ付きビジュアル記録。",
+      punch:
+        "曖昧なスクショ送付はやめて、地域・時刻・URL がそろった再現できる記録で共有する。",
       disclaimer:
         "スナップショットは確認・共有用の記録です（サービス利用上の保証は別途規約に従います）。",
       trial: "無料で始める",
@@ -26,6 +29,20 @@ export const copy = {
         "ハッシュで整合性チェック",
       ],
     },
+    valuePillars: [
+      {
+        title: "クライアント向けの説明",
+        subtitle: "ユーザーが実際に見た表示を、根拠として共有",
+      },
+      {
+        title: "グローバルQA",
+        subtitle: "国・地域ごとにサイトがどう見えているかを確認",
+      },
+      {
+        title: "レポートの自動化",
+        subtitle: "手作業のスクショ収集をやめる",
+      },
+    ],
     regionSearch: {
       title: "地域を選んで、確認したいページを探す",
       subtitle:
@@ -98,6 +115,31 @@ export const copy = {
           body: "ハッシュにより記録の一致を検証可能",
         },
       ],
+    },
+    roiSection: {
+      kicker: "ROI（目安）",
+      title: "手作業のスクショ・報告を減らして、月の工数を回収する。",
+      subtitle:
+        "入力値から「手作業をどれだけ減らせるか」を概算します。実際の削減効果は運用・体制・対象サイトにより変動します。",
+      planLabel: "プラン",
+      planStarter: "Starter",
+      planPro: "Pro",
+      inputsTitle: "入力",
+      hourlyRateLabel: "チームの時給（USD）",
+      minutesPerCheckLabel: "1回の確認にかかる時間（分）",
+      checksPerMonthLabel: "月の確認回数",
+      savingsRateLabel: "削減率（目安）",
+      resultsTitle: "結果（目安）",
+      laborCostLabel: "現状の手作業コスト（/月）",
+      savingsLabel: "削減できる見込み（/月）",
+      netLabel: "純増（削減 − プラン費）",
+      roiLabel: "ROI（純増 / プラン費）",
+      breakevenTitle: "元が取れるライン",
+      breakevenLabel: "必要な確認回数（/月）",
+      breakevenHint:
+        "この回数以上の確認をしているなら、削減だけでプラン費用を回収しやすい目安です。",
+      note:
+        "※ これは簡易計算です。たとえば「地域ごとの見え方の問い合わせ対応」「週次レポート」「証跡の整理」ほど、削減が出やすい傾向があります。",
     },
     howTitle: "仕組み",
     steps: [
@@ -465,14 +507,15 @@ export const copy = {
       pricing: "Pricing",
       regionSearch: "Try by region",
       faq: "FAQ",
+      roi: "ROI",
       login: "Log in",
       trial: "Start for free",
     },
     hero: {
-      title:
-        "See how your ads and landing pages appeared in a specific region at a specific time.",
+      title: "Show exactly what your clients saw — from anywhere in the world",
       subtitle:
-        "Timestamped visual records for geo-targeted campaigns.",
+        "Capture, log, and verify web pages with location, time, and proof-ready records.",
+      punch: "Stop sending random screenshots. Start showing verifiable records.",
       disclaimer:
         "Snapshots are records for verification and sharing. Service warranties and limits are set out in the terms of use.",
       trial: "Start for free",
@@ -485,6 +528,20 @@ export const copy = {
         "Hashes for quick consistency checks on stored captures",
       ],
     },
+    valuePillars: [
+      {
+        title: "Proof for clients",
+        subtitle: "Show proof of what users actually saw",
+      },
+      {
+        title: "Global QA",
+        subtitle: "Verify your site from different countries",
+      },
+      {
+        title: "Client reporting automation",
+        subtitle: "Stop taking screenshots manually",
+      },
+    ],
     regionSearch: {
       title: "Pick a region, then search what to verify",
       subtitle:
@@ -557,6 +614,31 @@ export const copy = {
         },
       ],
     },
+    roiSection: {
+      kicker: "ROI (estimate)",
+      title: "Turn client “proof” into a workflow—and win back hours each month.",
+      subtitle:
+        "Estimate time and cost savings when checks become structured records (URL, time, location) with history and integrity checks.",
+      planLabel: "Plan",
+      planStarter: "Starter",
+      planPro: "Pro",
+      inputsTitle: "Inputs",
+      hourlyRateLabel: "Team hourly rate (USD)",
+      minutesPerCheckLabel: "Minutes per check",
+      checksPerMonthLabel: "Checks per month",
+      savingsRateLabel: "Estimated reduction",
+      resultsTitle: "Results (estimate)",
+      laborCostLabel: "Current manual cost (/mo)",
+      savingsLabel: "Estimated savings (/mo)",
+      netLabel: "Net benefit (savings − plan)",
+      roiLabel: "ROI (net / plan)",
+      breakevenTitle: "Break-even point",
+      breakevenLabel: "Checks needed (/mo)",
+      breakevenHint:
+        "If you run more checks than this, time savings alone tend to cover the plan price.",
+      note:
+        "This is a simplified model. Teams see the biggest gains when client updates, weekly reporting, and “what was live?” questions stop living in scattered screenshots.",
+    },
     howTitle: "How it works",
     steps: [
       { title: "Enter a URL", body: "Point to the landing page or ad destination you want to observe." },
@@ -590,10 +672,11 @@ export const copy = {
       },
     ],
     midCta: {
-      title: "Know what the site actually looked like from each place.",
-      subtitle: "Verifiable visual records—not a generic uptime ping.",
+      title: "Proof for clients. Global QA. Less manual reporting.",
+      subtitle:
+        "One workflow: pick the region, capture the page, keep history and exports when stakeholders ask what was live.",
       body:
-        "Every observation records the view from a specific time and location.",
+        "Agencies and in-house teams use the same timestamps, URLs, and vantage points—so “what we saw” is easy to replay.",
     },
     trustBand: {
       title: "Confirmation records & observation history (in-app)",
