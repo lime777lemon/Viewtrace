@@ -2,10 +2,30 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { profileMetaFromUserMetadata } from "@/lib/auth/profile-meta";
+import { POST_EMAIL_VERIFY_PATH } from "@/lib/auth/email-verified-copy";
+import {
+  absoluteUrlForNextPath,
+  postAuthSideEffectsBeforeNavigate,
+} from "@/lib/auth/post-auth-redirect";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type Status = "working" | "error";
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error(`${label}_timeout`)), ms);
+    promise.then(
+      (v) => {
+        clearTimeout(t);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(t);
+        reject(e);
+      },
+    );
+  });
+}
 
 /**
  * `#access_token=...` などサーバーに届かない fragment のみここで処理する。
@@ -13,8 +33,9 @@ type Status = "working" | "error";
  */
 export default function AuthCallbackFragmentPage() {
   const sp = useSearchParams();
-  const nextRaw = sp?.get("next")?.trim() ?? "/dashboard";
-  const nextPath = nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "/dashboard";
+  const nextRaw = sp?.get("next")?.trim() ?? POST_EMAIL_VERIFY_PATH;
+  const nextPath =
+    nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : POST_EMAIL_VERIFY_PATH;
   const [status, setStatus] = useState<Status>("working");
   const [detail, setDetail] = useState<string | null>(null);
 
@@ -35,62 +56,35 @@ export default function AuthCallbackFragmentPage() {
           const accessToken = hp.get("access_token");
           const refreshToken = hp.get("refresh_token");
           if (accessToken && refreshToken) {
-            const { error } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken,
-            });
+            const { error } = await withTimeout(
+              supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken,
+              }),
+              25_000,
+              "setSession",
+            );
             if (error) throw error;
             if (!cancelled) {
-              await fetch("/api/audit/auth-sign-in", {
-                method: "POST",
-                credentials: "include",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ method: "oauth_implicit" }),
-              });
-              window.location.replace(nextPath);
+              const { data: sessionCheck } = await supabase.auth.getSession();
+              if (cancelled) return;
+              if (!sessionCheck.session) throw new Error("missing_session_after_setSession");
+              await postAuthSideEffectsBeforeNavigate();
+              if (cancelled) return;
+              window.location.replace(absoluteUrlForNextPath(nextPath));
             }
             return;
           }
         }
 
-        const { data, error } = await supabase.auth.getSession();
+        const { data, error } = await withTimeout(supabase.auth.getSession(), 25_000, "getSession");
         if (error) throw error;
         if (!data?.session) throw new Error("missing_session_in_callback");
 
-        try {
-          const { data: userData } = await supabase.auth.getUser();
-          const email = userData.user?.email ?? null;
-          if (email) {
-            const locale =
-              typeof navigator !== "undefined" && navigator.language?.toLowerCase().startsWith("ja")
-                ? "ja"
-                : "en";
-            const meta = userData.user?.user_metadata as Record<string, unknown> | undefined;
-            const p = profileMetaFromUserMetadata(meta);
-            const { error: insertError } = await supabase.from("trial_signups").insert({
-              email,
-              locale,
-              source: "auth",
-              full_name: p.full_name,
-              company_name: p.company_name,
-              phone: p.phone,
-            });
-            if (insertError && insertError.code !== "23505") {
-              console.warn("[auth] trial_signups insert failed", insertError.code, insertError.message);
-            }
-          }
-        } catch (e) {
-          console.warn("[auth] trial_signups insert skipped", e);
-        }
-
         if (!cancelled) {
-          await fetch("/api/audit/auth-sign-in", {
-            method: "POST",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ method: "oauth_implicit" }),
-          });
-          window.location.replace(nextPath);
+          await postAuthSideEffectsBeforeNavigate();
+          if (cancelled) return;
+          window.location.replace(absoluteUrlForNextPath(nextPath));
         }
       } catch (e) {
         if (cancelled) return;
