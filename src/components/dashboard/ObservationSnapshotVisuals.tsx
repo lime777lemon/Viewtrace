@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import type { Locale } from "@/lib/i18n";
+import { copy } from "@/lib/i18n";
 
 type Phase = "ready" | "loading" | "error";
 
@@ -66,6 +68,7 @@ type Props = {
   fetchSnapshot: boolean;
   displayTitle: string | null;
   metaLine: string;
+  locale: Locale;
 };
 
 export function ObservationSnapshotVisuals({
@@ -75,7 +78,9 @@ export function ObservationSnapshotVisuals({
   fetchSnapshot,
   displayTitle,
   metaLine,
+  locale,
 }: Props) {
+  const t = copy[locale].snapshotVisuals;
   const { imageUrl, phase } = useHydratedSnapshotImage(
     observationUrl,
     serverImageUrl,
@@ -89,7 +94,7 @@ export function ObservationSnapshotVisuals({
   return (
     <>
       <section>
-        <h2 className="font-display text-lg font-semibold text-[var(--color-ink)]">スナップショット</h2>
+        <h2 className="font-display text-lg font-semibold text-[var(--color-ink)]">{t.snapshotTitle}</h2>
         {displayTitle ? (
           <p className="mt-3 text-sm font-medium text-[var(--color-ink)]">{displayTitle}</p>
         ) : null}
@@ -104,20 +109,18 @@ export function ObservationSnapshotVisuals({
             />
           ) : showLoading ? (
             <div className="flex aspect-[16/10] flex-col justify-center gap-2 bg-gradient-to-br from-[#dfe9e6] to-[#c8d9d3] px-6 py-10 text-center">
-              <p className="text-sm font-medium text-[var(--color-ink)]">スナップショットを取得しています…</p>
+              <p className="text-sm font-medium text-[var(--color-ink)]">{t.loadingTitle}</p>
               <p className="text-xs text-[var(--color-ink-muted)]">
-                数十秒かかる場合があります。デプロイ環境の関数タイムアウトが短いと失敗することがあります。
+                {t.loadingHint}
               </p>
             </div>
           ) : (
             <div className="flex aspect-[16/10] flex-col justify-center gap-2 bg-gradient-to-br from-[#dfe9e6] to-[#c8d9d3] px-6 py-10 text-center">
               <p className="text-sm font-medium text-[var(--color-ink)]">
-                {showError ? "スナップショットを取得できませんでした" : "プレビュー画像がありません"}
+                {showError ? t.errorTitle : t.emptyTitle}
               </p>
               <p className="text-xs text-[var(--color-ink-muted)]">
-                {showError
-                  ? "対象 URL のブロック、タイムアウト、または Microlink の制限の可能性があります。"
-                  : "URL が無効か、プレビュー API が利用できない状態です。"}
+                {showError ? t.errorHint : t.emptyHint}
               </p>
               <Link
                 href={openUrl}
@@ -125,7 +128,7 @@ export function ObservationSnapshotVisuals({
                 rel="noopener noreferrer"
                 className="mx-auto mt-2 text-sm font-semibold text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
               >
-                新しいタブでページを開く
+                {t.openInNewTab}
               </Link>
             </div>
           )}
@@ -134,14 +137,14 @@ export function ObservationSnapshotVisuals({
       </section>
 
       <section>
-        <h2 className="font-display text-lg font-semibold text-[var(--color-ink)]">差分</h2>
+        <h2 className="font-display text-lg font-semibold text-[var(--color-ink)]">{t.diffTitle}</h2>
         <p className="mt-1 text-sm text-[var(--color-ink-muted)]">
-          同一 URL・別時刻のオブザベーション同士でピクセル差分を表示します（本番実装）。
+          {t.diffHint}
         </p>
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
           <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4">
             <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
-              この記録
+              {t.thisRecord}
             </p>
             <div className="mt-3 aspect-video overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]">
               {showImg ? (
@@ -149,27 +152,27 @@ export function ObservationSnapshotVisuals({
                 <img src={imageUrl!} alt="" className="h-full w-full object-cover object-top" />
               ) : showLoading ? (
                 <div className="flex h-full items-center justify-center px-4 text-center text-xs text-[var(--color-ink-muted)]">
-                  取得中…
+                  {t.fetchingShort}
                 </div>
               ) : (
                 <div className="flex h-full items-center justify-center text-xs text-[var(--color-ink-muted)]">
-                  画像なし
+                  {t.noImageShort}
                 </div>
               )}
             </div>
           </div>
           <div className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)]/80 p-4">
             <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
-              比較先
+              {t.compareTo}
             </p>
             <p className="mt-3 text-sm text-[var(--color-ink-muted)]">
-              一覧から別のオブザベーションを選ぶと、ここに並べてハイライト差分を表示する想定です。
+              {t.compareHint}
             </p>
             <Link
               href="/dashboard/observations"
               className="mt-4 inline-flex text-sm font-semibold text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
             >
-              オブザベーション一覧へ →
+              {t.backToObservations}
             </Link>
           </div>
         </div>

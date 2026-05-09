@@ -21,12 +21,20 @@ type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
+  const locale = await getRequestLocale();
   const session = await getSession();
   const obs = session
     ? await getObservationMergedForPlan(id, session.plan)
     : undefined;
   return {
-    title: obs ? `記録 ${obs.id} | Viewtrace` : "記録 | Viewtrace",
+    title:
+      locale === "ja"
+        ? obs
+          ? `記録 ${obs.id} | Viewtrace`
+          : "記録 | Viewtrace"
+        : obs
+          ? `Record ${obs.id} | Viewtrace`
+          : "Record | Viewtrace",
     robots: { index: false, follow: false },
   };
 }
@@ -35,6 +43,7 @@ export default async function ObservationDetailPage({ params }: Props) {
   const { id } = await params;
   const locale = await getRequestLocale();
   const rt = copy[locale].observationReport;
+  const t = copy[locale].observationDetail;
   const session = await getSession();
   if (!session) notFound();
   const obs = await getObservationMergedForPlan(id, session.plan);
@@ -75,12 +84,12 @@ export default async function ObservationDetailPage({ params }: Props) {
           href="/dashboard/observations"
           className="font-medium text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
         >
-          ← 一覧へ
+          {t.backToList}
         </Link>
       </div>
 
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="font-display text-2xl font-semibold tracking-tight">オブザベーション詳細</h1>
+        <h1 className="font-display text-2xl font-semibold tracking-tight">{t.title}</h1>
         <Link
           href={`/dashboard/observations/${obs.id}/report`}
           className="text-sm font-semibold text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
@@ -94,7 +103,7 @@ export default async function ObservationDetailPage({ params }: Props) {
       <dl className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4">
           <dt className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
-            取得日時
+            {t.capturedAt}
           </dt>
           <dd className="mt-1 text-sm text-[var(--color-ink)]">{formatJaDateTime(obs.capturedAt)}</dd>
           <dd className="mt-0.5 text-xs text-[var(--color-ink-muted)]">
@@ -103,43 +112,46 @@ export default async function ObservationDetailPage({ params }: Props) {
         </div>
         <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4">
           <dt className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
-            地域
+            {t.region}
           </dt>
           <dd className="mt-1 text-sm text-[var(--color-ink)]">{obs.regionLabel}</dd>
         </div>
         {displayTitle ? (
           <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4 sm:col-span-2">
             <dt className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
-              ページタイトル（取得時点）
+              {t.pageTitleCaptured}
             </dt>
             <dd className="mt-1 text-sm text-[var(--color-ink)]">{displayTitle}</dd>
           </div>
         ) : null}
         <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4 sm:col-span-2">
           <dt className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
-            URL
+            {t.url}
           </dt>
           <dd className="mt-1 break-all font-mono text-sm text-[var(--color-ink)]">{obs.url}</dd>
         </div>
         <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4 sm:col-span-2">
           <dt className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
-            ステータス
+            {t.status}
           </dt>
           <dd className="mt-1 text-sm text-[var(--color-ink)]">
-            {obs.status === "success" ? "成功" : obs.status === "failure" ? "失敗" : "処理中"}
+            {obs.status === "success"
+              ? t.statusSuccess
+              : obs.status === "failure"
+                ? t.statusFailure
+                : t.statusPending}
             {obs.note ? ` — ${obs.note}` : ""}
           </dd>
         </div>
         <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4 sm:col-span-2">
           <dt className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
-            コンテンツ整合性チェック
+            {t.integrityTitle}
           </dt>
           <dd className="mt-1 space-y-2 text-sm text-[var(--color-ink)]">
             {contentIntegrity === "ok" ? (
               <>
                 <p>
-                  記録された主要フィールドとハッシュが一致しています（SHA-256、v
-                  {OBSERVATION_CONTENT_HASH_VERSION}）。
+                  {t.integrityOk.replace("{version}", String(OBSERVATION_CONTENT_HASH_VERSION))}
                 </p>
                 {obs.contentHash ? (
                   <p className="break-all font-mono text-xs text-[var(--color-ink-muted)]">
@@ -149,16 +161,17 @@ export default async function ObservationDetailPage({ params }: Props) {
               </>
             ) : contentIntegrity === "missing" ? (
               <p className="text-[var(--color-ink-muted)]">
-                コンテンツハッシュがありません（この機能追加前の記録の可能性があります）。
+                {t.integrityMissing}
               </p>
             ) : (
               <>
                 <p className="font-medium text-amber-800 dark:text-amber-200">
-                  保存内容とハッシュが一致しません。記録内容の更新や、検証方式の変更などが考えられます。
+                  {t.integrityMismatch}
                 </p>
                 {obs.contentHash ? (
                   <p className="break-all font-mono text-xs text-[var(--color-ink-muted)]">
-                    保存値: {obs.contentHash}
+                    {t.integrityStoredPrefix}
+                    {obs.contentHash}
                   </p>
                 ) : null}
               </>
@@ -167,6 +180,7 @@ export default async function ObservationDetailPage({ params }: Props) {
         </div>
         <ObservationSnapshotBinaryPanel
           observationId={obs.id}
+          locale={locale}
           snapshotSha256={obs.snapshotSha256}
           snapshotPhash={obs.snapshotPhash}
           snapshotBytes={obs.snapshotBytes}
@@ -176,11 +190,11 @@ export default async function ObservationDetailPage({ params }: Props) {
         {session.plan === "pro" && obs.regionValue ? (
           <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4 sm:col-span-2">
             <dt className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
-              継続監視
+              {t.watchTitle}
             </dt>
             <dd className="mt-2 flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm text-[var(--color-ink)]">
-                このURL（{obs.regionLabel}）を1日1回自動で観測し、差分が大きいときにメール通知します。
+                {t.watchBody.replace("{region}", obs.regionLabel)}
               </p>
               <form action={setObservationWatchEnabledAction}>
                 <input type="hidden" name="url" value={obs.url} />
@@ -194,7 +208,7 @@ export default async function ObservationDetailPage({ params }: Props) {
                       : "bg-[var(--color-ink)] hover:opacity-90"
                   }`}
                 >
-                  {watchEnabled ? "監視中（停止）" : "監視を開始"}
+                  {watchEnabled ? t.watchEnabled : t.watchDisabled}
                 </button>
               </form>
             </dd>
@@ -207,6 +221,7 @@ export default async function ObservationDetailPage({ params }: Props) {
         displayTitle={displayTitle}
         displayImageUrl={displayImageUrl}
         resolvedCanonical={resolvedCanonical}
+        locale={locale}
       />
     </div>
   );

@@ -2,9 +2,12 @@
 
 import { useState } from "react";
 import { verifyObservationSnapshotBinaryAction } from "@/app/actions/verify-observation-snapshot";
+import type { Locale } from "@/lib/i18n";
+import { copy } from "@/lib/i18n";
 
 type Props = {
   observationId: string;
+  locale: Locale;
   snapshotSha256?: string;
   snapshotPhash?: string;
   snapshotBytes?: number;
@@ -14,12 +17,14 @@ type Props = {
 
 export function ObservationSnapshotBinaryPanel({
   observationId,
+  locale,
   snapshotSha256,
   snapshotPhash,
   snapshotBytes,
   snapshotContentType,
   snapshotImageUrl,
 }: Props) {
+  const t = copy[locale].snapshotBinary;
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -30,48 +35,40 @@ export function ObservationSnapshotBinaryPanel({
       const r = await verifyObservationSnapshotBinaryAction(observationId);
       if (!r.ok) {
         const map: Record<string, string> = {
-          unauthorized: "ログインが必要です。",
-          not_found: "記録が見つかりません。",
-          no_hash: "バイナリハッシュがありません。",
-          no_url: "検証用の画像 URL がありません。",
-          fetch_failed: "画像を取得できませんでした（ブロック・期限切れなど）。検証不能です。",
-          too_large: "画像が大きすぎるため検証をスキップしました。検証不能です。",
+          unauthorized: t.errUnauthorized,
+          not_found: t.errNotFound,
+          no_hash: t.errNoHash,
+          no_url: t.errNoUrl,
+          fetch_failed: t.errFetchFailed,
+          too_large: t.errTooLarge,
         };
-        setMessage(map[r.error] ?? "検証に失敗しました。");
+        setMessage(map[r.error] ?? t.errGeneric);
         return;
       }
 
       const distNote =
-        r.phashDistance !== null ? `（知覚ハッシュ距離: ${r.phashDistance}）` : "";
+        r.phashDistance !== null
+          ? `${t.distNotePrefix}${r.phashDistance}${t.distNoteSuffix}`
+          : "";
 
       switch (r.verdict) {
         case "exact":
-          setMessage(
-            `完全一致: 保存時の画像データと完全に一致しています。${distNote}`.trim(),
-          );
+          setMessage(`${t.verdictExact}${distNote}`.trim());
           break;
         case "visual_strong":
-          setMessage(
-            `視覚的一致（ほぼ同一）: 画像データは異なりますが、見た目はほぼ同一です。${distNote}`,
-          );
+          setMessage(`${t.verdictStrong}${distNote}`.trim());
           break;
         case "visual_weak":
-          setMessage(
-            `視覚的一致（かなり近い）: バイト列は異なりますが、見た目はかなり近いです。${distNote}`,
-          );
+          setMessage(`${t.verdictWeak}${distNote}`.trim());
           break;
         case "different":
-          setMessage(
-            `差分あり: 保存時の画像と差分があります。${distNote}`.trim(),
-          );
+          setMessage(`${t.verdictDifferent}${distNote}`.trim());
           break;
         case "unverified":
-          setMessage(
-            "検証不能: 画像は取得できましたが、知覚ハッシュの比較ができませんでした（形式・デコード）。",
-          );
+          setMessage(t.verdictUnverified);
           break;
         default:
-          setMessage("検証結果を表示できませんでした。");
+          setMessage(t.verdictUnknown);
       }
     } finally {
       setPending(false);
@@ -82,10 +79,10 @@ export function ObservationSnapshotBinaryPanel({
     return (
       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4 sm:col-span-2">
         <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
-          スナップショット（バイナリ）
+          {t.titleBinary}
         </p>
         <p className="mt-1 text-sm text-[var(--color-ink-muted)]">
-          バイナリハッシュは Blob に保存したスナップショットのみ付与されます（外部プレビュー URL のみの記録では未設定）。
+          {t.hintNoHash}
         </p>
       </div>
     );
@@ -94,16 +91,15 @@ export function ObservationSnapshotBinaryPanel({
   return (
     <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4 sm:col-span-2">
       <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
-        スナップショット整合性チェック（SHA-256 + 知覚ハッシュ）
+        {t.titleIntegrity}
       </p>
       <div className="mt-1 space-y-3 text-sm text-[var(--color-ink)]">
         <p className="text-xs text-[var(--color-ink-muted)]">
-          保存時: バイト列 SHA-256 は全プラン。知覚ハッシュ（blockhash）は Pro の Blob 保存・自動観測で付与。検証はボタン押下時のみ画像を 1
-          回取得します。
+          {t.hintHow}
         </p>
         {typeof snapshotBytes === "number" ? (
           <p className="text-xs text-[var(--color-ink-muted)]">
-            記録時サイズ: {snapshotBytes.toLocaleString()} bytes
+            {t.bytesAtCapture}: {snapshotBytes.toLocaleString()} bytes
             {snapshotContentType ? ` · ${snapshotContentType}` : ""}
           </p>
         ) : null}
@@ -116,13 +112,13 @@ export function ObservationSnapshotBinaryPanel({
         {snapshotPhash ? (
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
-              知覚ハッシュ（記録時）
+              {t.phashAtCapture}
             </p>
             <p className="break-all font-mono text-xs text-[var(--color-ink-muted)]">{snapshotPhash}</p>
           </div>
         ) : (
           <p className="text-xs text-[var(--color-ink-muted)]">
-            知覚ハッシュ未記録（Starter の Blob 保存、または旧データ）。バイト不一致時は「差分あり」までしか判定しません。
+            {t.phashMissing}
           </p>
         )}
         {snapshotImageUrl && /^https?:\/\//i.test(snapshotImageUrl) ? (
@@ -133,9 +129,9 @@ export function ObservationSnapshotBinaryPanel({
               onClick={() => void verify()}
               className="inline-flex rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2 text-xs font-semibold text-[var(--color-ink)] hover:border-[var(--color-accent)]/40 disabled:opacity-60"
             >
-              {pending ? "取得中…" : "今の URL から取得して照合"}
+              {pending ? t.verifying : t.verifyButton}
             </button>
-            <span className="text-xs text-[var(--color-ink-muted)]">（クリック時のみ 1 回取得）</span>
+            <span className="text-xs text-[var(--color-ink-muted)]">{t.clickOnce}</span>
           </div>
         ) : null}
         {message ? <p className="text-sm text-[var(--color-ink)]">{message}</p> : null}
