@@ -5,6 +5,36 @@ function trimTrailingSlash(s: string): string {
   return s.replace(/\/+$/, "");
 }
 
+/**
+ * GET /login など Origin が無いリクエストでも、実際にユーザーが開いているホストを使う（Vercel 本番ドメイン）。
+ * さもないと emailRedirectTo が VERCEL_URL（*.vercel.app）や古い env に寄り、Supabase の Redirect URLs と不一致になりメール送信が失敗することがある。
+ */
+function originFromForwardedHeaders(h: Headers): string | null {
+  const hostRaw = h.get("x-forwarded-host") ?? h.get("host");
+  const host = hostRaw?.split(",")[0]?.trim();
+  if (!host) return null;
+
+  const protoRaw = h.get("x-forwarded-proto")?.split(",")[0]?.trim().toLowerCase();
+  const isLocal =
+    host === "localhost" || host.startsWith("localhost:") || host.startsWith("127.0.0.1:");
+
+  let proto: string;
+  if (protoRaw === "https" || protoRaw === "http") {
+    proto = protoRaw;
+  } else if (isLocal) {
+    proto = "http";
+  } else {
+    proto = "https";
+  }
+
+  try {
+    const origin = `${proto}://${host}`;
+    return isAllowedRedirectOrigin(origin) ? trimTrailingSlash(origin) : null;
+  } catch {
+    return null;
+  }
+}
+
 /** 環境変数のみ（Server Action 外でも利用可） */
 export function resolveStaticSiteOrigin(): string {
   const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
@@ -55,6 +85,10 @@ export async function getAuthEmailRedirectTo(): Promise<string> {
     } catch {
       /* ignore */
     }
+  }
+  const fromForwarded = originFromForwardedHeaders(h);
+  if (fromForwarded) {
+    return `${fromForwarded}/auth/callback`;
   }
   return `${resolveStaticSiteOrigin()}/auth/callback`;
 }

@@ -91,7 +91,7 @@ const formEn: LoginFormStrings = {
   errPasswordMismatch: "Passwords do not match. Try again.",
   errSignupIncomplete: "We could not finish sign-up. Check your email or wait a moment and try again.",
   signupSuccessMessage:
-    "We have sent a confirmation email request. You cannot sign in until you confirm your address using the link in that message.",
+    "We have sent a confirmation email request. You cannot sign in until you confirm your address using the link in that message. If nothing arrives within a few minutes, check your spam folder.",
 };
 
 const formJa: LoginFormStrings = {
@@ -125,7 +125,7 @@ const formJa: LoginFormStrings = {
   errSignupIncomplete:
     "登録を完了できませんでした。メールアドレスを確認するか、しばらくしてから再度お試しください。",
   signupSuccessMessage:
-    "登録用の確認メールの送信をリクエストしました。メール内のリンクでアドレス確認が完了するまでログインできません。",
+    "登録用の確認メールの送信をリクエストしました。メール内のリンクでアドレス確認が完了するまでログインできません。数分経っても届かない場合は迷惑メールフォルダもご確認ください。",
 };
 
 export const loginPageCopy: Record<LoginLocale, LoginPageStrings> = {

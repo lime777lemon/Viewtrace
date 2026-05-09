@@ -99,6 +99,7 @@ export function LoginForm({
       });
 
       if (error) {
+        console.warn("[auth] signUp failed", error.message, error);
         setSignupFeedback({ error: mapAuthErrorForLocale(error.message, locale) });
         return;
       }
