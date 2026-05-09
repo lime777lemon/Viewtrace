@@ -64,6 +64,10 @@ export type LoginPageStrings = {
   resendSubmit: string;
   resendSending: string;
   resendSuccess: string;
+  /** メール内リンクで確認済みかつセッションあり（ダッシュボードへ誘導） */
+  emailVerifiedSuccessTitle: string;
+  emailVerifiedSuccessBody: string;
+  emailVerifiedDashboardCta: string;
   form: LoginFormStrings;
 };
 
@@ -167,6 +171,10 @@ export const loginPageCopy: Record<LoginLocale, LoginPageStrings> = {
     resendSubmit: "Resend confirmation email",
     resendSending: "Sending…",
     resendSuccess: "Sent again. Check spam if it still does not show up.",
+    emailVerifiedSuccessTitle: "Email verified",
+    emailVerifiedSuccessBody:
+      "Your address is confirmed and you are signed in. Continue to the dashboard when you are ready.",
+    emailVerifiedDashboardCta: "Go to dashboard",
     form: formEn,
   },
   ja: {
@@ -201,6 +209,10 @@ export const loginPageCopy: Record<LoginLocale, LoginPageStrings> = {
     resendSubmit: "確認メールを再送",
     resendSending: "送信中…",
     resendSuccess: "再送しました。届かない場合は迷惑メールフォルダもご確認ください。",
+    emailVerifiedSuccessTitle: "メール認証が完了しました",
+    emailVerifiedSuccessBody:
+      "メールアドレスの確認が取れ、ログイン済みです。ダッシュボードからご利用を開始できます。",
+    emailVerifiedDashboardCta: "ダッシュボードへ",
     form: formJa,
   },
 };

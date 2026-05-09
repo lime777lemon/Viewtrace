@@ -22,7 +22,8 @@ export default async function LoginPage({
   const initialMode = verified || modeParam === "signin" ? ("signin" as const) : ("signup" as const);
 
   const session = await getSession();
-  if (session) {
+  // メール確認リンク後は ?verified=1 付きで来る。このときはセッション付きでも認証完了画面を見せる。
+  if (session && !verified) {
     if (nextPath) redirect(nextPath);
     redirect("/dashboard");
   }
@@ -35,6 +36,7 @@ export default async function LoginPage({
       nextPath={nextPath}
       initialMode={initialMode}
       verified={verified}
+      showVerifiedSuccess={Boolean(session && verified)}
     />
   );
 }
