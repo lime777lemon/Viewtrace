@@ -122,7 +122,12 @@ export function LoginForm({
 
       setSignupFeedback({
         message:
-          "登録用の確認メールの送信をリクエストしました。メール内のリンクでアドレス確認が完了するまでログインできません。",
+          "登録用の確認メールの送信をリクエストしました。メール内のリンクでアドレス確認が完了するまでログインできません。\n\n" +
+          "メールが届かない場合:\n" +
+          "・迷惑メール・プロモーション欄を確認\n" +
+          "・数分待ってから下の「確認メールを再送」\n" +
+          "・アプリの .env の Resend キーは「商品メール」用です。確認メールは Supabase が送るため、到達率を上げるには Dashboard → Authentication → SMTP で Resend 等の SMTP を設定してください。\n" +
+          "・Supabase → Logs → Auth で送信エラーが出ていないか確認",
       });
     } finally {
       setSignupPending(false);
