@@ -19,10 +19,10 @@ export function LegalLocaleToggle({ locale }: { locale: Locale }) {
         <button
           type="button"
           onClick={() => setLocale("en")}
-          className={`rounded-full px-2.5 py-1 transition ${
+          className={`cursor-pointer rounded-full px-2.5 py-1 transition ${
             locale === "en"
-              ? "bg-[var(--color-ink)] text-white shadow-sm"
-              : "text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"
+              ? "bg-[var(--color-ink)] text-white shadow-sm hover:bg-[var(--color-ink)]/90 hover:shadow"
+              : "text-[var(--color-ink-muted)] hover:bg-[var(--color-border)]/45 hover:text-[var(--color-ink)]"
           }`}
           aria-pressed={locale === "en"}
         >
@@ -31,10 +31,10 @@ export function LegalLocaleToggle({ locale }: { locale: Locale }) {
         <button
           type="button"
           onClick={() => setLocale("ja")}
-          className={`rounded-full px-2.5 py-1 transition ${
+          className={`cursor-pointer rounded-full px-2.5 py-1 transition ${
             locale === "ja"
-              ? "bg-[var(--color-ink)] text-white shadow-sm"
-              : "text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"
+              ? "bg-[var(--color-ink)] text-white shadow-sm hover:bg-[var(--color-ink)]/90 hover:shadow"
+              : "text-[var(--color-ink-muted)] hover:bg-[var(--color-border)]/45 hover:text-[var(--color-ink)]"
           }`}
           aria-pressed={locale === "ja"}
         >

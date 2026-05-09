@@ -93,14 +93,22 @@ export function CheckoutClient({
               <button
                 type="button"
                 onClick={() => setLocale("ja")}
-                className={`rounded-full px-2.5 py-1 ${locale === "ja" ? "bg-[var(--color-ink)] text-white" : "text-[var(--color-ink-muted)]"}`}
+                className={`cursor-pointer rounded-full px-2.5 py-1 transition ${
+                  locale === "ja"
+                    ? "bg-[var(--color-ink)] text-white shadow-sm hover:bg-[var(--color-ink)]/90 hover:shadow"
+                    : "text-[var(--color-ink-muted)] hover:bg-[var(--color-border)]/45 hover:text-[var(--color-ink)]"
+                }`}
               >
                 {t.langJa}
               </button>
               <button
                 type="button"
                 onClick={() => setLocale("en")}
-                className={`rounded-full px-2.5 py-1 ${locale === "en" ? "bg-[var(--color-ink)] text-white" : "text-[var(--color-ink-muted)]"}`}
+                className={`cursor-pointer rounded-full px-2.5 py-1 transition ${
+                  locale === "en"
+                    ? "bg-[var(--color-ink)] text-white shadow-sm hover:bg-[var(--color-ink)]/90 hover:shadow"
+                    : "text-[var(--color-ink-muted)] hover:bg-[var(--color-border)]/45 hover:text-[var(--color-ink)]"
+                }`}
               >
                 {t.langEn}
               </button>
