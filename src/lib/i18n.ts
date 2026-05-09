@@ -426,6 +426,15 @@ export const copy = {
         "保存内容とハッシュが一致しません。記録内容の更新や、検証方式の変更などが考えられます。",
       integrityStoredPrefix: "保存値: ",
     },
+    observationsTable: {
+      colCaptured: "取得日時（JST）",
+      colUrl: "URL",
+      colRegion: "地域",
+      colStatus: "ステータス",
+      colActions: "操作",
+      actionDetail: "詳細",
+      emptyDefault: "オブザベーションがありません。",
+    },
     snapshotVisuals: {
       snapshotTitle: "スナップショット",
       loadingTitle: "スナップショットを取得しています…",
@@ -1005,6 +1014,37 @@ export const copy = {
       integrityMismatch:
         "Stored fields do not match the stored hash. The record may have changed, or the verification method may have been updated.",
       integrityStoredPrefix: "Stored: ",
+    },
+    observationsTable: {
+      colCaptured: "Captured (JST)",
+      colUrl: "URL",
+      colRegion: "Region",
+      colStatus: "Status",
+      colActions: "Actions",
+      actionDetail: "Details",
+      emptyDefault: "No observations yet.",
+    },
+    observationEvent: {
+      processingLabel: "Fetched via regional access",
+      captureLabel: "Recorded snapshot",
+      statusLabel: "Observation saved",
+      statusDetailSuccess: "Success — verification data saved to the database",
+      statusDetailFailure: "Failure — verification data saved to the database",
+      captureFormImage: "Confirmation image from the form",
+      captureBrowserlessBlob: "Browserless snapshot (Vercel Blob)",
+      capturePreviewOg: "Preview image (OG / Microlink, etc.)",
+      captureNoUrlToken:
+        "No snapshot_image_url — could not upload to Vercel Blob (BLOB_READ_WRITE_TOKEN is not set)",
+      captureNoUrlBlobUrlLong:
+        "No snapshot_image_url — skipped save because the Blob public URL was too long",
+      captureNoUrlBrowserlessOkNoUrl:
+        "No snapshot_image_url — Browserless succeeded but no image URL could be determined",
+      captureNoUrlBrowserlessFail:
+        "No snapshot_image_url — Browserless capture failed and preview did not return an image URL",
+      captureNoUrlNoPreview:
+        "No snapshot_image_url — could not get an image URL from screenshot or preview",
+      processingRecordedWithImageSuffix: "Recorded with confirmation image",
+      processingScreenshotVerifiedPrefix: "Verified with screenshot",
     },
     snapshotVisuals: {
       snapshotTitle: "Snapshot",

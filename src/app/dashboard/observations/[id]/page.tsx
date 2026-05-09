@@ -15,6 +15,7 @@ import {
 } from "@/lib/observation-content-hash";
 import { setObservationWatchEnabledAction } from "@/app/actions/observation-watches";
 import { copy } from "@/lib/i18n";
+import { localizeObservationNote } from "@/lib/i18n/observation-persisted-copy";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 
 type Props = { params: Promise<{ id: string }> };
@@ -140,7 +141,7 @@ export default async function ObservationDetailPage({ params }: Props) {
               : obs.status === "failure"
                 ? t.statusFailure
                 : t.statusPending}
-            {obs.note ? ` — ${obs.note}` : ""}
+            {obs.note ? ` — ${localizeObservationNote(obs.note, locale)}` : ""}
           </dd>
         </div>
         <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4 sm:col-span-2">

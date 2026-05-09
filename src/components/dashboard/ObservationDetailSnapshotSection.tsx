@@ -3,6 +3,10 @@ import type { Observation, ObservationHistoryEvent } from "@/lib/demo/observatio
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
 import type { Locale } from "@/lib/i18n";
 import { copy } from "@/lib/i18n";
+import {
+  localizeObservationEventDetail,
+  localizeObservationEventLabel,
+} from "@/lib/i18n/observation-persisted-copy";
 
 function defaultHistory(obs: Observation, locale: Locale): ObservationHistoryEvent[] {
   const t = copy[locale].observationDetail;
@@ -20,7 +24,7 @@ function defaultHistory(obs: Observation, locale: Locale): ObservationHistoryEve
             ? locale === "ja"
               ? "取得に失敗"
               : "Capture failed"
-            : "処理中",
+            : t.statusPending,
     },
   ];
 }
@@ -50,8 +54,11 @@ export function ObservationDetailSnapshotSection({
   const openUrl = resolvedCanonical ?? obs.url;
   const metaLine = `snapshot · ${obs.regionLabel} · ${formatUtcLabel(obs.capturedAt)}`;
   const fetchSnapshot = obs.status === "success";
-  const captureEventDetail = obs.events?.find((e) => e.kind === "capture")?.detail;
-  const showPersistedSnapshotWarning = !obs.snapshotImageUrl && Boolean(captureEventDetail?.trim());
+  const captureEventDetailRaw = obs.events?.find((e) => e.kind === "capture")?.detail;
+  const captureEventDetail = captureEventDetailRaw
+    ? localizeObservationEventDetail(captureEventDetailRaw, locale)
+    : undefined;
+  const showPersistedSnapshotWarning = !obs.snapshotImageUrl && Boolean(captureEventDetailRaw?.trim());
   const t = copy[locale].snapshotVisuals;
 
   return (
@@ -66,7 +73,7 @@ export function ObservationDetailSnapshotSection({
               ? "保存されたスナップショット画像（snapshot_image_url）がありません"
               : "No persisted snapshot image (snapshot_image_url) was saved"}
           </p>
-          <p className="mt-1 text-[var(--color-ink-muted)]">{captureEventDetail}</p>
+          <p className="mt-1 text-[var(--color-ink-muted)]">{captureEventDetail ?? ""}</p>
         </div>
       ) : null}
       <ObservationSnapshotVisuals
@@ -91,10 +98,14 @@ export function ObservationDetailSnapshotSection({
                 <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-accent)]">
                   {kindLabel(ev.kind, locale)}
                 </span>
-                <span className="text-sm font-medium text-[var(--color-ink)]">{ev.label}</span>
+                <span className="text-sm font-medium text-[var(--color-ink)]">
+                  {localizeObservationEventLabel(ev.label, locale)}
+                </span>
               </div>
               {ev.detail ? (
-                <p className="mt-1 text-sm text-[var(--color-ink-muted)]">{ev.detail}</p>
+                <p className="mt-1 text-sm text-[var(--color-ink-muted)]">
+                  {localizeObservationEventDetail(ev.detail, locale)}
+                </p>
               ) : null}
               <p className="mt-1 text-xs text-[var(--color-ink-muted)]">
                 {formatJaDateTime(ev.at)} · {formatUtcLabel(ev.at)}

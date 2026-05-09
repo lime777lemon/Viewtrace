@@ -6,6 +6,7 @@ import { getSession } from "@/lib/auth/session";
 import { getObservationMergedForPlan } from "@/lib/demo/user-observations";
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
 import { copy } from "@/lib/i18n";
+import { localizeObservationNote } from "@/lib/i18n/observation-persisted-copy";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import {
   OBSERVATION_CONTENT_HASH_VERSION,
@@ -123,7 +124,9 @@ export default async function ObservationReportPage({ params }: Props) {
 
         <section>
           <h2 className="text-sm font-semibold text-[var(--color-ink)]">{t.sectionNote}</h2>
-          <p className="mt-2 whitespace-pre-wrap text-sm text-[var(--color-ink)]">{obs.note ?? "—"}</p>
+          <p className="mt-2 whitespace-pre-wrap text-sm text-[var(--color-ink)]">
+            {obs.note ? localizeObservationNote(obs.note, locale) : "—"}
+          </p>
         </section>
 
         {obs.snapshotImageUrl ? (

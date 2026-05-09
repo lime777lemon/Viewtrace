@@ -19,6 +19,13 @@ import { getRegionOptions } from "@/lib/regions";
 import { normalizeUserUrlInput } from "@/lib/url-preview";
 import { runUrlPreviewFetch } from "@/lib/url-preview-fetch";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  formatCaptureNoUrlPreviewFail,
+  formatCaptureNoUrlUploadFail,
+  formatProcessingDetailRecordedWithImage,
+  formatProcessingDetailScreenshotVerified,
+  observationEventJa,
+} from "@/lib/i18n/observation-event-strings";
 
 function observationUrlHost(url: string): string {
   try {
@@ -162,31 +169,31 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
 
   const captureDetail = (() => {
     if (snapshotImageUrl) {
-      if (verifiedSnap && snapshotImageUrl === verifiedSnap) return "フォームの確認画像";
+      if (verifiedSnap && snapshotImageUrl === verifiedSnap) return observationEventJa.captureFormImage;
       if (uploadedBrowserlessUrl && snapshotImageUrl === uploadedBrowserlessUrl) {
-        return "Browserless スナップショット（Vercel Blob）";
+        return observationEventJa.captureBrowserlessBlob;
       }
-      return "プレビュー画像（OG / Microlink 等）";
+      return observationEventJa.capturePreviewOg;
     }
     if (blobUploadResult && !blobUploadResult.ok) {
       if (blobUploadResult.code === "token_missing") {
-        return "snapshot_image_url なし — BLOB_READ_WRITE_TOKEN が未設定のため Vercel Blob にアップロードできません";
+        return observationEventJa.captureNoUrlToken;
       }
       if (blobUploadResult.code === "url_too_long") {
-        return "snapshot_image_url なし — Blob の公開URLが長すぎるため保存をスキップしました";
+        return observationEventJa.captureNoUrlBlobUrlLong;
       }
-      return `snapshot_image_url なし — Vercel Blob アップロード失敗${blobUploadResult.message ? `（${blobUploadResult.message}）` : ""}`;
+      return formatCaptureNoUrlUploadFail(blobUploadResult.message);
     }
     if (browserlessShotOk) {
-      return "snapshot_image_url なし — Browserless は成功しましたが画像URLが確定しませんでした";
+      return observationEventJa.captureNoUrlBrowserlessOkNoUrl;
     }
     if (browserlessOn && !browserlessShotOk) {
-      return "snapshot_image_url なし — Browserless キャプチャに失敗し、プレビューからも画像URLを得られませんでした";
+      return observationEventJa.captureNoUrlBrowserlessFail;
     }
     if (!preview.ok) {
-      return `snapshot_image_url なし — プレビュー取得失敗（${preview.error}）`;
+      return formatCaptureNoUrlPreviewFail(preview.error);
     }
-    return "snapshot_image_url なし — スクリーンショット・プレビューのいずれからも画像URLを取得できませんでした";
+    return observationEventJa.captureNoUrlNoPreview;
   })();
 
   const userVerifiedCapture = Boolean(
@@ -200,8 +207,8 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
   const processingDetailWithoutPreview =
     !preview.ok && ok
       ? browserlessShotOk
-        ? `region=${regionValue} · スクリーンショットで確認済み${browserlessDetail ? `（${browserlessDetail}）` : ""}`
-        : `region=${regionValue} · 確認画像で記録済み`
+        ? formatProcessingDetailScreenshotVerified(regionValue, browserlessDetail)
+        : formatProcessingDetailRecordedWithImage(regionValue)
       : null;
 
   const successNote = (() => {
@@ -230,7 +237,7 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
       {
         at: capturedAt,
         kind: "processing",
-        label: "地域別アクセスで取得",
+        label: observationEventJa.labels.processing,
         detail: !ok
           ? `region=${regionValue} error=${preview.error}`
           : processingDetailWithoutPreview ??
@@ -241,14 +248,14 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
       {
         at: capturedAt,
         kind: "capture",
-        label: "スナップショットを記録",
+        label: observationEventJa.labels.capture,
         detail: captureDetail,
       },
       {
         at: capturedAt,
         kind: "status",
-        label: "オブザベーション登録",
-        detail: `${ok ? "成功" : "失敗"} — 確認情報をDBに保存`,
+        label: observationEventJa.labels.status,
+        detail: ok ? observationEventJa.statusDetailSuccess : observationEventJa.statusDetailFailure,
       },
     ],
   };

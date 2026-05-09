@@ -5,6 +5,7 @@ import { ObservationsTable } from "@/components/dashboard/ObservationsTable";
 import { getSession } from "@/lib/auth/session";
 import { getMergedObservationsForPlan, readUserObservations } from "@/lib/demo/user-observations";
 import { getPlan } from "@/lib/plans";
+import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { shouldHideNewObservationForTrial } from "@/lib/trial-observation-access";
 
 export const metadata: Metadata = {
@@ -13,6 +14,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ObservationsListPage() {
+  const locale = await getRequestLocale();
   const session = await getSession();
   const plan = session ? getPlan(session.plan) : null;
   const showCsv = plan?.csvExport ?? false;
@@ -61,7 +63,7 @@ export default async function ObservationsListPage() {
         </div>
       </div>
 
-      <ObservationsTable rows={rows} />
+      <ObservationsTable rows={rows} locale={locale} />
     </div>
   );
 }

@@ -1,12 +1,21 @@
 import Link from "next/link";
 import type { Observation } from "@/lib/demo/observations";
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
+import { copy, type Locale } from "@/lib/i18n";
+import { localizeObservationNote } from "@/lib/i18n/observation-persisted-copy";
 
-function StatusBadge({ status }: { status: Observation["status"] }) {
+function StatusBadge({
+  status,
+  locale,
+}: {
+  status: Observation["status"];
+  locale: Locale;
+}) {
+  const labels = copy[locale].observationDetail;
   const map = {
-    success: { label: "成功", className: "bg-emerald-100 text-emerald-900" },
-    failure: { label: "失敗", className: "bg-red-100 text-red-900" },
-    pending: { label: "処理中", className: "bg-amber-100 text-amber-900" },
+    success: { label: labels.statusSuccess, className: "bg-emerald-100 text-emerald-900" },
+    failure: { label: labels.statusFailure, className: "bg-red-100 text-red-900" },
+    pending: { label: labels.statusPending, className: "bg-amber-100 text-amber-900" },
   } as const;
   const s = map[status];
   return (
@@ -19,14 +28,17 @@ function StatusBadge({ status }: { status: Observation["status"] }) {
 export function ObservationsTable({
   rows,
   emptyMessage,
+  locale,
 }: {
   rows: Observation[];
   emptyMessage?: string;
+  locale: Locale;
 }) {
+  const tb = copy[locale].observationsTable;
   if (rows.length === 0) {
     return (
       <p className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-4 py-8 text-center text-sm text-[var(--color-ink-muted)]">
-        {emptyMessage ?? "オブザベーションがありません。"}
+        {emptyMessage ?? tb.emptyDefault}
       </p>
     );
   }
@@ -37,11 +49,11 @@ export function ObservationsTable({
         <table className="w-full min-w-[640px] text-left text-sm">
           <thead className="border-b border-[var(--color-border)] bg-[var(--color-surface)] text-xs font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">
             <tr>
-              <th className="px-4 py-3">取得日時（JST）</th>
-              <th className="px-4 py-3">URL</th>
-              <th className="px-4 py-3">地域</th>
-              <th className="px-4 py-3">ステータス</th>
-              <th className="px-4 py-3 text-right">操作</th>
+              <th className="px-4 py-3">{tb.colCaptured}</th>
+              <th className="px-4 py-3">{tb.colUrl}</th>
+              <th className="px-4 py-3">{tb.colRegion}</th>
+              <th className="px-4 py-3">{tb.colStatus}</th>
+              <th className="px-4 py-3 text-right">{tb.colActions}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--color-border)]">
@@ -60,10 +72,10 @@ export function ObservationsTable({
                   {row.regionLabel}
                 </td>
                 <td className="px-4 py-3 align-top">
-                  <StatusBadge status={row.status} />
+                  <StatusBadge status={row.status} locale={locale} />
                   {row.note ? (
                     <span className="mt-1 block text-[11px] text-[var(--color-ink-muted)]">
-                      {row.note}
+                      {localizeObservationNote(row.note, locale)}
                     </span>
                   ) : null}
                 </td>
@@ -72,7 +84,7 @@ export function ObservationsTable({
                     href={`/dashboard/observations/${row.id}`}
                     className="font-medium text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
                   >
-                    詳細
+                    {tb.actionDetail}
                   </Link>
                 </td>
               </tr>
