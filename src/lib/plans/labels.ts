@@ -28,6 +28,13 @@ export function getPlanLabels(planId: PlanId, locale: Locale): {
         coverageLabel: "All US states + major countries",
       };
     }
+    if (planId === "freeplan") {
+      return {
+        priceLabel: "$0",
+        audienceLabel: "Free trial & accounts without a paid subscription",
+        coverageLabel: "US + major countries",
+      };
+    }
     return {
       priceLabel: "$49/mo",
       audienceLabel: "Try-it-out & light validation",
@@ -39,6 +46,13 @@ export function getPlanLabels(planId: PlanId, locale: Locale): {
       priceLabel: "$99/月",
       audienceLabel: "本番運用・代理店・報告・記録整理向け",
       coverageLabel: "米国全州＋主要国",
+    };
+  }
+  if (planId === "freeplan") {
+    return {
+      priceLabel: "無料",
+      audienceLabel: "無料トライアル・未課金のアカウント",
+      coverageLabel: "米国＋主要国",
     };
   }
   return {

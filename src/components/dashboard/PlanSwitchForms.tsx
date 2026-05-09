@@ -10,8 +10,16 @@ export function PlanSwitchForms({
   locale: Locale;
 }) {
   const t = copy[locale].dashboardSettings;
+  const onFreePlan = currentPlan === "freeplan";
   return (
     <div className="mt-6 space-y-4">
+      {onFreePlan ? (
+        <p className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-3 py-2 text-xs text-[var(--color-ink-muted)]">
+          {locale === "ja"
+            ? "現在はフリープランです。下から有料プランにアップグレードできます。"
+            : "You are on the free plan. Upgrade to a paid plan below."}
+        </p>
+      ) : null}
       <div className="grid gap-3 sm:grid-cols-2">
         {(["starter", "pro"] as const).map((id) => {
           const p = PLANS[id];

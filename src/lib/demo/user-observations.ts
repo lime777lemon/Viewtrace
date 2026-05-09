@@ -87,7 +87,7 @@ export async function readUserObservations(): Promise<Observation[]> {
   if (!user?.id) return [];
 
   const session = await getSession();
-  const planForRegionFallback = session?.plan ?? "starter";
+  const planForRegionFallback = session?.plan ?? "freeplan";
 
   const { data, error } = await supabase
     .from("observations")

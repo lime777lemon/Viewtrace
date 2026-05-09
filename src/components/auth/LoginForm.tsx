@@ -86,7 +86,7 @@ export function LoginForm({
         options: {
           emailRedirectTo: buildEmailRedirectTo(),
           data: {
-            plan: "starter" as const,
+            plan: "freeplan" as const,
             trial_active: true,
             trial_started_at: trialStartedAt,
             trial_free_observations: TRIAL_CONFIG.freeObservations,

@@ -24,7 +24,7 @@ export default async function ObservationsListPage() {
   const plan = session ? getPlan(session.plan) : null;
   const showCsv = plan?.csvExport ?? false;
 
-  const planId = session?.plan ?? "starter";
+  const planId = session?.plan ?? "freeplan";
   const rows = await getMergedObservationsForPlan(planId);
 
   const userObsForTrial = session ? await readUserObservations() : [];

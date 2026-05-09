@@ -1,4 +1,5 @@
-export type PlanId = "starter" | "pro";
+/** freeplan = 無料トライアル／未課金。starter = 有料 Starter（Stripe）。 */
+export type PlanId = "freeplan" | "starter" | "pro";
 
 export type LocationsKey = "us_major_countries" | "all_us_states_major_countries";
 
@@ -26,6 +27,20 @@ export const TRIAL_CONFIG = {
 } as const;
 
 export const PLANS: Record<PlanId, PlanDefinition> = {
+  freeplan: {
+    id: "freeplan",
+    name: "Free plan",
+    priceLabel: "$0",
+    priceMonthlyUsd: 0,
+    monthlyObservations: 80,
+    retentionDays: 7,
+    locationsKey: "us_major_countries",
+    coverageLabel: "米国＋主要国",
+    audienceLabel: "無料トライアル・未課金",
+    csvExport: false,
+    allUsStates: false,
+    snapshotFullPage: false,
+  },
   starter: {
     id: "starter",
     name: "Starter",
@@ -79,6 +94,15 @@ const overageUsdSnapshot = parseOverageUsdFromEnv();
 /** Stripe メタデータ／アプリ制限と揃えた設定スナップショット */
 export const billingConfig = {
   plans: {
+    freeplan: {
+      name: PLANS.freeplan.name,
+      price_monthly_usd: PLANS.freeplan.priceMonthlyUsd,
+      monthly_observation_limit: PLANS.freeplan.monthlyObservations,
+      retention_days: PLANS.freeplan.retentionDays,
+      locations: PLANS.freeplan.locationsKey,
+      csv_export: PLANS.freeplan.csvExport,
+      snapshot_full_page: PLANS.freeplan.snapshotFullPage,
+    },
     starter: {
       name: PLANS.starter.name,
       price_monthly_usd: PLANS.starter.priceMonthlyUsd,
@@ -109,7 +133,9 @@ export const billingConfig = {
 
 export function parsePlanId(value: string | undefined | null): PlanId {
   if (value === "pro") return "pro";
-  return "starter";
+  if (value === "starter") return "starter";
+  if (value === "freeplan") return "freeplan";
+  return "freeplan";
 }
 
 export function getPlan(planId: PlanId): PlanDefinition {

@@ -127,7 +127,7 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
     if (shot.ok) {
       browserlessShotOk = true;
       // Keep text/UI readable: Starter is slightly more compressed, Pro keeps higher quality.
-      const webpQuality = session.plan === "starter" ? 78 : 86;
+      const webpQuality = session.plan === "pro" ? 86 : 78;
       blobUploadResult = await uploadObservationSnapshotPng(id, shot.png, {
         format: "webp",
         webpQuality,

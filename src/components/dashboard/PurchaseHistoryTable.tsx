@@ -41,6 +41,7 @@ function StatusBadge({ status }: { status: string | null }) {
 
 function planLabel(planId: string | null, locale: Locale): string {
   if (!planId) return "-";
+  if (planId === "freeplan") return locale === "ja" ? "フリープラン" : "Free plan";
   if (planId === "starter") return "Starter";
   if (planId === "pro") return "Pro";
   return locale === "ja" ? `不明（${planId}）` : `Unknown (${planId})`;

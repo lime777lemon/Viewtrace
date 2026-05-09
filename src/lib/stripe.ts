@@ -31,6 +31,7 @@ export function isStripeCheckoutConfigured(): boolean {
 }
 
 export function stripePriceIdForPlan(planId: PlanId): string | null {
+  if (planId === "freeplan") return null;
   const id = planId === "pro" ? process.env.STRIPE_PRICE_ID_PRO : process.env.STRIPE_PRICE_ID_STARTER;
   const v = id?.trim();
   return v && v.length > 0 ? v : null;
