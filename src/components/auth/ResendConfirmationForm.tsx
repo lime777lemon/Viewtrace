@@ -53,8 +53,7 @@ export function ResendConfirmationForm({ authCallbackUrl }: { authCallbackUrl: s
     >
       <p className="text-xs font-medium text-[var(--color-ink)]">Did not get the confirmation email?</p>
       <p className="mt-1 text-xs leading-relaxed text-[var(--color-ink-muted)]">
-        Enter the email you used to sign up and we’ll resend it. Sending many times in a short period may be
-        rate-limited.
+        Enter the email you used to sign up and we will resend the confirmation message.
       </p>
       <label htmlFor={emailId} className="mt-3 block text-xs font-medium text-[var(--color-ink)]">
         Email
