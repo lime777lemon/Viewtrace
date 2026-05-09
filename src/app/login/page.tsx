@@ -8,7 +8,7 @@ import { getSession } from "@/lib/auth/session";
 import { siteDomain } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "ログイン | Viewtrace",
+  title: "Sign in | Viewtrace",
   robots: { index: false, follow: false },
 };
 
@@ -54,13 +54,13 @@ export default async function LoginPage({
               href="/contact"
               className="hidden font-medium text-[var(--color-ink-muted)] transition hover:text-[var(--color-ink)] sm:inline"
             >
-              お問い合わせ
+              Contact
             </Link>
             <Link
               href="/"
               className="font-medium text-[var(--color-accent)] transition hover:text-[var(--color-accent-hover)]"
             >
-              サイトへ戻る
+              Back to site
             </Link>
           </div>
         </div>
@@ -70,26 +70,27 @@ export default async function LoginPage({
         <section className="order-2 lg:order-1">
           <p className="inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-3 py-1 text-xs font-medium text-[var(--color-ink-muted)]">
             <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-accent)]" />
-            プロダクト
+            Product
           </p>
           <h1 className="font-display mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
-            ダッシュボードにログイン
+            Sign in to the dashboard
           </h1>
           <p className="mt-4 max-w-md text-base leading-relaxed text-[var(--color-ink-muted)]">
-            オブザベーションの取得・一覧・設定はログイン後のダッシュボードで行います。記録は取得時点の観測であり、完全性や正確性を保証するものではありません。
+            After you sign in, you can capture, list, and configure observations in the dashboard. Records
+            reflect what we observed at capture time; we do not guarantee completeness or accuracy.
           </p>
           <ul className="mt-8 space-y-3 text-sm text-[var(--color-ink-muted)]">
             <li className="flex gap-2">
               <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-accent)]" />
-              タイムスタンプ付きのビジュアル記録を管理
+              Manage timestamped visual records
             </li>
             <li className="flex gap-2">
               <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-accent)]" />
-              地域条件に基づく観測の履歴を確認
+              Review observation history with regional targeting
             </li>
             <li className="flex gap-2">
               <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-accent)]" />
-              プラン・利用状況の参照（実装に応じて拡張）
+              View plan and usage (expanded as we ship more)
             </li>
           </ul>
         </section>
@@ -99,69 +100,73 @@ export default async function LoginPage({
             <div className="text-center">
               <p className="font-display text-lg font-semibold">Viewtrace</p>
               <p className="mt-1 text-sm text-[var(--color-ink-muted)]">
-                メールとパスワードで登録またはログイン
+                Sign up or sign in with email and password
               </p>
             </div>
 
             <div className="mt-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-left text-sm text-[var(--color-ink-muted)]">
-              <p className="font-medium text-[var(--color-ink)]">メールアドレスでサインイン</p>
+              <p className="font-medium text-[var(--color-ink)]">Email sign-in</p>
               <p className="mt-2 leading-relaxed">
-                「無料で始める」でアカウントを作成するか、「ログイン」で既存のアカウントに入れます。
+                Use <strong className="font-semibold text-[var(--color-ink)]">Get started</strong> to create
+                an account or <strong className="font-semibold text-[var(--color-ink)]">Sign in</strong> for an
+                existing one.
                 <strong className="font-semibold text-[var(--color-ink)]">
-                  新規登録後は確認メールのリンクでアドレス確認を済ませるまでログインできません。
-                </strong>
-                メールが届いたらリンクを開き、確認後にパスワードでログインしてください。
+                  {" "}
+                  After sign-up, you cannot sign in until you confirm your email via the link we send.
+                </strong>{" "}
+                Open the link in the message, then sign in with your password.
               </p>
               {verified ? (
                 <p className="mt-3 rounded-lg border border-emerald-200/80 bg-emerald-50/90 px-3 py-2 text-xs leading-relaxed text-emerald-950">
-                  メールアドレスの確認が完了しました。続けてこのページでパスワードを入力してログインしてください。
+                  Your email is confirmed. Enter your password on this page to sign in.
                 </p>
               ) : null}
               <p className="mt-2 rounded-lg border border-amber-200/80 bg-amber-50/90 px-3 py-2 text-xs leading-relaxed text-amber-950">
-                ブラウザで「このサイトにアクセスできません」と出ることがあります。多くは確認メールの先が{" "}
-                <span className="font-mono">localhost</span> や開発用URLのままになっているためです。登録したのと同じPCのブラウザでリンクを開くか、本番の{" "}
-                <span className="font-mono break-all">{productionCallbackUrl}</span> が Supabase の Site
-                URL・Redirect URLs に含まれているかを確認してください。
+                If the browser says the site cannot be reached, the confirmation link often still points at{" "}
+                <span className="font-mono">localhost</span> or a dev URL. Open the link in the same browser
+                where you signed up, or ensure production{" "}
+                <span className="font-mono break-all">{productionCallbackUrl}</span> is listed under Supabase
+                Site URL and Redirect URLs.
               </p>
               <p className="mt-2">
-                うまくいかない場合は
+                Need help?{" "}
                 <Link href="/contact" className="font-medium text-[var(--color-accent)] underline underline-offset-2">
-                  お問い合わせ
+                  Contact us
                 </Link>
-                ください。
+                .
               </p>
               <details className="mt-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-3 py-2 text-xs">
                 <summary className="cursor-pointer select-none font-medium text-[var(--color-ink)]">
-                  サイト運用・開発向け（認証バックエンドの設定）
+                  For operators &amp; developers (auth backend)
                 </summary>
                 <div className="mt-3 space-y-2 leading-relaxed">
                   <p>
-                    Supabase の Authentication → Providers で Email を有効にし、Authentication → URL
-                    configuration で <strong className="font-medium text-[var(--color-ink)]">Site URL</strong>{" "}
-                    を実際にユーザーが開く本番オリジン（例{" "}
-                    <span className="font-mono text-[11px]">https://viewtrace.net</span>）に合わせ、
-                    Redirect URLs に次のコールバックを必ず追加してください（Site URL が{" "}
-                    <span className="font-mono text-[11px]">localhost</span> のままだと、本番で届くメールのリンクが開発環境を指し、スマホでは開けません）。
+                    In Supabase, enable Email under Authentication → Providers. Under Authentication → URL
+                    configuration, set <strong className="font-medium text-[var(--color-ink)]">Site URL</strong>{" "}
+                    to the production origin users actually open (e.g.{" "}
+                    <span className="font-mono text-[11px]">https://viewtrace.net</span>), and add the callback
+                    below to Redirect URLs. If Site URL stays{" "}
+                    <span className="font-mono text-[11px]">localhost</span>, confirmation emails in
+                    production may point at dev, which mobile cannot open.
                   </p>
-                  <p className="text-[var(--color-ink)]">このページを開いている環境で使うコールバック（目安）</p>
+                  <p className="text-[var(--color-ink)]">Callback for this environment (reference)</p>
                   <p className="break-all font-mono text-[11px] text-[var(--color-ink)]">{callbackUrl}</p>
-                  <p className="text-[var(--color-ink)]">本番の例</p>
+                  <p className="text-[var(--color-ink)]">Production example</p>
                   <p className="break-all font-mono text-[11px] text-[var(--color-ink)]">{productionCallbackUrl}</p>
                   <p>
-                    ローカルでは <span className="font-mono text-[11px]">NEXT_PUBLIC_SITE_URL</span>{" "}
-                    を実際のオリジン（例{" "}
-                    <span className="whitespace-nowrap font-mono text-[11px]">
-                      http://localhost:3001
-                    </span>
-                    ）に合わせ、同じ URL の <span className="font-mono text-[11px]">/auth/callback</span>{" "}
-                    を Redirect URLs に登録してください。
+                    Locally, set <span className="font-mono text-[11px]">NEXT_PUBLIC_SITE_URL</span> to your
+                    real origin (e.g.{" "}
+                    <span className="whitespace-nowrap font-mono text-[11px]">http://localhost:3001</span>),
+                    and register that same origin’s{" "}
+                    <span className="font-mono text-[11px]">/auth/callback</span> in Redirect URLs.
                   </p>
                   <p>
-                    確認メールが届かない場合は、Project Settings → Auth → SMTP で Resend 等のカスタム SMTP
-                    を設定すると到達率が上がることがあります。デフォルトの送信は迷惑メールに入りやすい場合があります。
+                    If confirmation mail does not arrive, configure custom SMTP under Project Settings → Auth
+                    → SMTP (e.g. Resend). Default sending is often filtered as spam.
                   </p>
                   <p>
-                    ローカルですぐ試す場合は、Authentication の「Confirm email」をオフにすると確認メールなしでログインできます。
+                    For quick local testing, turn off “Confirm email” under Authentication so you can sign in
+                    without a confirmation message.
                   </p>
                 </div>
               </details>
@@ -177,19 +182,19 @@ export default async function LoginPage({
 
             <div className="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-1 border-t border-[var(--color-border)] pt-6 text-center text-xs text-[var(--color-ink-muted)]">
               <Link href="/terms" className="hover:text-[var(--color-ink)]">
-                利用規約
+                Terms
               </Link>
               <span aria-hidden className="text-[var(--color-border)]">
                 ·
               </span>
               <Link href="/privacy" className="hover:text-[var(--color-ink)]">
-                プライバシー
+                Privacy
               </Link>
               <span aria-hidden className="text-[var(--color-border)]">
                 ·
               </span>
               <Link href="/acceptable-use" className="hover:text-[var(--color-ink)]">
-                利用方針
+                Acceptable use
               </Link>
             </div>
           </div>

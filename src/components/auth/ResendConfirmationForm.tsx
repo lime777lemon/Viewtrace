@@ -21,7 +21,7 @@ export function ResendConfirmationForm({ authCallbackUrl }: { authCallbackUrl: s
     const fd = new FormData(e.currentTarget);
     const email = String(fd.get("email") ?? "").trim();
     if (!email || !isValidEmail(email)) {
-      setState({ error: "有効なメールアドレスを入力してください。" });
+      setState({ error: "Enter a valid email address." });
       return;
     }
 
@@ -39,7 +39,7 @@ export function ResendConfirmationForm({ authCallbackUrl }: { authCallbackUrl: s
       }
       setState({
         message:
-          "確認メールを再送しました。届かない場合は迷惑メールフォルダやドメイン受信設定をご確認ください。",
+          "Confirmation email sent again. If it still does not arrive, check spam and your domain’s inbound rules.",
       });
     } finally {
       setPending(false);
@@ -51,12 +51,13 @@ export function ResendConfirmationForm({ authCallbackUrl }: { authCallbackUrl: s
       onSubmit={onSubmit}
       className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-left"
     >
-      <p className="text-xs font-medium text-[var(--color-ink)]">確認メールが届かない場合</p>
+      <p className="text-xs font-medium text-[var(--color-ink)]">Did not get the confirmation email?</p>
       <p className="mt-1 text-xs leading-relaxed text-[var(--color-ink-muted)]">
-        登録したメールアドレスを入力して再送できます（短時間に繰り返すと制限されることがあります）。
+        Enter the email you used to sign up and we’ll resend it. Sending many times in a short period may be
+        rate-limited.
       </p>
       <label htmlFor={emailId} className="mt-3 block text-xs font-medium text-[var(--color-ink)]">
-        メールアドレス
+        Email
       </label>
       <input
         id={emailId}
@@ -82,7 +83,7 @@ export function ResendConfirmationForm({ authCallbackUrl }: { authCallbackUrl: s
         disabled={pending}
         className="mt-3 w-full rounded-full border border-[var(--color-border)] bg-[var(--color-surface-elevated)] py-2 text-xs font-semibold text-[var(--color-ink)] transition hover:bg-[var(--color-border)]/30 disabled:opacity-60"
       >
-        {pending ? "送信中…" : "確認メールを再送"}
+        {pending ? "Sending…" : "Resend confirmation email"}
       </button>
     </form>
   );

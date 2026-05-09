@@ -21,11 +21,11 @@ export async function authFormAction(
   const password = String(formData.get("password") ?? "");
 
   if (!email || !isValidEmail(email)) {
-    return { error: "有効なメールアドレスを入力してください。" };
+    return { error: "Enter a valid email address." };
   }
 
   if (!password) {
-    return { error: "パスワードを入力してください。" };
+    return { error: "Enter your password." };
   }
 
   const supabase = await createSupabaseServerClient();

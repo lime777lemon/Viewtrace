@@ -19,7 +19,7 @@ export function LoginForm({
 }: {
   nextPath?: string;
   initialMode?: Mode;
-  /** メール確認・PKCE 用。サーバーが決めた `/auth/callback` の絶対 URL（オリジン一致必須） */
+  /** Absolute `/auth/callback` URL for email confirmation & PKCE (origin must match). */
   authCallbackUrl: string;
 }) {
   const [signInState, signInAction, signInPending] = useActionState(authFormAction, null);
@@ -38,8 +38,6 @@ export function LoginForm({
     nextPath?.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "";
 
   function buildEmailRedirectTo(): string {
-    // メール確認後はいったんログインページへ戻し、そこでパスワード入力でログインさせる。
-    // これにより「認証したのにダッシュボードへ行けない」などの混乱を減らす。
     const u = new URL(authCallbackUrl);
     u.searchParams.set("next", "/login?mode=signin&verified=1");
     return u.toString();
@@ -55,21 +53,21 @@ export function LoginForm({
     const passwordConfirm = String(fd.get("passwordConfirm") ?? "");
 
     if (!email || !isValidEmail(email)) {
-      setSignupFeedback({ error: "有効なメールアドレスを入力してください。" });
+      setSignupFeedback({ error: "Enter a valid email address." });
       return;
     }
     if (!fullName) {
-      setSignupFeedback({ error: "お名前を入力してください。" });
+      setSignupFeedback({ error: "Enter your name." });
       return;
     }
     if (!isSignupPasswordOk(password)) {
       setSignupFeedback({
-        error: "パスワードは半角英字・数字のみで、8文字以上で入力してください。",
+        error: "Password must be at least 8 characters, letters and numbers only.",
       });
       return;
     }
     if (password !== passwordConfirm) {
-      setSignupFeedback({ error: "パスワードが一致しません。もう一度入力してください。" });
+      setSignupFeedback({ error: "Passwords do not match. Try again." });
       return;
     }
 
@@ -103,7 +101,7 @@ export function LoginForm({
       if (!data.user) {
         setSignupFeedback({
           error:
-            "登録を完了できませんでした。メールアドレスを確認するか、しばらくしてから再度お試しください。",
+            "We could not finish sign-up. Check your email or wait a moment and try again.",
         });
         return;
       }
@@ -122,12 +120,12 @@ export function LoginForm({
 
       setSignupFeedback({
         message:
-          "登録用の確認メールの送信をリクエストしました。メール内のリンクでアドレス確認が完了するまでログインできません。\n\n" +
-          "メールが届かない場合:\n" +
-          "・迷惑メール・プロモーション欄を確認\n" +
-          "・数分待ってから下の「確認メールを再送」\n" +
-          "・アプリの .env の Resend キーは「商品メール」用です。確認メールは Supabase が送るため、到達率を上げるには Dashboard → Authentication → SMTP で Resend 等の SMTP を設定してください。\n" +
-          "・Supabase → Logs → Auth で送信エラーが出ていないか確認",
+          "We have sent a confirmation email request. You cannot sign in until you confirm your address using the link in that message.\n\n" +
+          "If nothing arrives:\n" +
+          "· Check spam or promotions\n" +
+          "· Wait a few minutes, then use \"Resend confirmation email\" below\n" +
+          "· The Resend key in your app .env is for product email. Supabase sends confirmation mail; for better deliverability set SMTP under Dashboard → Authentication → SMTP (e.g. Resend).\n" +
+          "· Check Supabase → Logs → Auth for send errors",
       });
     } finally {
       setSignupPending(false);
@@ -160,7 +158,7 @@ export function LoginForm({
               : "text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"
           }`}
         >
-          無料で始める
+          Get started
         </button>
         <button
           type="button"
@@ -174,23 +172,25 @@ export function LoginForm({
               : "text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"
           }`}
         >
-          ログイン
+          Sign in
         </button>
       </div>
 
       {mode === "signup" ? (
         <p className="text-xs leading-relaxed text-[var(--color-ink-muted)]">
-          お名前（必須）・会社名・電話番号（任意）・メール・パスワードで登録します。パスワードは半角英字・数字のみ（8文字以上、記号は使えません）。
+          Sign up with name (required), company, phone (optional), email, and password. Passwords are
+          letters and numbers only, at least 8 characters, no symbols.
           <span className="font-medium text-[var(--color-ink)]">
-            登録後に届くメールのリンクでアドレス確認が完了するまで、ログインはできません。
-          </span>
-          プロフィールはログイン後の設定からも編集できます。
+            {" "}
+            You cannot sign in until you confirm your email via the link we send.
+          </span>{" "}
+          You can edit your profile later in settings.
         </p>
       ) : null}
 
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-[var(--color-ink)]">
-          メールアドレス
+          Email
         </label>
         <input
           id="email"
@@ -206,7 +206,7 @@ export function LoginForm({
         <>
           <div>
             <label htmlFor={fullNameId} className="block text-sm font-medium text-[var(--color-ink)]">
-              お名前
+              Full name
             </label>
             <input
               id={fullNameId}
@@ -215,13 +215,13 @@ export function LoginForm({
               autoComplete="name"
               required
               maxLength={200}
-              placeholder="例：山田 太郎"
+              placeholder="e.g. Jane Doe"
               className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm outline-none ring-[var(--color-accent)]/25 transition placeholder:text-[var(--color-ink-muted)]/60 focus:border-[var(--color-accent)]/40 focus:ring-2"
             />
           </div>
           <div>
             <label htmlFor={companyNameId} className="block text-sm font-medium text-[var(--color-ink)]">
-              会社名（任意）
+              Company (optional)
             </label>
             <input
               id={companyNameId}
@@ -229,13 +229,13 @@ export function LoginForm({
               type="text"
               autoComplete="organization"
               maxLength={200}
-              placeholder="例：株式会社〇〇"
+              placeholder="e.g. Acme Inc."
               className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm outline-none ring-[var(--color-accent)]/25 transition placeholder:text-[var(--color-ink-muted)]/60 focus:border-[var(--color-accent)]/40 focus:ring-2"
             />
           </div>
           <div>
             <label htmlFor={phoneId} className="block text-sm font-medium text-[var(--color-ink)]">
-              電話番号（任意）
+              Phone (optional)
             </label>
             <input
               id={phoneId}
@@ -243,7 +243,7 @@ export function LoginForm({
               type="tel"
               autoComplete="tel"
               maxLength={40}
-              placeholder="例：03-1234-5678"
+              placeholder="e.g. +1 555 0100"
               className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm outline-none ring-[var(--color-accent)]/25 transition placeholder:text-[var(--color-ink-muted)]/60 focus:border-[var(--color-accent)]/40 focus:ring-2"
             />
           </div>
@@ -252,14 +252,14 @@ export function LoginForm({
       <div>
         <div className="flex items-center justify-between gap-2">
           <label htmlFor={passwordId} className="block text-sm font-medium text-[var(--color-ink)]">
-            パスワード
+            Password
           </label>
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}
             className="text-xs font-medium text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
           >
-            {showPassword ? "隠す" : "表示"}
+            {showPassword ? "Hide" : "Show"}
           </button>
         </div>
         <input
@@ -269,12 +269,12 @@ export function LoginForm({
           autoComplete={mode === "signup" ? "new-password" : "current-password"}
           required
           minLength={mode === "signup" ? 8 : undefined}
-          placeholder={mode === "signup" ? "半角英数字8文字以上" : "パスワード"}
+          placeholder={mode === "signup" ? "8+ letters and numbers" : "Password"}
           className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm outline-none ring-[var(--color-accent)]/25 transition placeholder:text-[var(--color-ink-muted)]/60 focus:border-[var(--color-accent)]/40 focus:ring-2"
         />
         {mode === "signup" ? (
           <p className="mt-1 text-xs text-[var(--color-ink-muted)]">
-            半角英字・数字のみ、8文字以上で設定してください。
+            Use letters and numbers only, at least 8 characters.
           </p>
         ) : null}
       </div>
@@ -284,7 +284,7 @@ export function LoginForm({
             htmlFor={passwordConfirmId}
             className="block text-sm font-medium text-[var(--color-ink)]"
           >
-            パスワード（確認）
+            Confirm password
           </label>
           <input
             id={passwordConfirmId}
@@ -293,11 +293,11 @@ export function LoginForm({
             autoComplete="new-password"
             required
             minLength={8}
-            placeholder="もう一度入力"
+            placeholder="Re-enter password"
             className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm outline-none ring-[var(--color-accent)]/25 transition placeholder:text-[var(--color-ink-muted)]/60 focus:border-[var(--color-accent)]/40 focus:ring-2"
           />
           <p className="mt-1 text-xs text-[var(--color-ink-muted)]">
-            上と同じパスワードを入力してください。
+            Enter the same password again.
           </p>
         </div>
       ) : null}
@@ -340,11 +340,11 @@ export function LoginForm({
       >
         {mode === "signin"
           ? signInPending
-            ? "ログイン中…"
-            : "ログイン"
+            ? "Signing in…"
+            : "Sign in"
           : signupPending
-            ? "登録中…"
-            : "無料で始める"}
+            ? "Creating account…"
+            : "Get started"}
       </button>
     </form>
   );
