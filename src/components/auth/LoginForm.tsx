@@ -5,8 +5,10 @@ import { authFormAction } from "@/app/actions/auth";
 import {
   isSignupPasswordOk,
   isValidEmail,
-  mapAuthError,
+  mapAuthErrorForLocale,
 } from "@/lib/auth/form-helpers";
+import type { LoginLocale } from "@/lib/auth/login-copy";
+import { loginPageCopy } from "@/lib/auth/login-copy";
 import { TRIAL_CONFIG } from "@/lib/plans";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -16,12 +18,15 @@ export function LoginForm({
   nextPath,
   initialMode = "signup",
   authCallbackUrl,
+  locale,
 }: {
   nextPath?: string;
   initialMode?: Mode;
   /** Absolute `/auth/callback` URL for email confirmation & PKCE (origin must match). */
   authCallbackUrl: string;
+  locale: LoginLocale;
 }) {
+  const t = loginPageCopy[locale].form;
   const [signInState, signInAction, signInPending] = useActionState(authFormAction, null);
   const [signupFeedback, setSignupFeedback] = useState<{ error?: string; message?: string } | null>(
     null,
@@ -53,21 +58,21 @@ export function LoginForm({
     const passwordConfirm = String(fd.get("passwordConfirm") ?? "");
 
     if (!email || !isValidEmail(email)) {
-      setSignupFeedback({ error: "Enter a valid email address." });
+      setSignupFeedback({ error: t.errInvalidEmail });
       return;
     }
     if (!fullName) {
-      setSignupFeedback({ error: "Enter your name." });
+      setSignupFeedback({ error: t.errNameRequired });
       return;
     }
     if (!isSignupPasswordOk(password)) {
       setSignupFeedback({
-        error: "Password must be at least 8 characters, letters and numbers only.",
+        error: t.errPasswordRules,
       });
       return;
     }
     if (password !== passwordConfirm) {
-      setSignupFeedback({ error: "Passwords do not match. Try again." });
+      setSignupFeedback({ error: t.errPasswordMismatch });
       return;
     }
 
@@ -94,14 +99,13 @@ export function LoginForm({
       });
 
       if (error) {
-        setSignupFeedback({ error: mapAuthError(error.message) });
+        setSignupFeedback({ error: mapAuthErrorForLocale(error.message, locale) });
         return;
       }
 
       if (!data.user) {
         setSignupFeedback({
-          error:
-            "We could not finish sign-up. Check your email or wait a moment and try again.",
+          error: t.errSignupIncomplete,
         });
         return;
       }
@@ -119,8 +123,7 @@ export function LoginForm({
       });
 
       setSignupFeedback({
-        message:
-          "We have sent a confirmation email request. You cannot sign in until you confirm your address using the link in that message.",
+        message: t.signupSuccessMessage,
       });
     } finally {
       setSignupPending(false);
@@ -138,6 +141,7 @@ export function LoginForm({
       }}
       className="mt-8 space-y-5"
     >
+      <input type="hidden" name="_locale" value={locale} />
       {safeNext ? <input type="hidden" name="next" value={safeNext} /> : null}
 
       <div className="flex rounded-xl border border-[var(--color-border)] p-1 text-sm font-medium">
@@ -153,7 +157,7 @@ export function LoginForm({
               : "text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"
           }`}
         >
-          Get started
+          {t.getStartedTab}
         </button>
         <button
           type="button"
@@ -167,13 +171,13 @@ export function LoginForm({
               : "text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"
           }`}
         >
-          Sign in
+          {t.signInTab}
         </button>
       </div>
 
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-[var(--color-ink)]">
-          Email
+          {t.email}
         </label>
         <input
           id="email"
@@ -181,7 +185,7 @@ export function LoginForm({
           type="email"
           autoComplete="email"
           required
-          placeholder="you@company.com"
+          placeholder={t.emailPlaceholder}
           className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm outline-none ring-[var(--color-accent)]/25 transition placeholder:text-[var(--color-ink-muted)]/60 focus:border-[var(--color-accent)]/40 focus:ring-2"
         />
       </div>
@@ -189,7 +193,7 @@ export function LoginForm({
         <>
           <div>
             <label htmlFor={fullNameId} className="block text-sm font-medium text-[var(--color-ink)]">
-              Full name
+              {t.fullName}
             </label>
             <input
               id={fullNameId}
@@ -198,13 +202,13 @@ export function LoginForm({
               autoComplete="name"
               required
               maxLength={200}
-              placeholder="e.g. Jane Doe"
+              placeholder={t.fullNamePlaceholder}
               className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm outline-none ring-[var(--color-accent)]/25 transition placeholder:text-[var(--color-ink-muted)]/60 focus:border-[var(--color-accent)]/40 focus:ring-2"
             />
           </div>
           <div>
             <label htmlFor={companyNameId} className="block text-sm font-medium text-[var(--color-ink)]">
-              Company (optional)
+              {t.company}
             </label>
             <input
               id={companyNameId}
@@ -212,13 +216,13 @@ export function LoginForm({
               type="text"
               autoComplete="organization"
               maxLength={200}
-              placeholder="e.g. Acme Inc."
+              placeholder={t.companyPlaceholder}
               className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm outline-none ring-[var(--color-accent)]/25 transition placeholder:text-[var(--color-ink-muted)]/60 focus:border-[var(--color-accent)]/40 focus:ring-2"
             />
           </div>
           <div>
             <label htmlFor={phoneId} className="block text-sm font-medium text-[var(--color-ink)]">
-              Phone (optional)
+              {t.phone}
             </label>
             <input
               id={phoneId}
@@ -226,7 +230,7 @@ export function LoginForm({
               type="tel"
               autoComplete="tel"
               maxLength={40}
-              placeholder="e.g. +1 555 0100"
+              placeholder={t.phonePlaceholder}
               className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm outline-none ring-[var(--color-accent)]/25 transition placeholder:text-[var(--color-ink-muted)]/60 focus:border-[var(--color-accent)]/40 focus:ring-2"
             />
           </div>
@@ -235,14 +239,14 @@ export function LoginForm({
       <div>
         <div className="flex items-center justify-between gap-2">
           <label htmlFor={passwordId} className="block text-sm font-medium text-[var(--color-ink)]">
-            Password
+            {t.password}
           </label>
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}
             className="text-xs font-medium text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
           >
-            {showPassword ? "Hide" : "Show"}
+            {showPassword ? t.hidePassword : t.showPassword}
           </button>
         </div>
         <input
@@ -252,13 +256,11 @@ export function LoginForm({
           autoComplete={mode === "signup" ? "new-password" : "current-password"}
           required
           minLength={mode === "signup" ? 8 : undefined}
-          placeholder={mode === "signup" ? "8+ letters and numbers" : "Password"}
+          placeholder={mode === "signup" ? t.passwordPlaceholderSignup : t.passwordPlaceholderSignin}
           className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm outline-none ring-[var(--color-accent)]/25 transition placeholder:text-[var(--color-ink-muted)]/60 focus:border-[var(--color-accent)]/40 focus:ring-2"
         />
         {mode === "signup" ? (
-          <p className="mt-1 text-xs text-[var(--color-ink-muted)]">
-            Use letters and numbers only, at least 8 characters.
-          </p>
+          <p className="mt-1 text-xs text-[var(--color-ink-muted)]">{t.passwordHint}</p>
         ) : null}
       </div>
       {mode === "signup" ? (
@@ -267,7 +269,7 @@ export function LoginForm({
             htmlFor={passwordConfirmId}
             className="block text-sm font-medium text-[var(--color-ink)]"
           >
-            Confirm password
+            {t.confirmPassword}
           </label>
           <input
             id={passwordConfirmId}
@@ -276,12 +278,10 @@ export function LoginForm({
             autoComplete="new-password"
             required
             minLength={8}
-            placeholder="Re-enter password"
+            placeholder={t.confirmPasswordPlaceholder}
             className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm outline-none ring-[var(--color-accent)]/25 transition placeholder:text-[var(--color-ink-muted)]/60 focus:border-[var(--color-accent)]/40 focus:ring-2"
           />
-          <p className="mt-1 text-xs text-[var(--color-ink-muted)]">
-            Enter the same password again.
-          </p>
+          <p className="mt-1 text-xs text-[var(--color-ink-muted)]">{t.confirmPasswordHint}</p>
         </div>
       ) : null}
       {mode === "signin" && signInState?.error ? (
@@ -323,11 +323,11 @@ export function LoginForm({
       >
         {mode === "signin"
           ? signInPending
-            ? "Signing in…"
-            : "Sign in"
+            ? t.signingIn
+            : t.signInSubmit
           : signupPending
-            ? "Creating account…"
-            : "Get started"}
+            ? t.creatingAccount
+            : t.getStartedSubmit}
       </button>
     </form>
   );

@@ -2,7 +2,8 @@
 
 import { redirect } from "next/navigation";
 import { appendAuditEvent, AUDIT_ACTION } from "@/lib/audit-log";
-import { isValidEmail, mapAuthError } from "@/lib/auth/form-helpers";
+import { isValidEmail, mapAuthErrorForLocale } from "@/lib/auth/form-helpers";
+import type { LoginLocale } from "@/lib/auth/login-copy";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSession } from "@/lib/auth/session";
 import { parsePlanId } from "@/lib/plans";
@@ -17,22 +18,27 @@ export async function authFormAction(
   _prev: AuthFormState,
   formData: FormData,
 ): Promise<AuthFormState> {
+  const localeRaw = String(formData.get("_locale") ?? "en");
+  const locale: LoginLocale = localeRaw === "ja" ? "ja" : "en";
+
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
   if (!email || !isValidEmail(email)) {
-    return { error: "Enter a valid email address." };
+    return {
+      error: locale === "ja" ? "有効なメールアドレスを入力してください。" : "Enter a valid email address.",
+    };
   }
 
   if (!password) {
-    return { error: "Enter your password." };
+    return { error: locale === "ja" ? "パスワードを入力してください。" : "Enter your password." };
   }
 
   const supabase = await createSupabaseServerClient();
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
-    return { error: mapAuthError(error.message) };
+    return { error: mapAuthErrorForLocale(error.message, locale) };
   }
 
   await appendAuditEvent(supabase, {
