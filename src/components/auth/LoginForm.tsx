@@ -120,12 +120,7 @@ export function LoginForm({
 
       setSignupFeedback({
         message:
-          "We have sent a confirmation email request. You cannot sign in until you confirm your address using the link in that message.\n\n" +
-          "If nothing arrives:\n" +
-          "· Check spam or promotions\n" +
-          "· Wait a few minutes, then use \"Resend confirmation email\" below\n" +
-          "· The Resend key in your app .env is for product email. Supabase sends confirmation mail; for better deliverability set SMTP under Dashboard → Authentication → SMTP (e.g. Resend).\n" +
-          "· Check Supabase → Logs → Auth for send errors",
+          "We have sent a confirmation email request. You cannot sign in until you confirm your address using the link in that message.",
       });
     } finally {
       setSignupPending(false);
