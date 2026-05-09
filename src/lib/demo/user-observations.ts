@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { getSession } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Observation, ObservationHistoryEvent } from "@/lib/demo/observations";
 import type { PlanId } from "@/lib/plans";
@@ -85,6 +86,9 @@ export async function readUserObservations(): Promise<Observation[]> {
   } = await supabase.auth.getUser();
   if (!user?.id) return [];
 
+  const session = await getSession();
+  const planForRegionFallback = session?.plan ?? "starter";
+
   const { data, error } = await supabase
     .from("observations")
     .select(
@@ -98,13 +102,11 @@ export async function readUserObservations(): Promise<Observation[]> {
     .map((row) => {
       const capturedAt = typeof row.captured_at === "string" ? row.captured_at : new Date().toISOString();
       const regionValue = typeof row.region === "string" ? row.region : "";
-      const planId = "starter" as PlanId;
-      // NOTE: plan-specific labels are applied in getObservationMergedForPlan / getMergedObservationsForPlan,
-      // but we keep a reasonable fallback here.
+      // When region_label is missing, derive from the logged-in plan so labels match what content_hash was computed with.
       const labelFromDb =
         typeof row.region_label === "string" && row.region_label.trim() ? row.region_label.trim() : null;
       const labelFromOptions =
-        getRegionOptions(planId).find((r) => r.value === regionValue)?.label ?? regionValue;
+        getRegionOptions(planForRegionFallback).find((r) => r.value === regionValue)?.label ?? regionValue;
 
       const statusRaw = typeof row.status === "string" ? row.status : "pending";
       const status =
