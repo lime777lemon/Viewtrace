@@ -66,8 +66,14 @@ function isAllowedRedirectOrigin(origin: string): boolean {
  * サインアップ確認メールの「続きの URL」（/auth/callback）に使うベースオリジン。
  * フォーム送信時の Origin が取れる場合はそれを優先（ローカル別ポート・Preview で emailRedirectTo が本番固定になるのを防ぐ）。
  *
- * メールテンプレートは `{{ .RedirectTo }}` をそのまま href のベースにし、
- * `&token_hash={{ .TokenHash }}&type=email` を付けると別端末でも確認できる（Dashboard の Email Templates を編集）。
+ * Supabase Dashboard → Authentication → URL Configuration:
+ * 「Redirect URLs」に少なくとも `https://<本番ドメイン>/auth/callback` とローカル用 `http://localhost:<port>/auth/callback` を追加する。
+ * 未登録だと `redirect_to` が無効になり、Site URL（多くは `/`）へ落ちてメイン画面だけ開くことがある。
+ *
+ * Email Templates の「Confirm signup」はリンクを `{{ .SiteURL }}` だけにしない。
+ * `{{ .ConfirmationURL }}` を使うか、`{{ .RedirectTo }}` ベースで `token_hash` を付与する（callback/route.ts 冒頭コメント参照）。
+ *
+ * Site URL 直下に `#access_token=…` だけ付いて戻る場合は、`SupabaseHomeAuthCapture` が fragment 処理へ回す。
  */
 export async function getAuthEmailRedirectTo(): Promise<string> {
   const h = await headers();

@@ -14,19 +14,14 @@ export function LoginView({
   nextPath,
   initialMode,
   verified,
-  showVerifiedSuccess,
 }: {
   callbackUrl: string;
   nextPath?: string;
   initialMode: Mode;
   verified: boolean;
-  /** メール確認後にセッションがあるとき true（認証完了 UI のみ表示） */
-  showVerifiedSuccess: boolean;
 }) {
   const [locale, setLocale] = useState<LoginLocale>("en");
   const t = loginPageCopy[locale];
-  const continueHref =
-    nextPath && nextPath.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/dashboard";
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[var(--color-surface)] text-[var(--color-ink)]">
@@ -117,23 +112,7 @@ export function LoginView({
               <p className="mt-1 text-sm text-[var(--color-ink-muted)]">{t.cardSubtitle}</p>
             </div>
 
-            {showVerifiedSuccess ? (
-              <div className="mt-6 rounded-2xl border border-emerald-200/90 bg-emerald-50/95 px-5 py-8 text-center shadow-sm">
-                <p className="font-display text-xl font-semibold tracking-tight text-emerald-950">
-                  {t.emailVerifiedSuccessTitle}
-                </p>
-                <p className="mt-3 text-sm leading-relaxed text-emerald-900/95">
-                  {t.emailVerifiedSuccessBody}
-                </p>
-                <Link
-                  href={continueHref}
-                  className="mt-8 inline-flex w-full justify-center rounded-full bg-[var(--color-accent)] px-5 py-3.5 text-sm font-semibold text-white shadow-md shadow-[var(--color-accent)]/20 transition hover:bg-[var(--color-accent-hover)]"
-                >
-                  {t.emailVerifiedDashboardCta}
-                </Link>
-              </div>
-            ) : (
-              <>
+            <>
                 <div className="mt-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-left text-sm text-[var(--color-ink-muted)]">
                   <p className="font-medium text-[var(--color-ink)]">{t.emailSignInTitle}</p>
                   <p className="mt-2 leading-relaxed">
@@ -170,8 +149,7 @@ export function LoginView({
                 />
 
                 <ResendConfirmationForm authCallbackUrl={callbackUrl} locale={locale} />
-              </>
-            )}
+            </>
 
             <div className="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-1 border-t border-[var(--color-border)] pt-6 text-center text-xs text-[var(--color-ink-muted)]">
               <Link href="/terms" className="hover:text-[var(--color-ink)]">

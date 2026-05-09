@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { isValidEmail, mapAuthErrorForLocale } from "@/lib/auth/form-helpers";
+import { POST_EMAIL_VERIFY_PATH } from "@/lib/auth/email-verified-copy";
 import type { LoginLocale } from "@/lib/auth/login-copy";
 import { loginPageCopy } from "@/lib/auth/login-copy";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -20,7 +21,7 @@ export function ResendConfirmationForm({
 
   function buildEmailRedirectTo(): string {
     const u = new URL(authCallbackUrl);
-    u.searchParams.set("next", "/login?mode=signin&verified=1");
+    u.searchParams.set("next", POST_EMAIL_VERIFY_PATH);
     return u.toString();
   }
 
