@@ -24,9 +24,9 @@ export const copy = {
     },
     heroTrust: {
       items: [
-        "表示確認を記録として保存",
-        "履歴・ログで後から追跡可能",
-        "ハッシュで整合性チェック",
+        "見え方を「説明できる形」で残せる",
+        "いつ・どの地域で見たかが履歴に残る",
+        "あとから「変わったか」を確認しやすい",
       ],
     },
     valuePillars: [
@@ -111,10 +111,53 @@ export const copy = {
           body: "いつ・どこで・何を確認したかを履歴で確認",
         },
         {
-          title: "整合性チェック",
-          body: "ハッシュにより記録の一致を検証可能",
+          title: "ずれに気づく",
+          body: "保存した記録が後からも一致しているか、確認しやすい",
         },
       ],
+    },
+    audienceBenefits: {
+      kicker: "こんなチームへのメリット",
+      title: "クライアント説明・社内共有が、根拠つきでスムーズになる",
+      subtitle:
+        "海外向けキャンペーンや地域別表示の確認は、口頭やバラバラのスクショだと説明が難しくなりがちです。Viewtrace は「いつ・どの地域から・どのURLがどう見えたか」を一つの記録にまとめ、営業・制作・マーケの現場でそのまま使える形にします。",
+      personas: [
+        {
+          badge: "代表的なお客様",
+          title: "広告代理店・マーケター",
+          lead:
+            "配信やLPが各地でどう見えていたかを、後からでも同じ条件で示せます。クライアントへの報告・問い合わせ対応が速くなり、信頼につながりやすいです。",
+          bullets: [
+            "キャンペーンの「見え方」を言葉だけにしない",
+            "地域ごとの差異を、履歴として残せる",
+            "チーム内で共有する材料がそろう",
+          ],
+        },
+        {
+          badge: null as string | null,
+          title: "Web制作会社",
+          lead:
+            "納品後の表示確認や、クライアントとの認識合わせに使えます。公開後の見え方を時系列で残せるので、トラブル時の説明もしやすくなります。",
+          bullets: [
+            "納品・保守の記録が散らばりにくい",
+            "クライアントと「同じ画面」を指し示せる",
+            "複数案件でもダッシュボードで整理しやすい",
+          ],
+        },
+        {
+          badge: null as string | null,
+          title: "海外展開企業（EC / SaaS / D2C）",
+          lead:
+            "自社サイトやキャンペーンが、海外からどう見えていたかを社内で共有可能に。越境販売・ローカライズの確認に、そのまま使える記録が残ります。",
+          bullets: [
+            "市場ごとの表示を定点で確認しやすい",
+            "マーケ・プロダクト・CS が同じ記録を見られる",
+            "関係者向けの説明・社内稟議の資料にも使える",
+          ],
+        },
+      ],
+      marketNote:
+        "日本国内だけでも、中小の広告・マーケ関連事業者は数千〜1万社規模、フリーランスを含めるとさらに広い層があります。Web制作の中小事業者も数千社規模が目安で、海外展開を進めるEC・SaaS・D2C企業も同様のニーズを抱えています。海外クライアントや越境キャンペーンほど、「見え方の記録」が差別化の材料になります。",
     },
     roiSection: {
       kicker: "ROI（目安）",
@@ -139,7 +182,7 @@ export const copy = {
       breakevenHint:
         "この回数以上の確認をしているなら、削減だけでプラン費用を回収しやすい目安です。",
       note:
-        "※ これは簡易計算です。たとえば「地域ごとの見え方の問い合わせ対応」「週次レポート」「証跡の整理」ほど、削減が出やすい傾向があります。",
+        "※ これは簡易計算です。たとえば「地域ごとの表示の問い合わせ対応」「週次レポート」「確認記録の整理」ほど、削減が出やすい傾向があります。",
     },
     howTitle: "仕組み",
     steps: [
@@ -180,23 +223,24 @@ export const copy = {
         "各オブザベーションは、特定の時刻・特定の場所から見た表示を記録します。",
     },
     trustBand: {
-      title: "確認記録と観測履歴（アプリ内）",
+      title: "調べた結果を、そのまま共有・説明に使える",
       subtitle:
-        "鑑定や裁判手続きの代替ではなく、運用での確認記録・整合性チェックと、アプリケーションレベルの監査ログを補う仕組みです。",
+        "いつ・どこで・何を見たかを残し、チームやクライアントへの説明に使える記録です。特別な証明手続の代替ではありません。",
       items: [
-        "サーバー記録のタイムスタンプと、アプリケーションレベルの監査ログ（本人のみ閲覧）",
-        "オブザベーション主要項目のコンテンツハッシュ（整合性チェックの補助）",
-        "Blob 画像の SHA-256、Pro では知覚ハッシュ（CDN でバイトが変わる場合の近似確認）",
-        "月額枠超過は従量（$0.75/回）で取得を継続しやすい設計",
-        "印刷用レポートで確認記録をまとめて出力可能",
+        "記録の履歴はログイン中のアカウントだけがダッシュボードで確認できる",
+        "保存した内容にチェック用の印を付け、あとからずれがないか見られる",
+        "画像をしっかり保存できた記録は、ボタンから「いまと同じか」を照合できる",
+        "印刷用レポートでまとめて提出できる",
       ],
+      overageItem: "月の枠を超えても従量（{price}/回の目安）で続けやすい",
     },
+    planFeatureOverage: "追加オブザベーション：{price} / 回",
     pricingTitle: "料金",
     pricingSubtitle:
       "機能の有無ではなく、用途（試す／本番で回す）の違いで選べる2プランです。選択肢を絞り、迷いを減らす設計にしています。",
     pricingOverageTitle: "追加オブザベーション（従量）",
     pricingOverageBody:
-      "月間上限を超えた場合、追加オブザベーションは $0.75 / 回で請求されます。枠超過後も取得は継続し、料金は次回インボイスに加算されます。",
+      "月間上限を超えた場合、追加オブザベーションは {price} / 回で請求されます。枠超過後も取得は継続し、料金は次回インボイスに加算されます。",
     pricingTrialTitle: "無料トライアル",
     /** FAQ「無料トライアルはどのくらい使えますか？」と同一文言 */
     pricingTrialBody:
@@ -215,8 +259,7 @@ export const copy = {
           "7日間の保持",
           "フルページのビジュアルスナップショット",
           "ステータス履歴",
-          "サーバー記録・コンテンツハッシュ（整合性チェックの補助）",
-          "追加オブザベーション：$0.75 / 回",
+          "サーバー記録・記録内容のチェック用コード（ずれ検知の補助）",
         ],
         cta: "このコースに申し込む",
       },
@@ -236,9 +279,8 @@ export const copy = {
           "差分検知（画像）",
           "メール通知（閾値超え）",
           "CSVエクスポート・印刷用レポート",
-          "アプリ内監査ログ・スナップショットハッシュ（SHA-256 / 知覚ハッシュ）",
+          "アプリ内の操作履歴・保存画像のチェック（詳細比較は Pro で強化）",
           "確認記録・レポート用途向け",
-          "追加オブザベーション：$0.75 / 回",
         ],
         cta: "このコースに申し込む",
       },
@@ -255,6 +297,13 @@ export const copy = {
       ctaSecondary: "すでにアカウントの方はログイン",
     },
     faqTitle: "よくある質問",
+    faqMonthlyOverage: {
+      q: "月間の回数を超えたらどうなりますか？",
+      aWithOverage:
+        "追加オブザベーションは {price} / 回で、次回インボイスに加算されます。枠超過後もオブザベーションの取得は継続します。まずはトライアルでボリューム感を掴むのがおすすめです。",
+      aWithoutOverage:
+        "従量単価の公開設定がない場合は、プラン上限・お支払い条件は契約・お問い合わせに従います。デモでは上限に達しても記録を試せます。",
+    },
     faqs: [
       {
         q: "Starter と Pro はどう使い分けますか？",
@@ -263,10 +312,6 @@ export const copy = {
       {
         q: "無料トライアルはどのくらい使えますか？",
         a: "20回までオブザベーションを無料でお試しいただけます。クレジットカードは不要です。トライアル期間は14日間で、終了後は Starter または Pro を選択して継続いただけます。無料枠の20回を使い切ると、ログイン後のダッシュボード上部にお申し込み・プラン選択の案内が表示されます。",
-      },
-      {
-        q: "月間の回数を超えたらどうなりますか？",
-        a: "追加オブザベーションは $0.75 / 回で、次回インボイスに加算されます。枠超過後もオブザベーションの取得は継続します。まずはトライアルでボリューム感を掴むのがおすすめです。",
       },
       {
         q: "広告が正常に動いている保証になりますか？",
@@ -371,9 +416,9 @@ export const copy = {
       title: "確認記録シール",
       recordId: "記録 ID",
       timestamp: "サーバー記録時刻",
-      contentHash: "コンテンツハッシュ",
-      snapshotSha: "画像 SHA-256",
-      perceptual: "知覚ハッシュ",
+      contentHash: "ページ情報のチェック用コード",
+      snapshotSha: "画像データのチェック値",
+      perceptual: "見た目の近さ（参考）",
       disclaimer:
         "参照用の確認記録です。第三者による専門的な検証や、特別な証明手続の代替にはなりません。",
     },
@@ -390,16 +435,16 @@ export const copy = {
       sectionRegion: "地域",
       sectionStatus: "ステータス",
       sectionNote: "メモ",
-      sectionHashes: "ハッシュ（整合性チェック）",
+      sectionHashes: "記録の確認用データ",
       sectionEvents: "観測履歴",
       reportCaptured: "記録日時",
       reportTitle: "ページタイトル",
-      reportSnapshotUrl: "スナップショット URL",
-      reportIntegrity: "コンテンツ整合性チェック",
-      hashContent: "コンテンツハッシュ",
-      hashSnapshot: "スナップショット SHA-256",
-      hashPerceptual: "知覚ハッシュ",
-      hashBytesType: "バイト数 / 形式",
+      reportSnapshotUrl: "画面キャプチャのリンク",
+      reportIntegrity: "記録が一致しているか",
+      hashContent: "ページ情報のチェック用コード",
+      hashSnapshot: "画像のチェック値",
+      hashPerceptual: "見た目の近さ（参考）",
+      hashBytesType: "ファイルの大きさ / 形式",
     },
     observationDetail: {
       backToList: "← 一覧へ",
@@ -417,14 +462,16 @@ export const copy = {
         "このURL（{region}）を1日1回自動で観測し、差分が大きいときにメール通知します。",
       watchEnabled: "監視中（停止）",
       watchDisabled: "監視を開始",
-      integrityTitle: "コンテンツ整合性チェック",
+      integrityTitle: "記録の内容がきちんと残っているか",
       integrityOk:
-        "記録された主要フィールドとハッシュが一致しています（SHA-256、v{version}）。",
+        "保存した情報どうしが一致しています。共有や説明の土台として使えます（確認方式 v{version}）。",
       integrityMissing:
-        "コンテンツハッシュがありません（この機能追加前の記録の可能性があります）。",
+        "この記録にはチェック用の印がありません（古い記録の可能性があります）。",
       integrityMismatch:
-        "保存内容とハッシュが一致しません。記録内容の更新や、検証方式の変更などが考えられます。",
-      integrityStoredPrefix: "保存値: ",
+        "保存内容が記録作成時と食い違っている可能性があります。再取得や環境の変更で直る場合があります。",
+      integrityStoredPrefix: "保存していた値: ",
+      fallbackInsuranceLine:
+        "高画質の自動保存が難しいときも、プレビューで記録を続けます。空欄のままにしません。",
     },
     observationsTable: {
       colCaptured: "取得日時（JST）",
@@ -450,9 +497,9 @@ export const copy = {
       snapshotTitle: "スナップショット",
       loadingTitle: "スナップショットを取得しています…",
       loadingHint:
-        "数十秒かかる場合があります。デプロイ環境の関数タイムアウトが短いと失敗することがあります。",
+        "数十秒かかることがあります。混雑時や対象サイトの都合で時間がかかる場合があります。",
       errorTitle: "スナップショットを取得できませんでした",
-      errorHint: "対象 URL のブロック、タイムアウト、または Microlink の制限の可能性があります。",
+      errorHint: "サイト側のブロック、読み込みの遅さ、またはプレビュー取得の制限の可能性があります。",
       emptyTitle: "プレビュー画像がありません",
       emptyHint: "URL が無効か、プレビュー API が利用できない状態です。",
       openInNewTab: "新しいタブでページを開く",
@@ -467,35 +514,35 @@ export const copy = {
       backToObservations: "オブザベーション一覧へ →",
     },
     snapshotBinary: {
-      titleBinary: "スナップショット（バイナリ）",
-      titleIntegrity: "スナップショット整合性チェック（SHA-256 + 知覚ハッシュ）",
+      titleBinary: "保存した画面の詳しい確認",
+      titleIntegrity: "画像が当時と同じかを見る",
       hintNoHash:
-        "バイナリハッシュは Blob に保存したスナップショットのみ付与されます（外部プレビュー URL のみの記録では未設定）。",
+        "画像をこちらで保管した記録だけに、「ずっと同じか」調べるための印が付きます。外部のリンク画像だけのときは付きません。",
       hintHow:
-        "保存時: バイト列 SHA-256 は全プラン。知覚ハッシュ（blockhash）は Pro の Blob 保存・自動観測で付与。検証はボタン押下時のみ画像を 1 回取得します。",
-      bytesAtCapture: "記録時サイズ",
-      phashAtCapture: "知覚ハッシュ（記録時）",
+        "画像をしっかり保存できた記録は、あとから「いまのページと同じか」をボタン一つで照合できます（実行時だけ画像を取得します）。",
+      bytesAtCapture: "保存時のファイルサイズ",
+      phashAtCapture: "見た目比較用の値（記録時）",
       phashMissing:
-        "知覚ハッシュ未記録（Starter の Blob 保存、または旧データ）。バイト不一致時は「差分あり」までしか判定しません。",
-      verifyButton: "今の URL から取得して照合",
+        "見た目での細かい比較用データがありません。それでも「明らかに違う」かどうかは分かります。",
+      verifyButton: "いまのページとこの画像を比べる",
       verifying: "取得中…",
-      clickOnce: "（クリック時のみ 1 回取得）",
+      clickOnce: "（押したときだけ 1 回だけ取得）",
       errUnauthorized: "ログインが必要です。",
       errNotFound: "記録が見つかりません。",
-      errNoHash: "バイナリハッシュがありません。",
-      errNoUrl: "検証用の画像 URL がありません。",
-      errFetchFailed: "画像を取得できませんでした（ブロック・期限切れなど）。検証不能です。",
-      errTooLarge: "画像が大きすぎるため検証をスキップしました。検証不能です。",
-      errGeneric: "検証に失敗しました。",
-      distNotePrefix: "（知覚ハッシュ距離: ",
+      errNoHash: "比較用の印がまだありません。",
+      errNoUrl: "画像の場所が分かりません。",
+      errFetchFailed: "画像を取得できませんでした。サイト側の制限や期限の可能性があります。",
+      errTooLarge: "画像が大きすぎて比較をスキップしました。",
+      errGeneric: "比較に失敗しました。",
+      distNotePrefix: "（見た目の近さ: ",
       distNoteSuffix: "）",
-      verdictExact: "完全一致: 保存時の画像データと完全に一致しています。",
-      verdictStrong: "視覚的一致（ほぼ同一）: 画像データは異なりますが、見た目はほぼ同一です。",
-      verdictWeak: "視覚的一致（かなり近い）: バイト列は異なりますが、見た目はかなり近いです。",
-      verdictDifferent: "差分あり: 保存時の画像と差分があります。",
+      verdictExact: "同じ画像です。保存したときのデータと一致しています。",
+      verdictStrong: "ほぼ同じ見た目です（データの持ち方は少し違う場合があります）。",
+      verdictWeak: "かなり近い見た目です。",
+      verdictDifferent: "当時の画像と違いがあります。",
       verdictUnverified:
-        "検証不能: 画像は取得できましたが、知覚ハッシュの比較ができませんでした（形式・デコード）。",
-      verdictUnknown: "検証結果を表示できませんでした。",
+        "画像は取れましたが、見た目の比較を完了できませんでした。",
+      verdictUnknown: "結果を表示できませんでした。",
     },
     dashboardHome: {
       title: "概要",
@@ -507,7 +554,9 @@ export const copy = {
       cardMonthlyLabel: "今月のオブザベーション",
       cardMonthlyAll: "すべて見る →",
       cardMonthlyOverage:
-        "枠を超えた分は ${price} / 回で次回インボイスに加算される想定です。デモでは上限に達しても記録を続けられます。",
+        "枠を超えた分は {price} / 回で次回インボイスに加算される想定です。デモでは上限に達しても記録を続けられます。",
+      cardMonthlyOverageNone:
+        "デモでは上限に達しても記録を続けられます。従量単価は環境変数で公開設定したときだけダッシュボードに表示されます。",
       recentTitle: "直近の記録",
       newObservation: "新規オブザベーション",
       purchaseTitle: "購入履歴",
@@ -619,9 +668,9 @@ export const copy = {
     },
     heroTrust: {
       items: [
-        "Save what you saw as a real record—not a one-off screenshot",
-        "Rewind history: who checked what, when, and from where",
-        "Hashes for quick consistency checks on stored captures",
+        "Turn what you saw into something you can explain and share",
+        "Every check keeps time and place in the history",
+        "Easy to revisit later and spot if something changed",
       ],
     },
     valuePillars: [
@@ -705,10 +754,53 @@ export const copy = {
           body: "Reopen exactly when, where, and what the team inspected",
         },
         {
-          title: "Integrity check",
-          body: "Use hashes to sanity-check that a record still matches what you stored",
+          title: "Stay consistent",
+          body: "See at a glance whether a saved capture still lines up with what you stored",
         },
       ],
+    },
+    audienceBenefits: {
+      kicker: "Benefits by team",
+      title: "Client-ready proof, shared history, fewer “trust me” moments",
+      subtitle:
+        "Geo-targeted ads and localized pages are hard to explain from memory and scattered screenshots. Viewtrace bundles URL, time, and region into one record—so sales, creative, and marketing can show exactly what was live.",
+      personas: [
+        {
+          badge: "Most common",
+          title: "Ad agencies & marketers",
+          lead:
+            "Replay how campaigns and landing pages looked from each region. Faster client updates, cleaner answers to “what did users see?”, and a paper trail that supports trust.",
+          bullets: [
+            "Show the rendered experience—not a verbal recap",
+            "Keep regional differences in a searchable timeline",
+            "Give account and media teams one source of truth",
+          ],
+        },
+        {
+          badge: null as string | null,
+          title: "Web studios & dev shops",
+          lead:
+            "Document post-launch checks and align with clients on what was visible when. A time-stamped trail makes handoffs and follow-ups easier when questions come back weeks later.",
+          bullets: [
+            "Less hunting through folders and chat threads",
+            "Point clients to the same capture, same URL, same vantage point",
+            "Scale across retainers without losing context",
+          ],
+        },
+        {
+          badge: null as string | null,
+          title: "Global brands (e‑commerce, SaaS, D2C)",
+          lead:
+            "Let product, marketing, and support reference the same overseas view. Ideal for cross-border promos, localization QA, and internal approvals with evidence attached.",
+          bullets: [
+            "Spot display issues market by market",
+            "One record everyone can open—not a one-off export",
+            "Export-friendly for stakeholders who need a paper trail",
+          ],
+        },
+      ],
+      marketNote:
+        "In Japan alone, thousands of small agencies and production shops—and tens of thousands of marketers and freelancers—handle the same proof-and-QA work. Global and cross-border clients make auditable visual records even more valuable when you need to win and keep trust.",
     },
     roiSection: {
       kicker: "ROI (estimate)",
@@ -775,23 +867,24 @@ export const copy = {
         "Agencies and in-house teams use the same timestamps, URLs, and vantage points—so “what we saw” is easy to replay.",
     },
     trustBand: {
-      title: "Confirmation records & observation history (in-app)",
+      title: "Turn checks into records your team can share",
       subtitle:
-        "Lightweight in-app tools—not a substitute for expert review or formal proceedings. Includes integrity checks and an application-level audit log.",
+        "Capture when, where, and what you saw—for everyday reviews and client updates. Not a substitute for formal legal proof.",
       items: [
-        "Server timestamps and an application-level audit log (visible only to you)",
-        "Content hash over key observation fields (integrity check aid)",
-        "Snapshot SHA-256 for Blob files; Pro adds a perceptual hash for CDN byte drift",
-        "Metered overage ($0.75/observation) so work can continue past quota",
-        "Printable report to bundle confirmation records",
+        "Timestamped history you review in your own dashboard",
+        "Fingerprints on saved page data so you can spot drift later",
+        "One-click compare when we store the full capture for you",
+        "Print-ready reports for stakeholders",
       ],
+      overageItem: "Keep going past monthly limits with simple per-check add-ons ({price} each)",
     },
+    planFeatureOverage: "Additional observations: {price} each",
     pricingTitle: "Pricing",
     pricingSubtitle:
       "Two plans differentiated by how you use Viewtrace—not by locking core features. Fewer choices, clearer fit, better conversion.",
     pricingOverageTitle: "Additional observations (metered)",
     pricingOverageBody:
-      "If you exceed your monthly allowance, additional observations are billed at $0.75 each and added to your next invoice. Observations continue after you’ve used your included quota.",
+      "If you exceed your monthly allowance, additional observations are billed at {price} each and added to your next invoice. Observations continue after you’ve used your included quota.",
     pricingTrialTitle: "Free trial",
     pricingTrialBody:
       "Your trial includes up to 20 observations at no charge, with no credit card required. The trial lasts 14 days; afterward, choose Starter or Pro to continue. After you use all 20 trial observations, a banner at the top of the dashboard guides you to subscribe.",
@@ -810,8 +903,7 @@ export const copy = {
           "7-day retention",
           "Full-page visual snapshots",
           "Status history",
-          "Server timestamps & content hash (integrity check aid)",
-          "Additional observations: $0.75 each",
+          "Server timestamps & record check codes (drift detection aid)",
         ],
         cta: "Subscribe to this plan",
       },
@@ -832,9 +924,8 @@ export const copy = {
           "Pixel-based diff detection",
           "Email notifications (on threshold)",
           "CSV export & printable report",
-          "Application-level audit log & snapshot hashes (SHA-256 / perceptual)",
+          "In-app activity log & stronger saved-image checks (Pro)",
           "Confirmation records, exports & reporting",
-          "Additional observations: $0.75 each",
         ],
         cta: "Subscribe to this plan",
       },
@@ -851,6 +942,13 @@ export const copy = {
       ctaSecondary: "Log in if you already have an account",
     },
     faqTitle: "FAQ",
+    faqMonthlyOverage: {
+      q: "What happens if I exceed the monthly allowance?",
+      aWithOverage:
+        "Additional observations bill at {price} each and are added to your next invoice. Observations keep running after you’ve used your included quota. Use the trial to gauge volume before you commit.",
+      aWithoutOverage:
+        "When per-check overage pricing isn’t published, limits and billing follow your agreement or support guidance. In this demo you can keep recording past the cap.",
+    },
     faqs: [
       {
         q: "How do I choose between Starter and Pro?",
@@ -859,10 +957,6 @@ export const copy = {
       {
         q: "How does the free trial work?",
         a: "You can take up to 20 observations at no charge, with no credit card required. The trial lasts 14 days; afterward, choose Starter or Pro to continue. After you use all 20 trial observations, a banner at the top of the dashboard guides you to subscribe.",
-      },
-      {
-        q: "What happens if I exceed the monthly allowance?",
-        a: "Additional observations bill at $0.75 each and are added to your next invoice. Observations keep running after you’ve used your included quota. Use the trial to gauge volume before you commit.",
       },
       {
         q: "Is this a guarantee that ads are healthy?",
@@ -971,9 +1065,9 @@ export const copy = {
       title: "Confirmation record seal",
       recordId: "Record ID",
       timestamp: "Server record time",
-      contentHash: "Content hash",
-      snapshotSha: "Image SHA-256",
-      perceptual: "Perceptual hash",
+      contentHash: "Page data check code",
+      snapshotSha: "Image check fingerprint",
+      perceptual: "Visual similarity (reference)",
       disclaimer:
         "Reference confirmation records only—not a substitute for independent expert review or formal proof procedures.",
     },
@@ -990,16 +1084,16 @@ export const copy = {
       sectionRegion: "Region",
       sectionStatus: "Status",
       sectionNote: "Note",
-      sectionHashes: "Hashes (integrity checks)",
+      sectionHashes: "Record verification data",
       sectionEvents: "Observation history",
       reportCaptured: "Recorded at",
       reportTitle: "Page title",
-      reportSnapshotUrl: "Snapshot URL",
-      reportIntegrity: "Content integrity check",
-      hashContent: "Content hash",
-      hashSnapshot: "Snapshot SHA-256",
-      hashPerceptual: "Perceptual hash",
-      hashBytesType: "Bytes / type",
+      reportSnapshotUrl: "Screen capture link",
+      reportIntegrity: "Does the record still match?",
+      hashContent: "Page data check code",
+      hashSnapshot: "Image check fingerprint",
+      hashPerceptual: "Visual similarity (reference)",
+      hashBytesType: "File size / type",
     },
     observationDetail: {
       backToList: "← Back to list",
@@ -1017,14 +1111,16 @@ export const copy = {
         "Monitor this URL ({region}) once per day and email when visual diff is large.",
       watchEnabled: "Monitoring (stop)",
       watchDisabled: "Start monitoring",
-      integrityTitle: "Content integrity check",
+      integrityTitle: "Is this record complete and consistent?",
       integrityOk:
-        "Key fields match the stored hash (SHA-256, v{version}).",
+        "Saved details line up—ready to share or report with confidence (check v{version}).",
       integrityMissing:
-        "No content hash recorded (possibly captured before this feature shipped).",
+        "No verification stamp on this record yet (it may be from an older save).",
       integrityMismatch:
-        "Stored fields do not match the stored hash. The record may have changed, or the verification method may have been updated.",
-      integrityStoredPrefix: "Stored: ",
+        "Something no longer matches what was stored. Re-capturing or updating your setup may fix it.",
+      integrityStoredPrefix: "Previously stored: ",
+      fallbackInsuranceLine:
+        "If we can’t store a full auto-capture, we still save a preview so you’re never left with an empty record.",
     },
     observationsTable: {
       colCaptured: "Captured (JST)",
@@ -1072,9 +1168,9 @@ export const copy = {
       snapshotTitle: "Snapshot",
       loadingTitle: "Fetching snapshot…",
       loadingHint:
-        "This may take tens of seconds. Short function timeouts can cause failures on some deployments.",
+        "This may take a little while—busy sites or network limits can add delay.",
       errorTitle: "Could not fetch snapshot",
-      errorHint: "The URL may be blocked, timed out, or limited by the preview provider.",
+      errorHint: "The site may block automated previews, be slow to respond, or limit preview access.",
       emptyTitle: "No preview image",
       emptyHint: "The URL may be invalid, or preview is unavailable.",
       openInNewTab: "Open page in a new tab",
@@ -1089,35 +1185,35 @@ export const copy = {
       backToObservations: "Back to observations →",
     },
     snapshotBinary: {
-      titleBinary: "Snapshot (binary)",
-      titleIntegrity: "Snapshot integrity check (SHA-256 + perceptual hash)",
+      titleBinary: "Deep check on your saved page image",
+      titleIntegrity: "See if the image still matches the capture",
       hintNoHash:
-        "Binary hashes are only available for snapshots saved to Blob (not for external preview URLs).",
+        "We only add a “still the same?” fingerprint when the image is stored with us—not when it’s only an external link.",
       hintHow:
-        "On save: SHA-256 is stored for all plans. Perceptual hash (blockhash) is added for Pro Blob saves and automated runs. Verification fetches the image once when you click.",
-      bytesAtCapture: "Size at capture",
-      phashAtCapture: "Perceptual hash (captured)",
+        "When we store the image for you, one click compares it to what the page looks like now (we fetch the image only when you run the check).",
+      bytesAtCapture: "File size when saved",
+      phashAtCapture: "Visual compare hint (from capture)",
       phashMissing:
-        "No perceptual hash recorded (Starter Blob save or older data). When bytes differ we can only mark “different”.",
-      verifyButton: "Fetch current URL and compare",
+        "No extra visual-similarity data—you can still tell when something clearly changed.",
+      verifyButton: "Compare to the live page",
       verifying: "Fetching…",
-      clickOnce: "(Fetched once on click)",
+      clickOnce: "(Fetches once when you click)",
       errUnauthorized: "Please log in.",
       errNotFound: "Record not found.",
-      errNoHash: "No binary hash recorded.",
-      errNoUrl: "No image URL to verify.",
-      errFetchFailed: "Could not fetch image (blocked/expired). Unverifiable.",
-      errTooLarge: "Image too large; skipped verification. Unverifiable.",
-      errGeneric: "Verification failed.",
-      distNotePrefix: "(perceptual distance: ",
+      errNoHash: "No compare stamp on this record yet.",
+      errNoUrl: "We don’t know where to load the image from.",
+      errFetchFailed: "Couldn’t load the image—the site may block access or the link expired.",
+      errTooLarge: "Image was too large to compare in this run.",
+      errGeneric: "Comparison failed.",
+      distNotePrefix: "(visual closeness: ",
       distNoteSuffix: ")",
-      verdictExact: "Exact match: image bytes are identical to what was stored.",
-      verdictStrong: "Visual match (very close): bytes differ but looks nearly identical.",
-      verdictWeak: "Visual match (close): bytes differ but looks quite similar.",
-      verdictDifferent: "Different: the image differs from what was stored.",
+      verdictExact: "Same image—the bytes match what we stored.",
+      verdictStrong: "Looks almost the same (encoding may differ slightly).",
+      verdictWeak: "Looks quite similar.",
+      verdictDifferent: "This looks different from the saved capture.",
       verdictUnverified:
-        "Unverifiable: image fetched, but perceptual comparison failed (format/decode).",
-      verdictUnknown: "Could not display verification result.",
+        "We loaded an image but couldn’t finish the visual comparison.",
+      verdictUnknown: "Couldn’t show a result.",
     },
     dashboardHome: {
       title: "Overview",
@@ -1130,7 +1226,9 @@ export const copy = {
       cardMonthlyLabel: "Observations this month",
       cardMonthlyAll: "View all →",
       cardMonthlyOverage:
-        "Overage is assumed to bill at ${price}/observation on the next invoice. In this demo you can keep recording past the limit.",
+        "Overage is assumed to bill at {price}/observation on the next invoice. In this demo you can keep recording past the limit.",
+      cardMonthlyOverageNone:
+        "In this demo you can keep recording past the limit. Per-check overage pricing appears here only when configured via environment.",
       recentTitle: "Recent records",
       newObservation: "New observation",
       purchaseTitle: "Purchase history",

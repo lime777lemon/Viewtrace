@@ -56,8 +56,25 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
   },
 };
 
-/** 枠超過時の従量単価（USD / 回） */
-export const OVERAGE_PER_OBSERVATION_USD = 0.75;
+function parseOverageUsdFromEnv(): number | null {
+  const raw =
+    process.env.NEXT_PUBLIC_OVERAGE_PER_OBSERVATION_USD ?? process.env.OVERAGE_PER_OBSERVATION_USD;
+  if (raw == null || String(raw).trim() === "") return null;
+  const n = Number(String(raw).trim());
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return n;
+}
+
+/**
+ * 枠超過時の従量単価（USD / 回）。
+ * `NEXT_PUBLIC_OVERAGE_PER_OBSERVATION_USD` または `OVERAGE_PER_OBSERVATION_USD` に正の数を設定したときだけ返す。
+ * 未設定・空・0 以下は null（LP・FAQ・プラン表記では従量を出さない）。
+ */
+export function getOveragePerObservationUsd(): number | null {
+  return parseOverageUsdFromEnv();
+}
+
+const overageUsdSnapshot = parseOverageUsdFromEnv();
 
 /** Stripe メタデータ／アプリ制限と揃えた設定スナップショット */
 export const billingConfig = {
@@ -70,7 +87,7 @@ export const billingConfig = {
       locations: PLANS.starter.locationsKey,
       csv_export: PLANS.starter.csvExport,
       snapshot_full_page: PLANS.starter.snapshotFullPage,
-      overage_price_usd: OVERAGE_PER_OBSERVATION_USD,
+      ...(overageUsdSnapshot != null ? { overage_price_usd: overageUsdSnapshot } : {}),
     },
     pro: {
       name: PLANS.pro.name,
@@ -80,7 +97,7 @@ export const billingConfig = {
       locations: PLANS.pro.locationsKey,
       csv_export: PLANS.pro.csvExport,
       snapshot_full_page: PLANS.pro.snapshotFullPage,
-      overage_price_usd: OVERAGE_PER_OBSERVATION_USD,
+      ...(overageUsdSnapshot != null ? { overage_price_usd: overageUsdSnapshot } : {}),
     },
   },
   trial: {

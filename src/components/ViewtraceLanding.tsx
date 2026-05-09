@@ -6,13 +6,46 @@ import { RegionSearchSection } from "@/components/RegionSearchSection";
 import { copy, type Locale } from "@/lib/i18n";
 import { LOCALE_COOKIE } from "@/lib/i18n/locale-cookie";
 
+function formatOverageUsdLabel(usd: number): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: usd % 1 === 0 ? 0 : 2,
+  }).format(usd);
+}
+
 type Props = {
   initialLocale: Locale;
+  overagePerObservationUsd: number | null;
 };
 
-export function ViewtraceLanding({ initialLocale }: Props) {
+export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Props) {
   const [locale, setLocale] = useState<Locale>(initialLocale);
   const t = useMemo(() => copy[locale], [locale]);
+  const landingFaqs = useMemo(() => {
+    const injected = {
+      q: t.faqMonthlyOverage.q,
+      a:
+        overagePerObservationUsd != null
+          ? t.faqMonthlyOverage.aWithOverage.replace(
+              "{price}",
+              formatOverageUsdLabel(overagePerObservationUsd),
+            )
+          : t.faqMonthlyOverage.aWithoutOverage,
+    };
+    return [...t.faqs.slice(0, 2), injected, ...t.faqs.slice(2)];
+  }, [t, overagePerObservationUsd]);
+  const trustBandItems: string[] = useMemo(() => {
+    const items: string[] = [...t.trustBand.items];
+    if (overagePerObservationUsd != null) {
+      const line = t.trustBand.overageItem.replace(
+        "{price}",
+        formatOverageUsdLabel(overagePerObservationUsd),
+      );
+      items.splice(items.length - 1, 0, line);
+    }
+    return items;
+  }, [t, overagePerObservationUsd]);
   const [roiPlan, setRoiPlan] = useState<"starter" | "pro">("starter");
   const [roiHourlyRate, setRoiHourlyRate] = useState<number>(120);
   const [roiMinutesPerCheck, setRoiMinutesPerCheck] = useState<number>(8);
@@ -309,6 +342,53 @@ export function ViewtraceLanding({ initialLocale }: Props) {
           </div>
         </section>
 
+        <section id="audience-benefits" className="border-b border-[var(--color-border)]">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+            <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-accent)]">
+              {t.audienceBenefits.kicker}
+            </p>
+            <h2 className="mt-3 font-display max-w-3xl text-2xl font-semibold leading-snug text-[var(--color-ink)] sm:text-3xl">
+              {t.audienceBenefits.title}
+            </h2>
+            <p className="mt-4 max-w-3xl text-sm leading-relaxed text-[var(--color-ink-muted)]">
+              {t.audienceBenefits.subtitle}
+            </p>
+            <div className="mt-10 grid gap-6 lg:grid-cols-3">
+              {t.audienceBenefits.personas.map((persona) => (
+                <article
+                  key={persona.title}
+                  className="relative flex flex-col rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-sm"
+                >
+                  {persona.badge ? (
+                    <p className="mb-3 inline-flex w-fit rounded-full border border-[var(--color-accent)]/35 bg-[var(--color-accent-soft)]/40 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-[var(--color-accent)]">
+                      {persona.badge}
+                    </p>
+                  ) : null}
+                  <h3 className="font-display text-lg font-semibold text-[var(--color-ink)]">
+                    {persona.title}
+                  </h3>
+                  <p className="mt-3 flex-1 text-sm leading-relaxed text-[var(--color-ink-muted)]">
+                    {persona.lead}
+                  </p>
+                  <ul className="mt-5 space-y-2.5 border-t border-[var(--color-border)] pt-5">
+                    {persona.bullets.map((line) => (
+                      <li key={line} className="flex gap-2 text-sm text-[var(--color-ink)]">
+                        <span className="mt-0.5 shrink-0 text-[var(--color-accent)]" aria-hidden>
+                          ✓
+                        </span>
+                        <span>{line}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              ))}
+            </div>
+            <p className="mt-10 max-w-4xl text-xs leading-relaxed text-[var(--color-ink-muted)]">
+              {t.audienceBenefits.marketNote}
+            </p>
+          </div>
+        </section>
+
         <section id="roi" className="border-b border-[var(--color-border)] bg-[var(--color-surface-elevated)]">
           <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
             <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-accent)]">
@@ -537,7 +617,7 @@ export function ViewtraceLanding({ initialLocale }: Props) {
               {t.trustBand.subtitle}
             </p>
             <ul className="mt-6 grid gap-3 sm:grid-cols-2">
-              {t.trustBand.items.map((item) => (
+              {trustBandItems.map((item) => (
                 <li key={item} className="flex gap-2 text-sm text-[var(--color-ink-muted)]">
                   <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-accent)]" />
                   <span>{item}</span>
@@ -587,7 +667,17 @@ export function ViewtraceLanding({ initialLocale }: Props) {
                     <span className="text-sm text-[var(--color-ink-muted)]">{plan.period}</span>
                   </p>
                   <ul className="mt-8 flex-1 space-y-3 text-sm text-[var(--color-ink-muted)]">
-                    {plan.features.map((f) => (
+                    {[
+                      ...plan.features,
+                      ...(overagePerObservationUsd != null
+                        ? [
+                            t.planFeatureOverage.replace(
+                              "{price}",
+                              formatOverageUsdLabel(overagePerObservationUsd),
+                            ),
+                          ]
+                        : []),
+                    ].map((f) => (
                       <li key={f} className="flex gap-2">
                         <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-accent)]" />
                         <span>{f}</span>
@@ -607,15 +697,22 @@ export function ViewtraceLanding({ initialLocale }: Props) {
                 </article>
               ))}
             </div>
-            <div className="mt-10 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 sm:p-6">
-                <h3 className="font-display text-sm font-semibold text-[var(--color-ink)]">
-                  {t.pricingOverageTitle}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-[var(--color-ink-muted)]">
-                  {t.pricingOverageBody}
-                </p>
-              </div>
+            <div
+              className={`mt-10 grid gap-4 ${overagePerObservationUsd != null ? "sm:grid-cols-2" : ""}`}
+            >
+              {overagePerObservationUsd != null ? (
+                <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 sm:p-6">
+                  <h3 className="font-display text-sm font-semibold text-[var(--color-ink)]">
+                    {t.pricingOverageTitle}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-[var(--color-ink-muted)]">
+                    {t.pricingOverageBody.replace(
+                      "{price}",
+                      formatOverageUsdLabel(overagePerObservationUsd),
+                    )}
+                  </p>
+                </div>
+              ) : null}
               <div className="rounded-2xl border border-[var(--color-accent)]/25 bg-[var(--color-accent-soft)]/35 p-5 sm:p-6">
                 <h3 className="font-display text-sm font-semibold text-[var(--color-ink)]">
                   {t.pricingTrialTitle}
@@ -640,7 +737,7 @@ export function ViewtraceLanding({ initialLocale }: Props) {
               {t.faqTitle}
             </h2>
             <div className="mt-8 space-y-3">
-              {t.faqs.map((item, i) => (
+              {landingFaqs.map((item, i) => (
                 <details
                   key={item.q}
                   id={`faq-${i}`}

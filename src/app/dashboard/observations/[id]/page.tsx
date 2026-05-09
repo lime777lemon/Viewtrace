@@ -182,6 +182,11 @@ export default async function ObservationDetailPage({ params }: Props) {
             )}
           </dd>
         </div>
+        {obs.status === "success" && !obs.snapshotSha256 ? (
+          <div className="rounded-xl border border-sky-500/35 bg-sky-500/10 px-4 py-2.5 sm:col-span-2">
+            <p className="text-sm text-[var(--color-ink)]">{t.fallbackInsuranceLine}</p>
+          </div>
+        ) : null}
         <ObservationSnapshotBinaryPanel
           observationId={obs.id}
           locale={locale}

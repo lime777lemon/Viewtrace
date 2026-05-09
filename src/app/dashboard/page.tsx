@@ -8,7 +8,7 @@ import { getDemoUsageThisMonth } from "@/lib/demo/usage";
 import { copy } from "@/lib/i18n";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { getPlanLabels } from "@/lib/plans/labels";
-import { getPlan, OVERAGE_PER_OBSERVATION_USD } from "@/lib/plans";
+import { getOveragePerObservationUsd, getPlan } from "@/lib/plans";
 import { shouldHideNewObservationForTrial } from "@/lib/trial-observation-access";
 
 export const metadata: Metadata = {
@@ -25,6 +25,15 @@ export default async function DashboardHomePage() {
 
   const plan = getPlan(session.plan);
   const planLabels = getPlanLabels(session.plan, locale);
+  const overageUsd = getOveragePerObservationUsd();
+  const overagePriceLabel =
+    overageUsd != null
+      ? new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+          maximumFractionDigits: overageUsd % 1 === 0 ? 0 : 2,
+        }).format(overageUsd)
+      : null;
   const usage = await getDemoUsageThisMonth(session.plan);
 
   const all = await getMergedObservationsForPlan(session.plan);
@@ -108,7 +117,9 @@ export default async function DashboardHomePage() {
             />
           </div>
           <p className="mt-3 text-xs text-[var(--color-ink-muted)]">
-            {t.cardMonthlyOverage.replace("{price}", String(OVERAGE_PER_OBSERVATION_USD))}
+            {overagePriceLabel != null
+              ? t.cardMonthlyOverage.replace("{price}", overagePriceLabel)
+              : t.cardMonthlyOverageNone}
           </p>
         </div>
       </div>
