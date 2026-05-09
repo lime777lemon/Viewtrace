@@ -5,7 +5,6 @@ import { LoginForm } from "@/components/auth/LoginForm";
 import { ResendConfirmationForm } from "@/components/auth/ResendConfirmationForm";
 import { getAuthEmailRedirectTo } from "@/lib/auth/callback-url";
 import { getSession } from "@/lib/auth/session";
-import { siteDomain } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Sign in | Viewtrace",
@@ -31,7 +30,6 @@ export default async function LoginPage({
   }
 
   const callbackUrl = await getAuthEmailRedirectTo();
-  const productionCallbackUrl = `https://${siteDomain}/auth/callback`;
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[var(--color-surface)] text-[var(--color-ink)]">
@@ -121,13 +119,6 @@ export default async function LoginPage({
                   Your email is confirmed. Enter your password on this page to sign in.
                 </p>
               ) : null}
-              <p className="mt-2 rounded-lg border border-amber-200/80 bg-amber-50/90 px-3 py-2 text-xs leading-relaxed text-amber-950">
-                If the browser says the site cannot be reached, the confirmation link often still points at{" "}
-                <span className="font-mono">localhost</span> or a dev URL. Open the link in the same browser
-                where you signed up, or ensure production{" "}
-                <span className="font-mono break-all">{productionCallbackUrl}</span> is listed under Supabase
-                Site URL and Redirect URLs.
-              </p>
               <p className="mt-2">
                 Need help?{" "}
                 <Link href="/contact" className="font-medium text-[var(--color-accent)] underline underline-offset-2">
@@ -135,41 +126,6 @@ export default async function LoginPage({
                 </Link>
                 .
               </p>
-              <details className="mt-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-3 py-2 text-xs">
-                <summary className="cursor-pointer select-none font-medium text-[var(--color-ink)]">
-                  For operators &amp; developers (auth backend)
-                </summary>
-                <div className="mt-3 space-y-2 leading-relaxed">
-                  <p>
-                    In Supabase, enable Email under Authentication → Providers. Under Authentication → URL
-                    configuration, set <strong className="font-medium text-[var(--color-ink)]">Site URL</strong>{" "}
-                    to the production origin users actually open (e.g.{" "}
-                    <span className="font-mono text-[11px]">https://viewtrace.net</span>), and add the callback
-                    below to Redirect URLs. If Site URL stays{" "}
-                    <span className="font-mono text-[11px]">localhost</span>, confirmation emails in
-                    production may point at dev, which mobile cannot open.
-                  </p>
-                  <p className="text-[var(--color-ink)]">Callback for this environment (reference)</p>
-                  <p className="break-all font-mono text-[11px] text-[var(--color-ink)]">{callbackUrl}</p>
-                  <p className="text-[var(--color-ink)]">Production example</p>
-                  <p className="break-all font-mono text-[11px] text-[var(--color-ink)]">{productionCallbackUrl}</p>
-                  <p>
-                    Locally, set <span className="font-mono text-[11px]">NEXT_PUBLIC_SITE_URL</span> to your
-                    real origin (e.g.{" "}
-                    <span className="whitespace-nowrap font-mono text-[11px]">http://localhost:3001</span>),
-                    and register that same origin’s{" "}
-                    <span className="font-mono text-[11px]">/auth/callback</span> in Redirect URLs.
-                  </p>
-                  <p>
-                    If confirmation mail does not arrive, configure custom SMTP under Project Settings → Auth
-                    → SMTP (e.g. Resend). Default sending is often filtered as spam.
-                  </p>
-                  <p>
-                    For quick local testing, turn off “Confirm email” under Authentication so you can sign in
-                    without a confirmation message.
-                  </p>
-                </div>
-              </details>
             </div>
 
             <LoginForm
