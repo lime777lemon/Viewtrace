@@ -117,10 +117,12 @@ export function LoginForm({
       }
 
       const emailDomain = email.includes("@") ? email.split("@")[1] : "";
+      const redirectTo = buildEmailRedirectTo();
       console.info("[auth] signup confirmation email requested (browser)", {
         userId: data.user.id,
         emailDomain,
-        redirectUrl: authCallbackUrl,
+        authCallbackUrl,
+        emailRedirectTo: redirectTo,
       });
 
       setSignupFeedback({

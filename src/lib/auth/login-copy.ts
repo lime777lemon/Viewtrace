@@ -58,6 +58,12 @@ export type LoginPageStrings = {
   terms: string;
   privacy: string;
   acceptableUse: string;
+  /** 確認メール再送ブロック */
+  resendTitle: string;
+  resendHint: string;
+  resendSubmit: string;
+  resendSending: string;
+  resendSuccess: string;
   form: LoginFormStrings;
 };
 
@@ -91,7 +97,7 @@ const formEn: LoginFormStrings = {
   errPasswordMismatch: "Passwords do not match. Try again.",
   errSignupIncomplete: "We could not finish sign-up. Check your email or wait a moment and try again.",
   signupSuccessMessage:
-    "We have sent a confirmation email request. You cannot sign in until you confirm your address using the link in that message. If nothing arrives within a few minutes, check your spam folder.",
+    "We have sent a confirmation email request. You cannot sign in until you confirm your address using the link in that message. If nothing arrives within a few minutes, check your spam folder. You can resend using the form below with the same email.",
 };
 
 const formJa: LoginFormStrings = {
@@ -125,7 +131,7 @@ const formJa: LoginFormStrings = {
   errSignupIncomplete:
     "登録を完了できませんでした。メールアドレスを確認するか、しばらくしてから再度お試しください。",
   signupSuccessMessage:
-    "登録用の確認メールの送信をリクエストしました。メール内のリンクでアドレス確認が完了するまでログインできません。数分経っても届かない場合は迷惑メールフォルダもご確認ください。",
+    "登録用の確認メールの送信をリクエストしました。メール内のリンクでアドレス確認が完了するまでログインできません。数分経っても届かない場合は迷惑メールフォルダもご確認ください。同じメールアドレスで下から再送できます。",
 };
 
 export const loginPageCopy: Record<LoginLocale, LoginPageStrings> = {
@@ -156,6 +162,11 @@ export const loginPageCopy: Record<LoginLocale, LoginPageStrings> = {
     terms: "Terms",
     privacy: "Privacy",
     acceptableUse: "Acceptable use",
+    resendTitle: "Did not receive the confirmation email?",
+    resendHint: "Enter the same email you used for Get started and we will send the link again.",
+    resendSubmit: "Resend confirmation email",
+    resendSending: "Sending…",
+    resendSuccess: "Sent again. Check spam if it still does not show up.",
     form: formEn,
   },
   ja: {
@@ -185,6 +196,11 @@ export const loginPageCopy: Record<LoginLocale, LoginPageStrings> = {
     terms: "利用規約",
     privacy: "プライバシー",
     acceptableUse: "利用方針",
+    resendTitle: "確認メールが届かない場合",
+    resendHint: "「無料で始める」で登録したメールアドレスを入力して、確認リンクを再送できます。",
+    resendSubmit: "確認メールを再送",
+    resendSending: "送信中…",
+    resendSuccess: "再送しました。届かない場合は迷惑メールフォルダもご確認ください。",
     form: formJa,
   },
 };

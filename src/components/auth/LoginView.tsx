@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { LoginForm } from "@/components/auth/LoginForm";
+import { ResendConfirmationForm } from "@/components/auth/ResendConfirmationForm";
 import type { LoginLocale } from "@/lib/auth/login-copy";
 import { loginPageCopy } from "@/lib/auth/login-copy";
 
@@ -145,6 +146,8 @@ export function LoginView({
               authCallbackUrl={callbackUrl}
               locale={locale}
             />
+
+            <ResendConfirmationForm authCallbackUrl={callbackUrl} locale={locale} />
 
             <div className="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-1 border-t border-[var(--color-border)] pt-6 text-center text-xs text-[var(--color-ink-muted)]">
               <Link href="/terms" className="hover:text-[var(--color-ink)]">

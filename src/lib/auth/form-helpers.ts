@@ -31,7 +31,13 @@ function mapAuthErrorEn(message: string): string {
   if (m.includes("password")) {
     return "Check your password format (letters and numbers only, at least 8 characters).";
   }
-  if (m.includes("rate limit") || m.includes("too many requests") || m.includes("email rate limit")) {
+  if (
+    m.includes("rate limit") ||
+    m.includes("too many requests") ||
+    m.includes("email rate limit") ||
+    m.includes("over_request_rate_limit") ||
+    m.includes("request rate limit")
+  ) {
     return "Too many attempts. Please wait a few minutes and try again.";
   }
   if (
@@ -67,7 +73,13 @@ function mapAuthErrorJa(message: string): string {
   if (m.includes("password")) {
     return "パスワードの形式を確認してください（半角英数字・8文字以上）。";
   }
-  if (m.includes("rate limit") || m.includes("too many requests") || m.includes("email rate limit")) {
+  if (
+    m.includes("rate limit") ||
+    m.includes("too many requests") ||
+    m.includes("email rate limit") ||
+    m.includes("over_request_rate_limit") ||
+    m.includes("request rate limit")
+  ) {
     return "試行回数が多すぎます。数分待ってから再度お試しください。";
   }
   if (
