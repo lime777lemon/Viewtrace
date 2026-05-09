@@ -56,8 +56,10 @@ export async function middleware(request: NextRequest) {
   return supabaseResponse;
 }
 
+/**
+ * ダッシュボードだけで getUser を呼ぶ。全ページ・全 API で走らせると開発時の連続リクエストで
+ * Supabase Auth の over_request_rate_limit (429) に当たりやすい。
+ */
 export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
+  matcher: ["/dashboard", "/dashboard/:path*"],
 };
