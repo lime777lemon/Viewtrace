@@ -40,6 +40,15 @@ export default async function AuthCodeErrorPage({
       <p className="mt-3 text-sm text-ink-muted">
         リンクの有効期限切れ、または設定の不整合の可能性があります。もう一度ログインまたは登録をお試しください。
       </p>
+      {reason?.includes("exchangeCodeForSession_timeout") ? (
+        <p className="mt-4 rounded-xl border border-amber-200/80 bg-amber-50/90 px-4 py-3 text-left text-xs leading-relaxed text-amber-950">
+          <strong className="font-semibold">タイムアウト:</strong>{" "}
+          サーバーまたは回線の混雑で、認証コードの確認が間に合わなかった可能性があります。Wi‑Fi
+          とモバイルデータを切り替える、しばらく時間をおいてから{" "}
+          <strong>同じメールのリンクでもう一度</strong>試す（PKCE の場合は{" "}
+          <strong>登録時と同じブラウザ</strong>で開いてください）。繰り返す場合はお問い合わせください。
+        </p>
+      ) : null}
       {reason || errorCode || errorDescription ? (
         <div className="mt-4 rounded-2xl border border-border bg-surface p-4 text-left text-xs leading-relaxed text-ink-muted">
           <p className="font-medium text-ink">エラー詳細</p>

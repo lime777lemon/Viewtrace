@@ -9,6 +9,9 @@ import {
 } from "@/lib/auth/post-auth-redirect";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
+/** メール確認・モバイル回線などで exchange が遅いことがあるため余裕を持つ */
+const EXCHANGE_CODE_FOR_SESSION_MS = 60_000;
+
 function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
   return new Promise((resolve, reject) => {
     const t = setTimeout(() => reject(new Error(`${label}_timeout`)), ms);
@@ -50,7 +53,7 @@ function OAuthCompleteInner() {
         const supabase = createSupabaseBrowserClient();
         const { error } = await withTimeout(
           supabase.auth.exchangeCodeForSession(code),
-          25_000,
+          EXCHANGE_CODE_FOR_SESSION_MS,
           "exchangeCodeForSession",
         );
         if (cancelled) return;
