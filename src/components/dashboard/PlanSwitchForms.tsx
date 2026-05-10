@@ -14,7 +14,7 @@ export function PlanSwitchForms({
   return (
     <div className="mt-6 space-y-4">
       {onFreePlan ? (
-        <p className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-3 py-2 text-xs text-[var(--color-ink-muted)]">
+        <p className="rounded-lg border border-border bg-surface-elevated px-3 py-2 text-xs text-ink-muted">
           {locale === "ja"
             ? "現在はフリープランです。下から有料プランにアップグレードできます。"
             : "You are on the free plan. Upgrade to a paid plan below."}
@@ -27,23 +27,23 @@ export function PlanSwitchForms({
           const href = `/checkout?plan=${id}`;
           const className = `block w-full rounded-xl border px-4 py-3 text-left text-sm transition ${
             active
-              ? "cursor-default border-[var(--color-accent)] bg-[var(--color-accent-soft)]/50 ring-2 ring-[var(--color-accent)]/25"
-              : "border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-accent)]/40"
+              ? "cursor-default border-accent bg-accent-soft/50 ring-2 ring-accent/25"
+              : "border-border bg-surface hover:border-accent/40"
           }`;
 
           const body = (
             <>
-              <span className="font-display font-semibold text-[var(--color-ink)]">{p.name}</span>
+              <span className="font-display font-semibold text-ink">{p.name}</span>
               {active ? (
-                <span className="mt-1 block text-xs font-medium text-[var(--color-accent)]">
+                <span className="mt-1 block text-xs font-medium text-accent">
                   {t.currentPlanBadge}
                 </span>
               ) : (
-                <span className="mt-1 block text-xs text-[var(--color-ink-muted)]">
+                <span className="mt-1 block text-xs text-ink-muted">
                   {t.switchToPlan}
                 </span>
               )}
-              <span className="mt-1 block text-xs text-[var(--color-ink-muted)]">
+              <span className="mt-1 block text-xs text-ink-muted">
                 {t.planCardMeta
                   .replace("{price}", p.priceLabel)
                   .replace("{limit}", String(p.monthlyObservations))

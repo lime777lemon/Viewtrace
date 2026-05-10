@@ -29,7 +29,13 @@ export function SupabaseHomeAuthCapture() {
     const sp = new URLSearchParams(window.location.search);
     const code = sp.get("code");
     const type = sp.get("type");
-    if (code && (type === "signup" || type === "email")) {
+    // PKCE の確認メールは `/?code=…` だけで `type` が付かないことがある（Site URL が `/` のときなど）
+    if (
+      code &&
+      type !== "recovery" &&
+      type !== "invite" &&
+      (!type || type === "signup" || type === "email")
+    ) {
       const next = encodeURIComponent(POST_EMAIL_VERIFY_PATH);
       window.location.replace(
         `${window.location.origin}/auth/oauth-complete?code=${encodeURIComponent(code)}&next=${next}`,

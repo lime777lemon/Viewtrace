@@ -5,6 +5,7 @@ import { appendAuditEvent, AUDIT_ACTION } from "@/lib/audit-log";
 import { isValidEmail, mapAuthErrorForLocale } from "@/lib/auth/form-helpers";
 import type { LoginLocale } from "@/lib/auth/login-copy";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { insertTrialSignupRow } from "@/lib/auth/trial-signup-server";
 import { getSession } from "@/lib/auth/session";
 import { parsePlanId } from "@/lib/plans";
 
@@ -39,6 +40,18 @@ export async function authFormAction(
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
     return { error: mapAuthErrorForLocale(error.message, locale) };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user?.email) {
+    await insertTrialSignupRow(
+      supabase,
+      user.email,
+      locale,
+      user.user_metadata as Record<string, unknown> | undefined,
+    );
   }
 
   await appendAuditEvent(supabase, {

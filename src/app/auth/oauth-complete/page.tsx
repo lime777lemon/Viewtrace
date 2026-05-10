@@ -89,7 +89,7 @@ function OAuthCompleteInner() {
 
   return (
     <div className="mx-auto flex min-h-[40vh] max-w-md flex-col justify-center px-4 py-16 text-center">
-      <p className="text-sm text-[var(--color-ink-muted)]">{message}</p>
+      <p className="text-sm text-ink-muted">{message}</p>
     </div>
   );
 }
@@ -99,7 +99,7 @@ export default function OAuthCompletePage() {
     <Suspense
       fallback={
         <div className="mx-auto flex min-h-[40vh] max-w-md flex-col justify-center px-4 py-16 text-center">
-          <p className="text-sm text-[var(--color-ink-muted)]">読み込み中…</p>
+          <p className="text-sm text-ink-muted">読み込み中…</p>
         </div>
       }
     >

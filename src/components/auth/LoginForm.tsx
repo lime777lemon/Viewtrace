@@ -7,9 +7,11 @@ import {
   isValidEmail,
   mapAuthErrorForLocale,
 } from "@/lib/auth/form-helpers";
-import { POST_EMAIL_VERIFY_PATH } from "@/lib/auth/email-verified-copy";
 import type { LoginLocale } from "@/lib/auth/login-copy";
+import { buildSignupEmailRedirectTo } from "@/lib/auth/signup-email-redirect";
+import { POST_EMAIL_VERIFY_PATH } from "@/lib/auth/email-verified-copy";
 import { loginPageCopy } from "@/lib/auth/login-copy";
+import { postAuthSideEffectsBeforeNavigate } from "@/lib/auth/post-auth-redirect";
 import { TRIAL_CONFIG } from "@/lib/plans";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -43,10 +45,24 @@ export function LoginForm({
   const safeNext =
     nextPath?.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "";
 
+  /** サーバー計算のコールバック URL（参照・フォールバック用） */
   function buildEmailRedirectTo(): string {
     const u = new URL(authCallbackUrl);
     u.searchParams.set("next", POST_EMAIL_VERIFY_PATH);
     return u.toString();
+  }
+
+  /**
+   * 確認メールの redirect_to は「登録したタブのオリジン」と一致させる。
+   * さもないと Supabase が許可リスト不一致とみなし Site URL だけに落ち、
+   * メール内が `redirect_to=https://viewtrace.net` のみになることがある。
+   */
+  function emailRedirectToForSignup(): string {
+    try {
+      return buildSignupEmailRedirectTo(window.location.origin);
+    } catch {
+      return buildEmailRedirectTo();
+    }
   }
 
   async function submitSignup(fd: FormData) {
@@ -81,11 +97,12 @@ export function LoginForm({
     try {
       const supabase = createSupabaseBrowserClient();
       const trialStartedAt = new Date().toISOString();
+      const emailRedirectTo = emailRedirectToForSignup();
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: buildEmailRedirectTo(),
+          emailRedirectTo,
           data: {
             plan: "freeplan" as const,
             trial_active: true,
@@ -113,17 +130,17 @@ export function LoginForm({
       }
 
       if (data.session) {
+        await postAuthSideEffectsBeforeNavigate();
         window.location.assign(safeNext || "/dashboard");
         return;
       }
 
       const emailDomain = email.includes("@") ? email.split("@")[1] : "";
-      const redirectTo = buildEmailRedirectTo();
       console.info("[auth] signup confirmation email requested (browser)", {
         userId: data.user.id,
         emailDomain,
         authCallbackUrl,
-        emailRedirectTo: redirectTo,
+        emailRedirectTo,
       });
 
       setSignupFeedback({
@@ -148,7 +165,7 @@ export function LoginForm({
       <input type="hidden" name="_locale" value={locale} />
       {safeNext ? <input type="hidden" name="next" value={safeNext} /> : null}
 
-      <div className="flex rounded-xl border border-[var(--color-border)] p-1 text-sm font-medium">
+      <div className="flex rounded-xl border border-border p-1 text-sm font-medium">
         <button
           type="button"
           onClick={() => {
@@ -157,8 +174,8 @@ export function LoginForm({
           }}
           className={`flex-1 rounded-lg py-2 transition ${
             mode === "signup"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
-              : "text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"
+              ? "bg-accent text-white shadow-sm"
+              : "text-ink-muted hover:text-ink"
           }`}
         >
           {t.getStartedTab}
@@ -171,8 +188,8 @@ export function LoginForm({
           }}
           className={`flex-1 rounded-lg py-2 transition ${
             mode === "signin"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
-              : "text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"
+              ? "bg-accent text-white shadow-sm"
+              : "text-ink-muted hover:text-ink"
           }`}
         >
           {t.signInTab}
@@ -180,7 +197,7 @@ export function LoginForm({
       </div>
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-[var(--color-ink)]">
+        <label htmlFor="email" className="block text-sm font-medium text-ink">
           {t.email}
         </label>
         <input
@@ -190,13 +207,13 @@ export function LoginForm({
           autoComplete="email"
           required
           placeholder={t.emailPlaceholder}
-          className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm outline-none ring-[var(--color-accent)]/25 transition placeholder:text-[var(--color-ink-muted)]/60 focus:border-[var(--color-accent)]/40 focus:ring-2"
+          className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm outline-none ring-accent/25 transition placeholder:text-ink-muted/60 focus:border-accent/40 focus:ring-2"
         />
       </div>
       {mode === "signup" ? (
         <>
           <div>
-            <label htmlFor={fullNameId} className="block text-sm font-medium text-[var(--color-ink)]">
+            <label htmlFor={fullNameId} className="block text-sm font-medium text-ink">
               {t.fullName}
             </label>
             <input
@@ -207,11 +224,11 @@ export function LoginForm({
               required
               maxLength={200}
               placeholder={t.fullNamePlaceholder}
-              className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm outline-none ring-[var(--color-accent)]/25 transition placeholder:text-[var(--color-ink-muted)]/60 focus:border-[var(--color-accent)]/40 focus:ring-2"
+              className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm outline-none ring-accent/25 transition placeholder:text-ink-muted/60 focus:border-accent/40 focus:ring-2"
             />
           </div>
           <div>
-            <label htmlFor={companyNameId} className="block text-sm font-medium text-[var(--color-ink)]">
+            <label htmlFor={companyNameId} className="block text-sm font-medium text-ink">
               {t.company}
             </label>
             <input
@@ -221,11 +238,11 @@ export function LoginForm({
               autoComplete="organization"
               maxLength={200}
               placeholder={t.companyPlaceholder}
-              className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm outline-none ring-[var(--color-accent)]/25 transition placeholder:text-[var(--color-ink-muted)]/60 focus:border-[var(--color-accent)]/40 focus:ring-2"
+              className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm outline-none ring-accent/25 transition placeholder:text-ink-muted/60 focus:border-accent/40 focus:ring-2"
             />
           </div>
           <div>
-            <label htmlFor={phoneId} className="block text-sm font-medium text-[var(--color-ink)]">
+            <label htmlFor={phoneId} className="block text-sm font-medium text-ink">
               {t.phone}
             </label>
             <input
@@ -235,20 +252,20 @@ export function LoginForm({
               autoComplete="tel"
               maxLength={40}
               placeholder={t.phonePlaceholder}
-              className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm outline-none ring-[var(--color-accent)]/25 transition placeholder:text-[var(--color-ink-muted)]/60 focus:border-[var(--color-accent)]/40 focus:ring-2"
+              className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm outline-none ring-accent/25 transition placeholder:text-ink-muted/60 focus:border-accent/40 focus:ring-2"
             />
           </div>
         </>
       ) : null}
       <div>
         <div className="flex items-center justify-between gap-2">
-          <label htmlFor={passwordId} className="block text-sm font-medium text-[var(--color-ink)]">
+          <label htmlFor={passwordId} className="block text-sm font-medium text-ink">
             {t.password}
           </label>
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}
-            className="text-xs font-medium text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+            className="text-xs font-medium text-accent hover:text-accent-hover"
           >
             {showPassword ? t.hidePassword : t.showPassword}
           </button>
@@ -261,17 +278,17 @@ export function LoginForm({
           required
           minLength={mode === "signup" ? 8 : undefined}
           placeholder={mode === "signup" ? t.passwordPlaceholderSignup : t.passwordPlaceholderSignin}
-          className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm outline-none ring-[var(--color-accent)]/25 transition placeholder:text-[var(--color-ink-muted)]/60 focus:border-[var(--color-accent)]/40 focus:ring-2"
+          className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm outline-none ring-accent/25 transition placeholder:text-ink-muted/60 focus:border-accent/40 focus:ring-2"
         />
         {mode === "signup" ? (
-          <p className="mt-1 text-xs text-[var(--color-ink-muted)]">{t.passwordHint}</p>
+          <p className="mt-1 text-xs text-ink-muted">{t.passwordHint}</p>
         ) : null}
       </div>
       {mode === "signup" ? (
         <div>
           <label
             htmlFor={passwordConfirmId}
-            className="block text-sm font-medium text-[var(--color-ink)]"
+            className="block text-sm font-medium text-ink"
           >
             {t.confirmPassword}
           </label>
@@ -283,9 +300,9 @@ export function LoginForm({
             required
             minLength={8}
             placeholder={t.confirmPasswordPlaceholder}
-            className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm outline-none ring-[var(--color-accent)]/25 transition placeholder:text-[var(--color-ink-muted)]/60 focus:border-[var(--color-accent)]/40 focus:ring-2"
+            className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm outline-none ring-accent/25 transition placeholder:text-ink-muted/60 focus:border-accent/40 focus:ring-2"
           />
-          <p className="mt-1 text-xs text-[var(--color-ink-muted)]">{t.confirmPasswordHint}</p>
+          <p className="mt-1 text-xs text-ink-muted">{t.confirmPasswordHint}</p>
         </div>
       ) : null}
       {mode === "signin" && signInState?.error ? (
@@ -323,7 +340,7 @@ export function LoginForm({
       <button
         type="submit"
         disabled={mode === "signin" ? signInPending : signupPending}
-        className="w-full rounded-full bg-[var(--color-accent)] py-3.5 text-sm font-semibold text-white shadow-md shadow-[var(--color-accent)]/20 transition hover:bg-[var(--color-accent-hover)] disabled:opacity-60"
+        className="w-full rounded-full bg-accent py-3.5 text-sm font-semibold text-white shadow-md shadow-accent/20 transition hover:bg-accent-hover disabled:opacity-60"
       >
         {mode === "signin"
           ? signInPending

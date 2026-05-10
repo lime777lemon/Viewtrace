@@ -23,7 +23,7 @@ export default async function ContactPage() {
           ? "For questions or requests, email us below. Replies may take some time."
           : "ご質問・ご相談は、下記メールアドレスまでお送りください。返信までにお時間をいただく場合があります。"}
       </p>
-      <p className="text-lg font-semibold text-[var(--color-ink)]">
+      <p className="text-lg font-semibold text-ink">
         <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
       </p>
       <p>

@@ -106,6 +106,7 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
     screenshotFallback: !browserlessOn,
     fullPageScreenshot: browserlessOn ? false : plan.snapshotFullPage,
     regionValue,
+    retryWithoutProxyOnFailure: true,
   });
 
   let uploadedBrowserlessUrl: string | null = null;
@@ -161,6 +162,7 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
       screenshotFallback: true,
       fullPageScreenshot: plan.snapshotFullPage,
       regionValue,
+      retryWithoutProxyOnFailure: true,
     });
     if (fallback.ok && fallback.image && /^https?:\/\//i.test(fallback.image)) {
       snapshotImageUrl = fallback.image.slice(0, 2048);

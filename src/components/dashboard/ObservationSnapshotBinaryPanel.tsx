@@ -77,11 +77,11 @@ export function ObservationSnapshotBinaryPanel({
 
   if (!snapshotSha256) {
     return (
-      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4 sm:col-span-2">
-        <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
+      <div className="rounded-xl border border-border bg-surface-elevated p-4 sm:col-span-2">
+        <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
           {t.titleBinary}
         </p>
-        <p className="mt-1 text-sm text-[var(--color-ink-muted)]">
+        <p className="mt-1 text-sm text-ink-muted">
           {t.hintNoHash}
         </p>
       </div>
@@ -89,35 +89,35 @@ export function ObservationSnapshotBinaryPanel({
   }
 
   return (
-    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4 sm:col-span-2">
-      <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
+    <div className="rounded-xl border border-border bg-surface-elevated p-4 sm:col-span-2">
+      <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
         {t.titleIntegrity}
       </p>
-      <div className="mt-1 space-y-3 text-sm text-[var(--color-ink)]">
-        <p className="text-xs text-[var(--color-ink-muted)]">
+      <div className="mt-1 space-y-3 text-sm text-ink">
+        <p className="text-xs text-ink-muted">
           {t.hintHow}
         </p>
         {typeof snapshotBytes === "number" ? (
-          <p className="text-xs text-[var(--color-ink-muted)]">
+          <p className="text-xs text-ink-muted">
             {t.bytesAtCapture}: {snapshotBytes.toLocaleString()} bytes
             {snapshotContentType ? ` · ${snapshotContentType}` : ""}
           </p>
         ) : null}
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-muted">
             SHA-256
           </p>
-          <p className="break-all font-mono text-xs text-[var(--color-ink-muted)]">{snapshotSha256}</p>
+          <p className="break-all font-mono text-xs text-ink-muted">{snapshotSha256}</p>
         </div>
         {snapshotPhash ? (
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-muted">
               {t.phashAtCapture}
             </p>
-            <p className="break-all font-mono text-xs text-[var(--color-ink-muted)]">{snapshotPhash}</p>
+            <p className="break-all font-mono text-xs text-ink-muted">{snapshotPhash}</p>
           </div>
         ) : (
-          <p className="text-xs text-[var(--color-ink-muted)]">
+          <p className="text-xs text-ink-muted">
             {t.phashMissing}
           </p>
         )}
@@ -127,14 +127,14 @@ export function ObservationSnapshotBinaryPanel({
               type="button"
               disabled={pending}
               onClick={() => void verify()}
-              className="inline-flex rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2 text-xs font-semibold text-[var(--color-ink)] hover:border-[var(--color-accent)]/40 disabled:opacity-60"
+              className="inline-flex rounded-full border border-border bg-surface px-4 py-2 text-xs font-semibold text-ink hover:border-accent/40 disabled:opacity-60"
             >
               {pending ? t.verifying : t.verifyButton}
             </button>
-            <span className="text-xs text-[var(--color-ink-muted)]">{t.clickOnce}</span>
+            <span className="text-xs text-ink-muted">{t.clickOnce}</span>
           </div>
         ) : null}
-        {message ? <p className="text-sm text-[var(--color-ink)]">{message}</p> : null}
+        {message ? <p className="text-sm text-ink">{message}</p> : null}
       </div>
     </div>
   );

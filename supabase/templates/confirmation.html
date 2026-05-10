@@ -1,0 +1,28 @@
+<!--
+  【このファイルの読み方】
+
+  ■ Supabase 本番（ブラウザの Dashboard）で Confirm signup を編集するとき
+    Authentication → Email Templates → Confirm signup の「本文」には、
+    下の <body> の中身だけをコピーして貼ってください。
+    （<html>・<head>・<body> のタグ自体は Dashboard には書かないでください。
+     メールテンプレ側ですでにラップされるためです。）
+
+  ■ ローカル開発（supabase start）では
+    supabase/config.toml の content_path で、このファイル全体がそのまま使われます。
+
+  ■ token_hash 形が必要なときだけ（まれ）
+    src/app/auth/callback/route.ts 冒頭コメントの URL 形に差し替える。
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Confirm your signup</title>
+</head>
+<body style="font-family: system-ui, sans-serif; line-height: 1.5;">
+  <h2>Confirm your signup</h2>
+  <p>Follow this link to confirm your user:</p>
+  <p><a href="{{ .ConfirmationURL }}">Confirm your mail</a></p>
+</body>
+</html>

@@ -3,7 +3,7 @@ import { EmailVerifiedView } from "@/components/auth/EmailVerifiedView";
 import { getSession } from "@/lib/auth/session";
 
 export const metadata: Metadata = {
-  title: "認証完了 | Viewtrace",
+  title: "認証しました | Viewtrace",
   robots: { index: false, follow: false },
 };
 

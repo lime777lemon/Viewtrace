@@ -68,14 +68,33 @@ function isAllowedRedirectOrigin(origin: string): boolean {
  *
  * Supabase Dashboard → Authentication → URL Configuration:
  * 「Redirect URLs」に少なくとも `https://<本番ドメイン>/auth/callback` とローカル用 `http://localhost:<port>/auth/callback` を追加する。
- * 未登録だと `redirect_to` が無効になり、Site URL（多くは `/`）へ落ちてメイン画面だけ開くことがある。
+ * クエリ付き URL はワイルドカード（例 `https://viewtrace.net/**`）も検討（[Redirect URLs](https://supabase.com/docs/guides/auth/redirect-urls)）。
+ * 未登録だと `redirect_to` が無効になり、メールの verify リンクで `redirect_to` が Site URL のみになり（`/auth/callback` が消える）、トップだけ開くことがある。
  *
- * Email Templates の「Confirm signup」はリンクを `{{ .SiteURL }}` だけにしない。
- * `{{ .ConfirmationURL }}` を使うか、`{{ .RedirectTo }}` ベースで `token_hash` を付与する（callback/route.ts 冒頭コメント参照）。
+ * 本番で `NEXT_PUBLIC_SITE_URL` が設定されているときは、この関数は **必ずそのオリジン** の `/auth/callback` を返す（ヘッダより優先）。
+ *
+ * Email Templates の「Confirm signup」（Confirm your mail）のリンクは次のどちらかにする。
+ * - **推奨**: `href="{{ .ConfirmationURL }}"` — アプリの `signUp` で渡した `emailRedirectTo`（`/auth/callback?next=…`）がそのまま反映される。
+ * - **代替**: `href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email"`（`type` は `signup` の場合あり。callback/route.ts 冒頭コメント参照）。
+ * `{{ .SiteURL }}` のみにしない（Site URL 直下に落ち、アプリの callback／認証完了画面を踏めなくなることがある）。
+ *
+ * テンプレートのソースファイル: `supabase/templates/confirmation.html`（ローカル CLI と同期。
+ * ホスト済みプロジェクトは同ファイルの body を Dashboard → Confirm signup にコピーする）
+ *
+ * ダッシュボード貼り付け例（本文は英語のままで可）:
+ * `<p><a href="{{ .ConfirmationURL }}">Confirm your mail</a></p>`
+ *
+ * リンク完了後はアプリ側で `/auth/email-verified`（「認証しました」画面）へ誘導する（`next` が欠けても callback の既定で同じ）。
  *
  * Site URL 直下に `#access_token=…` だけ付いて戻る場合は、`SupabaseHomeAuthCapture` が fragment 処理へ回す。
  */
 export async function getAuthEmailRedirectTo(): Promise<string> {
+  // 本番では NEXT_PUBLIC_SITE_URL を最優先し、www / プロキシヘッダのブレで
+  // `emailRedirectTo` が許可リストから外れて Site URL だけになるのを防ぐ。
+  if (process.env.NEXT_PUBLIC_SITE_URL?.trim()) {
+    return `${trimTrailingSlash(resolveStaticSiteOrigin())}/auth/callback`;
+  }
+
   const h = await headers();
   const origin = h.get("origin");
   if (origin && isAllowedRedirectOrigin(origin)) {

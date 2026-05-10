@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useState } from "react";
 import { LoginForm } from "@/components/auth/LoginForm";
-import { ResendConfirmationForm } from "@/components/auth/ResendConfirmationForm";
 import type { LoginLocale } from "@/lib/auth/login-copy";
 import { loginPageCopy } from "@/lib/auth/login-copy";
 
@@ -24,24 +23,24 @@ export function LoginView({
   const t = loginPageCopy[locale];
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[var(--color-surface)] text-[var(--color-ink)]">
+    <div className="relative min-h-screen overflow-hidden bg-surface text-ink">
       <div
-        className="pointer-events-none absolute -left-32 top-20 h-80 w-80 rounded-full bg-[var(--color-accent-soft)] opacity-70 blur-3xl"
+        className="pointer-events-none absolute -left-32 top-20 h-80 w-80 rounded-full bg-accent-soft opacity-70 blur-3xl"
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-[var(--color-accent-soft)] opacity-50 blur-3xl"
+        className="pointer-events-none absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-accent-soft opacity-50 blur-3xl"
         aria-hidden
       />
 
-      <header className="relative z-10 border-b border-[var(--color-border)]/80 bg-[var(--color-surface-elevated)]/80 backdrop-blur-md">
+      <header className="relative z-10 border-b border-border/80 bg-surface-elevated/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
           <Link href="/" className="font-display text-lg font-semibold tracking-tight">
             Viewtrace
           </Link>
           <div className="flex flex-wrap items-center gap-3 text-sm sm:gap-4">
             <div
-              className="flex items-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] p-0.5 text-xs"
+              className="flex items-center rounded-full border border-border bg-surface p-0.5 text-xs"
               role="group"
               aria-label={t.langAria}
             >
@@ -50,8 +49,8 @@ export function LoginView({
                 onClick={() => setLocale("en")}
                 className={`rounded-full px-3 py-1.5 font-medium transition ${
                   locale === "en"
-                    ? "bg-[var(--color-accent)] text-white"
-                    : "text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"
+                    ? "bg-accent text-white"
+                    : "text-ink-muted hover:text-ink"
                 }`}
               >
                 {t.english}
@@ -61,8 +60,8 @@ export function LoginView({
                 onClick={() => setLocale("ja")}
                 className={`rounded-full px-3 py-1.5 font-medium transition ${
                   locale === "ja"
-                    ? "bg-[var(--color-accent)] text-white"
-                    : "text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"
+                    ? "bg-accent text-white"
+                    : "text-ink-muted hover:text-ink"
                 }`}
               >
                 {t.japanese}
@@ -70,13 +69,13 @@ export function LoginView({
             </div>
             <Link
               href="/contact"
-              className="hidden font-medium text-[var(--color-ink-muted)] transition hover:text-[var(--color-ink)] sm:inline"
+              className="hidden font-medium text-ink-muted transition hover:text-ink sm:inline"
             >
               {t.contact}
             </Link>
             <Link
               href="/"
-              className="font-medium text-[var(--color-accent)] transition hover:text-[var(--color-accent-hover)]"
+              className="font-medium text-accent transition hover:text-accent-hover"
             >
               {t.backToSite}
             </Link>
@@ -86,42 +85,42 @@ export function LoginView({
 
       <main className="relative z-10 mx-auto grid min-h-[calc(100vh-4.25rem)] max-w-6xl gap-10 px-4 py-10 sm:px-6 lg:grid-cols-2 lg:items-center lg:gap-16 lg:py-16">
         <section className="order-2 lg:order-1">
-          <p className="inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-3 py-1 text-xs font-medium text-[var(--color-ink-muted)]">
-            <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-accent)]" />
+          <p className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-elevated px-3 py-1 text-xs font-medium text-ink-muted">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
             {t.productPill}
           </p>
           <h1 className="font-display mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
             {t.heroTitle}
           </h1>
-          <ul className="mt-8 space-y-3 text-sm text-[var(--color-ink-muted)]">
+          <ul className="mt-8 space-y-3 text-sm text-ink-muted">
             <li className="flex gap-2">
-              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-accent)]" />
+              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
               {t.bullet1}
             </li>
             <li className="flex gap-2">
-              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-accent)]" />
+              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
               {t.bullet2}
             </li>
           </ul>
         </section>
 
         <section className="order-1 lg:order-2">
-          <div className="mx-auto w-full max-w-md rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-6 shadow-lg shadow-[var(--color-ink)]/5 sm:p-8">
+          <div className="mx-auto w-full max-w-md rounded-2xl border border-border bg-surface-elevated p-6 shadow-lg shadow-ink/5 sm:p-8">
             <div className="text-center">
               <p className="font-display text-lg font-semibold">Viewtrace</p>
-              <p className="mt-1 text-sm text-[var(--color-ink-muted)]">{t.cardSubtitle}</p>
+              <p className="mt-1 text-sm text-ink-muted">{t.cardSubtitle}</p>
             </div>
 
             <>
-                <div className="mt-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-left text-sm text-[var(--color-ink-muted)]">
-                  <p className="font-medium text-[var(--color-ink)]">{t.emailSignInTitle}</p>
+                <div className="mt-6 rounded-xl border border-border bg-surface p-4 text-left text-sm text-ink-muted">
+                  <p className="font-medium text-ink">{t.emailSignInTitle}</p>
                   <p className="mt-2 leading-relaxed">
                     {t.signInHelpPart1}
-                    <strong className="font-semibold text-[var(--color-ink)]">{t.getStarted}</strong>
+                    <strong className="font-semibold text-ink">{t.getStarted}</strong>
                     {t.signInHelpPart2}
-                    <strong className="font-semibold text-[var(--color-ink)]">{t.signIn}</strong>
+                    <strong className="font-semibold text-ink">{t.signIn}</strong>
                     {t.signInHelpPart3}
-                    <strong className="font-semibold text-[var(--color-ink)]">{t.signInHelpStrong}</strong>
+                    <strong className="font-semibold text-ink">{t.signInHelpStrong}</strong>
                     {t.signInHelpPart4}
                   </p>
                   {verified ? (
@@ -133,7 +132,7 @@ export function LoginView({
                     {t.needHelpPrefix}
                     <Link
                       href="/contact"
-                      className="font-medium text-[var(--color-accent)] underline underline-offset-2"
+                      className="font-medium text-accent underline underline-offset-2"
                     >
                       {t.contactLinkLabel}
                     </Link>
@@ -147,24 +146,22 @@ export function LoginView({
                   authCallbackUrl={callbackUrl}
                   locale={locale}
                 />
-
-                <ResendConfirmationForm authCallbackUrl={callbackUrl} locale={locale} />
             </>
 
-            <div className="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-1 border-t border-[var(--color-border)] pt-6 text-center text-xs text-[var(--color-ink-muted)]">
-              <Link href="/terms" className="hover:text-[var(--color-ink)]">
+            <div className="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-1 border-t border-border pt-6 text-center text-xs text-ink-muted">
+              <Link href="/terms" className="hover:text-ink">
                 {t.terms}
               </Link>
-              <span aria-hidden className="text-[var(--color-border)]">
+              <span aria-hidden className="text-border">
                 ·
               </span>
-              <Link href="/privacy" className="hover:text-[var(--color-ink)]">
+              <Link href="/privacy" className="hover:text-ink">
                 {t.privacy}
               </Link>
-              <span aria-hidden className="text-[var(--color-border)]">
+              <span aria-hidden className="text-border">
                 ·
               </span>
-              <Link href="/acceptable-use" className="hover:text-[var(--color-ink)]">
+              <Link href="/acceptable-use" className="hover:text-ink">
                 {t.acceptableUse}
               </Link>
             </div>

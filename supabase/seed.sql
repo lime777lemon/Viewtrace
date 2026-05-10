@@ -1,0 +1,1 @@
+-- Optional local seed data (see supabase/config.toml [db.seed])

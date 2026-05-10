@@ -22,7 +22,8 @@ export default async function LoginPage({
   const initialMode = verified || modeParam === "signin" ? ("signin" as const) : ("signup" as const);
 
   const session = await getSession();
-  if (session) {
+  // メール確認後に `/login?verified=1` へ誘導されたとき、セッション付きでも一言表示できるようにダッシュボードへ即飛ばさない
+  if (session && !verified) {
     if (nextPath) redirect(nextPath);
     redirect("/dashboard");
   }

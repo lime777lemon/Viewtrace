@@ -48,7 +48,7 @@ export default async function DashboardHomePage() {
     <div className="mx-auto max-w-5xl space-y-10">
       <div>
         <h1 className="font-display text-2xl font-semibold tracking-tight">{t.title}</h1>
-        <p className="mt-1 text-sm text-[var(--color-ink-muted)]">
+        <p className="mt-1 text-sm text-ink-muted">
           {t.subtitle
             .replace("{plan}", plan.name)
             .replace("{price}", planLabels.priceLabel)
@@ -58,18 +58,18 @@ export default async function DashboardHomePage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
+        <div className="rounded-2xl border border-border bg-surface-elevated p-5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
             {t.cardPlanLabel}
           </p>
           <p className="mt-2 font-display text-lg font-semibold">{plan.name}</p>
-          <p className="mt-1 text-sm text-[var(--color-ink-muted)]">{planLabels.priceLabel}</p>
-          <p className="mt-2 text-xs text-[var(--color-ink-muted)]">{planLabels.audienceLabel}</p>
-          <p className="mt-3 text-xs leading-relaxed text-[var(--color-ink-muted)]">
+          <p className="mt-1 text-sm text-ink-muted">{planLabels.priceLabel}</p>
+          <p className="mt-2 text-xs text-ink-muted">{planLabels.audienceLabel}</p>
+          <p className="mt-3 text-xs leading-relaxed text-ink-muted">
             {planLabels.coverageLabel}
             {plan.csvExport ? " · CSV" : ""}
           </p>
-          <p className="mt-3 text-xs text-[var(--color-ink-muted)]">
+          <p className="mt-3 text-xs text-ink-muted">
             {t.cardPlanMeta
               .replace("{days}", String(plan.retentionDays))
               .replace("{limit}", String(plan.monthlyObservations))}
@@ -77,27 +77,27 @@ export default async function DashboardHomePage() {
           <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2">
             <Link
               href="/dashboard/settings"
-              className="inline-block text-xs font-semibold text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+              className="inline-block text-xs font-semibold text-accent hover:text-accent-hover"
             >
               {t.cardPlanChange}
             </Link>
             <Link
               href="/dashboard/audit"
-              className="inline-block text-xs font-semibold text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+              className="inline-block text-xs font-semibold text-accent hover:text-accent-hover"
             >
               {t.auditLogLink}
             </Link>
           </div>
         </div>
-        <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-5 sm:col-span-2 lg:col-span-2">
+        <div className="rounded-2xl border border-border bg-surface-elevated p-5 sm:col-span-2 lg:col-span-2">
           <div className="flex flex-wrap items-end justify-between gap-2">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
+              <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
                 {t.cardMonthlyLabel}
               </p>
               <p className="mt-2 font-display text-2xl font-semibold tabular-nums">
                 {usage.used}
-                <span className="text-lg font-medium text-[var(--color-ink-muted)]">
+                <span className="text-lg font-medium text-ink-muted">
                   {" "}
                   / {usage.limit}
                 </span>
@@ -105,18 +105,18 @@ export default async function DashboardHomePage() {
             </div>
             <Link
               href="/dashboard/observations"
-              className="text-sm font-semibold text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+              className="text-sm font-semibold text-accent hover:text-accent-hover"
             >
               {t.cardMonthlyAll}
             </Link>
           </div>
-          <div className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--color-border)]">
+          <div className="mt-4 h-2 overflow-hidden rounded-full bg-border">
             <div
-              className="h-full rounded-full bg-[var(--color-accent)] transition-[width]"
+              className="h-full rounded-full bg-accent transition-[width]"
               style={{ width: `${pct}%` }}
             />
           </div>
-          <p className="mt-3 text-xs text-[var(--color-ink-muted)]">
+          <p className="mt-3 text-xs text-ink-muted">
             {overagePriceLabel != null
               ? t.cardMonthlyOverage.replace("{price}", overagePriceLabel)
               : t.cardMonthlyOverageNone}
@@ -130,7 +130,7 @@ export default async function DashboardHomePage() {
           {hideNewObservationButton ? null : (
             <Link
               href="/dashboard/observations/new"
-              className="inline-flex rounded-full bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--color-accent-hover)]"
+              className="inline-flex rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover"
             >
               {t.newObservation}
             </Link>
@@ -139,9 +139,9 @@ export default async function DashboardHomePage() {
         <ObservationsTable rows={recent} locale={locale} />
       </section>
 
-      <div className="rounded-xl border border-[var(--color-warn)]/30 bg-[var(--color-warn)]/10 p-4 text-sm text-[var(--color-ink)]">
+      <div className="rounded-xl border border-warn/30 bg-warn/10 p-4 text-sm text-ink">
         <p className="font-medium">{t.noticeTitle}</p>
-        <p className="mt-1 text-[var(--color-ink-muted)]">
+        <p className="mt-1 text-ink-muted">
           {t.noticeBody}
         </p>
       </div>

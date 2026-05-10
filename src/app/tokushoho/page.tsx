@@ -33,7 +33,7 @@ export default async function TokushohoPage() {
             <p>
               The Establish LLC (Japan)
               <br />
-              <span className="text-[var(--color-ink-muted)]">Service: Viewtrace</span>
+              <span className="text-ink-muted">Service: Viewtrace</span>
             </p>
           </section>
 
@@ -52,7 +52,7 @@ export default async function TokushohoPage() {
             <p>
               Email: <a href={`mailto:${siteEmail}`}>{siteEmail}</a>
             </p>
-            <p className="text-sm text-[var(--color-ink-muted)]">
+            <p className="text-sm text-ink-muted">
               Phone number is disclosed upon request in accordance with applicable laws.
             </p>
           </section>
@@ -110,7 +110,7 @@ export default async function TokushohoPage() {
             <p>
               The Establish合同会社
               <br />
-              <span className="text-[var(--color-ink-muted)]">サービス名：Viewtrace</span>
+              <span className="text-ink-muted">サービス名：Viewtrace</span>
             </p>
           </section>
 
@@ -130,7 +130,7 @@ export default async function TokushohoPage() {
               メール：
               <a href={`mailto:${siteEmail}`}>{siteEmail}</a>
             </p>
-            <p className="text-sm text-[var(--color-ink-muted)]">
+            <p className="text-sm text-ink-muted">
               お問い合わせは上記メールにて受け付けます。電話番号の開示をご希望の場合は、法令に基づき遅滞なく対応いたします。
             </p>
           </section>

@@ -28,7 +28,7 @@ export function ObservationsCsvExport() {
       type="button"
       disabled={pending}
       onClick={() => void download()}
-      className="inline-flex shrink-0 items-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-4 py-2.5 text-sm font-semibold text-[var(--color-ink)] transition hover:border-[var(--color-accent)]/40 disabled:opacity-60"
+      className="inline-flex shrink-0 items-center rounded-full border border-border bg-surface-elevated px-4 py-2.5 text-sm font-semibold text-ink transition hover:border-accent/40 disabled:opacity-60"
     >
       {pending ? "準備中…" : "CSVエクスポート"}
     </button>

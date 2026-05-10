@@ -125,7 +125,7 @@ export default async function PrivacyPage() {
             <a href={`mailto:${supportEmail}`}>{supportEmail}</a>
           </p>
 
-          <div className="muted-box text-sm text-[var(--color-ink-muted)]">
+          <div className="muted-box text-sm text-ink-muted">
             <p>
               本ポリシーは実務向けドラフトです。Cookie・アクセス解析・委託先・越境移転等は事業実態に合わせて追記してください。
             </p>

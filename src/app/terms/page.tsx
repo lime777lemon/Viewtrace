@@ -155,7 +155,7 @@ export default async function TermsPage() {
             <p>当社は、サービス内容・料金を変更できるものとします。</p>
           </section>
 
-          <div className="muted-box text-sm text-[var(--color-ink-muted)]">
+          <div className="muted-box text-sm text-ink-muted">
             <p>
               本規約は簡易ドラフトです。公開前に管轄法・決済条件・法人情報と整合させ、弁護士等のレビューを推奨します。
             </p>

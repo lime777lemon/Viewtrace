@@ -86,7 +86,7 @@ export default async function ObservationDetailPage({ params }: Props) {
       <div className="flex flex-wrap items-center gap-3 text-sm">
         <Link
           href="/dashboard/observations"
-          className="font-medium text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+          className="font-medium text-accent hover:text-accent-hover"
         >
           {t.backToList}
         </Link>
@@ -96,7 +96,7 @@ export default async function ObservationDetailPage({ params }: Props) {
         <h1 className="font-display text-2xl font-semibold tracking-tight">{t.title}</h1>
         <Link
           href={`/dashboard/observations/${obs.id}/report`}
-          className="text-sm font-semibold text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+          className="text-sm font-semibold text-accent hover:text-accent-hover"
         >
           {rt.openReport} →
         </Link>
@@ -105,40 +105,40 @@ export default async function ObservationDetailPage({ params }: Props) {
       <ObservationDigitalSeal obs={obs} locale={locale} />
 
       <dl className="grid gap-4 sm:grid-cols-2">
-        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4">
-          <dt className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
+        <div className="rounded-xl border border-border bg-surface-elevated p-4">
+          <dt className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
             {t.capturedAt}
           </dt>
-          <dd className="mt-1 text-sm text-[var(--color-ink)]">{formatJaDateTime(obs.capturedAt)}</dd>
-          <dd className="mt-0.5 text-xs text-[var(--color-ink-muted)]">
+          <dd className="mt-1 text-sm text-ink">{formatJaDateTime(obs.capturedAt)}</dd>
+          <dd className="mt-0.5 text-xs text-ink-muted">
             {formatUtcLabel(obs.capturedAt)}
           </dd>
         </div>
-        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4">
-          <dt className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
+        <div className="rounded-xl border border-border bg-surface-elevated p-4">
+          <dt className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
             {t.region}
           </dt>
-          <dd className="mt-1 text-sm text-[var(--color-ink)]">{obs.regionLabel}</dd>
+          <dd className="mt-1 text-sm text-ink">{obs.regionLabel}</dd>
         </div>
         {displayTitle ? (
-          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4 sm:col-span-2">
-            <dt className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
+          <div className="rounded-xl border border-border bg-surface-elevated p-4 sm:col-span-2">
+            <dt className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
               {t.pageTitleCaptured}
             </dt>
-            <dd className="mt-1 text-sm text-[var(--color-ink)]">{displayTitle}</dd>
+            <dd className="mt-1 text-sm text-ink">{displayTitle}</dd>
           </div>
         ) : null}
-        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4 sm:col-span-2">
-          <dt className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
+        <div className="rounded-xl border border-border bg-surface-elevated p-4 sm:col-span-2">
+          <dt className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
             {t.url}
           </dt>
-          <dd className="mt-1 break-all font-mono text-sm text-[var(--color-ink)]">{obs.url}</dd>
+          <dd className="mt-1 break-all font-mono text-sm text-ink">{obs.url}</dd>
         </div>
-        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4 sm:col-span-2">
-          <dt className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
+        <div className="rounded-xl border border-border bg-surface-elevated p-4 sm:col-span-2">
+          <dt className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
             {t.status}
           </dt>
-          <dd className="mt-1 text-sm text-[var(--color-ink)]">
+          <dd className="mt-1 text-sm text-ink">
             {obs.status === "success"
               ? t.statusSuccess
               : obs.status === "failure"
@@ -147,24 +147,24 @@ export default async function ObservationDetailPage({ params }: Props) {
             {obs.note ? ` — ${localizeObservationNote(obs.note, locale)}` : ""}
           </dd>
         </div>
-        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4 sm:col-span-2">
-          <dt className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
+        <div className="rounded-xl border border-border bg-surface-elevated p-4 sm:col-span-2">
+          <dt className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
             {t.integrityTitle}
           </dt>
-          <dd className="mt-1 space-y-2 text-sm text-[var(--color-ink)]">
+          <dd className="mt-1 space-y-2 text-sm text-ink">
             {contentIntegrity === "ok" ? (
               <>
                 <p>
                   {t.integrityOk.replace("{version}", String(OBSERVATION_CONTENT_HASH_VERSION))}
                 </p>
                 {obs.contentHash ? (
-                  <p className="break-all font-mono text-xs text-[var(--color-ink-muted)]">
+                  <p className="break-all font-mono text-xs text-ink-muted">
                     {obs.contentHash}
                   </p>
                 ) : null}
               </>
             ) : contentIntegrity === "missing" ? (
-              <p className="text-[var(--color-ink-muted)]">
+              <p className="text-ink-muted">
                 {t.integrityMissing}
               </p>
             ) : (
@@ -173,7 +173,7 @@ export default async function ObservationDetailPage({ params }: Props) {
                   {t.integrityMismatch}
                 </p>
                 {obs.contentHash ? (
-                  <p className="break-all font-mono text-xs text-[var(--color-ink-muted)]">
+                  <p className="break-all font-mono text-xs text-ink-muted">
                     {t.integrityStoredPrefix}
                     {obs.contentHash}
                   </p>
@@ -182,11 +182,6 @@ export default async function ObservationDetailPage({ params }: Props) {
             )}
           </dd>
         </div>
-        {obs.status === "success" && !obs.snapshotSha256 ? (
-          <div className="rounded-xl border border-sky-500/35 bg-sky-500/10 px-4 py-2.5 sm:col-span-2">
-            <p className="text-sm text-[var(--color-ink)]">{t.fallbackInsuranceLine}</p>
-          </div>
-        ) : null}
         <ObservationSnapshotBinaryPanel
           observationId={obs.id}
           locale={locale}
@@ -197,12 +192,12 @@ export default async function ObservationDetailPage({ params }: Props) {
           snapshotImageUrl={obs.snapshotImageUrl}
         />
         {session.plan === "pro" && obs.regionValue ? (
-          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4 sm:col-span-2">
-            <dt className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
+          <div className="rounded-xl border border-border bg-surface-elevated p-4 sm:col-span-2">
+            <dt className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
               {t.watchTitle}
             </dt>
             <dd className="mt-2 flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-[var(--color-ink)]">
+              <p className="text-sm text-ink">
                 {t.watchBody.replace("{region}", obs.regionLabel)}
               </p>
               <form action={setObservationWatchEnabledAction}>
@@ -214,7 +209,7 @@ export default async function ObservationDetailPage({ params }: Props) {
                   className={`inline-flex rounded-full px-5 py-2.5 text-sm font-semibold text-white transition ${
                     watchEnabled
                       ? "bg-emerald-600 hover:bg-emerald-700"
-                      : "bg-[var(--color-ink)] hover:opacity-90"
+                      : "bg-ink hover:opacity-90"
                   }`}
                 >
                   {watchEnabled ? t.watchEnabled : t.watchDisabled}

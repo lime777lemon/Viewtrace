@@ -69,33 +69,33 @@ export default async function ObservationReportPage({ params }: Props) {
         <div className="flex flex-wrap items-center gap-3 text-sm">
           <Link
             href={`/dashboard/observations/${obs.id}`}
-            className="font-medium text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+            className="font-medium text-accent hover:text-accent-hover"
           >
             ← {t.back}
           </Link>
         </div>
         <div className="flex flex-wrap items-center gap-4">
           <PrintReportButton label={t.print} />
-          <p className="text-sm text-[var(--color-ink-muted)]">{t.printHint}</p>
+          <p className="text-sm text-ink-muted">{t.printHint}</p>
         </div>
       </div>
 
       <article className="mx-auto max-w-3xl space-y-6 px-4 pb-12 sm:px-6 sm:pb-16">
-        <header className="border-b border-[var(--color-border)] pb-6">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
+        <header className="border-b border-border pb-6">
+          <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
             Viewtrace
           </p>
-          <h1 className="mt-2 font-display text-2xl font-semibold text-[var(--color-ink)]">{t.title}</h1>
-          <p className="mt-2 font-mono text-sm text-[var(--color-ink)]">{obs.id}</p>
-          <p className="mt-4 text-sm text-[var(--color-ink-muted)]">{t.disclaimer}</p>
+          <h1 className="mt-2 font-display text-2xl font-semibold text-ink">{t.title}</h1>
+          <p className="mt-2 font-mono text-sm text-ink">{obs.id}</p>
+          <p className="mt-4 text-sm text-ink-muted">{t.disclaimer}</p>
         </header>
 
         <section>
-          <h2 className="text-sm font-semibold text-[var(--color-ink)]">{t.sectionMeta}</h2>
+          <h2 className="text-sm font-semibold text-ink">{t.sectionMeta}</h2>
           <dl className="mt-3 space-y-2 text-sm">
             <div>
-              <dt className="text-[var(--color-ink-muted)]">{t.reportCaptured}</dt>
-              <dd className="text-[var(--color-ink)]">
+              <dt className="text-ink-muted">{t.reportCaptured}</dt>
+              <dd className="text-ink">
                 {formatJaDateTime(obs.capturedAt)} · {formatUtcLabel(obs.capturedAt)}
               </dd>
             </div>
@@ -103,67 +103,67 @@ export default async function ObservationReportPage({ params }: Props) {
         </section>
 
         <section>
-          <h2 className="text-sm font-semibold text-[var(--color-ink)]">{t.sectionUrl}</h2>
-          <p className="mt-2 break-all font-mono text-sm text-[var(--color-ink)]">{obs.url}</p>
+          <h2 className="text-sm font-semibold text-ink">{t.sectionUrl}</h2>
+          <p className="mt-2 break-all font-mono text-sm text-ink">{obs.url}</p>
         </section>
 
         <section>
-          <h2 className="text-sm font-semibold text-[var(--color-ink)]">{t.sectionRegion}</h2>
-          <p className="mt-2 text-sm text-[var(--color-ink)]">
+          <h2 className="text-sm font-semibold text-ink">{t.sectionRegion}</h2>
+          <p className="mt-2 text-sm text-ink">
             {obs.regionLabel}
             {obs.regionValue ? ` (${obs.regionValue})` : ""}
           </p>
         </section>
 
         <section>
-          <h2 className="text-sm font-semibold text-[var(--color-ink)]">{t.sectionStatus}</h2>
-          <p className="mt-2 text-sm text-[var(--color-ink)]">{obs.status}</p>
+          <h2 className="text-sm font-semibold text-ink">{t.sectionStatus}</h2>
+          <p className="mt-2 text-sm text-ink">{obs.status}</p>
         </section>
 
         {obs.pageTitle ? (
           <section>
-            <h2 className="text-sm font-semibold text-[var(--color-ink)]">{t.reportTitle}</h2>
-            <p className="mt-2 text-sm text-[var(--color-ink)]">{obs.pageTitle}</p>
+            <h2 className="text-sm font-semibold text-ink">{t.reportTitle}</h2>
+            <p className="mt-2 text-sm text-ink">{obs.pageTitle}</p>
           </section>
         ) : null}
 
         <section>
-          <h2 className="text-sm font-semibold text-[var(--color-ink)]">{t.sectionNote}</h2>
-          <p className="mt-2 whitespace-pre-wrap text-sm text-[var(--color-ink)]">
+          <h2 className="text-sm font-semibold text-ink">{t.sectionNote}</h2>
+          <p className="mt-2 whitespace-pre-wrap text-sm text-ink">
             {obs.note ? localizeObservationNote(obs.note, locale) : "—"}
           </p>
         </section>
 
         {obs.snapshotImageUrl ? (
           <section>
-            <h2 className="text-sm font-semibold text-[var(--color-ink)]">{t.reportSnapshotUrl}</h2>
-            <p className="mt-2 break-all font-mono text-xs text-[var(--color-ink)]">{obs.snapshotImageUrl}</p>
+            <h2 className="text-sm font-semibold text-ink">{t.reportSnapshotUrl}</h2>
+            <p className="mt-2 break-all font-mono text-xs text-ink">{obs.snapshotImageUrl}</p>
           </section>
         ) : null}
 
         <section>
-          <h2 className="text-sm font-semibold text-[var(--color-ink)]">{t.sectionHashes}</h2>
-          <dl className="mt-3 space-y-3 font-mono text-xs text-[var(--color-ink)]">
+          <h2 className="text-sm font-semibold text-ink">{t.sectionHashes}</h2>
+          <dl className="mt-3 space-y-3 font-mono text-xs text-ink">
             <div>
-              <dt className="text-[var(--color-ink-muted)]">
+              <dt className="text-ink-muted">
                 {t.hashContent} (v{OBSERVATION_CONTENT_HASH_VERSION})
               </dt>
               <dd className="mt-1 break-all">{obs.contentHash ?? "—"}</dd>
-              <dd className="mt-1 text-[var(--color-ink-muted)]">
+              <dd className="mt-1 text-ink-muted">
                 {t.reportIntegrity}: {integrityLabel}
               </dd>
             </div>
             <div>
-              <dt className="text-[var(--color-ink-muted)]">{t.hashSnapshot}</dt>
+              <dt className="text-ink-muted">{t.hashSnapshot}</dt>
               <dd className="mt-1 break-all">{obs.snapshotSha256 ?? "—"}</dd>
             </div>
             <div>
-              <dt className="text-[var(--color-ink-muted)]">{t.hashPerceptual}</dt>
+              <dt className="text-ink-muted">{t.hashPerceptual}</dt>
               <dd className="mt-1 break-all">{obs.snapshotPhash ?? "—"}</dd>
             </div>
             {typeof obs.snapshotBytes === "number" ? (
               <div>
-                <dt className="text-[var(--color-ink-muted)]">{t.hashBytesType}</dt>
+                <dt className="text-ink-muted">{t.hashBytesType}</dt>
                 <dd className="mt-1">
                   {obs.snapshotBytes} {obs.snapshotContentType ? `· ${obs.snapshotContentType}` : ""}
                 </dd>
@@ -174,15 +174,15 @@ export default async function ObservationReportPage({ params }: Props) {
 
         {obs.events?.length ? (
           <section>
-            <h2 className="text-sm font-semibold text-[var(--color-ink)]">{t.sectionEvents}</h2>
-            <ol className="mt-3 list-decimal space-y-3 pl-5 text-sm text-[var(--color-ink)]">
+            <h2 className="text-sm font-semibold text-ink">{t.sectionEvents}</h2>
+            <ol className="mt-3 list-decimal space-y-3 pl-5 text-sm text-ink">
               {obs.events.map((ev, i) => (
                 <li key={`${ev.at}-${i}`}>
                   <span className="font-medium">{ev.label}</span>
                   {ev.detail ? (
-                    <span className="mt-1 block text-[var(--color-ink-muted)]">{ev.detail}</span>
+                    <span className="mt-1 block text-ink-muted">{ev.detail}</span>
                   ) : null}
-                  <span className="mt-1 block text-xs text-[var(--color-ink-muted)]">
+                  <span className="mt-1 block text-xs text-ink-muted">
                     {formatUtcLabel(ev.at)}
                   </span>
                 </li>

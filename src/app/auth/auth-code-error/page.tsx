@@ -41,7 +41,7 @@ export default async function AuthCodeErrorPage({
         リンクの有効期限切れ、または設定の不整合の可能性があります。もう一度ログインまたは登録をお試しください。
       </p>
       {reason || errorCode || errorDescription ? (
-        <div className="mt-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-left text-xs leading-relaxed text-ink-muted">
+        <div className="mt-4 rounded-2xl border border-border bg-surface p-4 text-left text-xs leading-relaxed text-ink-muted">
           <p className="font-medium text-ink">エラー詳細</p>
           {errorCode ? (
             <p className="mt-2">
@@ -49,14 +49,14 @@ export default async function AuthCodeErrorPage({
             </p>
           ) : null}
           {errorDescription ? (
-            <p className="mt-2 break-words font-mono text-[11px] text-ink">{errorDescription}</p>
+            <p className="mt-2 wrap-break-word font-mono text-[11px] text-ink">{errorDescription}</p>
           ) : null}
           {reason ? (
-            <p className="mt-2 break-words font-mono text-[11px] text-ink">{reason}</p>
+            <p className="mt-2 wrap-break-word font-mono text-[11px] text-ink">{reason}</p>
           ) : null}
         </div>
       ) : null}
-      <div className="mt-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4 text-left text-xs leading-relaxed text-ink-muted">
+      <div className="mt-6 rounded-2xl border border-border bg-surface-elevated p-4 text-left text-xs leading-relaxed text-ink-muted">
         <p className="font-medium text-ink">よくある原因</p>
         <ul className="mt-2 list-disc space-y-1 pl-5">
           <li>
@@ -79,18 +79,22 @@ export default async function AuthCodeErrorPage({
           <li>別のドメイン/別ポートで開いた（例: 3000 と 3001 の違い）</li>
         </ul>
         {callbackUrl ? (
-          <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3">
+          <div className="mt-4 rounded-xl border border-border bg-surface p-3">
             <p className="font-medium text-ink">この環境で登録すべき Redirect URL（目安）</p>
             <p className="mt-2 break-all font-mono text-[11px] text-ink">{callbackUrl}</p>
           </div>
         ) : null}
         <p className="mt-3">
-          確認メールが届かない・リンクが無効な場合は、ログイン画面下部の「確認メールを再送」をお試しください。
+          確認メールが届かない・リンクが無効な場合は、迷惑メールフォルダを確認するか、ログイン画面から同じメールで「無料で始める」を再度お試しください。解決しない場合は
+          <Link href="/contact" className="font-semibold text-accent underline underline-offset-2">
+            お問い合わせ
+          </Link>
+          ください。
         </p>
       </div>
       <Link
         href="/login"
-        className="mt-8 inline-flex justify-center rounded-full bg-[var(--color-accent)] px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent-hover"
+        className="mt-8 inline-flex justify-center rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent-hover"
       >
         ログインへ
       </Link>

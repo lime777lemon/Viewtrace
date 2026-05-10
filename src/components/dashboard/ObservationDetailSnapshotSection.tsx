@@ -65,14 +65,14 @@ export function ObservationDetailSnapshotSection({
       {showPersistedSnapshotWarning ? (
         <div
           role="status"
-          className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-[var(--color-ink)]"
+          className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-ink"
         >
           <p className="font-semibold text-amber-900 dark:text-amber-100">
             {locale === "ja"
               ? "保存されたスナップショット画像（snapshot_image_url）がありません"
               : "No persisted snapshot image (snapshot_image_url) was saved"}
           </p>
-          <p className="mt-1 text-[var(--color-ink-muted)]">{captureEventDetail ?? ""}</p>
+          <p className="mt-1 text-ink-muted">{captureEventDetail ?? ""}</p>
         </div>
       ) : null}
       <ObservationSnapshotVisuals
@@ -86,27 +86,27 @@ export function ObservationDetailSnapshotSection({
       />
 
       <section>
-        <h2 className="font-display text-lg font-semibold text-[var(--color-ink)]">
+        <h2 className="font-display text-lg font-semibold text-ink">
           {locale === "ja" ? "履歴" : "History"}
         </h2>
-        <ol className="mt-4 space-y-0 border-l-2 border-[var(--color-accent)]/35 pl-4">
+        <ol className="mt-4 space-y-0 border-l-2 border-accent/35 pl-4">
           {[...history].reverse().map((ev, i) => (
             <li key={`${ev.at}-${i}`} className="relative pb-6 last:pb-0">
-              <span className="absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-[var(--color-surface)] bg-[var(--color-accent)]" />
+              <span className="absolute left-[-21px] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-surface bg-accent" />
               <div className="flex flex-wrap items-baseline gap-2">
-                <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-accent)]">
+                <span className="text-xs font-semibold uppercase tracking-wider text-accent">
                   {kindLabel(ev.kind, locale)}
                 </span>
-                <span className="text-sm font-medium text-[var(--color-ink)]">
+                <span className="text-sm font-medium text-ink">
                   {localizeObservationEventLabel(ev.label, locale)}
                 </span>
               </div>
               {ev.detail ? (
-                <p className="mt-1 text-sm text-[var(--color-ink-muted)]">
+                <p className="mt-1 text-sm text-ink-muted">
                   {localizeObservationEventDetail(ev.detail, locale)}
                 </p>
               ) : null}
-              <p className="mt-1 text-xs text-[var(--color-ink-muted)]">
+              <p className="mt-1 text-xs text-ink-muted">
                 {formatJaDateTime(ev.at)} · {formatUtcLabel(ev.at)}
               </p>
             </li>

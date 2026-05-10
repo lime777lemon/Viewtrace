@@ -35,11 +35,11 @@ export function OptionalProfileForm({
 
   return (
     <form action={formAction} className="mt-4 space-y-4">
-      <p className="text-xs text-[var(--color-ink-muted)]">
+      <p className="text-xs text-ink-muted">
         {t.profileHint}
       </p>
       <div>
-        <label htmlFor={fullNameId} className="block text-sm font-medium text-[var(--color-ink)]">
+        <label htmlFor={fullNameId} className="block text-sm font-medium text-ink">
           {t.fullNameLabel}
         </label>
         <input
@@ -50,11 +50,11 @@ export function OptionalProfileForm({
           defaultValue={initialFullName ?? ""}
           placeholder={t.fullNamePlaceholder}
           maxLength={200}
-          className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm outline-none ring-[var(--color-accent)]/25 focus:border-[var(--color-accent)]/40 focus:ring-2"
+          className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm outline-none ring-accent/25 focus:border-accent/40 focus:ring-2"
         />
       </div>
       <div>
-        <label htmlFor={companyId} className="block text-sm font-medium text-[var(--color-ink)]">
+        <label htmlFor={companyId} className="block text-sm font-medium text-ink">
           {t.companyLabel}
         </label>
         <input
@@ -65,11 +65,11 @@ export function OptionalProfileForm({
           defaultValue={initialCompanyName ?? ""}
           placeholder={t.companyPlaceholder}
           maxLength={200}
-          className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm outline-none ring-[var(--color-accent)]/25 focus:border-[var(--color-accent)]/40 focus:ring-2"
+          className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm outline-none ring-accent/25 focus:border-accent/40 focus:ring-2"
         />
       </div>
       <div>
-        <label htmlFor={phoneId} className="block text-sm font-medium text-[var(--color-ink)]">
+        <label htmlFor={phoneId} className="block text-sm font-medium text-ink">
           {t.phoneLabel}
         </label>
         <input
@@ -80,11 +80,11 @@ export function OptionalProfileForm({
           defaultValue={initialPhone ?? ""}
           placeholder={t.phonePlaceholder}
           maxLength={40}
-          className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm outline-none ring-[var(--color-accent)]/25 focus:border-[var(--color-accent)]/40 focus:ring-2"
+          className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm outline-none ring-accent/25 focus:border-accent/40 focus:ring-2"
         />
       </div>
       <div>
-        <label htmlFor={useCaseId} className="block text-sm font-medium text-[var(--color-ink)]">
+        <label htmlFor={useCaseId} className="block text-sm font-medium text-ink">
           {t.useCaseLabel}
         </label>
         <textarea
@@ -94,7 +94,7 @@ export function OptionalProfileForm({
           defaultValue={initialUseCase ?? ""}
           placeholder={t.useCasePlaceholder}
           maxLength={500}
-          className="mt-1.5 w-full resize-y rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm outline-none ring-[var(--color-accent)]/25 focus:border-[var(--color-accent)]/40 focus:ring-2"
+          className="mt-1.5 w-full resize-y rounded-xl border border-border bg-surface px-4 py-2.5 text-sm outline-none ring-accent/25 focus:border-accent/40 focus:ring-2"
         />
       </div>
       {state?.error ? (
@@ -110,7 +110,7 @@ export function OptionalProfileForm({
       <button
         type="submit"
         disabled={pending}
-        className="rounded-full bg-[var(--color-ink)] px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
+        className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
       >
         {pending ? t.saving : t.save}
       </button>

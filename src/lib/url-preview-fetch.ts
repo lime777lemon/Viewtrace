@@ -91,6 +91,32 @@ export async function runUrlPreviewFetch(
     return "network_error";
   }
 
+  /** 自前 fetch が届かないときでも、Microlink 側の取得でスナップショット URL だけ確保する */
+  async function tryMicrolinkAfterFetchFailure(
+    kind: "timeout" | "network_error",
+  ): Promise<UrlPreviewResult | null> {
+    if (!screenshotFallback) return null;
+    const imageOut = await fetchMicrolinkScreenshotUrl(target, {
+      fullPage: fullPageScreenshot,
+    });
+    if (!imageOut) return null;
+    return {
+      ok: true,
+      canonicalUrl: target,
+      title: null,
+      image: imageOut,
+      html: false,
+      status: 0,
+      headers: {},
+      viaProxy: false,
+    };
+  }
+
+  async function failFetch(kind: "timeout" | "network_error"): Promise<UrlPreviewResult> {
+    const ml = await tryMicrolinkAfterFetchFailure(kind);
+    return ml ?? { ok: false, error: kind };
+  }
+
   try {
     let res: Response;
     let usedProxy = Boolean(proxy);
@@ -121,10 +147,10 @@ export async function runUrlPreviewFetch(
           res = await attemptFetch(undefined);
           usedProxy = false;
         } catch {
-          return { ok: false, error: kind };
+          return failFetch(kind);
         }
       } else {
-        return { ok: false, error: kind };
+        return failFetch(kind);
       }
     }
 
@@ -214,6 +240,7 @@ export async function runUrlPreviewFetch(
       errCode,
       errMsg: errMsg.slice(0, 300),
     });
-    return { ok: false, error: kind };
+    const ml = await tryMicrolinkAfterFetchFailure(kind);
+    return ml ?? { ok: false, error: kind };
   }
 }

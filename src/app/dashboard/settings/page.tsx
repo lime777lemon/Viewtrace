@@ -25,18 +25,18 @@ export default async function SettingsPage() {
     <div className="mx-auto max-w-2xl space-y-8">
       <div>
         <h1 className="font-display text-2xl font-semibold tracking-tight">{t.title}</h1>
-        <p className="mt-1 text-sm text-[var(--color-ink-muted)]">{t.subtitle}</p>
+        <p className="mt-1 text-sm text-ink-muted">{t.subtitle}</p>
       </div>
 
-      <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-6">
-        <h2 className="text-sm font-semibold text-[var(--color-ink)]">{t.sectionAccount}</h2>
-        <p className="mt-3 text-sm text-[var(--color-ink-muted)]">{t.emailLabel}</p>
-        <p className="mt-1 font-medium text-[var(--color-ink)]">{session?.email ?? "—"}</p>
+      <section className="rounded-2xl border border-border bg-surface-elevated p-6">
+        <h2 className="text-sm font-semibold text-ink">{t.sectionAccount}</h2>
+        <p className="mt-3 text-sm text-ink-muted">{t.emailLabel}</p>
+        <p className="mt-1 font-medium text-ink">{session?.email ?? "—"}</p>
       </section>
 
-      <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-6">
-        <h2 className="text-sm font-semibold text-[var(--color-ink)]">{t.sectionProfile}</h2>
-        <p className="mt-1 text-sm text-[var(--color-ink-muted)]">
+      <section className="rounded-2xl border border-border bg-surface-elevated p-6">
+        <h2 className="text-sm font-semibold text-ink">{t.sectionProfile}</h2>
+        <p className="mt-1 text-sm text-ink-muted">
           {t.profileIntroPrefix}
           <span className="font-mono text-xs">full_name</span>・
           <span className="font-mono text-xs">phone</span>・
@@ -55,20 +55,20 @@ export default async function SettingsPage() {
         ) : null}
       </section>
 
-      <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-6">
-        <h2 className="text-sm font-semibold text-[var(--color-ink)]">{t.sectionPlan}</h2>
+      <section className="rounded-2xl border border-border bg-surface-elevated p-6">
+        <h2 className="text-sm font-semibold text-ink">{t.sectionPlan}</h2>
         {plan ? (
           <>
-            <p className="mt-3 font-display text-xl font-semibold text-[var(--color-ink)]">
+            <p className="mt-3 font-display text-xl font-semibold text-ink">
               {session?.trialEligible ? trialUi.name : plan.name}
             </p>
-            <p className="mt-1 text-sm text-[var(--color-ink-muted)]">
+            <p className="mt-1 text-sm text-ink-muted">
               {session?.trialEligible ? trialUi.priceLabel : labels?.priceLabel ?? plan.priceLabel}
             </p>
-            <p className="mt-2 text-sm text-[var(--color-ink-muted)]">
+            <p className="mt-2 text-sm text-ink-muted">
               {session?.trialEligible ? t.trialAudience : labels?.audienceLabel ?? plan.audienceLabel}
             </p>
-            <ul className="mt-4 space-y-2 text-sm text-[var(--color-ink-muted)]">
+            <ul className="mt-4 space-y-2 text-sm text-ink-muted">
               {session?.trialEligible ? (
                 <>
                   <li>
@@ -108,7 +108,7 @@ export default async function SettingsPage() {
             ) : null}
           </>
         ) : (
-          <p className="mt-3 text-sm text-[var(--color-ink-muted)]">セッションを確認できません。</p>
+          <p className="mt-3 text-sm text-ink-muted">セッションを確認できません。</p>
         )}
       </section>
     </div>

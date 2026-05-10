@@ -91,21 +91,21 @@ export function CheckoutClient({
         : null;
 
   return (
-    <div className="min-h-screen bg-[var(--color-surface)] text-[var(--color-ink)]">
-      <header className="border-b border-[var(--color-border)] bg-[var(--color-surface-elevated)]/90 backdrop-blur-md">
+    <div className="min-h-screen bg-surface text-ink">
+      <header className="border-b border-border bg-surface-elevated/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
           <Link href="/" className="font-display text-lg font-semibold">
             Viewtrace
           </Link>
           <div className="flex items-center gap-3">
-            <div className="flex rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] p-0.5 text-xs font-semibold">
+            <div className="flex rounded-full border border-border bg-surface p-0.5 text-xs font-semibold">
               <button
                 type="button"
                 onClick={() => setLocale("ja")}
                 className={`cursor-pointer rounded-full px-2.5 py-1 transition ${
                   locale === "ja"
-                    ? "bg-[var(--color-ink)] text-white shadow-sm hover:bg-[var(--color-ink)]/90 hover:shadow"
-                    : "text-[var(--color-ink-muted)] hover:bg-[var(--color-border)]/45 hover:text-[var(--color-ink)]"
+                    ? "bg-ink text-white shadow-sm hover:bg-ink/90 hover:shadow"
+                    : "text-ink-muted hover:bg-border/45 hover:text-ink"
                 }`}
               >
                 {t.langJa}
@@ -115,8 +115,8 @@ export function CheckoutClient({
                 onClick={() => setLocale("en")}
                 className={`cursor-pointer rounded-full px-2.5 py-1 transition ${
                   locale === "en"
-                    ? "bg-[var(--color-ink)] text-white shadow-sm hover:bg-[var(--color-ink)]/90 hover:shadow"
-                    : "text-[var(--color-ink-muted)] hover:bg-[var(--color-border)]/45 hover:text-[var(--color-ink)]"
+                    ? "bg-ink text-white shadow-sm hover:bg-ink/90 hover:shadow"
+                    : "text-ink-muted hover:bg-border/45 hover:text-ink"
                 }`}
               >
                 {t.langEn}
@@ -124,7 +124,7 @@ export function CheckoutClient({
             </div>
             <Link
               href="/#pricing"
-              className="text-sm font-medium text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+              className="text-sm font-medium text-accent hover:text-accent-hover"
             >
               {t.back}
             </Link>
@@ -134,7 +134,7 @@ export function CheckoutClient({
 
       <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
         {stripeMode === "none" ? (
-          <div className="mb-8 rounded-xl border border-[var(--color-warn)]/35 bg-[var(--color-warn)]/10 px-4 py-3 text-sm text-[var(--color-ink)]">
+          <div className="mb-8 rounded-xl border border-warn/35 bg-warn/10 px-4 py-3 text-sm text-ink">
             {t.demoBanner}
           </div>
         ) : (
@@ -158,7 +158,7 @@ export function CheckoutClient({
         ) : null}
 
         <h1 className="font-display text-3xl font-semibold tracking-tight">{t.title}</h1>
-        <p className="mt-2 max-w-2xl text-[var(--color-ink-muted)]">{t.subtitle}</p>
+        <p className="mt-2 max-w-2xl text-ink-muted">{t.subtitle}</p>
 
         <div className="mt-8 flex flex-wrap gap-2">
           {(["starter", "pro"] as const).map((id) => {
@@ -170,8 +170,8 @@ export function CheckoutClient({
                 href={`/checkout?plan=${id}${trialBlockReason ? `&reason=${trialBlockReason}` : ""}`}
                 className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                   active
-                    ? "bg-[var(--color-ink)] text-white"
-                    : "border border-[var(--color-border)] bg-[var(--color-surface-elevated)] text-[var(--color-ink-muted)] hover:border-[var(--color-ink-muted)]/40"
+                    ? "bg-ink text-white"
+                    : "border border-border bg-surface-elevated text-ink-muted hover:border-ink-muted/40"
                 }`}
               >
                 {p.name} · {p.priceLabel}
@@ -181,17 +181,17 @@ export function CheckoutClient({
         </div>
 
         <div className="mt-10 grid gap-10 lg:grid-cols-2">
-          <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-6 sm:p-8">
+          <section className="rounded-2xl border border-border bg-surface-elevated p-6 sm:p-8">
             <h2 className="font-display text-lg font-semibold">{t.orderSummary}</h2>
-            <p className="mt-1 text-sm text-[var(--color-ink-muted)]">{t.planLabel}</p>
+            <p className="mt-1 text-sm text-ink-muted">{t.planLabel}</p>
             <p className="mt-2 font-display text-xl font-semibold">
               {plan.name}{" "}
-              <span className="text-base font-normal text-[var(--color-ink-muted)]">
+              <span className="text-base font-normal text-ink-muted">
                 {plan.priceLabel}
               </span>
             </p>
-            <p className="mt-2 text-sm text-[var(--color-ink-muted)]">{plan.audienceLabel}</p>
-            <ul className="mt-6 space-y-2 text-sm text-[var(--color-ink-muted)]">
+            <p className="mt-2 text-sm text-ink-muted">{plan.audienceLabel}</p>
+            <ul className="mt-6 space-y-2 text-sm text-ink-muted">
               <li>
                 {t.monthly}: {plan.monthlyObservations}{" "}
                 {locale === "ja" ? "オブザベーション" : "observations"}
@@ -205,24 +205,24 @@ export function CheckoutClient({
                 <li>{locale === "ja" ? "CSVエクスポート" : "CSV export"}</li>
               ) : null}
             </ul>
-            <p className="mt-6 text-xs text-[var(--color-ink-muted)]">{t.billedMonthly}</p>
-            <p className="mt-2 text-xs text-[var(--color-ink-muted)]">{t.taxNote}</p>
+            <p className="mt-6 text-xs text-ink-muted">{t.billedMonthly}</p>
+            <p className="mt-2 text-xs text-ink-muted">{t.taxNote}</p>
           </section>
 
-          <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-6 sm:p-8">
+          <section className="rounded-2xl border border-border bg-surface-elevated p-6 sm:p-8">
             <h2 className="font-display text-lg font-semibold">{t.payment}</h2>
             {t.stripeNote ? (
-              <p className="mt-1 text-sm text-[var(--color-ink-muted)]">{t.stripeNote}</p>
+              <p className="mt-1 text-sm text-ink-muted">{t.stripeNote}</p>
             ) : null}
 
             {stripeMode !== "none" ? (
               <div className="mt-6 space-y-4">
-                <p className="text-sm text-[var(--color-ink-muted)]">
+                <p className="text-sm text-ink-muted">
                   {locale === "ja"
                     ? "請求先メールはログイン中のアカウントのメールアドレスが使われます。"
                     : "Billing email will use your signed-in account email."}
                 </p>
-                <p className="text-xs leading-relaxed text-[var(--color-ink-muted)]">{t.billingProfileHint}</p>
+                <p className="text-xs leading-relaxed text-ink-muted">{t.billingProfileHint}</p>
 
                 <div>
                   <label htmlFor="stripe-fullName" className="block text-sm font-medium">
@@ -236,7 +236,7 @@ export function CheckoutClient({
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder={t.fullNamePlaceholder}
-                    className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm outline-none ring-[var(--color-accent)]/25 focus:ring-2"
+                    className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm outline-none ring-accent/25 focus:ring-2"
                   />
                 </div>
                 <div>
@@ -251,7 +251,7 @@ export function CheckoutClient({
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
                     placeholder={t.companyNamePlaceholder}
-                    className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm outline-none ring-[var(--color-accent)]/25 focus:ring-2"
+                    className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm outline-none ring-accent/25 focus:ring-2"
                   />
                 </div>
                 <div>
@@ -266,7 +266,7 @@ export function CheckoutClient({
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder={t.phonePlaceholder}
-                    className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm outline-none ring-[var(--color-accent)]/25 focus:ring-2"
+                    className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm outline-none ring-accent/25 focus:ring-2"
                   />
                 </div>
 
@@ -280,14 +280,14 @@ export function CheckoutClient({
                   type="button"
                   onClick={startStripeCheckout}
                   disabled={stripePending}
-                  className="w-full rounded-full bg-[var(--color-accent)] py-3.5 text-sm font-semibold text-white shadow-md transition hover:bg-[var(--color-accent-hover)] disabled:opacity-60"
+                  className="w-full rounded-full bg-accent py-3.5 text-sm font-semibold text-white shadow-md transition hover:bg-accent-hover disabled:opacity-60"
                 >
                   {stripePending ? t.stripePayPending : t.payWithStripe}
                 </button>
 
-                <p className="text-center text-xs text-[var(--color-ink-muted)]">
+                <p className="text-center text-xs text-ink-muted">
                   {t.termsAgree}
-                  <Link href="/terms" className="font-medium text-[var(--color-accent)] underline underline-offset-2">
+                  <Link href="/terms" className="font-medium text-accent underline underline-offset-2">
                     {t.termsLink}
                   </Link>
                   {t.termsAgreeEnd}
@@ -297,7 +297,7 @@ export function CheckoutClient({
               <form action={formAction} className="mt-6 space-y-4">
                 <input type="hidden" name="plan" value={planId} />
 
-                <p className="text-xs leading-relaxed text-[var(--color-ink-muted)]">{t.billingProfileHint}</p>
+                <p className="text-xs leading-relaxed text-ink-muted">{t.billingProfileHint}</p>
 
                 <div>
                   <label htmlFor={emailId} className="block text-sm font-medium">
@@ -311,7 +311,7 @@ export function CheckoutClient({
                     autoComplete="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm outline-none ring-[var(--color-accent)]/25 focus:ring-2"
+                    className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm outline-none ring-accent/25 focus:ring-2"
                   />
                 </div>
                 <div>
@@ -325,7 +325,7 @@ export function CheckoutClient({
                     autoComplete="name"
                     maxLength={200}
                     placeholder={t.fullNamePlaceholder}
-                    className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm outline-none ring-[var(--color-accent)]/25 focus:ring-2"
+                    className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm outline-none ring-accent/25 focus:ring-2"
                   />
                 </div>
                 <div>
@@ -339,7 +339,7 @@ export function CheckoutClient({
                     autoComplete="organization"
                     maxLength={200}
                     placeholder={t.companyNamePlaceholder}
-                    className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm outline-none ring-[var(--color-accent)]/25 focus:ring-2"
+                    className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm outline-none ring-accent/25 focus:ring-2"
                   />
                 </div>
                 <div>
@@ -353,7 +353,7 @@ export function CheckoutClient({
                     autoComplete="tel"
                     maxLength={40}
                     placeholder={t.phonePlaceholder}
-                    className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm outline-none ring-[var(--color-accent)]/25 focus:ring-2"
+                    className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm outline-none ring-accent/25 focus:ring-2"
                   />
                 </div>
                 <div>
@@ -365,7 +365,7 @@ export function CheckoutClient({
                     name="cardholder"
                     type="text"
                     autoComplete="cc-name"
-                    className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm outline-none ring-[var(--color-accent)]/25 focus:ring-2"
+                    className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm outline-none ring-accent/25 focus:ring-2"
                   />
                 </div>
                 <div>
@@ -378,7 +378,7 @@ export function CheckoutClient({
                     inputMode="numeric"
                     autoComplete="cc-number"
                     placeholder={t.cardPlaceholder}
-                    className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 font-mono text-sm outline-none ring-[var(--color-accent)]/25 focus:ring-2"
+                    className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-2.5 font-mono text-sm outline-none ring-accent/25 focus:ring-2"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -391,7 +391,7 @@ export function CheckoutClient({
                       name="expiry"
                       placeholder={t.expiryPlaceholder}
                       autoComplete="cc-exp"
-                      className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 font-mono text-sm outline-none ring-[var(--color-accent)]/25 focus:ring-2"
+                      className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-2.5 font-mono text-sm outline-none ring-accent/25 focus:ring-2"
                     />
                   </div>
                   <div>
@@ -403,7 +403,7 @@ export function CheckoutClient({
                       name="cvc"
                       inputMode="numeric"
                       autoComplete="cc-csc"
-                      className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 font-mono text-sm outline-none ring-[var(--color-accent)]/25 focus:ring-2"
+                      className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-2.5 font-mono text-sm outline-none ring-accent/25 focus:ring-2"
                     />
                   </div>
                 </div>
@@ -417,14 +417,14 @@ export function CheckoutClient({
                 <button
                   type="submit"
                   disabled={pending}
-                  className="w-full rounded-full bg-[var(--color-accent)] py-3.5 text-sm font-semibold text-white shadow-md transition hover:bg-[var(--color-accent-hover)] disabled:opacity-60"
+                  className="w-full rounded-full bg-accent py-3.5 text-sm font-semibold text-white shadow-md transition hover:bg-accent-hover disabled:opacity-60"
                 >
                   {pending ? t.payPending : t.payButton}
                 </button>
 
-                <p className="text-center text-xs text-[var(--color-ink-muted)]">
+                <p className="text-center text-xs text-ink-muted">
                   {t.termsAgree}
-                  <Link href="/terms" className="font-medium text-[var(--color-accent)] underline underline-offset-2">
+                  <Link href="/terms" className="font-medium text-accent underline underline-offset-2">
                     {t.termsLink}
                   </Link>
                   {t.termsAgreeEnd}

@@ -37,16 +37,16 @@ export default async function ObservationsListPage() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-semibold tracking-tight">{t.title}</h1>
-          <p className="mt-1 text-sm text-[var(--color-ink-muted)]">
+          <p className="mt-1 text-sm text-ink-muted">
             {t.subtitle}
             {plan ? t.planSuffix.replace("{plan}", plan.name) : ""}
           </p>
           {showCsv ? (
-            <p className="mt-2 text-xs text-[var(--color-ink-muted)]">{t.csvProHint}</p>
+            <p className="mt-2 text-xs text-ink-muted">{t.csvProHint}</p>
           ) : (
-            <p className="mt-2 text-xs text-[var(--color-ink-muted)]">
+            <p className="mt-2 text-xs text-ink-muted">
               {t.csvUpgradeHint}{" "}
-              <Link href="/dashboard/settings" className="font-medium text-[var(--color-accent)]">
+              <Link href="/dashboard/settings" className="font-medium text-accent">
                 {t.csvUpgradeLink}
               </Link>
             </p>
@@ -57,7 +57,7 @@ export default async function ObservationsListPage() {
           {hideNewObservationButton ? null : (
             <Link
               href="/dashboard/observations/new"
-              className="inline-flex shrink-0 rounded-full bg-[var(--color-accent)] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[var(--color-accent-hover)]"
+              className="inline-flex shrink-0 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent-hover"
             >
               {t.newObservation}
             </Link>

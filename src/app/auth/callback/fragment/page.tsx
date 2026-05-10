@@ -115,7 +115,11 @@ export default function AuthCallbackFragmentPage() {
             >
               ログイン画面
             </a>
-            へ戻り、「確認メールを再送」をお試しください。
+            へ戻り、必要に応じて同じメールアドレスで「無料で始める」から登録し直すか、
+            <a href="/contact" className="font-semibold text-accent hover:text-accent-hover">
+              お問い合わせ
+            </a>
+            ください。
           </p>
           {detail ? (
             <p className="mt-4 break-all font-mono text-[11px] text-ink-muted/80">

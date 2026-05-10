@@ -93,41 +93,41 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-50 border-b border-[var(--color-border)] bg-[var(--color-surface)]/90 backdrop-blur-md">
+      <header className="sticky top-0 z-50 border-b border-border bg-surface/90 backdrop-blur-md">
         <div className="mx-auto max-w-6xl space-y-3 px-4 py-3 sm:px-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <a
               href="#top"
-              className="font-display text-lg font-semibold tracking-tight text-[var(--color-ink)]"
+              className="font-display text-lg font-semibold tracking-tight text-ink"
             >
               Viewtrace
             </a>
-            <nav className="hidden items-center gap-6 text-sm font-medium text-[var(--color-ink-muted)] lg:flex xl:gap-8">
-              <a href="#pricing" className="transition hover:text-[var(--color-ink)]">
+            <nav className="hidden items-center gap-6 text-sm font-medium text-ink-muted lg:flex xl:gap-8">
+              <a href="#pricing" className="transition hover:text-ink">
                 {t.nav.pricing}
               </a>
-              <a href="#region-search" className="transition hover:text-[var(--color-ink)]">
+              <a href="#region-search" className="transition hover:text-ink">
                 {t.nav.regionSearch}
               </a>
-              <a href="#roi" className="transition hover:text-[var(--color-ink)]">
+              <a href="#roi" className="transition hover:text-ink">
                 {t.nav.roi}
               </a>
-              <a href="#faq" className="transition hover:text-[var(--color-ink)]">
+              <a href="#faq" className="transition hover:text-ink">
                 {t.nav.faq}
               </a>
-              <a href="/login" className="transition hover:text-[var(--color-ink)]">
+              <a href="/login" className="transition hover:text-ink">
                 {t.nav.login}
               </a>
             </nav>
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="flex rounded-full border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-0.5 text-xs font-semibold">
+              <div className="flex rounded-full border border-border bg-surface-elevated p-0.5 text-xs font-semibold">
                 <button
                   type="button"
                   onClick={() => persistLocale("en")}
                   className={`cursor-pointer rounded-full px-2.5 py-1 transition ${
                     locale === "en"
-                      ? "bg-[var(--color-ink)] text-white shadow-sm hover:bg-[var(--color-ink)]/90 hover:shadow"
-                      : "text-[var(--color-ink-muted)] hover:bg-[var(--color-border)]/45 hover:text-[var(--color-ink)]"
+                      ? "bg-ink text-white shadow-sm hover:bg-ink/90 hover:shadow"
+                      : "text-ink-muted hover:bg-border/45 hover:text-ink"
                   }`}
                   aria-pressed={locale === "en"}
                 >
@@ -138,8 +138,8 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                   onClick={() => persistLocale("ja")}
                   className={`cursor-pointer rounded-full px-2.5 py-1 transition ${
                     locale === "ja"
-                      ? "bg-[var(--color-ink)] text-white shadow-sm hover:bg-[var(--color-ink)]/90 hover:shadow"
-                      : "text-[var(--color-ink-muted)] hover:bg-[var(--color-border)]/45 hover:text-[var(--color-ink)]"
+                      ? "bg-ink text-white shadow-sm hover:bg-ink/90 hover:shadow"
+                      : "text-ink-muted hover:bg-border/45 hover:text-ink"
                   }`}
                   aria-pressed={locale === "ja"}
                 >
@@ -148,26 +148,26 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
               </div>
               <Link
                 href="/login"
-                className="hidden rounded-full bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--color-accent-hover)] sm:inline-flex"
+                className="hidden rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-accent-hover sm:inline-flex"
               >
                 {t.nav.trial}
               </Link>
             </div>
           </div>
-          <nav className="flex flex-wrap gap-4 text-xs font-medium text-[var(--color-ink-muted)] lg:hidden">
-            <a href="#pricing" className="hover:text-[var(--color-ink)]">
+          <nav className="flex flex-wrap gap-4 text-xs font-medium text-ink-muted lg:hidden">
+            <a href="#pricing" className="hover:text-ink">
               {t.nav.pricing}
             </a>
-            <a href="#region-search" className="hover:text-[var(--color-ink)]">
+            <a href="#region-search" className="hover:text-ink">
               {t.nav.regionSearch}
             </a>
-            <a href="#roi" className="hover:text-[var(--color-ink)]">
+            <a href="#roi" className="hover:text-ink">
               {t.nav.roi}
             </a>
-            <a href="#faq" className="hover:text-[var(--color-ink)]">
+            <a href="#faq" className="hover:text-ink">
               {t.nav.faq}
             </a>
-            <a href="/login" className="hover:text-[var(--color-ink)]">
+            <a href="/login" className="hover:text-ink">
               {t.nav.login}
             </a>
           </nav>
@@ -175,23 +175,23 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
       </header>
 
       <main id="top">
-        <section className="relative overflow-hidden border-b border-[var(--color-border)]">
+        <section className="relative overflow-hidden border-b border-border">
           <div
-            className="pointer-events-none absolute -right-24 top-0 h-96 w-96 rounded-full bg-[var(--color-accent-soft)] opacity-60 blur-3xl"
+            className="pointer-events-none absolute -right-24 top-0 h-96 w-96 rounded-full bg-accent-soft opacity-60 blur-3xl"
             aria-hidden
           />
           <div className="relative mx-auto max-w-6xl px-4 pb-20 pt-16 sm:px-6 sm:pt-24">
-            <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-3 py-1 text-xs font-medium text-[var(--color-ink-muted)]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-accent)]" />
+            <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-surface-elevated px-3 py-1 text-xs font-medium text-ink-muted">
+              <span className="h-1.5 w-1.5 rounded-full bg-accent" />
               Viewtrace
             </p>
-            <h1 className="font-display max-w-3xl text-3xl font-semibold leading-tight tracking-tight text-[var(--color-ink)] sm:text-4xl lg:text-[2.75rem] lg:leading-[1.15]">
+            <h1 className="font-display max-w-3xl text-3xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl lg:text-[2.75rem] lg:leading-[1.15]">
               {t.hero.title}
             </h1>
-            <p className="mt-6 max-w-2xl text-lg text-[var(--color-ink-muted)]">
+            <p className="mt-6 max-w-2xl text-lg text-ink-muted">
               {t.hero.subtitle}
             </p>
-            <p className="mt-5 max-w-3xl text-base font-semibold leading-snug text-[var(--color-ink)] sm:text-lg">
+            <p className="mt-5 max-w-3xl text-base font-semibold leading-snug text-ink sm:text-lg">
               {t.hero.punch}
             </p>
             <div
@@ -201,12 +201,12 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
               {t.valuePillars.map((p) => (
                 <div
                   key={p.title}
-                  className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-5 py-4 shadow-sm"
+                  className="rounded-2xl border border-border bg-surface-elevated px-5 py-4 shadow-sm"
                 >
-                  <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-accent)]">
+                  <p className="text-xs font-bold uppercase tracking-wider text-accent">
                     {p.title}
                   </p>
-                  <p className="mt-2 text-sm font-medium leading-snug text-[var(--color-ink)]">
+                  <p className="mt-2 text-sm font-medium leading-snug text-ink">
                     {p.subtitle}
                   </p>
                 </div>
@@ -219,10 +219,10 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
               {t.heroTrust.items.map((line) => (
                 <li
                   key={line}
-                  className="flex items-start gap-2.5 text-sm font-semibold text-[var(--color-ink)]"
+                  className="flex items-start gap-2.5 text-sm font-semibold text-ink"
                 >
                   <span
-                    className="mt-0.5 shrink-0 text-base leading-none text-[var(--color-accent)]"
+                    className="mt-0.5 shrink-0 text-base leading-none text-accent"
                     aria-hidden
                   >
                     ✓
@@ -234,18 +234,18 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
             <div className="mt-10 flex flex-wrap gap-3">
               <Link
                 href="/login"
-                className="inline-flex items-center justify-center rounded-full bg-[var(--color-accent)] px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[var(--color-accent-hover)]"
+                className="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-accent-hover"
               >
                 {t.hero.trial}
               </Link>
               <a
                 href="#sample"
-                className="inline-flex items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-6 py-3 text-sm font-semibold text-[var(--color-ink)] transition hover:border-[var(--color-ink-muted)]/40"
+                className="inline-flex items-center justify-center rounded-full border border-border bg-surface-elevated px-6 py-3 text-sm font-semibold text-ink transition hover:border-ink-muted/40"
               >
                 {t.hero.sample}
               </a>
             </div>
-            <p className="mt-6 max-w-2xl text-sm font-medium text-[var(--color-warn)]">
+            <p className="mt-6 max-w-2xl text-sm font-medium text-warn">
               {t.hero.disclaimer}
             </p>
           </div>
@@ -253,21 +253,21 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
 
         <RegionSearchSection locale={locale} labels={t.regionSearch} />
 
-        <section className="border-b border-[var(--color-border)] bg-[var(--color-surface-elevated)]">
+        <section className="border-b border-border bg-surface-elevated">
           <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-            <h2 className="font-display max-w-3xl text-2xl font-semibold leading-snug text-[var(--color-ink)] sm:text-3xl">
+            <h2 className="font-display max-w-3xl text-2xl font-semibold leading-snug text-ink sm:text-3xl">
               {t.pitch.problemTitle}
             </h2>
             <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {t.pitch.problemPoints.map((item) => (
                 <article
                   key={item.title}
-                  className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-sm"
+                  className="rounded-2xl border border-border bg-surface p-5 shadow-sm"
                 >
-                  <h3 className="font-display text-base font-semibold text-[var(--color-ink)]">
+                  <h3 className="font-display text-base font-semibold text-ink">
                     {item.title}
                   </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-[var(--color-ink-muted)]">
+                  <p className="mt-2 text-sm leading-relaxed text-ink-muted">
                     {item.body}
                   </p>
                 </article>
@@ -276,17 +276,17 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
           </div>
         </section>
 
-        <section className="border-b border-[var(--color-border)]">
+        <section className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
             <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
               <div>
-                <h2 className="font-display text-2xl font-semibold text-[var(--color-ink)] sm:text-3xl">
+                <h2 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
                   {t.pitch.solutionTitle}
                 </h2>
-                <ul className="mt-6 space-y-2 text-sm font-medium text-[var(--color-ink)]">
+                <ul className="mt-6 space-y-2 text-sm font-medium text-ink">
                   {t.pitch.solutionBullets.map((line) => (
                     <li key={line} className="flex gap-2">
-                      <span className="text-[var(--color-accent)]" aria-hidden>
+                      <span className="text-accent" aria-hidden>
                         ✓
                       </span>
                       <span>{line}</span>
@@ -297,12 +297,12 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                   {t.pitch.benefits.map((b) => (
                     <div
                       key={b.title}
-                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-4 py-3"
+                      className="rounded-xl border border-border bg-surface-elevated px-4 py-3"
                     >
-                      <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-accent)]">
+                      <p className="text-xs font-bold uppercase tracking-wider text-accent">
                         {b.title}
                       </p>
-                      <p className="mt-2 text-sm leading-relaxed text-[var(--color-ink-muted)]">
+                      <p className="mt-2 text-sm leading-relaxed text-ink-muted">
                         {b.body}
                       </p>
                     </div>
@@ -311,10 +311,10 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
               </div>
               <div
                 id="sample"
-                className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-[var(--color-border)] bg-gradient-to-br from-[#dfe9e6] to-[#c8d9d3] shadow-inner"
+                className="relative aspect-4/3 overflow-hidden rounded-2xl border border-border bg-linear-to-br from-[#dfe9e6] to-[#c8d9d3] shadow-inner"
               >
                 <div className="absolute inset-0 flex flex-col p-6">
-                  <div className="flex items-center gap-2 text-xs font-medium text-[var(--color-ink-muted)]">
+                  <div className="flex items-center gap-2 text-xs font-medium text-ink-muted">
                     <span className="h-2 w-2 rounded-full bg-emerald-600" />
                     snapshot · US-CA · 2026-05-04 14:32 UTC
                   </div>
@@ -333,7 +333,7 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                       </div>
                     </div>
                   </div>
-                  <p className="mt-3 text-center text-[11px] text-[var(--color-ink-muted)]">
+                  <p className="mt-3 text-center text-[11px] text-ink-muted">
                     {locale === "ja" ? "イメージ図（デモ）" : "Illustrative mockup"}
                   </p>
                 </div>
@@ -342,38 +342,38 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
           </div>
         </section>
 
-        <section id="audience-benefits" className="border-b border-[var(--color-border)]">
+        <section id="audience-benefits" className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-            <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-accent)]">
+            <p className="text-xs font-bold uppercase tracking-wider text-accent">
               {t.audienceBenefits.kicker}
             </p>
-            <h2 className="mt-3 font-display max-w-3xl text-2xl font-semibold leading-snug text-[var(--color-ink)] sm:text-3xl">
+            <h2 className="mt-3 font-display max-w-3xl text-2xl font-semibold leading-snug text-ink sm:text-3xl">
               {t.audienceBenefits.title}
             </h2>
-            <p className="mt-4 max-w-3xl text-sm leading-relaxed text-[var(--color-ink-muted)]">
+            <p className="mt-4 max-w-3xl text-sm leading-relaxed text-ink-muted">
               {t.audienceBenefits.subtitle}
             </p>
             <div className="mt-10 grid gap-6 lg:grid-cols-3">
               {t.audienceBenefits.personas.map((persona) => (
                 <article
                   key={persona.title}
-                  className="relative flex flex-col rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-sm"
+                  className="relative flex flex-col rounded-2xl border border-border bg-surface p-6 shadow-sm"
                 >
                   {persona.badge ? (
-                    <p className="mb-3 inline-flex w-fit rounded-full border border-[var(--color-accent)]/35 bg-[var(--color-accent-soft)]/40 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-[var(--color-accent)]">
+                    <p className="mb-3 inline-flex w-fit rounded-full border border-accent/35 bg-accent-soft/40 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-accent">
                       {persona.badge}
                     </p>
                   ) : null}
-                  <h3 className="font-display text-lg font-semibold text-[var(--color-ink)]">
+                  <h3 className="font-display text-lg font-semibold text-ink">
                     {persona.title}
                   </h3>
-                  <p className="mt-3 flex-1 text-sm leading-relaxed text-[var(--color-ink-muted)]">
+                  <p className="mt-3 flex-1 text-sm leading-relaxed text-ink-muted">
                     {persona.lead}
                   </p>
-                  <ul className="mt-5 space-y-2.5 border-t border-[var(--color-border)] pt-5">
+                  <ul className="mt-5 space-y-2.5 border-t border-border pt-5">
                     {persona.bullets.map((line) => (
-                      <li key={line} className="flex gap-2 text-sm text-[var(--color-ink)]">
-                        <span className="mt-0.5 shrink-0 text-[var(--color-accent)]" aria-hidden>
+                      <li key={line} className="flex gap-2 text-sm text-ink">
+                        <span className="mt-0.5 shrink-0 text-accent" aria-hidden>
                           ✓
                         </span>
                         <span>{line}</span>
@@ -383,39 +383,39 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                 </article>
               ))}
             </div>
-            <p className="mt-10 max-w-4xl text-xs leading-relaxed text-[var(--color-ink-muted)]">
+            <p className="mt-10 max-w-4xl text-xs leading-relaxed text-ink-muted">
               {t.audienceBenefits.marketNote}
             </p>
           </div>
         </section>
 
-        <section id="roi" className="border-b border-[var(--color-border)] bg-[var(--color-surface-elevated)]">
+        <section id="roi" className="border-b border-border bg-surface-elevated">
           <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-            <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-accent)]">
+            <p className="text-xs font-bold uppercase tracking-wider text-accent">
               {t.roiSection.kicker}
             </p>
-            <h2 className="mt-3 font-display max-w-3xl text-2xl font-semibold text-[var(--color-ink)] sm:text-3xl">
+            <h2 className="mt-3 font-display max-w-3xl text-2xl font-semibold text-ink sm:text-3xl">
               {t.roiSection.title}
             </h2>
-            <p className="mt-4 max-w-3xl text-sm leading-relaxed text-[var(--color-ink-muted)]">
+            <p className="mt-4 max-w-3xl text-sm leading-relaxed text-ink-muted">
               {t.roiSection.subtitle}
             </p>
 
             <div className="mt-10 grid gap-6 lg:grid-cols-2">
-              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-sm">
-                <p className="text-sm font-semibold text-[var(--color-ink)]">{t.roiSection.inputsTitle}</p>
+              <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+                <p className="text-sm font-semibold text-ink">{t.roiSection.inputsTitle}</p>
 
                 <div className="mt-5 space-y-4 text-sm">
                   <label className="block">
-                    <span className="text-[var(--color-ink-muted)]">{t.roiSection.planLabel}</span>
+                    <span className="text-ink-muted">{t.roiSection.planLabel}</span>
                     <div className="mt-2 flex gap-2">
                       <button
                         type="button"
                         onClick={() => setRoiPlan("starter")}
                         className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                           roiPlan === "starter"
-                            ? "bg-[var(--color-ink)] text-white"
-                            : "border border-[var(--color-border)] bg-[var(--color-surface-elevated)] text-[var(--color-ink)] hover:border-[var(--color-ink-muted)]/40"
+                            ? "bg-ink text-white"
+                            : "border border-border bg-surface-elevated text-ink hover:border-ink-muted/40"
                         }`}
                         aria-pressed={roiPlan === "starter"}
                       >
@@ -426,8 +426,8 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                         onClick={() => setRoiPlan("pro")}
                         className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                           roiPlan === "pro"
-                            ? "bg-[var(--color-ink)] text-white"
-                            : "border border-[var(--color-border)] bg-[var(--color-surface-elevated)] text-[var(--color-ink)] hover:border-[var(--color-ink-muted)]/40"
+                            ? "bg-ink text-white"
+                            : "border border-border bg-surface-elevated text-ink hover:border-ink-muted/40"
                         }`}
                         aria-pressed={roiPlan === "pro"}
                       >
@@ -437,44 +437,44 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                   </label>
 
                   <label className="block">
-                    <span className="text-[var(--color-ink-muted)]">{t.roiSection.hourlyRateLabel}</span>
+                    <span className="text-ink-muted">{t.roiSection.hourlyRateLabel}</span>
                     <input
                       type="number"
                       inputMode="decimal"
                       min={0}
                       value={roiHourlyRate}
                       onChange={(e) => setRoiHourlyRate(Number(e.target.value))}
-                      className="mt-2 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-3 py-2 text-[var(--color-ink)]"
+                      className="mt-2 w-full rounded-xl border border-border bg-surface-elevated px-3 py-2 text-ink"
                     />
                   </label>
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <label className="block">
-                      <span className="text-[var(--color-ink-muted)]">{t.roiSection.minutesPerCheckLabel}</span>
+                      <span className="text-ink-muted">{t.roiSection.minutesPerCheckLabel}</span>
                       <input
                         type="number"
                         inputMode="decimal"
                         min={0}
                         value={roiMinutesPerCheck}
                         onChange={(e) => setRoiMinutesPerCheck(Number(e.target.value))}
-                        className="mt-2 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-3 py-2 text-[var(--color-ink)]"
+                        className="mt-2 w-full rounded-xl border border-border bg-surface-elevated px-3 py-2 text-ink"
                       />
                     </label>
                     <label className="block">
-                      <span className="text-[var(--color-ink-muted)]">{t.roiSection.checksPerMonthLabel}</span>
+                      <span className="text-ink-muted">{t.roiSection.checksPerMonthLabel}</span>
                       <input
                         type="number"
                         inputMode="decimal"
                         min={0}
                         value={roiChecksPerMonth}
                         onChange={(e) => setRoiChecksPerMonth(Number(e.target.value))}
-                        className="mt-2 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-3 py-2 text-[var(--color-ink)]"
+                        className="mt-2 w-full rounded-xl border border-border bg-surface-elevated px-3 py-2 text-ink"
                       />
                     </label>
                   </div>
 
                   <label className="block">
-                    <span className="text-[var(--color-ink-muted)]">
+                    <span className="text-ink-muted">
                       {t.roiSection.savingsRateLabel} ({Math.round(roiSavingsRate * 100)}%)
                     </span>
                     <input
@@ -490,24 +490,24 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-sm">
-                <p className="text-sm font-semibold text-[var(--color-ink)]">{t.roiSection.resultsTitle}</p>
+              <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+                <p className="text-sm font-semibold text-ink">{t.roiSection.resultsTitle}</p>
 
                 <dl className="mt-5 space-y-4 text-sm">
                   <div className="flex items-baseline justify-between gap-4">
-                    <dt className="text-[var(--color-ink-muted)]">{t.roiSection.laborCostLabel}</dt>
-                    <dd className="font-display text-lg font-semibold text-[var(--color-ink)]">
+                    <dt className="text-ink-muted">{t.roiSection.laborCostLabel}</dt>
+                    <dd className="font-display text-lg font-semibold text-ink">
                       {fmtUsd(roiLaborCost)}
                     </dd>
                   </div>
                   <div className="flex items-baseline justify-between gap-4">
-                    <dt className="text-[var(--color-ink-muted)]">{t.roiSection.savingsLabel}</dt>
-                    <dd className="font-display text-lg font-semibold text-[var(--color-ink)]">
+                    <dt className="text-ink-muted">{t.roiSection.savingsLabel}</dt>
+                    <dd className="font-display text-lg font-semibold text-ink">
                       {fmtUsd(roiSavings)}
                     </dd>
                   </div>
                   <div className="flex items-baseline justify-between gap-4">
-                    <dt className="text-[var(--color-ink-muted)]">{t.roiSection.netLabel}</dt>
+                    <dt className="text-ink-muted">{t.roiSection.netLabel}</dt>
                     <dd
                       className={`font-display text-xl font-semibold ${
                         roiNet >= 0 ? "text-emerald-700 dark:text-emerald-300" : "text-rose-700 dark:text-rose-300"
@@ -518,27 +518,27 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                     </dd>
                   </div>
                   <div className="flex items-baseline justify-between gap-4">
-                    <dt className="text-[var(--color-ink-muted)]">{t.roiSection.roiLabel}</dt>
-                    <dd className="font-display text-lg font-semibold text-[var(--color-ink)]">
+                    <dt className="text-ink-muted">{t.roiSection.roiLabel}</dt>
+                    <dd className="font-display text-lg font-semibold text-ink">
                       {roiPlanCost > 0 ? `${Math.round(roiRatio * 10) / 10}×` : "—"}
                     </dd>
                   </div>
                 </dl>
 
-                <div className="mt-6 rounded-xl border border-[var(--color-accent)]/25 bg-[var(--color-accent-soft)]/35 px-4 py-3">
-                  <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-accent)]">
+                <div className="mt-6 rounded-xl border border-accent/25 bg-accent-soft/35 px-4 py-3">
+                  <p className="text-xs font-bold uppercase tracking-wider text-accent">
                     {t.roiSection.breakevenTitle}
                   </p>
                   <div className="mt-2 flex items-baseline justify-between gap-4">
-                    <p className="text-sm text-[var(--color-ink-muted)]">{t.roiSection.breakevenLabel}</p>
-                    <p className="font-display text-lg font-semibold text-[var(--color-ink)]">
+                    <p className="text-sm text-ink-muted">{t.roiSection.breakevenLabel}</p>
+                    <p className="font-display text-lg font-semibold text-ink">
                       {Number.isFinite(roiBreakevenChecks) ? Math.ceil(roiBreakevenChecks).toLocaleString() : "—"}
                     </p>
                   </div>
-                  <p className="mt-2 text-xs leading-relaxed text-[var(--color-ink-muted)]">{t.roiSection.breakevenHint}</p>
+                  <p className="mt-2 text-xs leading-relaxed text-ink-muted">{t.roiSection.breakevenHint}</p>
                 </div>
 
-                <p className="mt-6 text-xs leading-relaxed text-[var(--color-ink-muted)]">{t.roiSection.note}</p>
+                <p className="mt-6 text-xs leading-relaxed text-ink-muted">{t.roiSection.note}</p>
               </div>
             </div>
           </div>
@@ -546,48 +546,48 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
 
         <section
           id="how-it-works"
-          className="border-b border-[var(--color-border)] bg-[var(--color-surface-elevated)]"
+          className="border-b border-border bg-surface-elevated"
         >
           <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-            <h2 className="font-display text-2xl font-semibold text-[var(--color-ink)] sm:text-3xl">
+            <h2 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
               {t.howTitle}
             </h2>
             <ol className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {t.steps.map((step, i) => (
                 <li key={step.title} className="relative flex gap-4">
-                  <span className="font-display flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--color-accent)] text-sm font-bold text-white">
+                  <span className="font-display flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-white">
                     {i + 1}
                   </span>
                   <div>
-                    <h3 className="font-display font-semibold text-[var(--color-ink)]">
+                    <h3 className="font-display font-semibold text-ink">
                       {step.title}
                     </h3>
-                    <p className="mt-2 text-sm leading-relaxed text-[var(--color-ink-muted)]">
+                    <p className="mt-2 text-sm leading-relaxed text-ink-muted">
                       {step.body}
                     </p>
                   </div>
                 </li>
               ))}
             </ol>
-            <p className="mt-10 text-sm text-[var(--color-ink-muted)]">{t.stepNote}</p>
+            <p className="mt-10 text-sm text-ink-muted">{t.stepNote}</p>
           </div>
         </section>
 
-        <section id="use-cases" className="border-b border-[var(--color-border)]">
+        <section id="use-cases" className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-            <h2 className="font-display text-2xl font-semibold text-[var(--color-ink)] sm:text-3xl">
+            <h2 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
               {t.useCasesTitle}
             </h2>
             <div className="mt-10 grid gap-6 lg:grid-cols-3">
               {t.useCases.map((u) => (
                 <article
                   key={u.title}
-                  className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-6"
+                  className="rounded-2xl border border-border bg-surface-elevated p-6"
                 >
-                  <h3 className="font-display text-lg font-semibold text-[var(--color-ink)]">
+                  <h3 className="font-display text-lg font-semibold text-ink">
                     {u.title}
                   </h3>
-                  <p className="mt-3 text-sm leading-relaxed text-[var(--color-ink-muted)]">
+                  <p className="mt-3 text-sm leading-relaxed text-ink-muted">
                     {u.body}
                   </p>
                 </article>
@@ -596,30 +596,30 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
           </div>
         </section>
 
-        <section className="border-b border-[var(--color-border)] bg-[var(--color-ink)] text-[var(--color-surface)]">
+        <section className="border-b border-border bg-ink text-surface">
           <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
             <h2 className="font-display max-w-3xl text-2xl font-semibold sm:text-3xl">
               {t.midCta.title}
             </h2>
-            <p className="mt-4 max-w-2xl text-[var(--color-surface)]/80">{t.midCta.subtitle}</p>
-            <p className="mt-6 max-w-2xl text-sm leading-relaxed text-[var(--color-surface)]/70">
+            <p className="mt-4 max-w-2xl text-surface/80">{t.midCta.subtitle}</p>
+            <p className="mt-6 max-w-2xl text-sm leading-relaxed text-surface/70">
               {t.midCta.body}
             </p>
           </div>
         </section>
 
-        <section className="border-b border-[var(--color-border)] bg-[var(--color-surface-elevated)]">
+        <section className="border-b border-border bg-surface-elevated">
           <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
-            <h2 className="font-display text-xl font-semibold text-[var(--color-ink)] sm:text-2xl">
+            <h2 className="font-display text-xl font-semibold text-ink sm:text-2xl">
               {t.trustBand.title}
             </h2>
-            <p className="mt-3 max-w-3xl text-sm leading-relaxed text-[var(--color-ink-muted)]">
+            <p className="mt-3 max-w-3xl text-sm leading-relaxed text-ink-muted">
               {t.trustBand.subtitle}
             </p>
             <ul className="mt-6 grid gap-3 sm:grid-cols-2">
               {trustBandItems.map((item) => (
-                <li key={item} className="flex gap-2 text-sm text-[var(--color-ink-muted)]">
-                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-accent)]" />
+                <li key={item} className="flex gap-2 text-sm text-ink-muted">
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
                   <span>{item}</span>
                 </li>
               ))}
@@ -627,22 +627,22 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
           </div>
         </section>
 
-        <section id="pricing" className="border-b border-[var(--color-border)]">
+        <section id="pricing" className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-            <h2 className="font-display text-2xl font-semibold text-[var(--color-ink)] sm:text-3xl">
+            <h2 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
               {t.pricingTitle}
             </h2>
-            <p className="mt-4 max-w-3xl text-sm leading-relaxed text-[var(--color-ink-muted)]">
+            <p className="mt-4 max-w-3xl text-sm leading-relaxed text-ink-muted">
               {t.pricingSubtitle}
             </p>
             <div className="mt-10 grid gap-6 lg:grid-cols-2">
               {t.plans.map((plan) => (
                 <article
                   key={plan.name}
-                  className={`relative flex flex-col rounded-2xl border bg-[var(--color-surface-elevated)] p-8 shadow-sm ${
+                  className={`relative flex flex-col rounded-2xl border bg-surface-elevated p-8 shadow-sm ${
                     plan.badge
-                      ? "border-[var(--color-accent)] ring-2 ring-[var(--color-accent)]/25"
-                      : "border-[var(--color-border)]"
+                      ? "border-accent ring-2 ring-accent/25"
+                      : "border-border"
                   }`}
                 >
                   {plan.badge ? (
@@ -651,22 +651,22 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                       {plan.badge}
                     </div>
                   ) : null}
-                  <h3 className="font-display text-xl font-semibold text-[var(--color-ink)]">
+                  <h3 className="font-display text-xl font-semibold text-ink">
                     {plan.name}
                   </h3>
-                  <p className="mt-1 text-sm font-medium text-[var(--color-ink)]">{plan.description}</p>
+                  <p className="mt-1 text-sm font-medium text-ink">{plan.description}</p>
                   {"subdescription" in plan && plan.subdescription ? (
-                    <p className="mt-2 text-sm leading-relaxed text-[var(--color-ink-muted)]">
+                    <p className="mt-2 text-sm leading-relaxed text-ink-muted">
                       {plan.subdescription}
                     </p>
                   ) : null}
                   <p className="mt-6 flex items-baseline gap-1">
-                    <span className="font-display text-4xl font-semibold text-[var(--color-ink)]">
+                    <span className="font-display text-4xl font-semibold text-ink">
                       {plan.price}
                     </span>
-                    <span className="text-sm text-[var(--color-ink-muted)]">{plan.period}</span>
+                    <span className="text-sm text-ink-muted">{plan.period}</span>
                   </p>
-                  <ul className="mt-8 flex-1 space-y-3 text-sm text-[var(--color-ink-muted)]">
+                  <ul className="mt-8 flex-1 space-y-3 text-sm text-ink-muted">
                     {[
                       ...plan.features,
                       ...(overagePerObservationUsd != null
@@ -679,7 +679,7 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                         : []),
                     ].map((f) => (
                       <li key={f} className="flex gap-2">
-                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-accent)]" />
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
                         <span>{f}</span>
                       </li>
                     ))}
@@ -688,8 +688,8 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                     href={`/checkout?plan=${plan.name === "Pro" ? "pro" : "starter"}`}
                     className={`mt-8 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold transition ${
                       plan.badge
-                        ? "bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)]"
-                        : "border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink)] hover:border-[var(--color-ink-muted)]/40"
+                        ? "bg-accent text-white hover:bg-accent-hover"
+                        : "border border-border bg-surface text-ink hover:border-ink-muted/40"
                     }`}
                   >
                     {plan.cta}
@@ -701,11 +701,11 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
               className={`mt-10 grid gap-4 ${overagePerObservationUsd != null ? "sm:grid-cols-2" : ""}`}
             >
               {overagePerObservationUsd != null ? (
-                <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 sm:p-6">
-                  <h3 className="font-display text-sm font-semibold text-[var(--color-ink)]">
+                <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6">
+                  <h3 className="font-display text-sm font-semibold text-ink">
                     {t.pricingOverageTitle}
                   </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-[var(--color-ink-muted)]">
+                  <p className="mt-2 text-sm leading-relaxed text-ink-muted">
                     {t.pricingOverageBody.replace(
                       "{price}",
                       formatOverageUsdLabel(overagePerObservationUsd),
@@ -713,27 +713,27 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                   </p>
                 </div>
               ) : null}
-              <div className="rounded-2xl border border-[var(--color-accent)]/25 bg-[var(--color-accent-soft)]/35 p-5 sm:p-6">
-                <h3 className="font-display text-sm font-semibold text-[var(--color-ink)]">
+              <div className="rounded-2xl border border-accent/25 bg-accent-soft/35 p-5 sm:p-6">
+                <h3 className="font-display text-sm font-semibold text-ink">
                   {t.pricingTrialTitle}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-[var(--color-ink-muted)]">
+                <p className="mt-2 text-sm leading-relaxed text-ink-muted">
                   {t.pricingTrialBody}
                 </p>
               </div>
             </div>
-            <div className="mt-12 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-6 sm:p-8">
-              <p className="text-sm font-medium text-[var(--color-ink)]">{t.observationNote}</p>
-              <p className="mt-3 text-sm text-[var(--color-ink-muted)] leading-relaxed">
+            <div className="mt-12 rounded-2xl border border-border bg-surface-elevated p-6 sm:p-8">
+              <p className="text-sm font-medium text-ink">{t.observationNote}</p>
+              <p className="mt-3 text-sm text-ink-muted leading-relaxed">
                 {t.observationSub}
               </p>
             </div>
           </div>
         </section>
 
-        <section id="faq" className="border-b border-[var(--color-border)] bg-[var(--color-surface-elevated)]">
+        <section id="faq" className="border-b border-border bg-surface-elevated">
           <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-20">
-            <h2 className="font-display text-2xl font-semibold text-[var(--color-ink)] sm:text-3xl">
+            <h2 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
               {t.faqTitle}
             </h2>
             <div className="mt-8 space-y-3">
@@ -741,17 +741,17 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                 <details
                   key={item.q}
                   id={`faq-${i}`}
-                  className="group scroll-mt-28 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-4 open:shadow-sm"
+                  className="group scroll-mt-28 rounded-2xl border border-border bg-surface px-5 py-4 open:shadow-sm"
                 >
-                  <summary className="cursor-pointer list-none font-medium text-[var(--color-ink)] marker:content-none [&::-webkit-details-marker]:hidden">
+                  <summary className="cursor-pointer list-none font-medium text-ink marker:content-none [&::-webkit-details-marker]:hidden">
                     <span className="flex items-start justify-between gap-3">
                       {item.q}
-                      <span className="mt-0.5 text-[var(--color-ink-muted)] transition group-open:rotate-45">
+                      <span className="mt-0.5 text-ink-muted transition group-open:rotate-45">
                         +
                       </span>
                     </span>
                   </summary>
-                  <p className="mt-3 text-sm leading-relaxed text-[var(--color-ink-muted)]">
+                  <p className="mt-3 text-sm leading-relaxed text-ink-muted">
                     {item.a}
                   </p>
                 </details>
@@ -760,25 +760,25 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
           </div>
         </section>
 
-        <section id="signup" className="bg-[var(--color-accent-soft)]/50">
+        <section id="signup" className="bg-accent-soft/50">
           <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
-            <div className="mx-auto max-w-xl rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-8 shadow-sm">
-              <h2 className="font-display text-xl font-semibold text-[var(--color-ink)]">
+            <div className="mx-auto max-w-xl rounded-2xl border border-border bg-surface-elevated p-8 shadow-sm">
+              <h2 className="font-display text-xl font-semibold text-ink">
                 {t.accountSignup.title}
               </h2>
-              <p className="mt-4 text-sm leading-relaxed text-[var(--color-ink-muted)]">
+              <p className="mt-4 text-sm leading-relaxed text-ink-muted">
                 {t.accountSignup.intro}
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <Link
                   href="/login"
-                  className="inline-flex flex-1 items-center justify-center rounded-full bg-[var(--color-accent)] px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[var(--color-accent-hover)] sm:min-w-[12rem]"
+                  className="inline-flex flex-1 items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-accent-hover sm:min-w-48"
                 >
                   {t.accountSignup.ctaPrimary}
                 </Link>
                 <Link
                   href="/login?mode=signin"
-                  className="inline-flex flex-1 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-6 py-3 text-sm font-semibold text-[var(--color-ink)] transition hover:border-[var(--color-ink-muted)]/40 sm:min-w-[12rem]"
+                  className="inline-flex flex-1 items-center justify-center rounded-full border border-border bg-surface px-6 py-3 text-sm font-semibold text-ink transition hover:border-ink-muted/40 sm:min-w-48"
                 >
                   {t.accountSignup.ctaSecondary}
                 </Link>
@@ -788,75 +788,75 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
         </section>
       </main>
 
-      <footer className="border-t border-[var(--color-border)] bg-[var(--color-ink)] text-[var(--color-surface)]">
+      <footer className="border-t border-border bg-ink text-surface">
         <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
           <div className="flex flex-col gap-10 lg:flex-row lg:justify-between">
             <div>
               <p className="font-display text-lg font-semibold">Viewtrace</p>
-              <p className="mt-2 max-w-sm text-sm text-[var(--color-surface)]/70">
+              <p className="mt-2 max-w-sm text-sm text-surface/70">
                 {t.footer.tagline}
               </p>
             </div>
             <div className="grid gap-10 sm:grid-cols-3">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-surface)]/50">
+                <p className="text-xs font-semibold uppercase tracking-wider text-surface/50">
                   {t.footer.product}
                 </p>
                 <ul className="mt-3 space-y-2 text-sm">
                   <li>
-                    <a href="#pricing" className="text-[var(--color-surface)]/80 hover:text-white">
+                    <a href="#pricing" className="text-surface/80 hover:text-white">
                       {t.footer.links.pricing}
                     </a>
                   </li>
                   <li>
-                    <a href="#faq" className="text-[var(--color-surface)]/80 hover:text-white">
+                    <a href="#faq" className="text-surface/80 hover:text-white">
                       {t.footer.links.faq}
                     </a>
                   </li>
                 </ul>
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-surface)]/50">
+                <p className="text-xs font-semibold uppercase tracking-wider text-surface/50">
                   {t.footer.legal}
                 </p>
                 <ul className="mt-3 space-y-2 text-sm">
                   <li>
-                    <a href="/terms" className="text-[var(--color-surface)]/80 hover:text-white">
+                    <a href="/terms" className="text-surface/80 hover:text-white">
                       {t.footer.links.terms}
                     </a>
                   </li>
                   <li>
-                    <a href="/privacy" className="text-[var(--color-surface)]/80 hover:text-white">
+                    <a href="/privacy" className="text-surface/80 hover:text-white">
                       {t.footer.links.privacy}
                     </a>
                   </li>
                   <li>
                     <a
                       href="/acceptable-use"
-                      className="text-[var(--color-surface)]/80 hover:text-white"
+                      className="text-surface/80 hover:text-white"
                     >
                       {t.footer.links.acceptable}
                     </a>
                   </li>
                   <li>
-                    <a href="/tokushoho" className="text-[var(--color-surface)]/80 hover:text-white">
+                    <a href="/tokushoho" className="text-surface/80 hover:text-white">
                       {t.footer.links.tokushoho}
                     </a>
                   </li>
                 </ul>
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-surface)]/50">
+                <p className="text-xs font-semibold uppercase tracking-wider text-surface/50">
                   {t.footer.support}
                 </p>
                 <ul className="mt-3 space-y-2 text-sm">
                   <li>
-                    <a href="/contact" className="text-[var(--color-surface)]/80 hover:text-white">
+                    <a href="/contact" className="text-surface/80 hover:text-white">
                       {t.footer.links.contact}
                     </a>
                   </li>
                   <li id="login">
-                    <a href="/login" className="text-[var(--color-surface)]/80 hover:text-white">
+                    <a href="/login" className="text-surface/80 hover:text-white">
                       {t.nav.login}
                     </a>
                   </li>
@@ -864,10 +864,10 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
               </div>
             </div>
           </div>
-          <p className="mt-10 max-w-3xl text-xs leading-relaxed text-[var(--color-surface)]/55">
+          <p className="mt-10 max-w-3xl text-xs leading-relaxed text-surface/55">
             {t.footer.disclaimer}
           </p>
-          <p className="mt-6 text-xs text-[var(--color-surface)]/45">{t.footer.rights}</p>
+          <p className="mt-6 text-xs text-surface/45">{t.footer.rights}</p>
         </div>
       </footer>
     </div>

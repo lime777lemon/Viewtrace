@@ -15,14 +15,14 @@ export function LegalLocaleToggle({ locale }: { locale: Locale }) {
 
   return (
     <div className="flex items-center gap-3">
-      <div className="flex rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] p-0.5 text-[11px] font-semibold">
+      <div className="flex rounded-full border border-border bg-surface p-0.5 text-[11px] font-semibold">
         <button
           type="button"
           onClick={() => setLocale("en")}
           className={`cursor-pointer rounded-full px-2.5 py-1 transition ${
             locale === "en"
-              ? "bg-[var(--color-ink)] text-white shadow-sm hover:bg-[var(--color-ink)]/90 hover:shadow"
-              : "text-[var(--color-ink-muted)] hover:bg-[var(--color-border)]/45 hover:text-[var(--color-ink)]"
+              ? "bg-ink text-white shadow-sm hover:bg-ink/90 hover:shadow"
+              : "text-ink-muted hover:bg-border/45 hover:text-ink"
           }`}
           aria-pressed={locale === "en"}
         >
@@ -33,8 +33,8 @@ export function LegalLocaleToggle({ locale }: { locale: Locale }) {
           onClick={() => setLocale("ja")}
           className={`cursor-pointer rounded-full px-2.5 py-1 transition ${
             locale === "ja"
-              ? "bg-[var(--color-ink)] text-white shadow-sm hover:bg-[var(--color-ink)]/90 hover:shadow"
-              : "text-[var(--color-ink-muted)] hover:bg-[var(--color-border)]/45 hover:text-[var(--color-ink)]"
+              ? "bg-ink text-white shadow-sm hover:bg-ink/90 hover:shadow"
+              : "text-ink-muted hover:bg-border/45 hover:text-ink"
           }`}
           aria-pressed={locale === "ja"}
         >

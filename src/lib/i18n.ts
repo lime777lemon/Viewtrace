@@ -478,8 +478,6 @@ export const copy = {
       integrityMismatch:
         "保存内容が記録作成時と食い違っている可能性があります。再取得や環境の変更で直る場合があります。",
       integrityStoredPrefix: "保存していた値: ",
-      fallbackInsuranceLine:
-        "高画質の自動保存が難しいときも、プレビューで記録を続けます。空欄のままにしません。",
     },
     observationsTable: {
       colCaptured: "取得日時（JST）",
@@ -1140,8 +1138,6 @@ export const copy = {
       integrityMismatch:
         "Something no longer matches what was stored. Re-capturing or updating your setup may fix it.",
       integrityStoredPrefix: "Previously stored: ",
-      fallbackInsuranceLine:
-        "If we can’t store a full auto-capture, we still save a preview so you’re never left with an empty record.",
     },
     observationsTable: {
       colCaptured: "Captured (JST)",

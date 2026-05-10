@@ -43,14 +43,14 @@ export default async function DashboardAuditPage() {
       <div className="flex flex-wrap items-center gap-3 text-sm">
         <Link
           href="/dashboard"
-          className="font-medium text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+          className="font-medium text-accent hover:text-accent-hover"
         >
           ← {t.back}
         </Link>
       </div>
       <div>
         <h1 className="font-display text-2xl font-semibold tracking-tight">{t.title}</h1>
-        <p className="mt-1 text-sm text-[var(--color-ink-muted)]">{t.subtitle}</p>
+        <p className="mt-1 text-sm text-ink-muted">{t.subtitle}</p>
       </div>
 
       {error ? (
@@ -60,13 +60,13 @@ export default async function DashboardAuditPage() {
       ) : null}
 
       {!error && rows.length === 0 ? (
-        <p className="text-sm text-[var(--color-ink-muted)]">{t.empty}</p>
+        <p className="text-sm text-ink-muted">{t.empty}</p>
       ) : null}
 
       {!error && rows.length > 0 ? (
-        <div className="overflow-x-auto rounded-xl border border-[var(--color-border)]">
+        <div className="overflow-x-auto rounded-xl border border-border">
           <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-[var(--color-border)] bg-[var(--color-surface-elevated)] text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
+            <thead className="border-b border-border bg-surface-elevated text-xs font-semibold uppercase tracking-wider text-ink-muted">
               <tr>
                 <th className="px-4 py-3">{t.colAt}</th>
                 <th className="px-4 py-3">{t.colAction}</th>
@@ -75,15 +75,15 @@ export default async function DashboardAuditPage() {
                 <th className="px-4 py-3">{t.colChain}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[var(--color-border)]">
+            <tbody className="divide-y divide-border">
               {rows.map((r) => (
-                <tr key={r.id} className="bg-[var(--color-surface)]">
-                  <td className="whitespace-nowrap px-4 py-3 align-top text-[var(--color-ink)]">
+                <tr key={r.id} className="bg-surface">
+                  <td className="whitespace-nowrap px-4 py-3 align-top text-ink">
                     <span className="block">{formatJaDateTime(r.created_at)}</span>
-                    <span className="text-xs text-[var(--color-ink-muted)]">{formatUtcLabel(r.created_at)}</span>
+                    <span className="text-xs text-ink-muted">{formatUtcLabel(r.created_at)}</span>
                   </td>
-                  <td className="px-4 py-3 align-top font-mono text-xs text-[var(--color-ink)]">{r.action}</td>
-                  <td className="px-4 py-3 align-top text-xs text-[var(--color-ink-muted)]">
+                  <td className="px-4 py-3 align-top font-mono text-xs text-ink">{r.action}</td>
+                  <td className="px-4 py-3 align-top text-xs text-ink-muted">
                     {r.resource_type ? (
                       <span className="font-mono">
                         {r.resource_type}
@@ -94,14 +94,14 @@ export default async function DashboardAuditPage() {
                     )}
                   </td>
                   <td className="max-w-xs px-4 py-3 align-top">
-                    <pre className="whitespace-pre-wrap break-all font-mono text-[10px] leading-snug text-[var(--color-ink-muted)]">
+                    <pre className="whitespace-pre-wrap break-all font-mono text-[10px] leading-snug text-ink-muted">
                       {r.meta && Object.keys(r.meta).length > 0
                         ? JSON.stringify(r.meta, null, 0).slice(0, 400)
                         : "—"}
                       {r.meta && JSON.stringify(r.meta).length > 400 ? "…" : ""}
                     </pre>
                   </td>
-                  <td className="px-4 py-3 align-top font-mono text-[10px] text-[var(--color-ink-muted)]">
+                  <td className="px-4 py-3 align-top font-mono text-[10px] text-ink-muted">
                     {r.chain_hash.slice(0, 12)}…
                   </td>
                 </tr>

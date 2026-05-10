@@ -59,14 +59,14 @@ export function DashboardShell({
   }
 
   return (
-    <div className="min-h-screen bg-[var(--color-surface)] text-[var(--color-ink)]">
+    <div className="min-h-screen bg-surface text-ink">
       <div className="flex min-h-screen">
-        <aside className="hidden w-56 shrink-0 flex-col border-r border-[var(--color-border)] bg-[var(--color-surface-elevated)] md:flex">
-          <div className="border-b border-[var(--color-border)] px-4 py-4">
+        <aside className="hidden w-56 shrink-0 flex-col border-r border-border bg-surface-elevated md:flex">
+          <div className="border-b border-border px-4 py-4">
             <Link href="/dashboard" className="font-display text-lg font-semibold tracking-tight">
               Viewtrace
             </Link>
-            <p className="mt-1 text-[10px] font-medium uppercase tracking-wider text-[var(--color-ink-muted)]">
+            <p className="mt-1 text-[10px] font-medium uppercase tracking-wider text-ink-muted">
               {t.productLabel}
             </p>
           </div>
@@ -79,8 +79,8 @@ export function DashboardShell({
                   href={item.href}
                   className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
                     active
-                      ? "bg-[var(--color-accent-soft)] text-[var(--color-ink)]"
-                      : "text-[var(--color-ink-muted)] hover:bg-[var(--color-surface)] hover:text-[var(--color-ink)]"
+                      ? "bg-accent-soft text-ink"
+                      : "text-ink-muted hover:bg-surface hover:text-ink"
                   }`}
                 >
                   {item.label}
@@ -88,10 +88,10 @@ export function DashboardShell({
               );
             })}
           </nav>
-          <div className="border-t border-[var(--color-border)] p-3">
+          <div className="border-t border-border p-3">
             <Link
               href="/"
-              className="block rounded-lg px-3 py-2 text-sm text-[var(--color-ink-muted)] transition hover:bg-[var(--color-surface)] hover:text-[var(--color-ink)]"
+              className="block rounded-lg px-3 py-2 text-sm text-ink-muted transition hover:bg-surface hover:text-ink"
             >
               {t.backToMarketing}
             </Link>
@@ -99,7 +99,7 @@ export function DashboardShell({
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-40 border-b border-[var(--color-border)] bg-[var(--color-surface)]/95 backdrop-blur-md">
+          <header className="sticky top-0 z-40 border-b border-border bg-surface/95 backdrop-blur-md">
             <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
               <div className="flex min-w-0 items-center gap-3 md:hidden">
                 <Link href="/dashboard" className="font-display font-semibold">
@@ -108,14 +108,14 @@ export function DashboardShell({
               </div>
               <div className="hidden min-w-0 flex-1 md:block" aria-hidden />
               <div className="flex min-w-0 flex-wrap items-center justify-end gap-2 sm:gap-3 md:shrink-0">
-                <div className="flex rounded-full border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-0.5 text-[11px] font-semibold">
+                <div className="flex rounded-full border border-border bg-surface-elevated p-0.5 text-[11px] font-semibold">
                   <button
                     type="button"
                     onClick={() => setLocale("en")}
                     className={`cursor-pointer rounded-full px-2.5 py-1 transition ${
                       locale === "en"
-                        ? "bg-[var(--color-ink)] text-white shadow-sm hover:bg-[var(--color-ink)]/90 hover:shadow"
-                        : "text-[var(--color-ink-muted)] hover:bg-[var(--color-border)]/45 hover:text-[var(--color-ink)]"
+                        ? "bg-ink text-white shadow-sm hover:bg-ink/90 hover:shadow"
+                        : "text-ink-muted hover:bg-border/45 hover:text-ink"
                     }`}
                     aria-pressed={locale === "en"}
                   >
@@ -126,24 +126,24 @@ export function DashboardShell({
                     onClick={() => setLocale("ja")}
                     className={`cursor-pointer rounded-full px-2.5 py-1 transition ${
                       locale === "ja"
-                        ? "bg-[var(--color-ink)] text-white shadow-sm hover:bg-[var(--color-ink)]/90 hover:shadow"
-                        : "text-[var(--color-ink-muted)] hover:bg-[var(--color-border)]/45 hover:text-[var(--color-ink)]"
+                        ? "bg-ink text-white shadow-sm hover:bg-ink/90 hover:shadow"
+                        : "text-ink-muted hover:bg-border/45 hover:text-ink"
                     }`}
                     aria-pressed={locale === "ja"}
                   >
                     ja
                   </button>
                 </div>
-                <span className="rounded-full bg-[var(--color-surface-elevated)] px-2.5 py-1 text-xs font-semibold text-[var(--color-ink)] ring-1 ring-[var(--color-border)]">
+                <span className="rounded-full bg-surface-elevated px-2.5 py-1 text-xs font-semibold text-ink ring-1 ring-border">
                   {planName}
                 </span>
-                <span className="hidden max-w-[200px] truncate text-sm text-[var(--color-ink-muted)] sm:inline" title={email}>
+                <span className="hidden max-w-[200px] truncate text-sm text-ink-muted sm:inline" title={email}>
                   {email}
                 </span>
                 <LogoutButton label={t.logout} />
               </div>
             </div>
-            <nav className="flex gap-1 overflow-x-auto border-t border-[var(--color-border)] px-2 py-2 md:hidden">
+            <nav className="flex gap-1 overflow-x-auto border-t border-border px-2 py-2 md:hidden">
               {nav.map((item) => {
                 const active = isNavActive(item.href, currentPath);
                 return (
@@ -152,8 +152,8 @@ export function DashboardShell({
                     href={item.href}
                     className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
                       active
-                        ? "bg-[var(--color-ink)] text-white"
-                        : "bg-[var(--color-surface-elevated)] text-[var(--color-ink-muted)]"
+                        ? "bg-ink text-white"
+                        : "bg-surface-elevated text-ink-muted"
                     }`}
                   >
                     {item.label}
