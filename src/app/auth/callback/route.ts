@@ -50,15 +50,14 @@ async function finishSessionSideEffects(
 
 /**
  * メール確認・OAuth の戻り。
- * PKCE の `code` はブラウザの Cookie に保存された code verifier と突き合わせる必要があるため、
- * サーバーでは交換せず `/auth/oauth-complete` へ渡してクライアントで exchange する。
- * `token_hash`（または Supabase 標準リンクの `token`）+ `verifyOtp` はサーバーで処理可能（PKCE verifier 不要）。
  *
- * 別端末のメールアプリだけで確認したい場合:
- * Supabase Dashboard → Authentication → Email Templates → Confirm signup で、
- * リンクを `{{ .ConfirmationURL }}` ではなく次の形にする（RedirectTo には既に query があるので & で連結）:
- *   <a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email">...</a>
- * `type` はプロジェクトによって `signup` の場合あり。公式の ConfirmationURL 例は `type=email`。
+ * PKCE の `code`: リクエストに付いた Cookie から verifier を読み、この Route Handler 内で
+ * `exchangeCodeForSession` する（@supabase/ssr の推奨）。クライアントの `/auth/oauth-complete`
+ * より verifier を拾いやすい。
+ *
+ * `token_hash`（または `token`）+ `verifyOtp` は従来どおりサーバーで処理（別ブラウザ可）。
+ *
+ * メール確認は `supabase/templates/confirmation.html` の token_hash リンクも推奨。
  */
 export async function GET(request: NextRequest) {
   const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -77,10 +76,39 @@ export async function GET(request: NextRequest) {
   const type = request.nextUrl.searchParams.get("type");
 
   if (code) {
-    const u = new URL("/auth/oauth-complete", request.url);
-    u.searchParams.set("code", code);
-    u.searchParams.set("next", nextPath);
-    return NextResponse.redirect(u);
+    let redirectResponse = NextResponse.redirect(redirectTarget);
+
+    const supabaseExchange = createServerClient(url, anonKey, {
+      cookieOptions: supabaseCookieOptions(
+        request.nextUrl.hostname,
+        request.nextUrl.protocol === "https:",
+      ),
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet, headers) {
+          redirectResponse = NextResponse.redirect(redirectTarget);
+          cookiesToSet.forEach(({ name, value, options }) =>
+            redirectResponse.cookies.set(name, value, options),
+          );
+          if (headers) {
+            Object.entries(headers).forEach(([key, value]) => redirectResponse.headers.set(key, value));
+          }
+        },
+      },
+    });
+
+    const { error: exchangeError } = await supabaseExchange.auth.exchangeCodeForSession(code);
+    if (exchangeError) {
+      const u = new URL("/auth/auth-code-error", request.url);
+      u.searchParams.set("reason", exchangeError.message);
+      return NextResponse.redirect(u);
+    }
+
+    await finishSessionSideEffects(supabaseExchange, request);
+
+    return redirectResponse;
   }
 
   // サーバーからは URL の #fragment が見えない。クライアント用に内部パスへ渡す。

@@ -1,17 +1,24 @@
 <!--
   【このファイルの読み方】
 
-  ■ Supabase 本番（ブラウザの Dashboard）で Confirm signup を編集するとき
+  ■ 本番（Supabase Dashboard）
     Authentication → Email Templates → Confirm signup の「本文」には、
     下の <body> の中身だけをコピーして貼ってください。
-    （<html>・<head>・<body> のタグ自体は Dashboard には書かないでください。
-     メールテンプレ側ですでにラップされるためです。）
+    （<html>・<head>・<body> のタグは Dashboard には書かないでください。）
 
-  ■ ローカル開発（supabase start）では
-    supabase/config.toml の content_path で、このファイル全体がそのまま使われます。
+  ■ なぜ ConfirmationURL を使わないか
+    {{ .ConfirmationURL }} は PKCE 用で、メールを開いたブラウザに
+    「サインアップ時と同じ code verifier Cookie」が必要です。
+    別端末・別ブラウザ・localhost と本番の混在では
+    「PKCE code verifier not found in storage」になりやすいです。
 
-  ■ token_hash 形が必要なときだけ（まれ）
-    src/app/auth/callback/route.ts 冒頭コメントの URL 形に差し替える。
+  ■ このテンプレート
+    アプリの /auth/callback へ token_hash を渡し、サーバーで verifyOtp します
+    （src/app/auth/callback/route.ts）。PKCE verifier は不要です。
+
+  ■ RedirectTo について
+    signUp の emailRedirectTo（例: https://viewtrace.net/auth/callback）が入ります。
+    クエリを自分で付けない限り `?token_hash=…` で問題ありません。
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -23,6 +30,8 @@
 <body style="font-family: system-ui, sans-serif; line-height: 1.5;">
   <h2>Confirm your signup</h2>
   <p>Follow this link to confirm your user:</p>
-  <p><a href="{{ .ConfirmationURL }}">Confirm your mail</a></p>
+  <p>
+    <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=signup">Confirm your mail</a>
+  </p>
 </body>
 </html>

@@ -34,6 +34,9 @@ export default async function AuthCodeErrorPage({
   const errorDescRaw = sp.error_description ?? sp.errorDescription;
   const errorDescription = typeof errorDescRaw === "string" ? errorDescRaw : null;
 
+  const reasonLower = reason?.toLowerCase() ?? "";
+  const isPkceVerifierMissing = reasonLower.includes("code verifier not found");
+
   return (
     <div className="mx-auto flex min-h-[60vh] max-w-md flex-col justify-center px-4 py-16 text-center">
       <h1 className="font-display text-xl font-semibold text-ink">認証を完了できませんでした</h1>
@@ -44,9 +47,19 @@ export default async function AuthCodeErrorPage({
         <p className="mt-4 rounded-xl border border-amber-200/80 bg-amber-50/90 px-4 py-3 text-left text-xs leading-relaxed text-amber-950">
           <strong className="font-semibold">タイムアウト:</strong>{" "}
           サーバーまたは回線の混雑で、認証コードの確認が間に合わなかった可能性があります。Wi‑Fi
-          とモバイルデータを切り替える、しばらく時間をおいてから{" "}
-          <strong>同じメールのリンクでもう一度</strong>試す（PKCE の場合は{" "}
-          <strong>登録時と同じブラウザ</strong>で開いてください）。繰り返す場合はお問い合わせください。
+          とモバイルデータを切り替えるか、しばらく時間をおいて{" "}
+          <strong>同じメールのリンクでもう一度</strong>お試しください。繰り返す場合はお問い合わせください。
+        </p>
+      ) : null}
+      {isPkceVerifierMissing ? (
+        <p className="mt-4 rounded-xl border border-amber-200/80 bg-amber-50/90 px-4 py-3 text-left text-xs leading-relaxed text-amber-950">
+          <strong className="font-semibold">PKCE（確認コード）:</strong>{" "}
+          登録したブラウザと違う環境でリンクを開いた、Cookie が消えた、
+          <span className="font-mono">localhost</span> と本番でホストが違う、などで起きます。
+          Viewtrace は確認メールを{" "}
+          <span className="font-mono">token_hash</span> 方式にすれば同じブラウザでなくても確認できます。管理者は{" "}
+          <span className="font-mono">supabase/templates/confirmation.html</span> の本文を Supabase の Confirm
+          signup に反映し、必要なら「確認メールを再送」してください。
         </p>
       ) : null}
       {reason || errorCode || errorDescription ? (
@@ -68,19 +81,6 @@ export default async function AuthCodeErrorPage({
       <div className="mt-6 rounded-2xl border border-border bg-surface-elevated p-4 text-left text-xs leading-relaxed text-ink-muted">
         <p className="font-medium text-ink">よくある原因</p>
         <ul className="mt-2 list-disc space-y-1 pl-5">
-          <li>
-            <strong className="font-medium text-ink">Supabase にユーザーがいること</strong>と、
-            この画面の <span className="font-mono">code</span> を
-            <strong className="font-medium text-ink">今のブラウザで交換できること</strong>は別です。メールの
-            PKCE リンクは、<strong>登録を完了したのと同じブラウザ</strong>に保存された情報と組み合わせる必要があり、スマホのメールアプリだけ・別端末だけで開くと失敗しやすいです。
-          </li>
-          <li>
-            メールのリンクが PKCE の <span className="font-mono">code</span> 形式のとき、
-            <strong className="font-medium text-ink">登録したのと同じブラウザ</strong>
-            で開く必要があります。別端末だけで済ませるには、Supabase の確認メールテンプレートで{" "}
-            <span className="font-mono">token_hash</span> リンク（
-            <span className="font-mono">verifyOtp</span>）を使う設定が必要です。
-          </li>
           <li>確認メールのリンクの期限が切れている</li>
           <li>
             ブラウザが「このサイトにアクセスできません」と表示する（メール内の続き先が{" "}
@@ -92,6 +92,10 @@ export default async function AuthCodeErrorPage({
             が登録されていない（ローカルはポート番号も含めて一致が必要）
           </li>
           <li>別のドメイン/別ポートで開いた（例: 3000 と 3001 の違い）</li>
+          <li>
+            古い確認メール（<span className="font-mono">ConfirmationURL</span> / PKCE）を別ブラウザで開いた →{" "}
+            <span className="font-mono">token_hash</span> リンクのテンプレに更新するか、登録と同じブラウザで開く
+          </li>
         </ul>
         {callbackUrl ? (
           <div className="mt-4 rounded-xl border border-border bg-surface p-3">

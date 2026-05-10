@@ -12,6 +12,7 @@ import { buildSignupEmailRedirectTo } from "@/lib/auth/signup-email-redirect";
 import { POST_EMAIL_VERIFY_PATH } from "@/lib/auth/email-verified-copy";
 import { loginPageCopy } from "@/lib/auth/login-copy";
 import { postAuthSideEffectsBeforeNavigate } from "@/lib/auth/post-auth-redirect";
+import { siteOrigin } from "@/lib/site";
 import { TRIAL_CONFIG } from "@/lib/plans";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -45,20 +46,23 @@ export function LoginForm({
   const safeNext =
     nextPath?.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "";
 
-  /** サーバー計算のコールバック URL（参照・フォールバック用） */
+  /** サーバー計算のコールバック URL（フォールバック用・`authCallbackUrl` と同形） */
   function buildEmailRedirectTo(): string {
-    const u = new URL(authCallbackUrl);
-    u.searchParams.set("next", POST_EMAIL_VERIFY_PATH);
-    return u.toString();
+    return authCallbackUrl;
   }
 
   /**
-   * 確認メールの redirect_to は「登録したタブのオリジン」と一致させる。
-   * さもないと Supabase が許可リスト不一致とみなし Site URL だけに落ち、
-   * メール内が `redirect_to=https://viewtrace.net` のみになることがある。
+   * 確認メールの `redirect_to`。Supabase の Redirect URLs と一致させる。
+   *
+   * - 本番で `NEXT_PUBLIC_SITE_URL` があるときは **正規オリジン**（apex 等）に固定し、
+   *   `www` と apex で別 URL になって許可リストから外れるのを防ぐ。
+   * - 未設定時（プレビュー・ローカルなど）は開いているタブの `origin` を使う。
    */
   function emailRedirectToForSignup(): string {
     try {
+      if (process.env.NEXT_PUBLIC_SITE_URL?.trim()) {
+        return buildSignupEmailRedirectTo(siteOrigin);
+      }
       return buildSignupEmailRedirectTo(window.location.origin);
     } catch {
       return buildEmailRedirectTo();

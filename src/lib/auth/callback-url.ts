@@ -73,16 +73,13 @@ function isAllowedRedirectOrigin(origin: string): boolean {
  *
  * 本番で `NEXT_PUBLIC_SITE_URL` が設定されているときは、この関数は **必ずそのオリジン** の `/auth/callback` を返す（ヘッダより優先）。
  *
- * Email Templates の「Confirm signup」（Confirm your mail）のリンクは次のどちらかにする。
- * - **推奨**: `href="{{ .ConfirmationURL }}"` — アプリの `signUp` で渡した `emailRedirectTo`（`/auth/callback?next=…`）がそのまま反映される。
- * - **代替**: `href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email"`（`type` は `signup` の場合あり。callback/route.ts 冒頭コメント参照）。
- * `{{ .SiteURL }}` のみにしない（Site URL 直下に落ち、アプリの callback／認証完了画面を踏めなくなることがある）。
+ * Email Templates の「Confirm signup」は `supabase/templates/confirmation.html` に合わせる。
+ * **推奨**: `href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=signup"`（サーバーで verifyOtp。別ブラウザ可）。
+ * `{{ .ConfirmationURL }}` は PKCE 用で、サインアップと違う環境で開くと code verifier 不足になりやすい。
+ * `{{ .SiteURL }}` のみにしない（Site URL 直下に落ち、callback を踏めなくなることがある）。
  *
  * テンプレートのソースファイル: `supabase/templates/confirmation.html`（ローカル CLI と同期。
  * ホスト済みプロジェクトは同ファイルの body を Dashboard → Confirm signup にコピーする）
- *
- * ダッシュボード貼り付け例（本文は英語のままで可）:
- * `<p><a href="{{ .ConfirmationURL }}">Confirm your mail</a></p>`
  *
  * リンク完了後はアプリ側で `/auth/email-verified`（「認証成功」画面）へ誘導する（`next` が欠けても callback の既定で同じ）。
  *

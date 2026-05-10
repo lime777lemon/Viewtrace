@@ -38,7 +38,7 @@ export function SupabaseHomeAuthCapture() {
     ) {
       const next = encodeURIComponent(POST_EMAIL_VERIFY_PATH);
       window.location.replace(
-        `${window.location.origin}/auth/oauth-complete?code=${encodeURIComponent(code)}&next=${next}`,
+        `${window.location.origin}/auth/callback?code=${encodeURIComponent(code)}&next=${next}`,
       );
     }
   }, [pathname]);
