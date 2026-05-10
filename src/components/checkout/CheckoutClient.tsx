@@ -1,26 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect, useId, useState } from "react";
+import { useActionState, useId, useState } from "react";
 import { demoCheckoutAction } from "@/app/actions/checkout";
 import { copy, type Locale } from "@/lib/i18n";
+import { LOCALE_COOKIE } from "@/lib/i18n/locale-cookie";
 import type { PlanId } from "@/lib/plans";
 import { getPlan } from "@/lib/plans";
+import { getPlanLabels } from "@/lib/plans/labels";
 import type { StripeMode } from "@/lib/stripe";
 
 export function CheckoutClient({
   planId,
   stripeMode,
   trialBlockReason,
+  initialLocale,
 }: {
   planId: PlanId;
   stripeMode: StripeMode;
   /** 無料トライアル終了・枠切れからのリダイレクト時のみ */
   trialBlockReason?: "trial_expired" | "trial_observation_limit";
+  initialLocale: Locale;
 }) {
-  const [locale, setLocale] = useState<Locale>("ja");
+  const [locale, setLocale] = useState<Locale>(initialLocale);
   const t = copy[locale].checkout;
   const plan = getPlan(planId);
+  const planLabels = getPlanLabels(planId, locale);
   const [state, formAction, pending] = useActionState(demoCheckoutAction, null);
   const emailId = useId();
 
@@ -31,10 +36,11 @@ export function CheckoutClient({
   const [stripePending, setStripePending] = useState(false);
   const [stripeError, setStripeError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const lang = document.documentElement.lang;
-    if (lang === "en") setLocale("en");
-  }, []);
+  function setLocaleAndCookie(next: Locale) {
+    const maxAgeDays = 365;
+    document.cookie = `${LOCALE_COOKIE}=${next}; path=/; max-age=${maxAgeDays * 24 * 60 * 60}; SameSite=Lax`;
+    setLocale(next);
+  }
 
   const errorMessage =
     state?.error === "email"
@@ -101,7 +107,7 @@ export function CheckoutClient({
             <div className="flex rounded-full border border-border bg-surface p-0.5 text-xs font-semibold">
               <button
                 type="button"
-                onClick={() => setLocale("ja")}
+                onClick={() => setLocaleAndCookie("ja")}
                 className={`cursor-pointer rounded-full px-2.5 py-1 transition ${
                   locale === "ja"
                     ? "bg-ink text-white shadow-sm hover:bg-ink/90 hover:shadow"
@@ -112,7 +118,7 @@ export function CheckoutClient({
               </button>
               <button
                 type="button"
-                onClick={() => setLocale("en")}
+                onClick={() => setLocaleAndCookie("en")}
                 className={`cursor-pointer rounded-full px-2.5 py-1 transition ${
                   locale === "en"
                     ? "bg-ink text-white shadow-sm hover:bg-ink/90 hover:shadow"
@@ -137,19 +143,11 @@ export function CheckoutClient({
           <div className="mb-8 rounded-xl border border-warn/35 bg-warn/10 px-4 py-3 text-sm text-ink">
             {t.demoBanner}
           </div>
-        ) : (
-          <>
-            {stripeMode === "test" ? (
-              <div className="mb-8 rounded-xl border border-emerald-300/60 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
-                {locale === "ja" ? "Stripe（テストモード）が接続されています。" : "Stripe (test mode) is connected."}
-              </div>
-            ) : t.stripeLiveBanner ? (
-              <div className="mb-8 rounded-xl border border-emerald-300/60 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
-                {t.stripeLiveBanner}
-              </div>
-            ) : null}
-          </>
-        )}
+        ) : stripeMode === "test" ? (
+          <div className="mb-8 rounded-xl border border-emerald-300/60 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
+            {locale === "ja" ? "Stripe（テストモード）が接続されています。" : "Stripe (test mode) is connected."}
+          </div>
+        ) : null}
 
         {trialNotice ? (
           <div className="mb-8 rounded-xl border border-sky-300/80 bg-sky-50 px-4 py-3 text-sm leading-relaxed text-sky-950">
@@ -163,6 +161,7 @@ export function CheckoutClient({
         <div className="mt-8 flex flex-wrap gap-2">
           {(["starter", "pro"] as const).map((id) => {
             const p = getPlan(id);
+            const tabLabels = getPlanLabels(id, locale);
             const active = planId === id;
             return (
               <Link
@@ -174,7 +173,7 @@ export function CheckoutClient({
                     : "border border-border bg-surface-elevated text-ink-muted hover:border-ink-muted/40"
                 }`}
               >
-                {p.name} · {p.priceLabel}
+                {p.name} · {tabLabels.priceLabel}
               </Link>
             );
           })}
@@ -187,10 +186,10 @@ export function CheckoutClient({
             <p className="mt-2 font-display text-xl font-semibold">
               {plan.name}{" "}
               <span className="text-base font-normal text-ink-muted">
-                {plan.priceLabel}
+                {planLabels.priceLabel}
               </span>
             </p>
-            <p className="mt-2 text-sm text-ink-muted">{plan.audienceLabel}</p>
+            <p className="mt-2 text-sm text-ink-muted">{planLabels.audienceLabel}</p>
             <ul className="mt-6 space-y-2 text-sm text-ink-muted">
               <li>
                 {t.monthly}: {plan.monthlyObservations}{" "}
@@ -200,7 +199,7 @@ export function CheckoutClient({
                 {locale === "ja" ? "保存" : "Retention"}: {plan.retentionDays}{" "}
                 {locale === "ja" ? "日" : "days"}
               </li>
-              <li>{plan.coverageLabel}</li>
+              <li>{planLabels.coverageLabel}</li>
               {plan.csvExport ? (
                 <li>{locale === "ja" ? "CSVエクスポート" : "CSV export"}</li>
               ) : null}

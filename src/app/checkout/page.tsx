@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { CheckoutClient } from "@/components/checkout/CheckoutClient";
+import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { parsePlanId } from "@/lib/plans";
 import { getStripeMode, isStripeCheckoutConfigured } from "@/lib/stripe";
 
@@ -20,6 +21,14 @@ export default async function CheckoutPage({ searchParams }: Props) {
     reasonRaw === "trial_expired" || reasonRaw === "trial_observation_limit" ? reasonRaw : undefined;
   const stripeConfigured = isStripeCheckoutConfigured();
   const stripeMode = stripeConfigured ? getStripeMode() : "none";
+  const initialLocale = await getRequestLocale();
 
-  return <CheckoutClient planId={planId} stripeMode={stripeMode} trialBlockReason={trialBlockReason} />;
+  return (
+    <CheckoutClient
+      planId={planId}
+      stripeMode={stripeMode}
+      trialBlockReason={trialBlockReason}
+      initialLocale={initialLocale}
+    />
+  );
 }

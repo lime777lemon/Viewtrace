@@ -95,8 +95,16 @@ export default async function SettingsPage() {
                 </>
               )}
             </ul>
-            {session && !session.trialEligible ? (
-              <PlanSwitchForms currentPlan={session.plan} locale={locale} />
+
+            {session ? (
+              <>
+                <h3 className="mt-8 text-sm font-semibold text-ink">{t.sectionPaidPlans}</h3>
+                <PlanSwitchForms
+                  currentPlan={session.plan}
+                  locale={locale}
+                  trialEligible={session.trialEligible}
+                />
+              </>
             ) : null}
 
             {session ? (

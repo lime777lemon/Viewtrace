@@ -5,15 +5,22 @@ import { PLANS, type PlanId } from "@/lib/plans";
 export function PlanSwitchForms({
   currentPlan,
   locale,
+  trialEligible = false,
 }: {
   currentPlan: PlanId;
   locale: Locale;
+  /** 無料トライアル枠のユーザー（有料プランへの導線を必ず出す） */
+  trialEligible?: boolean;
 }) {
   const t = copy[locale].dashboardSettings;
   const onFreePlan = currentPlan === "freeplan";
   return (
-    <div className="mt-6 space-y-4">
-      {onFreePlan ? (
+    <div className="mt-3 space-y-4">
+      {trialEligible ? (
+        <p className="rounded-lg border border-border bg-surface-elevated px-3 py-2 text-xs text-ink-muted">
+          {t.planUpgradeDuringTrial}
+        </p>
+      ) : onFreePlan ? (
         <p className="rounded-lg border border-border bg-surface-elevated px-3 py-2 text-xs text-ink-muted">
           {locale === "ja"
             ? "現在はフリープランです。下から有料プランにアップグレードできます。"

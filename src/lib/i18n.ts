@@ -332,7 +332,6 @@ export const copy = {
       subtitle: "月額プランのお申し込みです。内容を確認のうえ、お支払いにお進みください。",
       demoBanner:
         "これはデモの決済画面です。実際の課金は発生せず、Stripe 等の決済プロバイダは未接続です。",
-      stripeLiveBanner: "",
       orderSummary: "ご注文内容",
       planLabel: "プラン",
       monthly: "月額",
@@ -608,6 +607,9 @@ export const copy = {
       save: "保存する",
       saving: "保存中…",
       sectionPlan: "現在のプラン",
+      sectionPaidPlans: "有料プラン",
+      planUpgradeDuringTrial:
+        "トライアル終了後も続けるには、下の Starter または Pro からお申し込みください（チェックアウトで決済）。",
       trialAudience: "無料枠でお試し中です。",
       trialObservations: "最大 {limit} オブザベーションまで",
       trialDays: "{days} 日間",
@@ -989,8 +991,6 @@ export const copy = {
         "Subscribe to a monthly plan (demo). Review your order and use test card details.",
       demoBanner:
         "This is a demo checkout. No real charges are made; no payment provider is connected yet.",
-      stripeLiveBanner:
-        "Stripe is connected. Continuing to Stripe Checkout will run real payment flows (test mode or live, depending on your Stripe keys).",
       orderSummary: "Order summary",
       planLabel: "Plan",
       monthly: "Monthly",
@@ -1291,6 +1291,9 @@ export const copy = {
       save: "Save",
       saving: "Saving…",
       sectionPlan: "Current plan",
+      sectionPaidPlans: "Paid plans",
+      planUpgradeDuringTrial:
+        "To keep using Viewtrace after your trial, subscribe to Starter or Pro below (checkout handles payment).",
       trialAudience: "Exploring with a limited quota.",
       trialObservations: "Up to {limit} observations",
       trialDays: "{days}-day trial period",

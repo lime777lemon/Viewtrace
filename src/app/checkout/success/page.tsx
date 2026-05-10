@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { copy } from "@/lib/i18n";
+import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { getPlan, parsePlanId } from "@/lib/plans";
+import { getPlanLabels } from "@/lib/plans/labels";
 import { getStripe } from "@/lib/stripe";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -21,7 +23,9 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
   const plan = getPlan(planId);
   const sessionId = typeof sp.session_id === "string" ? sp.session_id.trim() : "";
   const isStripe = Boolean(sessionId);
-  const locale = sp.locale === "en" ? "en" : "ja";
+  const localeFromQuery = sp.locale === "en" || sp.locale === "ja" ? sp.locale : null;
+  const locale = localeFromQuery ?? (await getRequestLocale());
+  const planLabels = getPlanLabels(planId, locale);
   const t = copy[locale].checkout;
 
   // Best-effort: reflect the purchased plan immediately.
@@ -89,7 +93,7 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
         <p className="mt-4 text-[var(--color-ink-muted)]">
           {isStripe ? (
             <>
-              <strong className="text-[var(--color-ink)]">{plan.name}</strong>（{plan.priceLabel}）
+              <strong className="text-[var(--color-ink)]">{plan.name}</strong>（{planLabels.priceLabel}）
               {locale === "ja" ? " のお申し込みを受け付けました。" : " subscription received."}{" "}
               {t.stripeSuccessSubtitle}
             </>
@@ -97,13 +101,13 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
             <>
               {locale === "ja" ? (
                 <>
-                  プラン <strong className="text-[var(--color-ink)]">{plan.name}</strong>（{plan.priceLabel}
+                  プラン <strong className="text-[var(--color-ink)]">{plan.name}</strong>（{planLabels.priceLabel}
                   ）のお申し込みフローをシミュレートしました。実際の課金や Stripe 連携はありません。
                 </>
               ) : (
                 <>
                   Simulated checkout for <strong className="text-[var(--color-ink)]">{plan.name}</strong> (
-                  {plan.priceLabel}). No real charges.
+                  {planLabels.priceLabel}). No real charges.
                 </>
               )}
             </>
