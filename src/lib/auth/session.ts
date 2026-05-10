@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { TRIAL_CONFIG, parsePlanId, type PlanId } from "@/lib/plans";
 
@@ -27,8 +28,13 @@ export type SessionPayload = {
   trialExpired: boolean;
 };
 
-/** Supabase Auth のユーザー（JWT 検証は getUser 側で実施） */
-export async function getSession(): Promise<SessionPayload | null> {
+/**
+ * Supabase Auth のユーザー（JWT 検証は getUser 側で実施）。
+ * React `cache` で同一リクエスト内の重複呼び出しをまとめる。layout と page が並列で
+ * getSession すると getUser が二重に走り、リフレッシュトークンのローテーション競合で
+ * 一瞬セッションが無い扱いになり /login に飛ぶことがある。
+ */
+export const getSession = cache(async (): Promise<SessionPayload | null> => {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -92,4 +98,4 @@ export async function getSession(): Promise<SessionPayload | null> {
     trialEndsAt,
     trialExpired,
   };
-}
+});

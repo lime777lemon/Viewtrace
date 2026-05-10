@@ -6,6 +6,9 @@ import { getPlan, TRIAL_CONFIG } from "@/lib/plans";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { getPlanLabels, getTrialPlanUi } from "@/lib/plans/labels";
 
+/** Cookie セッションを毎リクエスト評価（静的化による古いセッション扱いを避ける） */
+export const dynamic = "force-dynamic";
+
 export default async function DashboardLayout({
   children,
 }: Readonly<{
