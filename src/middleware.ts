@@ -39,19 +39,16 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // セッションの更新・Cookie 反映のため getUser を呼ぶ（公式推奨の直後に置く）。
+  await supabase.auth.getUser();
 
   if (request.cookies.get(SESSION_COOKIE)) {
     supabaseResponse.cookies.delete(SESSION_COOKIE);
   }
 
-  if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
-    const u = request.nextUrl.clone();
-    u.pathname = "/login";
-    return NextResponse.redirect(u);
-  }
+  // 未ログインのリダイレクトは dashboard/layout.tsx の getSession() に任せる。
+  // Edge の getUser が一時的に user を返さない・Link プリフェッチのタイミングで
+  // 誤って /login へ飛ばすことがある（サイドナビ押下でログイン画面になる現象）。
 
   return supabaseResponse;
 }
