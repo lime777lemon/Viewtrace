@@ -10,7 +10,7 @@ import {
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 /** メール確認・モバイル回線などで exchange が遅いことがあるため余裕を持つ */
-const EXCHANGE_CODE_FOR_SESSION_MS = 60_000;
+const EXCHANGE_CODE_FOR_SESSION_MS = 90_000;
 
 function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -28,6 +28,12 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
   });
 }
 
+/**
+ * React Strict Mode（開発）で useEffect が即リマウントされ、同じ PKCE code で exchange が
+ * 二重起動して競合・タイムアウトしやすい。同一 code の同時実行を抑止する。
+ */
+const pkceExchangeInFlight = new Set<string>();
+
 function OAuthCompleteInner() {
   const sp = useSearchParams();
   const router = useRouter();
@@ -44,7 +50,10 @@ function OAuthCompleteInner() {
       return;
     }
 
-    let cancelled = false;
+    if (pkceExchangeInFlight.has(authCode)) {
+      return;
+    }
+    pkceExchangeInFlight.add(authCode);
 
     async function run() {
       const code = authCode;
@@ -56,7 +65,6 @@ function OAuthCompleteInner() {
           EXCHANGE_CODE_FOR_SESSION_MS,
           "exchangeCodeForSession",
         );
-        if (cancelled) return;
         if (error) {
           router.replace(
             `/auth/auth-code-error?reason=${encodeURIComponent(error.message ?? "exchange_failed")}`,
@@ -65,29 +73,23 @@ function OAuthCompleteInner() {
         }
 
         const { data: sessionCheck } = await supabase.auth.getSession();
-        if (cancelled) return;
         if (!sessionCheck.session) {
           router.replace("/auth/auth-code-error?reason=no_session_after_exchange");
           return;
         }
 
         await postAuthSideEffectsBeforeNavigate();
-        if (cancelled) return;
         window.location.replace(absoluteUrlForNextPath(nextPath));
       } catch (e) {
-        if (cancelled) return;
         const msg = e instanceof Error ? e.message : "unknown_error";
         setMessage("エラーが発生しました。ログインへ移動します…");
         router.replace(`/auth/auth-code-error?reason=${encodeURIComponent(msg)}`);
+      } finally {
+        pkceExchangeInFlight.delete(authCode);
       }
     }
 
     void run();
-    return () => {
-      cancelled = true;
-    };
-    // useSearchParams のオブジェクト参照はレンダーごとに変わりうる。プリミティブだけに依存しないと
-    // クリーンアップで exchange が毎回キャンセルされ、画面が止まったままになる。
   }, [authCode, nextRaw, router]);
 
   return (
