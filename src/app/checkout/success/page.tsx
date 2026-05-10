@@ -75,8 +75,8 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--color-surface)] text-[var(--color-ink)]">
-      <header className="border-b border-[var(--color-border)] bg-[var(--color-surface-elevated)]">
+    <div className="min-h-screen bg-surface text-ink">
+      <header className="border-b border-border bg-surface-elevated">
         <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-4 sm:px-6">
           <Link href="/" className="font-display text-lg font-semibold">
             Viewtrace
@@ -84,16 +84,16 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
         </div>
       </header>
       <main className="mx-auto max-w-lg px-4 py-16 sm:px-6">
-        <p className="text-sm font-medium text-[var(--color-accent)]">
+        <p className="text-accent text-sm font-medium">
           {isStripe ? "Stripe" : "Demo checkout"}
         </p>
         <h1 className="font-display mt-2 text-2xl font-semibold tracking-tight">
           {isStripe ? t.stripeSuccessTitle : t.successTitle}
         </h1>
-        <p className="mt-4 text-[var(--color-ink-muted)]">
+        <p className="text-ink-muted mt-4">
           {isStripe ? (
             <>
-              <strong className="text-[var(--color-ink)]">{plan.name}</strong>（{planLabels.priceLabel}）
+              <strong className="text-ink">{plan.name}</strong>（{planLabels.priceLabel}）
               {locale === "ja" ? " のお申し込みを受け付けました。" : " subscription received."}{" "}
               {t.stripeSuccessSubtitle}
             </>
@@ -101,12 +101,12 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
             <>
               {locale === "ja" ? (
                 <>
-                  プラン <strong className="text-[var(--color-ink)]">{plan.name}</strong>（{planLabels.priceLabel}
+                  プラン <strong className="text-ink">{plan.name}</strong>（{planLabels.priceLabel}
                   ）のお申し込みフローをシミュレートしました。実際の課金や Stripe 連携はありません。
                 </>
               ) : (
                 <>
-                  Simulated checkout for <strong className="text-[var(--color-ink)]">{plan.name}</strong> (
+                  Simulated checkout for <strong className="text-ink">{plan.name}</strong> (
                   {planLabels.priceLabel}). No real charges.
                 </>
               )}
@@ -114,24 +114,24 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
           )}
         </p>
         {!isStripe ? (
-          <p className="mt-4 text-sm text-[var(--color-ink-muted)]">{t.successSubtitle}</p>
+          <p className="text-ink-muted mt-4 text-sm">{t.successSubtitle}</p>
         ) : null}
         <div className="mt-10 flex flex-col gap-3 sm:flex-row">
           <Link
             href="/login"
-            className="inline-flex justify-center rounded-full bg-[var(--color-accent)] px-6 py-3 text-sm font-semibold text-white hover:bg-[var(--color-accent-hover)]"
+            className="bg-accent hover:bg-accent-hover inline-flex justify-center rounded-full px-6 py-3 text-sm font-semibold text-white"
           >
             {t.successCtaLogin}
           </Link>
           <Link
             href="/"
-            className="inline-flex justify-center rounded-full border border-[var(--color-border)] px-6 py-3 text-sm font-semibold text-[var(--color-ink)] hover:border-[var(--color-ink-muted)]/40"
+            className="border-border text-ink hover:border-ink-muted/40 inline-flex justify-center rounded-full border px-6 py-3 text-sm font-semibold"
           >
             {t.successCtaHome}
           </Link>
         </div>
-        <p className="mt-10 text-xs text-[var(--color-ink-muted)]">
-          <Link href="/tokushoho" className="text-[var(--color-accent)] underline underline-offset-2">
+        <p className="text-ink-muted mt-10 text-xs">
+          <Link href="/tokushoho" className="text-accent underline underline-offset-2">
             {locale === "ja" ? "特定商取引法に基づく表記" : "Commercial disclosure (Japan)"}
           </Link>
         </p>

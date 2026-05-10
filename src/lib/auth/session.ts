@@ -1,6 +1,61 @@
+import type { AuthError } from "@supabase/supabase-js";
 import { cache } from "react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { TRIAL_CONFIG, parsePlanId, type PlanId } from "@/lib/plans";
+
+function authErrorStatus(error: AuthError): number | undefined {
+  const s = (error as AuthError & { status?: number }).status;
+  return typeof s === "number" ? s : undefined;
+}
+
+/**
+ * 開発: 詳細。本番: message は出さず分類用フィールドのみ（ログ漏えい対策）。
+ * 「セッション Cookie が無い」系は /login の初回表示でも毎回起きうるため既定ではログしない。
+ * 追うときだけ `VIEWTRACE_AUTH_DEBUG_GET_SESSION=1`（.env.local）を付与。
+ */
+function isBenignMissingSessionError(error: AuthError): boolean {
+  if (error.name === "AuthSessionMissingError") return true;
+  const m = error.message?.toLowerCase() ?? "";
+  return m.includes("auth session missing");
+}
+
+function logGetSessionNull(error: AuthError | null, user: { id: string; email?: string | null } | null) {
+  const isDev = process.env.NODE_ENV === "development";
+  const verboseAuth = process.env.VIEWTRACE_AUTH_DEBUG_GET_SESSION === "1";
+
+  if (error) {
+    if (isBenignMissingSessionError(error)) {
+      if (isDev && verboseAuth) {
+        console.debug("[Viewtrace auth] getSession → null (no session cookie)", {
+          name: error.name,
+          message: error.message,
+          status: authErrorStatus(error),
+        });
+      }
+      return;
+    }
+    if (isDev) {
+      console.warn("[Viewtrace auth] getSession → null", error.message, {
+        name: error.name,
+        status: authErrorStatus(error),
+      });
+    } else {
+      console.warn("[Viewtrace auth] getSession → null (getUser error)", {
+        name: error.name,
+        status: authErrorStatus(error),
+      });
+    }
+    return;
+  }
+
+  if (!isDev) return;
+
+  if (!user) {
+    console.warn("[Viewtrace auth] getSession → null (no user / unauthenticated)");
+  } else if (!user.email) {
+    console.warn("[Viewtrace auth] getSession → null (user without email)", { sub: user.id });
+  }
+}
 
 export type SessionPayload = {
   email: string;
@@ -40,7 +95,10 @@ export const getSession = cache(async (): Promise<SessionPayload | null> => {
     data: { user },
     error,
   } = await supabase.auth.getUser();
-  if (error || !user?.email) return null;
+  if (error || !user?.email) {
+    logGetSessionNull(error, user);
+    return null;
+  }
   const meta = user.user_metadata as Record<string, unknown> | undefined;
   const rawPlan = typeof meta?.plan === "string" ? meta.plan : undefined;
   const plan = parsePlanId(rawPlan);
