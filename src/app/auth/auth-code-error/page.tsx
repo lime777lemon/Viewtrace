@@ -69,6 +69,12 @@ export default async function AuthCodeErrorPage({
         <p className="font-medium text-ink">よくある原因</p>
         <ul className="mt-2 list-disc space-y-1 pl-5">
           <li>
+            <strong className="font-medium text-ink">Supabase にユーザーがいること</strong>と、
+            この画面の <span className="font-mono">code</span> を
+            <strong className="font-medium text-ink">今のブラウザで交換できること</strong>は別です。メールの
+            PKCE リンクは、<strong>登録を完了したのと同じブラウザ</strong>に保存された情報と組み合わせる必要があり、スマホのメールアプリだけ・別端末だけで開くと失敗しやすいです。
+          </li>
+          <li>
             メールのリンクが PKCE の <span className="font-mono">code</span> 形式のとき、
             <strong className="font-medium text-ink">登録したのと同じブラウザ</strong>
             で開く必要があります。別端末だけで済ませるには、Supabase の確認メールテンプレートで{" "}

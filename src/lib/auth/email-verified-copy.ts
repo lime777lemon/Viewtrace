@@ -14,7 +14,7 @@ export type EmailVerifiedStrings = {
 
 export const emailVerifiedCopy: Record<EmailVerifiedLocale, EmailVerifiedStrings> = {
   en: {
-    title: "You're verified",
+    title: "Authentication successful",
     body: "Your email is confirmed. Continue on the sign-in page with the email and password you registered.",
     loginCta: "Go to sign-in page",
     dashboardCta: "Go to dashboard",
@@ -25,7 +25,7 @@ export const emailVerifiedCopy: Record<EmailVerifiedLocale, EmailVerifiedStrings
     japanese: "日本語",
   },
   ja: {
-    title: "認証しました",
+    title: "認証成功",
     body: "メールアドレスの確認が完了しました。下のボタンからログインページへ進み、登録したメールアドレスとパスワードでログインしてください。",
     loginCta: "ログインページへ",
     dashboardCta: "ダッシュボードへ",

@@ -84,7 +84,7 @@ function isAllowedRedirectOrigin(origin: string): boolean {
  * ダッシュボード貼り付け例（本文は英語のままで可）:
  * `<p><a href="{{ .ConfirmationURL }}">Confirm your mail</a></p>`
  *
- * リンク完了後はアプリ側で `/auth/email-verified`（「認証しました」画面）へ誘導する（`next` が欠けても callback の既定で同じ）。
+ * リンク完了後はアプリ側で `/auth/email-verified`（「認証成功」画面）へ誘導する（`next` が欠けても callback の既定で同じ）。
  *
  * Site URL 直下に `#access_token=…` だけ付いて戻る場合は、`SupabaseHomeAuthCapture` が fragment 処理へ回す。
  */

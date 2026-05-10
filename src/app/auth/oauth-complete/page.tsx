@@ -9,25 +9,6 @@ import {
 } from "@/lib/auth/post-auth-redirect";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
-/** メール確認・モバイル回線などで exchange が遅いことがあるため余裕を持つ */
-const EXCHANGE_CODE_FOR_SESSION_MS = 90_000;
-
-function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const t = setTimeout(() => reject(new Error(`${label}_timeout`)), ms);
-    promise.then(
-      (v) => {
-        clearTimeout(t);
-        resolve(v);
-      },
-      (e) => {
-        clearTimeout(t);
-        reject(e);
-      },
-    );
-  });
-}
-
 /**
  * React Strict Mode（開発）で useEffect が即リマウントされ、同じ PKCE code で exchange が
  * 二重起動して競合・タイムアウトしやすい。同一 code の同時実行を抑止する。
@@ -37,6 +18,7 @@ const pkceExchangeInFlight = new Set<string>();
 function OAuthCompleteInner() {
   const sp = useSearchParams();
   const router = useRouter();
+  const [phase, setPhase] = useState<"loading" | "success">("loading");
   const [message, setMessage] = useState("認証を完了しています…");
   const authCode = sp.get("code");
   const nextRaw = sp.get("next")?.trim() ?? "";
@@ -60,11 +42,9 @@ function OAuthCompleteInner() {
       if (!code) return;
       try {
         const supabase = createSupabaseBrowserClient();
-        const { error } = await withTimeout(
-          supabase.auth.exchangeCodeForSession(code),
-          EXCHANGE_CODE_FOR_SESSION_MS,
-          "exchangeCodeForSession",
-        );
+        // 人為の短いタイムアウトで切ると、実際は PKCE 失敗・別ブラウザ等なのに
+        // exchangeCodeForSession_timeout だけが出て原因が隠れる。Supabase のエラーをそのまま返す。
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
         if (error) {
           router.replace(
             `/auth/auth-code-error?reason=${encodeURIComponent(error.message ?? "exchange_failed")}`,
@@ -79,6 +59,8 @@ function OAuthCompleteInner() {
         }
 
         await postAuthSideEffectsBeforeNavigate();
+        setPhase("success");
+        await new Promise<void>((r) => setTimeout(r, 1200));
         window.location.replace(absoluteUrlForNextPath(nextPath));
       } catch (e) {
         const msg = e instanceof Error ? e.message : "unknown_error";
@@ -94,7 +76,23 @@ function OAuthCompleteInner() {
 
   return (
     <div className="mx-auto flex min-h-[40vh] max-w-md flex-col justify-center px-4 py-16 text-center">
-      <p className="text-sm text-ink-muted">{message}</p>
+      {phase === "success" ? (
+        <>
+          <p className="font-display text-2xl font-semibold tracking-tight text-emerald-800 dark:text-emerald-200">
+            認証成功
+          </p>
+          <p className="mt-3 text-sm text-ink-muted">まもなく次の画面へ移動します…</p>
+        </>
+      ) : (
+        <>
+          <p className="text-sm text-ink-muted">{message}</p>
+          <p className="mt-5 text-xs leading-relaxed text-ink-muted">
+            メールのリンクは「パスワード登録時と同じブラウザ」で開いてください。
+            別の端末やアプリ内ブラウザだけだと、確認コード（PKCE）と組み合わせられず失敗することがあります（Supabase
+            のユーザー一覧に載っていることとは別の問題です）。
+          </p>
+        </>
+      )}
     </div>
   );
 }
