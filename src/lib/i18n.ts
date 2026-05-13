@@ -160,9 +160,13 @@ export const copy = {
     },
     roiSection: {
       kicker: "ROI（目安）",
-      title: "手作業のスクショ・報告を減らして、月の工数を回収する。",
+      title: "確認にかかる時間が、どれだけプラン費を上回るかをざっくり試算",
       subtitle:
-        "入力値から「手作業をどれだけ減らせるか」を概算します。実際の削減効果は運用・体制・対象サイトにより変動します。",
+        "時給 × 1回あたりの分 × 月の回数で「いまの手間のコスト」を出し、削減率を掛けたあとプラン料を引いた目安です。",
+      flowTitle: "この試算のイメージ",
+      flowStep1: "いま：同じ画面を何度も取り直し・説明し直し",
+      flowStep2: "Viewtrace：URL・時刻・地域が揃った記録で確認が短くなる想定",
+      flowStep3: "その差を「削減できる時間」として金額化",
       planLabel: "プラン",
       planStarter: "Starter",
       planPro: "Pro",
@@ -178,10 +182,8 @@ export const copy = {
       roiLabel: "ROI（純増 / プラン費）",
       breakevenTitle: "元が取れるライン",
       breakevenLabel: "必要な確認回数（/月）",
-      breakevenHint:
-        "この回数以上の確認をしているなら、削減だけでプラン費用を回収しやすい目安です。",
-      note:
-        "※ これは簡易計算です。たとえば「地域ごとの表示の問い合わせ対応」「週次レポート」「確認記録の整理」ほど、削減が出やすい傾向があります。",
+      breakevenHint: "月にこれだけの「確認」があるなら、時間の節約だけでもプランに届きやすい目安です。",
+      note: "※ あくまで目安です。実際の削減はチームの進め方や案件によって変わります。",
     },
     howTitle: "仕組み",
     steps: [
@@ -864,9 +866,13 @@ export const copy = {
     },
     roiSection: {
       kicker: "ROI (estimate)",
-      title: "Turn client “proof” into a workflow—and win back hours each month.",
+      title: "A quick check: does saved time outweigh the plan price?",
       subtitle:
-        "Estimate time and cost savings when checks become structured records (URL, time, location) with history and integrity checks.",
+        "We multiply hourly rate × minutes per check × checks per month, apply your savings rate, then subtract the plan fee. Rough by design.",
+      flowTitle: "What the model imagines",
+      flowStep1: "Today: repeat captures and explanations",
+      flowStep2: "With Viewtrace: fewer repeats when URL, time, and place stay attached",
+      flowStep3: "We turn that gap into “hours saved” and dollars",
       planLabel: "Plan",
       planStarter: "Starter",
       planPro: "Pro",
@@ -882,10 +888,8 @@ export const copy = {
       roiLabel: "ROI (net / plan)",
       breakevenTitle: "Break-even point",
       breakevenLabel: "Checks needed (/mo)",
-      breakevenHint:
-        "If you run more checks than this, time savings alone tend to cover the plan price.",
-      note:
-        "This is a simplified model. Teams see the biggest gains when client updates, weekly reporting, and “what was live?” questions stop living in scattered screenshots.",
+      breakevenHint: "Roughly how many checks per month make time savings alone cover the plan.",
+      note: "This is a rough estimate; your workflow and clients will change the outcome.",
     },
     howTitle: "How it works",
     steps: [

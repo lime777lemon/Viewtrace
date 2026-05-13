@@ -401,6 +401,58 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
               {t.roiSection.subtitle}
             </p>
 
+            <figure className="mt-8 max-w-4xl rounded-2xl border border-border bg-surface p-5 sm:p-6">
+              <figcaption className="text-xs font-bold uppercase tracking-wider text-accent">
+                {t.roiSection.flowTitle}
+              </figcaption>
+              <div className="mt-4 flex flex-col gap-3 sm:hidden">
+                <div className="rounded-xl border border-border bg-surface-elevated px-4 py-3 text-sm text-ink">
+                  <span className="font-semibold text-accent">1</span>
+                  <p className="mt-1 leading-snug">{t.roiSection.flowStep1}</p>
+                </div>
+                <p className="text-center text-lg text-ink-muted" aria-hidden>
+                  ↓
+                </p>
+                <div className="rounded-xl border border-border bg-surface-elevated px-4 py-3 text-sm text-ink">
+                  <span className="font-semibold text-accent">2</span>
+                  <p className="mt-1 leading-snug">{t.roiSection.flowStep2}</p>
+                </div>
+                <p className="text-center text-lg text-ink-muted" aria-hidden>
+                  ↓
+                </p>
+                <div className="rounded-xl border border-accent/30 bg-accent-soft/40 px-4 py-3 text-sm text-ink">
+                  <span className="font-semibold text-accent">3</span>
+                  <p className="mt-1 leading-snug">{t.roiSection.flowStep3}</p>
+                </div>
+              </div>
+              <div className="mt-4 hidden gap-4 sm:grid sm:grid-cols-[1fr_auto_1fr_auto_1fr] sm:items-center">
+                <div className="rounded-xl border border-border bg-surface-elevated px-4 py-3 text-sm text-ink">
+                  <span className="font-semibold text-accent">1</span>
+                  <p className="mt-1 leading-snug">{t.roiSection.flowStep1}</p>
+                </div>
+                <div
+                  className="text-2xl font-light text-ink-muted"
+                  aria-hidden
+                >
+                  →
+                </div>
+                <div className="rounded-xl border border-border bg-surface-elevated px-4 py-3 text-sm text-ink">
+                  <span className="font-semibold text-accent">2</span>
+                  <p className="mt-1 leading-snug">{t.roiSection.flowStep2}</p>
+                </div>
+                <div
+                  className="text-2xl font-light text-ink-muted"
+                  aria-hidden
+                >
+                  →
+                </div>
+                <div className="rounded-xl border border-accent/30 bg-accent-soft/40 px-4 py-3 text-sm text-ink">
+                  <span className="font-semibold text-accent">3</span>
+                  <p className="mt-1 leading-snug">{t.roiSection.flowStep3}</p>
+                </div>
+              </div>
+            </figure>
+
             <div className="mt-10 grid gap-6 lg:grid-cols-2">
               <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
                 <p className="text-sm font-semibold text-ink">{t.roiSection.inputsTitle}</p>
