@@ -92,9 +92,7 @@ export async function runUrlPreviewFetch(
   }
 
   /** 自前 fetch が届かないときでも、Microlink 側の取得でスナップショット URL だけ確保する */
-  async function tryMicrolinkAfterFetchFailure(
-    kind: "timeout" | "network_error",
-  ): Promise<UrlPreviewResult | null> {
+  async function tryMicrolinkAfterFetchFailure(): Promise<UrlPreviewResult | null> {
     if (!screenshotFallback) return null;
     const imageOut = await fetchMicrolinkScreenshotUrl(target, {
       fullPage: fullPageScreenshot,
@@ -113,7 +111,7 @@ export async function runUrlPreviewFetch(
   }
 
   async function failFetch(kind: "timeout" | "network_error"): Promise<UrlPreviewResult> {
-    const ml = await tryMicrolinkAfterFetchFailure(kind);
+    const ml = await tryMicrolinkAfterFetchFailure();
     return ml ?? { ok: false, error: kind };
   }
 
@@ -240,7 +238,7 @@ export async function runUrlPreviewFetch(
       errCode,
       errMsg: errMsg.slice(0, 300),
     });
-    const ml = await tryMicrolinkAfterFetchFailure(kind);
+    const ml = await tryMicrolinkAfterFetchFailure();
     return ml ?? { ok: false, error: kind };
   }
 }

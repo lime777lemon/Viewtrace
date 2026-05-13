@@ -9,7 +9,6 @@ import {
 } from "@/lib/auth/form-helpers";
 import type { LoginLocale } from "@/lib/auth/login-copy";
 import { buildSignupEmailRedirectTo } from "@/lib/auth/signup-email-redirect";
-import { POST_EMAIL_VERIFY_PATH } from "@/lib/auth/email-verified-copy";
 import { loginPageCopy } from "@/lib/auth/login-copy";
 import { postAuthSideEffectsBeforeNavigate } from "@/lib/auth/post-auth-redirect";
 import { siteOrigin } from "@/lib/site";
