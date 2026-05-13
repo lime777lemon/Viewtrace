@@ -8,7 +8,6 @@ import { getPlan } from "@/lib/plans";
 import { copy } from "@/lib/i18n";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { getRegionLabelForLocale, getRegionOptions } from "@/lib/regions";
-import { getScheduledObservationEnvStatus } from "@/lib/scheduled-observation-env";
 import type { ObservationWatchPanelCopy } from "@/components/dashboard/ObservationWatchPanel";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -117,8 +116,6 @@ export default async function AutoObservationsPage({
     label: getRegionLabelForLocale(o, locale),
   }));
 
-  const envStatus = getScheduledObservationEnvStatus();
-
   return (
     <AutoObservationsClient
       watches={watches}
@@ -130,8 +127,6 @@ export default async function AutoObservationsPage({
       showInvalidRegionBanner={sp.error === "invalid_region"}
       showSaveErrorBanner={sp.error === "save"}
       showSavedRowBanner={sp.saved === "row"}
-      envStatus={envStatus}
-      accountEmailConfigured={Boolean(session.email?.trim())}
     />
   );
 }

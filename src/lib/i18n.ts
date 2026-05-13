@@ -441,22 +441,6 @@ export const copy = {
       savedListRowBody: "この行の設定をサーバーに保存しました。下の要約と一覧は、保存された内容を表示しています。",
       observeNow: "今観測する",
       observeNowPending: "観測を実行中…",
-      deliveryStatusTitle: "定期実行・メール通知が届くための環境",
-      deliveryStatusIntro:
-        "「実行のたびに結果を送る」を保存したあと、次の項目がすべて満たされていると、スケジュールに沿った自動観測とメール通知が動きます。",
-      deliveryItemCronSecret: "CRON_SECRET（Vercel の環境変数。手動実行時は Authorization: Bearer と同じ値）",
-      deliveryItemSupabaseAdmin: "SUPABASE_SERVICE_ROLE_KEY と NEXT_PUBLIC_SUPABASE_URL（Cron が DB と通知先メール取得に使用）",
-      deliveryItemResend: "RESEND_API_KEY（任意で RESEND_FROM。未設定だとメールは送られません）",
-      deliveryItemBrowserless: "BROWSERLESS_TOKEN（スクリーンショット取得）",
-      deliveryItemVercel: "Vercel へのデプロイ（VERCEL=1 のとき Cron がスケジュール実行されます）",
-      deliveryItemAccountEmail: "アカウントの登録メール（通知先。ログインに使っているメール）",
-      deliveryConfigured: "設定済み",
-      deliveryNotConfigured: "未設定",
-      deliveryAccountEmailOk: "利用可能",
-      deliveryLocalNote:
-        "※ ローカル（npm run dev）では Vercel の Cron は動きません。本番またはプレビュー URL で確認してください。",
-      deliveryCaptureFailureNote:
-        "※ 定期実行のうち、画面の取得に失敗した回は、その回のオブザベーション記録もメール通知も行われません。次のスケジュールで再試行されます。",
     },
     dashboardAudit: {
       back: "概要へ",
@@ -1168,22 +1152,6 @@ export const copy = {
         "This row’s settings were saved. The summary and list below reflect what is stored on the server.",
       observeNow: "Run observation now",
       observeNowPending: "Running…",
-      deliveryStatusTitle: "Environment for scheduled runs and email",
-      deliveryStatusIntro:
-        "After you save “Send after every run”, all of the following must be satisfied for scheduled captures and emails to work.",
-      deliveryItemCronSecret: "CRON_SECRET (Vercel env; manual runs use Authorization: Bearer with the same value)",
-      deliveryItemSupabaseAdmin: "SUPABASE_SERVICE_ROLE_KEY and NEXT_PUBLIC_SUPABASE_URL (Cron uses admin for DB and recipient email)",
-      deliveryItemResend: "RESEND_API_KEY (optional RESEND_FROM; without this, no email is sent)",
-      deliveryItemBrowserless: "BROWSERLESS_TOKEN (screenshot capture)",
-      deliveryItemVercel: "Deployed on Vercel (when VERCEL=1, project Cron can trigger this route)",
-      deliveryItemAccountEmail: "Account email (login email used as notification recipient)",
-      deliveryConfigured: "Configured",
-      deliveryNotConfigured: "Not set",
-      deliveryAccountEmailOk: "OK",
-      deliveryLocalNote:
-        "Note: Vercel Cron does not run on localhost (npm run dev). Verify on production or preview deployment.",
-      deliveryCaptureFailureNote:
-        "If a scheduled run cannot capture the page, no observation is saved and no email is sent for that run. The next scheduled run will try again.",
     },
     dashboardAudit: {
       back: "Overview",
