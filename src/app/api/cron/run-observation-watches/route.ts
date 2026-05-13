@@ -14,7 +14,7 @@ import {
 import { uploadObservationSnapshotPng } from "@/lib/observation-snapshot-storage";
 import pixelmatch from "pixelmatch";
 import { PNG } from "pngjs";
-import { sendResendEmail } from "@/lib/resend";
+import { sendResendEmail, isResendConfigured } from "@/lib/resend";
 import { siteOrigin } from "@/lib/site";
 
 export const runtime = "nodejs";
@@ -238,42 +238,48 @@ export async function POST(req: Request) {
 
     const detailUrl = `${siteOrigin}/dashboard/observations/${obsId}`;
 
-    if (notifyMode === "always" && userEmail) {
-      const subject = "Viewtrace: scheduled observation / 定期自動観測";
-      const text = [
-        "A new scheduled observation was recorded.",
-        "新しい定期自動観測の記録が追加されました。",
-        "",
-        `URL: ${url}`,
-        `Region / 地域: ${region}`,
-        blobUrl ? `Snapshot / スナップショット: ${blobUrl}` : "Snapshot: not stored (check dashboard).",
-        "",
-        `Open record / 記録を開く: ${detailUrl}`,
-      ].join("\n");
-      const html = [
-        "<p>A new scheduled observation was recorded.</p>",
-        "<p>新しい定期自動観測の記録が追加されました。</p>",
-        `<p><strong>URL</strong><br/>${escapeHtml(url)}</p>`,
-        `<p><strong>Region</strong> / 地域<br/>${escapeHtml(region)}</p>`,
-        blobUrl
-          ? `<p><a href="${escapeHtml(blobUrl)}">Snapshot link</a></p>`
-          : "<p>Snapshot was not stored to Blob; open the dashboard for details.</p>",
-        `<p><a href="${escapeHtml(detailUrl)}">Open record / 記録を開く</a></p>`,
-      ].join("");
-
-      const res = await sendResendEmail({ to: userEmail, subject, text, html });
-      if (res.ok) {
-        notified += 1;
-        await svc
-          .from("observation_watches")
-          .update({ last_notified_at: new Date().toISOString() })
-          .eq("id", watchId);
+    if (notifyMode === "always") {
+      if (!userEmail) {
+        console.warn("[cron] email skipped: user_email_missing", { watchId, userId });
+      } else if (!isResendConfigured()) {
+        console.warn("[cron] email skipped: resend_not_configured", { watchId, userId });
       } else {
-        console.warn("[cron] email failed", { watchId, error: res.error });
+        const subject = "Viewtrace: scheduled observation / 定期自動観測";
+        const text = [
+          "A new scheduled observation was recorded.",
+          "新しい定期自動観測の記録が追加されました。",
+          "",
+          `URL: ${url}`,
+          `Region / 地域: ${region}`,
+          blobUrl ? `Snapshot / スナップショット: ${blobUrl}` : "Snapshot: not stored (check dashboard).",
+          "",
+          `Open record / 記録を開く: ${detailUrl}`,
+        ].join("\n");
+        const html = [
+          "<p>A new scheduled observation was recorded.</p>",
+          "<p>新しい定期自動観測の記録が追加されました。</p>",
+          `<p><strong>URL</strong><br/>${escapeHtml(url)}</p>`,
+          `<p><strong>Region</strong> / 地域<br/>${escapeHtml(region)}</p>`,
+          blobUrl
+            ? `<p><a href="${escapeHtml(blobUrl)}">Snapshot link</a></p>`
+            : "<p>Snapshot was not stored to Blob; open the dashboard for details.</p>",
+          `<p><a href="${escapeHtml(detailUrl)}">Open record / 記録を開く</a></p>`,
+        ].join("");
+
+        const res = await sendResendEmail({ to: userEmail, subject, text, html });
+        if (res.ok) {
+          notified += 1;
+          await svc
+            .from("observation_watches")
+            .update({ last_notified_at: new Date().toISOString() })
+            .eq("id", watchId);
+        } else {
+          console.warn("[cron] email failed", { watchId, userId, error: res.error });
+        }
       }
     }
 
-    if (notifyMode === "change_only" && blobUrl && userEmail) {
+    if (notifyMode === "change_only" && blobUrl) {
       const { data: recent } = await svc
         .from("observations")
         .select("id,snapshot_image_url,captured_at")
@@ -292,29 +298,35 @@ export async function POST(req: Request) {
       await svc.from("observation_watches").update({ last_diff_ratio: ratio }).eq("id", watchId);
 
       if (ratio !== null && ratio >= threshold) {
-        const subject = `Viewtrace: 変化を検知しました（${Math.round(ratio * 1000) / 10}%）`;
-        const text = [
-          "差分が大きい変更を検知しました。",
-          "",
-          `URL: ${url}`,
-          `地域: ${region}`,
-          `差分率: ${Math.round(ratio * 1000) / 10}%`,
-          "",
-          `最新スナップショット: ${a.snapshot_image_url}`,
-          `前回スナップショット: ${b.snapshot_image_url}`,
-          "",
-          `記録: ${detailUrl}`,
-        ].join("\n");
-
-        const res = await sendResendEmail({ to: userEmail, subject, text });
-        if (res.ok) {
-          notified += 1;
-          await svc
-            .from("observation_watches")
-            .update({ last_notified_at: new Date().toISOString() })
-            .eq("id", watchId);
+        if (!userEmail) {
+          console.warn("[cron] email skipped: user_email_missing", { watchId, userId });
+        } else if (!isResendConfigured()) {
+          console.warn("[cron] email skipped: resend_not_configured", { watchId, userId });
         } else {
-          console.warn("[cron] email failed", { watchId, error: res.error });
+          const subject = `Viewtrace: 変化を検知しました（${Math.round(ratio * 1000) / 10}%）`;
+          const text = [
+            "差分が大きい変更を検知しました。",
+            "",
+            `URL: ${url}`,
+            `地域: ${region}`,
+            `差分率: ${Math.round(ratio * 1000) / 10}%`,
+            "",
+            `最新スナップショット: ${a.snapshot_image_url}`,
+            `前回スナップショット: ${b.snapshot_image_url}`,
+            "",
+            `記録: ${detailUrl}`,
+          ].join("\n");
+
+          const res = await sendResendEmail({ to: userEmail, subject, text });
+          if (res.ok) {
+            notified += 1;
+            await svc
+              .from("observation_watches")
+              .update({ last_notified_at: new Date().toISOString() })
+              .eq("id", watchId);
+          } else {
+            console.warn("[cron] email failed", { watchId, userId, error: res.error });
+          }
         }
       }
     }

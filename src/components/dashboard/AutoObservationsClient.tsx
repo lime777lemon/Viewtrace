@@ -15,6 +15,7 @@ import {
   type WatchFrequency,
   type WatchNotifyMode,
 } from "@/lib/observation-watch-schedule";
+import type { ScheduledObservationEnvStatus } from "@/lib/scheduled-observation-env";
 
 function ObserveNowSubmitButton({ label, pendingLabel }: { label: string; pendingLabel: string }) {
   const { pending } = useFormStatus();
@@ -69,6 +70,19 @@ export type AutoObservationsCopy = {
   savedListRowBody: string;
   observeNow: string;
   observeNowPending: string;
+  deliveryStatusTitle: string;
+  deliveryStatusIntro: string;
+  deliveryItemCronSecret: string;
+  deliveryItemSupabaseAdmin: string;
+  deliveryItemResend: string;
+  deliveryItemBrowserless: string;
+  deliveryItemVercel: string;
+  deliveryItemAccountEmail: string;
+  deliveryConfigured: string;
+  deliveryNotConfigured: string;
+  deliveryAccountEmailOk: string;
+  deliveryLocalNote: string;
+  deliveryCaptureFailureNote: string;
 };
 
 type RegionOption = { value: string; label: string };
@@ -83,6 +97,8 @@ type Props = {
   showInvalidRegionBanner: boolean;
   showSaveErrorBanner: boolean;
   showSavedRowBanner: boolean;
+  envStatus: ScheduledObservationEnvStatus;
+  accountEmailConfigured: boolean;
 };
 
 export function AutoObservationsClient({
@@ -95,6 +111,8 @@ export function AutoObservationsClient({
   showInvalidRegionBanner,
   showSaveErrorBanner,
   showSavedRowBanner,
+  envStatus,
+  accountEmailConfigured,
 }: Props) {
   const defaultRegion = regions[0]?.value ?? "US-CA";
 
@@ -198,6 +216,51 @@ export function AutoObservationsClient({
           <p className="mt-1 text-xs leading-relaxed text-emerald-900/95">{copy.savedListRowBody}</p>
         </div>
       ) : null}
+
+      <section className="rounded-2xl border border-border bg-surface-elevated p-6">
+        <h2 className="text-sm font-semibold text-ink">{copy.deliveryStatusTitle}</h2>
+        <p className="mt-2 text-xs leading-relaxed text-ink-muted sm:text-sm">{copy.deliveryStatusIntro}</p>
+        <ul className="mt-4 divide-y divide-border rounded-lg border border-border bg-surface px-3 sm:px-4">
+          <li className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-sm">
+            <span className="text-ink-muted">{copy.deliveryItemCronSecret}</span>
+            <span className={envStatus.cronSecret ? "font-semibold text-emerald-800" : "font-semibold text-amber-800"}>
+              {envStatus.cronSecret ? copy.deliveryConfigured : copy.deliveryNotConfigured}
+            </span>
+          </li>
+          <li className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-sm">
+            <span className="text-ink-muted">{copy.deliveryItemSupabaseAdmin}</span>
+            <span className={envStatus.supabaseAdmin ? "font-semibold text-emerald-800" : "font-semibold text-amber-800"}>
+              {envStatus.supabaseAdmin ? copy.deliveryConfigured : copy.deliveryNotConfigured}
+            </span>
+          </li>
+          <li className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-sm">
+            <span className="text-ink-muted">{copy.deliveryItemResend}</span>
+            <span className={envStatus.resend ? "font-semibold text-emerald-800" : "font-semibold text-amber-800"}>
+              {envStatus.resend ? copy.deliveryConfigured : copy.deliveryNotConfigured}
+            </span>
+          </li>
+          <li className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-sm">
+            <span className="text-ink-muted">{copy.deliveryItemBrowserless}</span>
+            <span className={envStatus.browserless ? "font-semibold text-emerald-800" : "font-semibold text-amber-800"}>
+              {envStatus.browserless ? copy.deliveryConfigured : copy.deliveryNotConfigured}
+            </span>
+          </li>
+          <li className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-sm">
+            <span className="text-ink-muted">{copy.deliveryItemVercel}</span>
+            <span className={envStatus.onVercel ? "font-semibold text-emerald-800" : "font-semibold text-amber-800"}>
+              {envStatus.onVercel ? copy.deliveryConfigured : copy.deliveryNotConfigured}
+            </span>
+          </li>
+          <li className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-sm">
+            <span className="text-ink-muted">{copy.deliveryItemAccountEmail}</span>
+            <span className={accountEmailConfigured ? "font-semibold text-emerald-800" : "font-semibold text-amber-800"}>
+              {accountEmailConfigured ? copy.deliveryAccountEmailOk : copy.deliveryNotConfigured}
+            </span>
+          </li>
+        </ul>
+        <p className="mt-3 text-xs leading-relaxed text-ink-muted">{copy.deliveryLocalNote}</p>
+        <p className="mt-2 text-xs leading-relaxed text-ink-muted">{copy.deliveryCaptureFailureNote}</p>
+      </section>
 
       <section className="rounded-2xl border border-border bg-surface-elevated p-6">
         <h2 className="text-sm font-semibold text-ink">{copy.addTitle}</h2>
