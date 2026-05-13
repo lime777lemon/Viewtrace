@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { RegionSearchSection } from "@/components/RegionSearchSection";
 import { copy, type Locale } from "@/lib/i18n";
 import { LOCALE_COOKIE } from "@/lib/i18n/locale-cookie";
@@ -51,10 +51,31 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
   const [roiMinutesPerCheck, setRoiMinutesPerCheck] = useState<number>(8);
   const [roiChecksPerMonth, setRoiChecksPerMonth] = useState<number>(120);
   const [roiSavingsRate, setRoiSavingsRate] = useState<number>(0.6);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const mobileNavRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     document.documentElement.lang = locale === "ja" ? "ja" : "en";
   }, [locale]);
+
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+    function handlePointerDown(event: PointerEvent) {
+      const el = mobileNavRef.current;
+      if (el && !el.contains(event.target as Node)) {
+        setMobileNavOpen(false);
+      }
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setMobileNavOpen(false);
+    }
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [mobileNavOpen]);
 
   function persistLocale(next: Locale) {
     const maxAgeDays = 365;
@@ -94,11 +115,11 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-50 border-b border-border bg-surface/90 backdrop-blur-md">
-        <div className="mx-auto max-w-6xl space-y-3 px-4 py-3 sm:px-6">
+        <div className="mx-auto max-w-6xl px-4 py-3 sm:px-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <a
               href="#top"
-              className="font-display text-lg font-semibold tracking-tight text-ink"
+              className="font-display text-xl font-semibold tracking-tight text-[#276248] transition hover:opacity-90"
             >
               Viewtrace
             </a>
@@ -120,6 +141,90 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
               </a>
             </nav>
             <div className="flex items-center gap-2 sm:gap-3">
+              <div className="relative lg:hidden" ref={mobileNavRef}>
+                <button
+                  type="button"
+                  id="landing-mobile-nav-trigger"
+                  aria-expanded={mobileNavOpen}
+                  aria-controls="landing-mobile-nav-panel"
+                  aria-haspopup="true"
+                  onClick={() => setMobileNavOpen((open) => !open)}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-elevated px-3 py-1.5 text-sm font-medium text-ink transition hover:border-ink-muted/40 hover:bg-border/20"
+                >
+                  {t.nav.menu}
+                  <svg
+                    className={`h-4 w-4 shrink-0 text-ink-muted transition ${mobileNavOpen ? "rotate-180" : ""}`}
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.94a.75.75 0 111.08 1.04l-4.24 4.5a.75.75 0 01-1.08 0l-4.24-4.5a.75.75 0 01.02-1.06z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+                {mobileNavOpen ? (
+                  <div
+                    id="landing-mobile-nav-panel"
+                    role="menu"
+                    aria-labelledby="landing-mobile-nav-trigger"
+                    className="absolute right-0 z-50 mt-2 min-w-48 overflow-hidden rounded-xl border border-border bg-surface py-1 shadow-lg"
+                  >
+                    <a
+                      href="#pricing"
+                      role="menuitem"
+                      className="block px-4 py-2.5 text-sm font-medium text-ink-muted transition hover:bg-border/30 hover:text-ink"
+                      onClick={() => setMobileNavOpen(false)}
+                    >
+                      {t.nav.pricing}
+                    </a>
+                    <a
+                      href="#region-search"
+                      role="menuitem"
+                      className="block px-4 py-2.5 text-sm font-medium text-ink-muted transition hover:bg-border/30 hover:text-ink"
+                      onClick={() => setMobileNavOpen(false)}
+                    >
+                      {t.nav.regionSearch}
+                    </a>
+                    <a
+                      href="#roi"
+                      role="menuitem"
+                      className="block px-4 py-2.5 text-sm font-medium text-ink-muted transition hover:bg-border/30 hover:text-ink"
+                      onClick={() => setMobileNavOpen(false)}
+                    >
+                      {t.nav.roi}
+                    </a>
+                    <a
+                      href="#faq"
+                      role="menuitem"
+                      className="block px-4 py-2.5 text-sm font-medium text-ink-muted transition hover:bg-border/30 hover:text-ink"
+                      onClick={() => setMobileNavOpen(false)}
+                    >
+                      {t.nav.faq}
+                    </a>
+                    <a
+                      href="/login"
+                      role="menuitem"
+                      className="block px-4 py-2.5 text-sm font-medium text-ink-muted transition hover:bg-border/30 hover:text-ink"
+                      onClick={() => setMobileNavOpen(false)}
+                    >
+                      {t.nav.login}
+                    </a>
+                    <div className="border-t border-border p-2 sm:hidden">
+                      <Link
+                        href="/login"
+                        role="menuitem"
+                        className="flex w-full items-center justify-center rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-accent-hover"
+                        onClick={() => setMobileNavOpen(false)}
+                      >
+                        {t.nav.trial}
+                      </Link>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
               <div className="flex rounded-full border border-border bg-surface-elevated p-0.5 text-xs font-semibold">
                 <button
                   type="button"
@@ -154,37 +259,20 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
               </Link>
             </div>
           </div>
-          <nav className="flex flex-wrap gap-4 text-xs font-medium text-ink-muted lg:hidden">
-            <a href="#pricing" className="hover:text-ink">
-              {t.nav.pricing}
-            </a>
-            <a href="#region-search" className="hover:text-ink">
-              {t.nav.regionSearch}
-            </a>
-            <a href="#roi" className="hover:text-ink">
-              {t.nav.roi}
-            </a>
-            <a href="#faq" className="hover:text-ink">
-              {t.nav.faq}
-            </a>
-            <a href="/login" className="hover:text-ink">
-              {t.nav.login}
-            </a>
-          </nav>
         </div>
       </header>
 
       <main id="top">
         <section className="relative overflow-hidden border-b border-border">
           <div
-            className="pointer-events-none absolute -right-24 top-0 h-96 w-96 rounded-full bg-accent-soft opacity-60 blur-3xl"
+            className="pointer-events-none absolute inset-0 z-0 bg-[url('/marketing/auto-email-no-bg.png')] bg-size-[min(400px,58vw)] bg-position-[right_-4%_center] bg-no-repeat opacity-60 sm:bg-size-[min(440px,46vw)]"
             aria-hidden
           />
-          <div className="relative mx-auto max-w-6xl px-4 pb-20 pt-16 sm:px-6 sm:pt-24">
-            <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-surface-elevated px-3 py-1 text-xs font-medium text-ink-muted">
-              <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-              Viewtrace
-            </p>
+          <div
+            className="pointer-events-none absolute -right-24 top-0 z-0 h-96 w-96 rounded-full bg-accent-soft opacity-60 blur-3xl"
+            aria-hidden
+          />
+          <div className="relative z-10 mx-auto max-w-6xl px-4 pb-20 pt-16 sm:px-6 sm:pt-24">
             <h1 className="font-display max-w-3xl text-3xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl lg:text-[2.75rem] lg:leading-[1.15]">
               {t.hero.title}
             </h1>
@@ -844,7 +932,7 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
         <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
           <div className="flex flex-col gap-10 lg:flex-row lg:justify-between">
             <div>
-              <p className="font-display text-lg font-semibold">Viewtrace</p>
+              <p className="font-display text-2xl font-semibold tracking-tight text-[#276248]">Viewtrace</p>
               <p className="mt-2 max-w-sm text-sm text-surface/70">
                 {t.footer.tagline}
               </p>

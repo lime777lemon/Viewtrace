@@ -100,7 +100,10 @@ export function CheckoutClient({
     <div className="min-h-screen bg-surface text-ink">
       <header className="border-b border-border bg-surface-elevated/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
-          <Link href="/" className="font-display text-lg font-semibold">
+          <Link
+            href="/"
+            className="font-display text-xl font-semibold tracking-tight text-[#276248] transition hover:opacity-90"
+          >
             Viewtrace
           </Link>
           <div className="flex items-center gap-3">

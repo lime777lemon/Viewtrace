@@ -78,7 +78,10 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
     <div className="min-h-screen bg-surface text-ink">
       <header className="border-b border-border bg-surface-elevated">
         <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-4 sm:px-6">
-          <Link href="/" className="font-display text-lg font-semibold">
+          <Link
+            href="/"
+            className="font-display text-xl font-semibold tracking-tight text-[#276248] transition hover:opacity-90"
+          >
             Viewtrace
           </Link>
         </div>

@@ -68,7 +68,10 @@ export function DashboardShell({
       <div className="flex min-h-screen">
         <aside className="hidden w-56 shrink-0 flex-col border-r border-border bg-surface-elevated md:flex">
           <div className="border-b border-border px-4 py-4">
-            <Link href="/dashboard" className="font-display text-lg font-semibold tracking-tight">
+            <Link
+              href="/dashboard"
+              className="font-display text-xl font-semibold tracking-tight text-[#276248]"
+            >
               Viewtrace
             </Link>
             <p className="mt-1 text-[10px] font-medium uppercase tracking-wider text-ink-muted">
@@ -107,7 +110,10 @@ export function DashboardShell({
           <header className="sticky top-0 z-40 border-b border-border bg-surface/95 backdrop-blur-md">
             <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
               <div className="flex min-w-0 items-center gap-3 md:hidden">
-                <Link href="/dashboard" className="font-display font-semibold">
+                <Link
+                  href="/dashboard"
+                  className="font-display text-lg font-semibold tracking-tight text-[#276248]"
+                >
                   Viewtrace
                 </Link>
               </div>

@@ -13,24 +13,27 @@ export function EmailVerifiedView({ hasSession }: { hasSession: boolean }) {
   const t = emailVerifiedCopy[locale];
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[var(--color-surface)] text-[var(--color-ink)]">
+    <div className="relative min-h-screen overflow-hidden bg-surface text-ink">
       <div
-        className="pointer-events-none absolute -left-32 top-20 h-80 w-80 rounded-full bg-[var(--color-accent-soft)] opacity-70 blur-3xl"
+        className="pointer-events-none absolute -left-32 top-20 h-80 w-80 rounded-full bg-accent-soft opacity-70 blur-3xl"
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-[var(--color-accent-soft)] opacity-50 blur-3xl"
+        className="pointer-events-none absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-accent-soft opacity-50 blur-3xl"
         aria-hidden
       />
 
-      <header className="relative z-10 border-b border-[var(--color-border)]/80 bg-[var(--color-surface-elevated)]/80 backdrop-blur-md">
+      <header className="relative z-10 border-b border-border/80 bg-surface-elevated/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
-          <Link href="/" className="font-display text-lg font-semibold tracking-tight">
+          <Link
+            href="/"
+            className="font-display text-xl font-semibold tracking-tight text-[#276248] transition hover:opacity-90"
+          >
             Viewtrace
           </Link>
           <div className="flex flex-wrap items-center gap-3 text-sm sm:gap-4">
             <div
-              className="flex items-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] p-0.5 text-xs"
+              className="flex items-center rounded-full border border-border bg-surface p-0.5 text-xs"
               role="group"
               aria-label={t.langAria}
             >
@@ -39,8 +42,8 @@ export function EmailVerifiedView({ hasSession }: { hasSession: boolean }) {
                 onClick={() => setLocale("en")}
                 className={`rounded-full px-3 py-1.5 font-medium transition ${
                   locale === "en"
-                    ? "bg-[var(--color-accent)] text-white"
-                    : "text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"
+                    ? "bg-accent text-white"
+                    : "text-ink-muted hover:text-ink"
                 }`}
               >
                 {t.english}
@@ -50,8 +53,8 @@ export function EmailVerifiedView({ hasSession }: { hasSession: boolean }) {
                 onClick={() => setLocale("ja")}
                 className={`rounded-full px-3 py-1.5 font-medium transition ${
                   locale === "ja"
-                    ? "bg-[var(--color-accent)] text-white"
-                    : "text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"
+                    ? "bg-accent text-white"
+                    : "text-ink-muted hover:text-ink"
                 }`}
               >
                 {t.japanese}
@@ -59,7 +62,7 @@ export function EmailVerifiedView({ hasSession }: { hasSession: boolean }) {
             </div>
             <Link
               href="/"
-              className="font-medium text-[var(--color-accent)] transition hover:text-[var(--color-accent-hover)]"
+              className="font-medium text-accent transition hover:text-accent-hover"
             >
               {t.backToSite}
             </Link>
@@ -85,7 +88,7 @@ export function EmailVerifiedView({ hasSession }: { hasSession: boolean }) {
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Link
               href={`/login?mode=signin&from=${encodeURIComponent(POST_EMAIL_VERIFY_PATH)}`}
-              className="inline-flex justify-center rounded-full bg-[var(--color-accent)] px-6 py-3.5 text-sm font-semibold text-white shadow-md shadow-[var(--color-accent)]/20 transition hover:bg-[var(--color-accent-hover)]"
+              className="inline-flex justify-center rounded-full bg-accent px-6 py-3.5 text-sm font-semibold text-white shadow-md shadow-accent/20 transition hover:bg-accent-hover"
             >
               {t.loginCta}
             </Link>

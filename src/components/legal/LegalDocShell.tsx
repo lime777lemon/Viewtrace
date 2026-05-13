@@ -13,17 +13,20 @@ type LegalDocShellProps = {
 export function LegalDocShell({ locale = "ja", title, updated, children }: LegalDocShellProps) {
   const t = copy[locale].legalShell;
   return (
-    <div className="min-h-screen bg-[var(--color-surface)] text-[var(--color-ink)]">
-      <header className="border-b border-[var(--color-border)] bg-[var(--color-surface-elevated)]">
+    <div className="min-h-screen bg-surface text-ink">
+      <header className="border-b border-border bg-surface-elevated">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-          <Link href="/" className="font-display text-lg font-semibold tracking-tight">
+          <Link
+            href="/"
+            className="font-display text-xl font-semibold tracking-tight text-[#276248] transition hover:opacity-90"
+          >
             Viewtrace
           </Link>
           <div className="flex items-center gap-3">
             <LegalLocaleToggle locale={locale} />
             <Link
               href="/"
-              className="text-sm font-medium text-[var(--color-ink-muted)] transition hover:text-[var(--color-ink)]"
+              className="text-sm font-medium text-ink-muted transition hover:text-ink"
             >
               {t.backToHome}
             </Link>
@@ -31,16 +34,16 @@ export function LegalDocShell({ locale = "ja", title, updated, children }: Legal
         </div>
       </header>
       <article className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
-        <h1 className="font-display text-3xl font-semibold tracking-tight text-[var(--color-ink)]">
+        <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">
           {title}
         </h1>
         {updated ? (
-          <p className="mt-2 text-sm text-[var(--color-ink-muted)]">
+          <p className="mt-2 text-sm text-ink-muted">
             {t.updatedPrefix}
             {updated}
           </p>
         ) : null}
-        <div className="prose-custom mt-10 space-y-8 text-[var(--color-ink)]">{children}</div>
+        <div className="prose-custom mt-10 space-y-8 text-ink">{children}</div>
       </article>
     </div>
   );

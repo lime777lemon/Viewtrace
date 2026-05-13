@@ -35,7 +35,10 @@ export function LoginView({
 
       <header className="relative z-10 border-b border-border/80 bg-surface-elevated/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
-          <Link href="/" className="font-display text-lg font-semibold tracking-tight">
+          <Link
+            href="/"
+            className="font-display text-xl font-semibold tracking-tight text-[#276248] transition hover:opacity-90"
+          >
             Viewtrace
           </Link>
           <div className="flex flex-wrap items-center gap-3 text-sm sm:gap-4">
@@ -107,7 +110,7 @@ export function LoginView({
         <section className="order-1 lg:order-2">
           <div className="mx-auto w-full max-w-md rounded-2xl border border-border bg-surface-elevated p-6 shadow-lg shadow-ink/5 sm:p-8">
             <div className="text-center">
-              <p className="font-display text-lg font-semibold">Viewtrace</p>
+              <p className="font-display text-2xl font-semibold tracking-tight text-[#276248]">Viewtrace</p>
               <p className="mt-1 text-sm text-ink-muted">{t.cardSubtitle}</p>
             </div>
 

@@ -9,6 +9,7 @@ export const copy = {
       roi: "ROI",
       login: "ログイン",
       trial: "無料で始める",
+      menu: "メニュー",
     },
     hero: {
       title: "定期チェックの結果を、決まったタイミングでメールでお知らせ",
@@ -717,6 +718,7 @@ export const copy = {
       roi: "ROI",
       login: "Log in",
       trial: "Start for free",
+      menu: "Menu",
     },
     hero: {
       title: "Scheduled check results, emailed on the cadence you choose",
