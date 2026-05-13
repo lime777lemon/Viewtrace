@@ -110,7 +110,24 @@ const ALL_OBSERVATION_REGION_VALUES = new Set([
   ...getRegionOptions("pro").map((r) => r.value),
 ]);
 
+/** フォーム・クエリから来た地域コードを正規化（大小・不可視文字）。 */
+export function normalizeObservationRegionInput(value: string): string {
+  const t = value
+    .trim()
+    .replace(/[\u200B-\u200D\uFEFF]/g, "");
+  const us = t.match(/^us-([a-z]{2})$/i);
+  if (us) return `US-${us[1].toUpperCase()}`;
+  if (/^[a-z]{2}$/i.test(t) && t.length === 2) return t.toUpperCase();
+  return t;
+}
+
+/** ログイン中プランで選べる地域か（自動観測の保存など） */
+export function isValidObservationRegionForPlan(planId: PlanId, value: string): boolean {
+  const normalized = normalizeObservationRegionInput(value);
+  return getRegionOptions(planId).some((o) => o.value === normalized);
+}
+
 /** API 等で渡される region 値（US-CA, GB など）が UI と一致するか */
 export function isValidObservationRegion(value: string): boolean {
-  return ALL_OBSERVATION_REGION_VALUES.has(value.trim());
+  return ALL_OBSERVATION_REGION_VALUES.has(normalizeObservationRegionInput(value));
 }

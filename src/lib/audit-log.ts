@@ -10,6 +10,13 @@ export const AUDIT_ACTION = {
   AUTH_SIGN_OUT: "auth.sign_out",
 } as const;
 
+/** crypto.randomUUID 等の標準 36 文字形式（大文字小文字可） */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function isAuditObservationId(value: string): boolean {
+  return UUID_RE.test(value.trim());
+}
+
 function stableMetaJson(meta: Record<string, unknown>): string {
   if (!meta || Object.keys(meta).length === 0) return "{}";
   const keys = Object.keys(meta).sort();
@@ -18,23 +25,46 @@ function stableMetaJson(meta: Record<string, unknown>): string {
   return JSON.stringify(o);
 }
 
+/** システムイベント（認証・CSV 等）— resource_type / resource_id は DB 上 NULL */
+export type AppendAuditSystemEventInput = {
+  scope: "system";
+  action: string;
+  meta?: Record<string, unknown>;
+};
+
+/** オブザベーションに紐づくイベント — resource_type = observation, resource_id = UUID 必須 */
+export type AppendAuditObservationEventInput = {
+  scope: "observation";
+  action: string;
+  observationId: string;
+  meta?: Record<string, unknown>;
+};
+
+export type AppendAuditEventInput = AppendAuditSystemEventInput | AppendAuditObservationEventInput;
+
 /**
  * ログイン済みセッション向けにアプリ内監査ログへ行を追記する。
  * 失敗してもユーザー操作は止めない（コンソールに警告）。
+ *
+ * DB 制約（移行適用後）: (resource_type, resource_id) は (NULL,NULL) または ('observation', uuid) のみ。
  */
-export async function appendAuditEvent(
-  supabase: SupabaseClient,
-  input: {
-    action: string;
-    resourceType?: string | null;
-    resourceId?: string | null;
-    meta?: Record<string, unknown>;
-  },
-): Promise<void> {
+export async function appendAuditEvent(supabase: SupabaseClient, input: AppendAuditEventInput): Promise<void> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user?.id) return;
+
+  let resourceType: string | null = null;
+  let resourceId: string | null = null;
+  if (input.scope === "observation") {
+    const id = input.observationId.trim();
+    if (!isAuditObservationId(id)) {
+      console.warn("[audit] skip insert: invalid observation UUID", { action: input.action });
+      return;
+    }
+    resourceType = "observation";
+    resourceId = id;
+  }
 
   const { data: lastRow } = await supabase
     .from("audit_events")
@@ -50,8 +80,8 @@ export async function appendAuditEvent(
     prev,
     user.id,
     input.action,
-    input.resourceType ?? "",
-    input.resourceId ?? "",
+    resourceType ?? "",
+    resourceId ?? "",
     createdAt,
     stableMetaJson(input.meta ?? {}),
   ].join("|");
@@ -61,8 +91,8 @@ export async function appendAuditEvent(
   const { error } = await supabase.from("audit_events").insert({
     user_id: user.id,
     action: input.action,
-    resource_type: input.resourceType ?? null,
-    resource_id: input.resourceId ?? null,
+    resource_type: resourceType,
+    resource_id: resourceId,
     meta: input.meta ?? {},
     chain_hash: chainHash,
     created_at: createdAt,

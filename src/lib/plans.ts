@@ -17,6 +17,8 @@ export type PlanDefinition = {
   allUsStates: boolean;
   /** Microlink でフルページスクリーンショット（Pro） */
   snapshotFullPage: boolean;
+  /** Starter / Pro: URL を定期自動観測しメール通知 */
+  autoObservationWatch: boolean;
 };
 
 /** 無料トライアル（LP・請求設計と一致） */
@@ -40,6 +42,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     csvExport: false,
     allUsStates: false,
     snapshotFullPage: false,
+    autoObservationWatch: false,
   },
   starter: {
     id: "starter",
@@ -54,6 +57,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     csvExport: false,
     allUsStates: false,
     snapshotFullPage: false,
+    autoObservationWatch: true,
   },
   pro: {
     id: "pro",
@@ -68,6 +72,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     csvExport: true,
     allUsStates: true,
     snapshotFullPage: true,
+    autoObservationWatch: true,
   },
 };
 
@@ -102,6 +107,7 @@ export const billingConfig = {
       locations: PLANS.freeplan.locationsKey,
       csv_export: PLANS.freeplan.csvExport,
       snapshot_full_page: PLANS.freeplan.snapshotFullPage,
+      auto_observation_watch: PLANS.freeplan.autoObservationWatch,
     },
     starter: {
       name: PLANS.starter.name,
@@ -111,6 +117,7 @@ export const billingConfig = {
       locations: PLANS.starter.locationsKey,
       csv_export: PLANS.starter.csvExport,
       snapshot_full_page: PLANS.starter.snapshotFullPage,
+      auto_observation_watch: PLANS.starter.autoObservationWatch,
       ...(overageUsdSnapshot != null ? { overage_price_usd: overageUsdSnapshot } : {}),
     },
     pro: {
@@ -121,6 +128,7 @@ export const billingConfig = {
       locations: PLANS.pro.locationsKey,
       csv_export: PLANS.pro.csvExport,
       snapshot_full_page: PLANS.pro.snapshotFullPage,
+      auto_observation_watch: PLANS.pro.autoObservationWatch,
       ...(overageUsdSnapshot != null ? { overage_price_usd: overageUsdSnapshot } : {}),
     },
   },

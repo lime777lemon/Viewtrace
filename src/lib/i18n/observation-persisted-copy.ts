@@ -72,6 +72,7 @@ function localizeObservationNoteEn(note: string): string {
   let s = note;
 
   s = s.replace(/^自動観測（毎日）$/, "Daily automated observation");
+  s = s.replace(/^自動観測（定期）$/, "Scheduled automated observation");
   s = s.replace(
     /^自動観測（画像保存に失敗 — BLOB_READ_WRITE_TOKEN 未設定のため Blob に保存できません）$/,
     "Automated observation (image save failed — BLOB_READ_WRITE_TOKEN not set; could not save to Blob)",

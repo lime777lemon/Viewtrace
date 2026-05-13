@@ -2,17 +2,29 @@
 
 const MAX_HTML_BYTES = 900_000;
 
+/** 貼り付け由来の BOM・不可視文字・全角コロン／スラッシュを整える */
+function stripAndNormalizeUrlInput(input: string): string {
+  return input
+    .replace(/^\uFEFF/, "")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .replace(/[\u00A0\u3000]/g, " ")
+    .trim()
+    .replace(/\.+$/, "")
+    .replace(/\uFF1A/g, ":")
+    .replace(/\uFF0F/g, "/");
+}
+
 export function normalizeUserUrlInput(input: string): string | null {
-  const raw = input.trim().replace(/\.+$/, "");
+  const raw = stripAndNormalizeUrlInput(input);
   if (!raw) return null;
   try {
     if (/^https?:\/\//i.test(raw)) {
-      const u = new URL(raw);
+      const u = new URL(raw.replace(/ /g, "%20"));
       if (u.protocol !== "http:" && u.protocol !== "https:") return null;
       u.hash = "";
       return u.href;
     }
-    const candidate = `https://${raw}`;
+    const candidate = `https://${raw.replace(/ /g, "%20")}`;
     const u = new URL(candidate);
     if (!u.hostname.includes(".")) return null;
     u.hash = "";

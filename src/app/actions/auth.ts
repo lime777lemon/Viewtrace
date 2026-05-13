@@ -55,6 +55,7 @@ export async function authFormAction(
   }
 
   await appendAuditEvent(supabase, {
+    scope: "system",
     action: AUDIT_ACTION.AUTH_SIGN_IN,
     meta: { method: "password" },
   });
@@ -73,6 +74,7 @@ export async function logoutAction(): Promise<void> {
   } = await supabase.auth.getUser();
   if (user?.id) {
     await appendAuditEvent(supabase, {
+      scope: "system",
       action: AUDIT_ACTION.AUTH_SIGN_OUT,
       meta: {},
     });

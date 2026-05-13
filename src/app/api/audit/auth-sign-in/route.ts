@@ -22,6 +22,7 @@ export async function POST(req: Request) {
   }
 
   await appendAuditEvent(supabase, {
+    scope: "system",
     action: AUDIT_ACTION.AUTH_SIGN_IN,
     meta: { method },
   });

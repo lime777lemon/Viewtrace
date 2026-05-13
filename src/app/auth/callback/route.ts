@@ -42,6 +42,7 @@ async function finishSessionSideEffects(
 
   if (user?.id) {
     await appendAuditEvent(supabase, {
+      scope: "system",
       action: AUDIT_ACTION.AUTH_SIGN_IN,
       meta: { method: "oauth" },
     });

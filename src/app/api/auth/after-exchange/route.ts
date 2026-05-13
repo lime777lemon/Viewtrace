@@ -29,6 +29,7 @@ export async function POST(req: Request) {
     user.user_metadata as Record<string, unknown> | undefined,
   );
   await appendAuditEvent(supabase, {
+    scope: "system",
     action: AUDIT_ACTION.AUTH_SIGN_IN,
     meta: { method: "pkce_browser_exchange" },
   });

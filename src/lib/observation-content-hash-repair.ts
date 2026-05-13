@@ -46,9 +46,9 @@ export async function reconcileObservationContentHashIfNeeded(
   const reason = integrity === "missing" ? "content_hash_backfill" : "content_hash_repaired";
 
   await appendAuditEvent(supabase, {
+    scope: "observation",
     action: AUDIT_ACTION.OBSERVATION_CONTENT_HASH_SYNC,
-    resourceType: "observation",
-    resourceId: obs.id,
+    observationId: obs.id,
     meta: {
       reason,
       hash_version: OBSERVATION_CONTENT_HASH_VERSION,

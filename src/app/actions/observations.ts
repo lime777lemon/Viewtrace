@@ -269,9 +269,9 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
   });
   if (!saved.ok && saved.code === "monthly_limit") {
     await appendAuditEvent(supabase, {
+      scope: "observation",
       action: AUDIT_ACTION.OBSERVATION_RECORD,
-      resourceType: "observation",
-      resourceId: id,
+      observationId: id,
       meta: {
         result: "monthly_limit",
         urlHost: observationUrlHost(url),
@@ -283,9 +283,9 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
 
   if (saved.ok) {
     await appendAuditEvent(supabase, {
+      scope: "observation",
       action: AUDIT_ACTION.OBSERVATION_RECORD,
-      resourceType: "observation",
-      resourceId: id,
+      observationId: id,
       meta: {
         result: "saved",
         status: obs.status,

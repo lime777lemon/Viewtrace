@@ -14,14 +14,22 @@ import {
   OBSERVATION_CONTENT_HASH_VERSION,
   verifyObservationStoredHash,
 } from "@/lib/observation-content-hash";
-import { setObservationWatchEnabledAction } from "@/app/actions/observation-watches";
+import { ObservationWatchPanel } from "@/components/dashboard/ObservationWatchPanel";
+import { getPlan } from "@/lib/plans";
+import {
+  clampRepeatCount,
+  parseWatchFrequency,
+  parseWatchNotifyMode,
+  type WatchFrequency,
+  type WatchNotifyMode,
+} from "@/lib/observation-watch-schedule";
 import { copy } from "@/lib/i18n";
 import { localizeObservationNote } from "@/lib/i18n/observation-persisted-copy";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 
-type Props = { params: Promise<{ id: string }> };
+type PageProps = { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string }> };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params }: Pick<PageProps, "params">): Promise<Metadata> {
   const { id } = await params;
   const locale = await getRequestLocale();
   const session = await getSession();
@@ -41,11 +49,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function ObservationDetailPage({ params }: Props) {
+export default async function ObservationDetailPage({ params, searchParams }: PageProps) {
   const { id } = await params;
+  const sp = await searchParams;
   const locale = await getRequestLocale();
   const rt = copy[locale].observationReport;
   const t = copy[locale].observationDetail;
+  const autoObsCopy = copy[locale].dashboardAutoObs;
   const session = await getSession();
   if (!session) notFound();
   let obs = await getObservationMergedForPlan(id, session.plan);
@@ -59,17 +69,29 @@ export default async function ObservationDetailPage({ params }: Props) {
 
   obs = await reconcileObservationContentHashIfNeeded(supabase, obs);
 
+  const plan = getPlan(session.plan);
   const { data: watchRow } =
-    session.plan === "pro" && obs.regionValue
+    plan.autoObservationWatch && obs.regionValue
       ? await supabase
           .from("observation_watches")
-          .select("enabled")
+          .select(
+            "enabled,schedule_frequency,repeat_count,notify_mode",
+          )
           .eq("user_id", user.id)
           .eq("url", obs.url)
           .eq("region", obs.regionValue)
           .maybeSingle()
-      : { data: null as { enabled: boolean } | null };
+      : { data: null as Record<string, unknown> | null };
+
   const watchEnabled = Boolean(watchRow?.enabled);
+  const watchFrequency: WatchFrequency =
+    parseWatchFrequency(String(watchRow?.schedule_frequency ?? "")) ?? "daily";
+  const watchRepeat = clampRepeatCount(
+    watchFrequency,
+    typeof watchRow?.repeat_count === "number" ? watchRow.repeat_count : Number(watchRow?.repeat_count ?? 1),
+  );
+  const watchNotify: WatchNotifyMode =
+    parseWatchNotifyMode(String(watchRow?.notify_mode ?? "")) ?? "always";
 
   const live =
     obs.status === "success" && (!obs.snapshotImageUrl || !obs.pageTitle)
@@ -91,6 +113,16 @@ export default async function ObservationDetailPage({ params }: Props) {
           {t.backToList}
         </Link>
       </div>
+
+      {sp.error === "save" ? (
+        <div
+          role="alert"
+          className="rounded-lg border border-rose-300/90 bg-rose-50 px-4 py-3 text-sm text-rose-950"
+        >
+          <p className="font-semibold">{autoObsCopy.saveError}</p>
+          <p className="mt-1 text-xs leading-relaxed text-rose-900/90">{autoObsCopy.saveErrorHint}</p>
+        </div>
+      ) : null}
 
       <div className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="font-display text-2xl font-semibold tracking-tight">{t.title}</h1>
@@ -191,32 +223,33 @@ export default async function ObservationDetailPage({ params }: Props) {
           snapshotContentType={obs.snapshotContentType}
           snapshotImageUrl={obs.snapshotImageUrl}
         />
-        {session.plan === "pro" && obs.regionValue ? (
-          <div className="rounded-xl border border-border bg-surface-elevated p-4 sm:col-span-2">
-            <dt className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
-              {t.watchTitle}
-            </dt>
-            <dd className="mt-2 flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-ink">
-                {t.watchBody.replace("{region}", obs.regionLabel)}
-              </p>
-              <form action={setObservationWatchEnabledAction}>
-                <input type="hidden" name="url" value={obs.url} />
-                <input type="hidden" name="region" value={obs.regionValue} />
-                <input type="hidden" name="enabled" value={String(!watchEnabled)} />
-                <button
-                  type="submit"
-                  className={`inline-flex rounded-full px-5 py-2.5 text-sm font-semibold text-white transition ${
-                    watchEnabled
-                      ? "bg-emerald-600 hover:bg-emerald-700"
-                      : "bg-ink hover:opacity-90"
-                  }`}
-                >
-                  {watchEnabled ? t.watchEnabled : t.watchDisabled}
-                </button>
-              </form>
-            </dd>
-          </div>
+        {plan.autoObservationWatch && obs.regionValue ? (
+          <ObservationWatchPanel
+            url={obs.url}
+            regionValue={obs.regionValue}
+            regionLabel={obs.regionLabel}
+            observationId={obs.id}
+            initialEnabled={watchEnabled}
+            initialFrequency={watchFrequency}
+            initialRepeat={watchRepeat}
+            initialNotify={watchNotify}
+            copy={{
+              title: t.watchTitle,
+              intro: t.watchIntro,
+              frequencyLabel: t.watchFrequencyLabel,
+              frequencyDaily: t.watchFrequencyDaily,
+              frequencyWeekly: t.watchFrequencyWeekly,
+              frequencyMonthly: t.watchFrequencyMonthly,
+              repeatLabel: t.watchRepeatLabel,
+              notifyLabel: t.watchNotifyLabel,
+              notifyAlways: t.watchNotifyAlways,
+              notifyChangeOnly: t.watchNotifyChangeOnly,
+              monitoringOn: t.watchMonitoringOn,
+              monitoringOff: t.watchMonitoringOff,
+              monitoringStateLabel: t.watchMonitoringStateLabel,
+              save: t.watchSave,
+            }}
+          />
         ) : null}
       </dl>
 

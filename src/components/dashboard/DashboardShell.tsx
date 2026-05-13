@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { LogoutButton } from "@/components/dashboard/LogoutButton";
 import type { Locale } from "@/lib/i18n";
 import { copy } from "@/lib/i18n";
-import type { PlanId } from "@/lib/plans";
+import { getPlan, type PlanId } from "@/lib/plans";
 import { LOCALE_COOKIE } from "@/lib/i18n/locale-cookie";
 
 function isNavActive(href: string, path: string): boolean {
@@ -32,6 +32,7 @@ type DashboardShellProps = {
 
 export function DashboardShell({
   email,
+  planId,
   planName,
   locale = "ja",
   trialExpired = false,
@@ -43,10 +44,14 @@ export function DashboardShell({
 }: DashboardShellProps) {
   const currentPath = usePathname() ?? "";
   const t = copy[locale].dashboard;
+  const plan = getPlan(planId);
   const nav = [
     { href: "/dashboard", label: t.nav.overview },
     { href: "/dashboard/region-search", label: t.nav.regionSearch },
     { href: "/dashboard/observations", label: t.nav.observations },
+    ...(plan.autoObservationWatch
+      ? [{ href: "/dashboard/auto-observations" as const, label: t.nav.autoObservations }]
+      : []),
     { href: "/dashboard/audit", label: t.nav.auditLog },
     { href: "/dashboard/purchases", label: t.nav.purchases },
     { href: "/dashboard/settings", label: t.nav.settings },

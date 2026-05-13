@@ -20,8 +20,8 @@ export async function exportObservationsCsvAction(): Promise<
   const csv = observationsToCsv(rows);
 
   await appendAuditEvent(supabase, {
+    scope: "system",
     action: AUDIT_ACTION.OBSERVATIONS_EXPORT_CSV,
-    resourceType: "observations",
     meta: { rowCount: rows.length, plan: session.plan },
   });
 
