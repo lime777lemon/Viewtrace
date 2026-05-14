@@ -7,27 +7,50 @@ import { copy, type Locale } from "@/lib/i18n";
 import { LOCALE_COOKIE } from "@/lib/i18n/locale-cookie";
 import type { PlanId } from "@/lib/plans";
 import { getPlan } from "@/lib/plans";
-import { getSnapshotCapabilityCopy } from "@/lib/plans/snapshot-ui";
 import { getPlanLabels } from "@/lib/plans/labels";
 import type { StripeMode } from "@/lib/stripe";
+
+function formatOverageUsdLabel(usd: number): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: usd % 1 === 0 ? 0 : 2,
+  }).format(usd);
+}
 
 export function CheckoutClient({
   planId,
   stripeMode,
   trialBlockReason,
   initialLocale,
+  overagePerObservationUsd,
 }: {
   planId: PlanId;
   stripeMode: StripeMode;
   /** 無料トライアル終了・枠切れからのリダイレクト時のみ */
   trialBlockReason?: "trial_expired" | "trial_observation_limit";
   initialLocale: Locale;
+  overagePerObservationUsd: number | null;
 }) {
   const [locale, setLocale] = useState<Locale>(initialLocale);
-  const t = copy[locale].checkout;
+  const landing = copy[locale];
+  const t = landing.checkout;
   const plan = getPlan(planId);
   const planLabels = getPlanLabels(planId, locale);
-  const snapshotUi = getSnapshotCapabilityCopy(locale, planId);
+  const lpPlan =
+    planId === "starter" || planId === "pro"
+      ? landing.plans.find((p) => p.name === plan.name)
+      : undefined;
+  const summaryFeatures =
+    lpPlan && overagePerObservationUsd != null
+      ? [
+          ...lpPlan.features,
+          landing.planFeatureOverage.replace(
+            "{price}",
+            formatOverageUsdLabel(overagePerObservationUsd),
+          ),
+        ]
+      : lpPlan?.features;
   const [state, formAction, pending] = useActionState(demoCheckoutAction, null);
   const emailId = useId();
 
@@ -188,31 +211,46 @@ export function CheckoutClient({
           <section className="rounded-2xl border border-border bg-surface-elevated p-6 sm:p-8">
             <h2 className="font-display text-lg font-semibold">{t.orderSummary}</h2>
             <p className="mt-1 text-sm text-ink-muted">{t.planLabel}</p>
-            <p className="mt-2 font-display text-xl font-semibold">
-              {plan.name}{" "}
-              <span className="text-base font-normal text-ink-muted">
-                {planLabels.priceLabel}
-              </span>
-            </p>
-            <p className="mt-2 text-sm text-ink-muted">{planLabels.audienceLabel}</p>
-            <ul className="mt-6 space-y-2 text-sm text-ink-muted">
-              <li>
-                {t.monthly}: {plan.monthlyObservations}{" "}
-                {locale === "ja" ? "オブザベーション" : "observations"}
-              </li>
-              <li>
-                {locale === "ja" ? "保存" : "Retention"}: {plan.retentionDays}{" "}
-                {locale === "ja" ? "日" : "days"}
-              </li>
-              <li>{planLabels.coverageLabel}</li>
-              <li>
-                <span className="font-medium text-ink">{snapshotUi.marketing}</span>
-                <span className="mt-0.5 block text-xs text-ink-muted">{snapshotUi.technical}</span>
-              </li>
-              {plan.csvExport ? (
-                <li>{locale === "ja" ? "CSVエクスポート" : "CSV export"}</li>
-              ) : null}
-            </ul>
+            {lpPlan && summaryFeatures ? (
+              <>
+                <h3 className="mt-2 font-display text-xl font-semibold text-ink">{lpPlan.name}</h3>
+                <p className="mt-1 text-sm font-medium text-ink">{lpPlan.description}</p>
+                {"subdescription" in lpPlan && lpPlan.subdescription ? (
+                  <p className="mt-2 text-sm leading-relaxed text-ink-muted">{lpPlan.subdescription}</p>
+                ) : null}
+                <p className="mt-6 flex items-baseline gap-1">
+                  <span className="font-display text-3xl font-semibold text-ink">{lpPlan.price}</span>
+                  <span className="text-sm text-ink-muted">{lpPlan.period}</span>
+                </p>
+                <ul className="mt-6 space-y-2.5 text-sm text-ink-muted">
+                  {summaryFeatures.map((f) => (
+                    <li key={f} className="flex gap-2">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <>
+                <p className="mt-2 font-display text-xl font-semibold">
+                  {plan.name}{" "}
+                  <span className="text-base font-normal text-ink-muted">{planLabels.priceLabel}</span>
+                </p>
+                <p className="mt-2 text-sm text-ink-muted">{planLabels.audienceLabel}</p>
+                <ul className="mt-6 space-y-2 text-sm text-ink-muted">
+                  <li>
+                    {t.monthly}: {plan.monthlyObservations}{" "}
+                    {locale === "ja" ? "オブザベーション" : "observations"}
+                  </li>
+                  <li>
+                    {locale === "ja" ? "保存" : "Retention"}: {plan.retentionDays}{" "}
+                    {locale === "ja" ? "日" : "days"}
+                  </li>
+                  <li>{planLabels.coverageLabel}</li>
+                </ul>
+              </>
+            )}
             <p className="mt-6 text-xs text-ink-muted">{t.billedMonthly}</p>
             <p className="mt-2 text-xs text-ink-muted">{t.taxNote}</p>
           </section>

@@ -1071,7 +1071,7 @@ export const copy = {
           "Quick visual checks (viewport-sized snapshots)",
           "Status history",
           "Server timestamps & record check codes (drift detection aid)",
-          "Auto-observation (daily / weekly / monthly cadence) with email",
+          "Auto-observation (set daily / weekly / monthly run counts) with email notifications",
         ],
         cta: "Subscribe to this plan",
       },

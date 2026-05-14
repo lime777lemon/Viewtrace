@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { CheckoutClient } from "@/components/checkout/CheckoutClient";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
-import { parsePlanId } from "@/lib/plans";
+import { getOveragePerObservationUsd, parsePlanId } from "@/lib/plans";
 import { getStripeMode, isStripeCheckoutConfigured } from "@/lib/stripe";
 
 export const metadata: Metadata = {
@@ -22,6 +22,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
   const stripeConfigured = isStripeCheckoutConfigured();
   const stripeMode = stripeConfigured ? getStripeMode() : "none";
   const initialLocale = await getRequestLocale();
+  const overagePerObservationUsd = getOveragePerObservationUsd();
 
   return (
     <CheckoutClient
@@ -29,6 +30,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
       stripeMode={stripeMode}
       trialBlockReason={trialBlockReason}
       initialLocale={initialLocale}
+      overagePerObservationUsd={overagePerObservationUsd}
     />
   );
 }
