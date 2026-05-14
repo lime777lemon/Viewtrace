@@ -276,6 +276,17 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
             <h1 className="font-display max-w-3xl text-3xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl lg:text-[2.75rem] lg:leading-[1.15]">
               {t.hero.title}
             </h1>
+            <div className="mt-5 max-w-3xl space-y-3 border-l-2 border-[#276248]/45 pl-4 sm:mt-6 sm:pl-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#276248] sm:text-xs">
+                {t.hero.catchKicker}
+              </p>
+              <p className="font-display text-lg font-semibold leading-snug tracking-tight text-ink sm:text-xl">
+                {t.hero.catchLine}
+              </p>
+              <p className="font-mono text-[10px] font-medium uppercase leading-relaxed tracking-[0.12em] text-ink-muted sm:text-[11px]">
+                {t.hero.catchLexicon}
+              </p>
+            </div>
             <p className="mt-6 max-w-2xl text-lg text-ink-muted">
               {t.hero.subtitle}
             </p>

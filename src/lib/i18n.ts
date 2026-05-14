@@ -13,6 +13,10 @@ export const copy = {
     },
     hero: {
       title: "定期チェックの結果を、決まったタイミングでメールでお知らせ",
+      catchKicker: "High-fidelity geo routing",
+      catchLine:
+        "実ユーザーに近い高精度な地域ルーティングで、検証と記録をインフラのように積み上げる。説明も監査も、再現できるリプレイへ。",
+      catchLexicon: "fidelity · archival · audit-grade · verification · routing · replay",
       subtitle:
         "URL と地域を指定すれば自動で画面を記録。実行のたびに結果の概要と記録へのリンクをお届けします。差分が大きいときだけ知らせる設定も選べます。",
       punch:
@@ -786,6 +790,10 @@ export const copy = {
     },
     hero: {
       title: "Scheduled check results, emailed on the cadence you choose",
+      catchKicker: "High-fidelity geo routing",
+      catchLine:
+        "Geo routing that behaves closer to real users—archival captures, audit-grade verification, and replay your team can defend under scrutiny.",
+      catchLexicon: "fidelity · archival · audit-grade · verification · routing · replay",
       subtitle:
         "Set a URL and region and we capture the page automatically. After each run you get a short summary and a link to the saved record—or choose alerts only when the visual change is large.",
       punch: "Stop sending random screenshots. Share timestamped, location-aware records your team can revisit.",
