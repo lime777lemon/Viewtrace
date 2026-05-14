@@ -7,6 +7,7 @@ import { getPlanLabels } from "@/lib/plans/labels";
 import { getStripe } from "@/lib/stripe";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { syncPublicUserPlanMirror } from "@/lib/supabase/sync-public-user-plan";
 
 export const metadata: Metadata = {
   title: "ご注文ありがとうございます | Viewtrace",
@@ -67,6 +68,7 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
               stripe_checkout_session_id: session.id,
             },
           });
+          await syncPublicUserPlanMirror(admin, user.id, metadataPlanId);
         }
       }
     } catch {

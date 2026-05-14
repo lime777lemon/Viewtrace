@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { syncPublicUserPlanMirror } from "@/lib/supabase/sync-public-user-plan";
 
 export const runtime = "nodejs";
 
@@ -127,6 +128,8 @@ export async function POST(req: Request) {
       });
       if (updErr) {
         console.error("[stripe webhook] failed to update user metadata", updErr);
+      } else {
+        await syncPublicUserPlanMirror(admin, userId, planId);
       }
 
       // Write audit row into public.subscriptions (best-effort)

@@ -3,6 +3,7 @@ import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { syncPublicUserPlanMirror } from "@/lib/supabase/sync-public-user-plan";
 
 export const runtime = "nodejs";
 
@@ -75,6 +76,8 @@ export async function POST() {
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 502 });
   }
+
+  await syncPublicUserPlanMirror(admin, user.id, planId);
 
   return NextResponse.json({ ok: true });
 }

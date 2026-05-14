@@ -8,6 +8,8 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { insertTrialSignupRow } from "@/lib/auth/trial-signup-server";
 import { getSession } from "@/lib/auth/session";
 import { parsePlanId } from "@/lib/plans";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { syncPublicUserPlanMirror } from "@/lib/supabase/sync-public-user-plan";
 
 export type AuthFormState = { error?: string; message?: string } | null;
 
@@ -99,6 +101,10 @@ export async function switchPlanAction(formData: FormData): Promise<void> {
   });
   if (error) {
     redirect("/dashboard/settings");
+  }
+  const admin = createSupabaseAdminClient();
+  if (admin) {
+    await syncPublicUserPlanMirror(admin, user.id, plan);
   }
   redirect("/dashboard/settings");
 }
