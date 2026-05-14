@@ -1,5 +1,6 @@
 "use server";
 
+import { createHash } from "node:crypto";
 import { redirect } from "next/navigation";
 import { appendAuditEvent, AUDIT_ACTION } from "@/lib/audit-log";
 import { isValidEmail, mapAuthErrorForLocale } from "@/lib/auth/form-helpers";
@@ -10,6 +11,7 @@ import { getSession } from "@/lib/auth/session";
 import { parsePlanId } from "@/lib/plans";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { syncPublicUserPlanMirror } from "@/lib/supabase/sync-public-user-plan";
+import { insertOpsSignal } from "@/lib/ops/insert-signal";
 
 export type AuthFormState = { error?: string; message?: string } | null;
 
@@ -41,6 +43,12 @@ export async function authFormAction(
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
+    const emailFp = createHash("sha256").update(email.toLowerCase()).digest("hex").slice(0, 16);
+    void insertOpsSignal("auth_failure", {
+      email_fp: emailFp,
+      locale,
+      code: typeof error.code === "string" ? error.code : "",
+    });
     return { error: mapAuthErrorForLocale(error.message, locale) };
   }
 

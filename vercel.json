@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/run-observation-watches",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/ops-monitoring",
+      "schedule": "*/15 * * * *"
     }
   ]
 }
