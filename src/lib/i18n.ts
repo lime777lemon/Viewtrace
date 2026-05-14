@@ -12,39 +12,39 @@ export const copy = {
       menu: "メニュー",
     },
     hero: {
-      title: "定期チェックの結果を、決まったタイミングでメールでお知らせ",
+      title: "説明責任と監査性のための証跡インフラ。地域ルーティングで取り、チームの shared truth をメールまで届ける。",
       catchKicker: "High-fidelity geo routing",
       catchLine:
-        "実ユーザーに近い高精度な地域ルーティングで、検証と記録をインフラのように積み上げる。説明も監査も、再現できるリプレイへ。",
-      catchLexicon: "fidelity · archival · audit-grade · verification · routing · replay",
+        "実ユーザーに近い地域ルーティングで「いつ・どこで・何が見えていたか」をインフラとして積み上げる。説明責任に耐える証跡と、関係者が同じ前提で見られる shared truth へ。",
+      catchLexicon: "説明責任 · 証跡 · 監査性 · shared truth · verification · routing · replay",
       subtitle:
-        "URL と地域を指定すれば自動で画面を記録。実行のたびに結果の概要と記録へのリンクをお届けします。差分が大きいときだけ知らせる設定も選べます。",
+        "URL と地域を指定すると、表示状態をタイムスタンプ付きのビジュアル証跡として保存します。実行ごとに概要と記録へのリンクを送り、視覚差分が大きいときだけ通知する設定も選べます。地理テスト（geo testing tool）や海外からの見え方、広告表示の検証（ad verification）、ランディングの地域別 QA（landing page QA）、代理店まわりの根拠出し（proof for ad agencies）など、越境の説明負荷が高いワークを想定しています。",
       punch:
-        "曖昧なスクショ送付はやめて、地域・時刻・URL がそろった再現できる記録で共有する。",
+        "添付の山や口頭の代替ではなく、URL・時刻・地域が揃った再現可能な証跡として、説明・照合・監査のたたき台を共有する。",
       disclaimer:
-        "スナップショットは確認・共有用の記録です（サービス利用上の保証は別途規約に従います）。",
+        "取得したビジュアル記録は説明・照合・共有用の証跡です（サービス利用上の保証は別途規約に従います）。",
       trial: "無料で始める",
       sample: "サンプルを見る",
     },
     heroTrust: {
       items: [
-        "見え方を「説明できる形」で残せる",
-        "いつ・どの地域で見たかが履歴に残る",
-        "あとから「変わったか」を確認しやすい",
+        "説明責任：いつ・誰が・どの条件で見たかを言い切れる",
+        "証跡：取得内容が履歴に残り、後追いしやすい",
+        "監査性・shared truth：同じURL・時刻・地域で関係者が同じ前提を共有",
       ],
     },
     valuePillars: [
       {
-        title: "クライアント向けの説明",
-        subtitle: "ユーザーが実際に見た表示を、根拠として共有",
+        title: "説明責任を支える根拠",
+        subtitle: "「見せた／見た」を言葉ではなく、条件付きのビジュアル証跡で提示",
       },
       {
-        title: "グローバルQA",
-        subtitle: "国・地域ごとにサイトがどう見えているかを確認",
+        title: "監査性のあるジオ証跡",
+        subtitle: "国・地域ごとの視点を、揃った形式で積み上げ、照合しやすくする",
       },
       {
-        title: "レポートの自動化",
-        subtitle: "手作業のスクショ収集をやめる",
+        title: "チームの shared truth",
+        subtitle: "定期実行とメールで、認識のズレと欠落を起こしにくくする",
       },
     ],
     regionSearch: {
@@ -84,47 +84,47 @@ export const copy = {
       recordAsObservationLoginSuffix: "（ダッシュボードの一覧に保存）",
     },
     pitch: {
-      problemTitle: "「ちゃんと確認した」は、あとから証明できますか？",
+      problemTitle: "「ちゃんと説明した」は、あとから説明責任を果たせますか？",
       problemPoints: [
         {
           title: "海外表示が違っていた",
           body: "現地では別の見え方・挙動になっていて、気づくのが遅れる。",
         },
         {
-          title: "クライアントに説明できない",
-          body: "口頭やチャットだけでは、いつ・どこで・何を見たかが残らない。",
+          title: "クライアントに説明責任を果たせない",
+          body: "口頭やチャットだけでは、いつ・どこで・何を根拠にしたかが共有されず、監査にも使いづらい。",
         },
         {
-          title: "スクショが散らばっている",
-          body: "フォルダやスレッドに散在し、時系列や条件が追いづらい。",
+          title: "証跡がバラバラで shared truth がない",
+          body: "フォルダやスレッドに散在し、誰がどの条件で見たかが揃わず、監査や説明に使いづらい。",
         },
       ],
-      solutionTitle: "Viewtrace なら、確認作業をそのまま記録にできます。",
+      solutionTitle: "Viewtrace は、観測を証跡として残すためのレイヤです。",
       solutionBullets: [
-        "ワンクリックで記録",
-        "自動で履歴化",
+        "ワンクリックでビジュアル記録",
+        "自動で履歴化（欠落しにくい）",
         "URL・時刻・地域をセットで保存",
       ],
       benefits: [
         {
-          title: "記録",
-          body: "表示状態をそのまま保存",
+          title: "証跡",
+          body: "表示状態を条件付きで保存し、あとから同じ前提で開ける",
         },
         {
-          title: "追跡",
-          body: "いつ・どこで・何を確認したかを履歴で確認",
+          title: "説明責任",
+          body: "いつ・どこで・何を根拠にしたかを履歴として示せる",
         },
         {
-          title: "ずれに気づく",
-          body: "保存した記録が後からも一致しているか、確認しやすい",
+          title: "監査性",
+          body: "保存した内容のずれを、照合しやすい形で追える",
         },
       ],
     },
     audienceBenefits: {
-      kicker: "こんなチームへのメリット",
-      title: "クライアント説明・社内共有が、根拠つきでスムーズになる",
+      kicker: "導入先のイメージ",
+      title: "説明と照合のために、根拠をインフラとして用意する",
       subtitle:
-        "海外向けキャンペーンや地域別表示の確認は、口頭やバラバラのスクショだと説明が難しくなりがちです。Viewtrace は「いつ・どの地域から・どのURLがどう見えたか」を一つの記録にまとめ、営業・制作・マーケの現場でそのまま使える形にします。",
+        "海外向けキャンペーンや地域別表示は、口頭や散在したファイルだけだと説明責任と監査性が担保しづらくなりがちです。Viewtrace は「いつ・どの地域から・どのURLがどう見えたか」を一つの証跡にまとめ、関係者が同じ shared truth を見られる形にします。",
       personas: [
         {
           badge: "代表的なお客様",
@@ -161,7 +161,7 @@ export const copy = {
         },
       ],
       marketNote:
-        "日本国内だけでも、中小の広告・マーケ関連事業者は数千〜1万社規模、フリーランスを含めるとさらに広い層があります。Web制作の中小事業者も数千社規模が目安で、海外展開を進めるEC・SaaS・D2C企業も同様のニーズを抱えています。海外クライアントや越境キャンペーンほど、「見え方の記録」が差別化の材料になります。",
+        "日本国内だけでも、中小の広告・マーケ関連事業者は数千〜1万社規模、フリーランスを含めるとさらに広い層があります。Web制作の中小事業者も数千社規模が目安で、海外展開を進めるEC・SaaS・D2C企業も同様のニーズを抱えています。海外クライアントや越境キャンペーンほど、「再現可能な証跡」が信頼の前提になります。",
     },
     roiSection: {
       kicker: "ROI（目安）",
@@ -198,12 +198,12 @@ export const copy = {
         body: "観測する地理的な位置を選びます。",
       },
       {
-        title: "ビジュアル記録を取得",
-        body: "指定条件でのタイムスタンプ付きスクリーンショットです。",
+        title: "ビジュアル証跡を取得",
+        body: "指定条件で、タイムスタンプ付きのレンダリング記録を固定します。",
       },
       {
-        title: "スクリーンショットと差分を確認",
-        body: "複数の記録を比較し、問題を把握します。",
+        title: "差分照合（監査・説明向け）",
+        body: "取得した証跡同士を比較し、変化を説明・照合できる材料にします。",
       },
     ],
     stepNote: "記録は取得時点の状態を表します。",
@@ -211,27 +211,35 @@ export const copy = {
     useCases: [
       {
         title: "デジタル広告代理店",
-        body: "クライアントキャンペーンを地域横断で検証し、影響が出る前に問題を捕捉します。",
+        body: "クライアントキャンペーンを地域横断で観測し、問い合わせ時に同じ条件で提示できる証跡を残します。",
       },
       {
         title: "Shopify・DTCブランド",
-        body: "ジオ向けプロモーションやLPが、海外顧客向けに正しく表示されているか確認します。",
+        body: "ジオ向けプロモーションやLPを、市場ごとの表示として記録・比較し、説明の土台にします。",
       },
       {
         title: "SaaSマーケチーム",
-        body: "地域キャンペーンの状況を監視し、ローカライズの不具合を調査します。",
+        body: "地域キャンペーンの見え方を定点で積み上げ、ローカライズや表示差分の説明に使います。",
       },
     ],
     midCta: {
-      title: "場所ごとに、サイトが実際どう見えていたかを把握する。",
-      subtitle: "単なる自動チェックではなく、検証可能なビジュアル記録。",
+      title: "地域ごとの表示を、説明責任と監査性のための証跡にする。",
+      subtitle: "単発のキャプチャツールではなく、関係者が同じ前提を持てる shared truth の基盤。",
       body:
-        "各オブザベーションは、特定の時刻・特定の場所から見た表示を記録します。",
+        "各オブザベーションは、特定の時刻・特定の場所から見た表示を、再提示可能なビジュアル証跡として保存します。",
+    },
+    seoTopics: {
+      kicker: "検索・導入のヒント",
+      title: "地理・越境・広告まわりのトピック（このセクションに集約）",
+      intro:
+        "次の検索意図に沿った説明を、このページ内にまとめています。別URLのトピックページは置かず、重複とメンテ負荷を抑えています。",
+      backLabel: "ページ上部へ",
+      ctaLogin: "無料で始める",
     },
     trustBand: {
-      title: "調べた結果を、そのまま共有・説明に使える",
+      title: "観測を、説明責任・照合・監査に耐える証跡へ",
       subtitle:
-        "いつ・どこで・何を見たかを残し、チームやクライアントへの説明に使える記録です。特別な証明手続の代替ではありません。",
+        "いつ・どこで・何を根拠にしたかを残し、チームとクライアントが同じ事実を見られるようにします。特別な証明手続の代替ではありません。",
       items: [
         "記録の履歴はログイン中のアカウントだけがダッシュボードで確認できる",
         "保存した内容にチェック用の印を付け、あとからずれがないか見られる",
@@ -326,11 +334,23 @@ export const copy = {
       },
       {
         q: "何が得られますか？",
-        a: "単純なチェックとは異なり、ユーザーが実際に見ていた表示を示します。特定の時刻・場所におけるサイトの見え方の検証記録です。",
+        a: "単なる画面チェックではなく、特定の時刻・場所における表示をビジュアル証跡として残せます。あとから同じ条件で再提示しやすい形です。",
       },
       {
         q: "いつでも解約できますか？",
         a: "はい。ダッシュボードからいつでも解約できます。",
+      },
+      {
+        q: "他国から自社サイトの見え方を確認するには？（how to check website from another country）",
+        a: "地域（国・州など）を選び、対象 URL でオブザベーションを実行すると、その経路・時刻で取得した表示をビジュアル証跡として保存できます。VPN だけより、あとから同じ条件を示しやすいです。手順の整理はこのページ下部の「検索・導入のヒント」セクション内の該当ブロックを参照してください。",
+      },
+      {
+        q: "geo screenshot tool や geo testing tool のように使えますか？",
+        a: "はい。地理ルートでレンダリングを取得し、同じ URL・地域のまま再実行して履歴を積み上げられます。単発のキャプチャではなく、説明・照合に使える観測として設計しています。",
+      },
+      {
+        q: "広告の表示確認（ad verification tool）に使えますか？",
+        a: "キャンペーン LP やジオ向けページを、指定地域から取得して記録できます。差分が大きいときだけ通知する設定（プランによる）も選べます。第三者の配信保証の代替ではありません。",
       },
     ],
     checkout: {
@@ -657,7 +677,7 @@ export const copy = {
       phoneLabel: "電話番号（任意）",
       phonePlaceholder: "例：03-1234-5678",
       useCaseLabel: "用途（任意）",
-      useCasePlaceholder: "例：広告キャンペーンの表示確認、社内の確認記録の保管…",
+      useCasePlaceholder: "例：キャンペーンの証跡保管、社内照合用の記録…",
       save: "保存する",
       saving: "保存中…",
       sectionPlan: "現在のプラン",
@@ -760,7 +780,7 @@ export const copy = {
         "本規約は簡易ドラフトです。公開前に管轄法・決済条件・法人情報と整合させ、弁護士等のレビューを推奨します。",
     },
     footer: {
-      tagline: "地域ターゲットキャンペーン向けのビジュアル記録。",
+      tagline: "説明責任・証跡・監査性のためのジオ証跡インフラ。",
       product: "プロダクト",
       legal: "法的情報",
       support: "サポート",
@@ -789,38 +809,39 @@ export const copy = {
       menu: "Menu",
     },
     hero: {
-      title: "Scheduled check results, emailed on the cadence you choose",
+      title: "Accountability infrastructure—geo-routed evidence and shared truth, in your inbox on schedule",
       catchKicker: "High-fidelity geo routing",
       catchLine:
-        "Geo routing that behaves closer to real users—archival captures, audit-grade verification, and replay your team can defend under scrutiny.",
-      catchLexicon: "fidelity · archival · audit-grade · verification · routing · replay",
+        "Route like real users, then persist what rendered as an evidence trail teams can defend. Built for accountability, auditability, and shared truth—not disposable captures.",
+      catchLexicon: "accountability · evidence · auditability · shared truth · verification · routing · replay",
       subtitle:
-        "Set a URL and region and we capture the page automatically. After each run you get a short summary and a link to the saved record—or choose alerts only when the visual change is large.",
-      punch: "Stop sending random screenshots. Share timestamped, location-aware records your team can revisit.",
+        "Set a URL and region and we persist timestamped visual evidence of what rendered. After each run you get a short summary and a link to the saved trail—or choose alerts only when the visual change is large. Teams come from searches like geo screenshot tool, website screenshot from another country, geo testing tool, ad verification tool, localized QA, landing page QA, how to check website from another country, and proof for ad agencies—Viewtrace keeps those workflows on one accountable trail.",
+      punch:
+        "Not a screenshot utility—a replayable evidence layer where URL, timestamp, and vantage point stay attached for reviews and audits.",
       disclaimer:
-        "Snapshots are records for verification and sharing. Service warranties and limits are set out in the terms of use.",
+        "Captured visuals are evidence trails for explanation, reconciliation, and sharing—not a substitute for formal warranties; see terms of use.",
       trial: "Start for free",
       sample: "View sample",
     },
     heroTrust: {
       items: [
-        "Turn what you saw into something you can explain and share",
-        "Every check keeps time and place in the history",
-        "Easy to revisit later and spot if something changed",
+        "Accountability: say when, who, and under which vantage point",
+        "Evidence: renders land on a timeline you can reopen",
+        "Auditability & shared truth: one URL + time + region for every stakeholder",
       ],
     },
     valuePillars: [
       {
-        title: "Proof for clients",
-        subtitle: "Show proof of what users actually saw",
+        title: "Accountability you can show",
+        subtitle: "Replace “trust me” with conditioned visual evidence stakeholders can open",
       },
       {
-        title: "Global QA",
-        subtitle: "Verify your site from different countries",
+        title: "Auditable geo evidence",
+        subtitle: "Stack the same record shape from every country or state—easy to reconcile",
       },
       {
-        title: "Client reporting automation",
-        subtitle: "Stop taking screenshots manually",
+        title: "Shared truth for the team",
+        subtitle: "Scheduled runs and email so everyone references the same trail",
       },
     ],
     regionSearch: {
@@ -859,47 +880,47 @@ export const copy = {
       recordAsObservationLoginSuffix: " (saved to your dashboard list)",
     },
     pitch: {
-      problemTitle: "You ran the geo check—can you show your work next week?",
+      problemTitle: "Stakeholders ask what was live—can you meet that accountability next week?",
       problemPoints: [
         {
           title: "Overseas, it didn’t match what you expected",
           body: "The real region renders differently. By the time it surfaces in a meeting, you’re reconstructing from memory.",
         },
         {
-          title: "Clients hear a story, not a replay",
-          body: "Slack threads and ad-hoc screenshots don’t carry URL, timestamp, and vantage point in one place.",
+          title: "Clients hear a story, not a shared truth",
+          body: "Slack threads and ad-hoc files don’t carry URL, timestamp, and vantage point in one auditable object.",
         },
         {
-          title: "Your ‘proof’ is ten files named screenshot-final-v2",
-          body: "Drive folders, DMs, and desktop grabs—no single timeline when someone asks “what did we actually see?”",
+          title: "Evidence scattered across drives and DMs",
+          body: "No single timeline or shared truth when compliance, finance, or the client asks what the team actually saw.",
         },
       ],
-      solutionTitle: "Viewtrace turns every check into a timestamped, traceable record.",
+      solutionTitle: "Viewtrace is the layer that turns observations into accountable, auditable evidence.",
       solutionBullets: [
         "Capture in one click—same URL, region, and moment, every time",
-        "History and app logs build as you work—no manual filing",
+        "History builds as you work—harder to lose than manual filing",
         "URL, timestamp, and region stored together—always",
       ],
       benefits: [
         {
-          title: "Record",
-          body: "Keep the rendered state you saw—not a vague recap",
+          title: "Evidence",
+          body: "Persist renders with their conditions so the trail can be reopened",
         },
         {
-          title: "Trace",
-          body: "Reopen exactly when, where, and what the team inspected",
+          title: "Accountability",
+          body: "Show when, where, and what the team relied on—not a vague recap",
         },
         {
-          title: "Stay consistent",
-          body: "See at a glance whether a saved capture still lines up with what you stored",
+          title: "Auditability",
+          body: "Spot drift between what you stored and what you fetch later",
         },
       ],
     },
     audienceBenefits: {
-      kicker: "Benefits by team",
-      title: "Client-ready proof, shared history, fewer “trust me” moments",
+      kicker: "Where teams deploy it",
+      title: "Put proof on rails—not in chat attachments",
       subtitle:
-        "Geo-targeted ads and localized pages are hard to explain from memory and scattered screenshots. Viewtrace bundles URL, time, and region into one record—so sales, creative, and marketing can show exactly what was live.",
+        "Geo-targeted campaigns and localized pages are hard to defend on memory alone. Viewtrace bundles URL, time, and region into one evidence object—so sales, creative, marketing, and legal-adjacent reviewers share the same auditable truth.",
       personas: [
         {
           badge: "Most common",
@@ -927,7 +948,7 @@ export const copy = {
           badge: null as string | null,
           title: "Global brands (e‑commerce, SaaS, D2C)",
           lead:
-            "Let product, marketing, and support reference the same overseas view. Ideal for cross-border promos, localization QA, and internal approvals with evidence attached.",
+            "Let product, marketing, and support reference the same overseas view. Built for cross-border promos, localization evidence, and internal approvals with a paper trail.",
           bullets: [
             "Spot display issues market by market",
             "One record everyone can open—not a one-off export",
@@ -936,7 +957,7 @@ export const copy = {
         },
       ],
       marketNote:
-        "In Japan alone, thousands of small agencies and production shops—and tens of thousands of marketers and freelancers—handle the same proof-and-QA work. Global and cross-border clients make auditable visual records even more valuable when you need to win and keep trust.",
+        "In Japan alone, thousands of small agencies and production shops—and tens of thousands of marketers and freelancers—ship the same proof-and-verification work. Global and cross-border clients make replayable visual evidence a baseline for trust.",
     },
     roiSection: {
       kicker: "ROI (estimate)",
@@ -973,12 +994,12 @@ export const copy = {
         body: "Choose the geographic vantage point for the observation.",
       },
       {
-        title: "Capture a visual record",
-        body: "Timestamped screenshots under your specified conditions.",
+        title: "Persist visual evidence",
+        body: "Under your chosen conditions, we fix a timestamped rendering trail—not a disposable grab.",
       },
       {
-        title: "Review screenshots and diffs",
-        body: "Compare multiple captures to spot issues.",
+        title: "Diff for accountability & audits",
+        body: "Compare trails to turn change into material you can explain and reconcile.",
       },
     ],
     stepNote: "Each record reflects the state at capture time.",
@@ -986,28 +1007,36 @@ export const copy = {
     useCases: [
       {
         title: "Digital ad agencies",
-        body: "Validate client campaigns across regions and catch problems early.",
+        body: "Observe client campaigns across regions and keep defensible evidence when questions land weeks later.",
       },
       {
         title: "Shopify & DTC brands",
-        body: "Check geo promos and LPs for international shoppers.",
+        body: "Record geo promos and LPs market by market—your baseline for explanations and comparisons.",
       },
       {
         title: "SaaS marketing teams",
-        body: "Monitor regional campaigns and investigate localization issues.",
+        body: "Stack scheduled captures for regional campaigns and attach proof to localization reviews.",
       },
     ],
     midCta: {
-      title: "Proof for clients. Global QA. Less manual reporting.",
+      title: "Accountability infrastructure—not a disposable capture tool.",
       subtitle:
-        "One workflow: pick the region, capture the page, keep history and exports when stakeholders ask what was live.",
+        "Pick the region, persist what rendered, and keep a trail exports can attach to when stakeholders demand shared truth.",
       body:
-        "Agencies and in-house teams use the same timestamps, URLs, and vantage points—so “what we saw” is easy to replay.",
+        "Each observation stores what the page looked like from a specific moment and vantage point—replayable evidence, not anecdote.",
+    },
+    seoTopics: {
+      kicker: "Search intent guides",
+      title: "Geo, cross-border, and ad topics—in one section on this page",
+      intro:
+        "Below is the same guidance we used to split across separate URLs—now inlined here so you maintain one source of truth. We skip extra /topics/* routes to avoid duplicate crawls.",
+      backLabel: "Back to top",
+      ctaLogin: "Start for free",
     },
     trustBand: {
-      title: "Turn checks into records your team can share",
+      title: "Turn observations into evidence teams can cite under scrutiny",
       subtitle:
-        "Capture when, where, and what you saw—for everyday reviews and client updates. Not a substitute for formal legal proof.",
+        "Capture when, where, and what you relied on—for client updates, internal reconciliation, and audit-friendly reviews. Not a substitute for formal legal proof.",
       items: [
         "Timestamped history you review in your own dashboard",
         "Fingerprints on saved page data so you can spot drift later",
@@ -1108,6 +1137,18 @@ export const copy = {
       {
         q: "Can I cancel anytime?",
         a: "Yes. Cancel anytime from your dashboard.",
+      },
+      {
+        q: "How do I check a website from another country?",
+        a: "Pick an observation region, run an observation on your URL, and Viewtrace saves what rendered at that time from that vantage point—URL, timestamp, and region stay attached. It is closer to an evidence trail than a VPN-only peek. For a longer walkthrough, see the matching block in the “Search intent guides” section near the bottom of this page.",
+      },
+      {
+        q: "Is Viewtrace a geo screenshot tool or geo testing tool?",
+        a: "You can use it that way: geo-routed captures with history and optional scheduled reruns. The difference is we standardize what you store so teams can reconcile later—not a one-off grab in a downloads folder.",
+      },
+      {
+        q: "Can we use Viewtrace as an ad verification tool?",
+        a: "Yes for rendered-state proof: capture how landing pages and promos looked in-market, diff material changes, and alert the team when visuals drift (plan-dependent). It does not replace third-party ad-delivery guarantees.",
       },
     ],
     checkout: {
@@ -1462,7 +1503,7 @@ export const copy = {
       phoneLabel: "Phone (optional)",
       phonePlaceholder: "e.g. +1 415-555-0100",
       useCaseLabel: "Use case (optional)",
-      useCasePlaceholder: "e.g. campaign QA, internal confirmation records…",
+      useCasePlaceholder: "e.g. campaign evidence trails, internal reconciliation records…",
       save: "Save",
       saving: "Saving…",
       sectionPlan: "Current plan",
@@ -1565,7 +1606,7 @@ export const copy = {
       draftNotice: "",
     },
     footer: {
-      tagline: "Visual records for geo-targeted campaigns.",
+      tagline: "Accountability, evidence trails, and auditability for geo-targeted experiences.",
       product: "Product",
       legal: "Legal",
       support: "Support",

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { RegionSearchSection } from "@/components/RegionSearchSection";
 import { copy, type Locale } from "@/lib/i18n";
 import { LOCALE_COOKIE } from "@/lib/i18n/locale-cookie";
+import { getTopicSectionsForLanding } from "@/lib/seo/topic-pages";
 
 function formatOverageUsdLabel(usd: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -22,6 +23,7 @@ type Props = {
 export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Props) {
   const [locale, setLocale] = useState<Locale>(initialLocale);
   const t = useMemo(() => copy[locale], [locale]);
+  const topicSections = useMemo(() => getTopicSectionsForLanding(locale), [locale]);
   const landingFaqs = useMemo(() => {
     const injected = {
       q: t.faqMonthlyOverage.q,
@@ -743,6 +745,51 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                   </p>
                 </article>
               ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="search-topics" className="border-b border-border bg-surface">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+            <p className="text-xs font-bold uppercase tracking-wider text-accent">{t.seoTopics.kicker}</p>
+            <h2 className="mt-3 font-display max-w-3xl text-2xl font-semibold leading-snug text-ink sm:text-3xl">
+              {t.seoTopics.title}
+            </h2>
+            <p className="mt-4 max-w-3xl text-sm leading-relaxed text-ink-muted sm:text-base">
+              {t.seoTopics.intro}
+            </p>
+            <div className="mt-10 space-y-16 border-t border-border pt-10">
+              {topicSections.map(({ slug, label, h1, paragraphs }) => (
+                <article
+                  key={slug}
+                  id={`topic-${slug}`}
+                  className="scroll-mt-24 rounded-2xl border border-border bg-surface-elevated p-6 sm:p-8"
+                >
+                  <p className="text-xs font-medium uppercase tracking-wider text-ink-muted">{label}</p>
+                  <h3 className="mt-2 font-display text-xl font-semibold leading-snug text-ink sm:text-2xl">
+                    {h1}
+                  </h3>
+                  <div className="mt-5 space-y-4 text-sm leading-relaxed text-ink-muted sm:text-base">
+                    {paragraphs.map((p, i) => (
+                      <p key={i}>{p}</p>
+                    ))}
+                  </div>
+                </article>
+              ))}
+            </div>
+            <div className="mt-12 flex flex-wrap gap-3 border-t border-border pt-10">
+              <Link
+                href="/#top"
+                className="inline-flex items-center justify-center rounded-full border border-border bg-surface px-6 py-3 text-sm font-semibold text-ink transition hover:border-ink-muted/40"
+              >
+                {t.seoTopics.backLabel}
+              </Link>
+              <Link
+                href="/login"
+                className="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-accent-hover"
+              >
+                {t.seoTopics.ctaLogin}
+              </Link>
             </div>
           </div>
         </section>
