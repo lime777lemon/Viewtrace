@@ -9,6 +9,7 @@ import { copy } from "@/lib/i18n";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { getPlanLabels } from "@/lib/plans/labels";
 import { getOveragePerObservationUsd, getPlan } from "@/lib/plans";
+import { getSnapshotCapabilityCopy } from "@/lib/plans/snapshot-ui";
 import { shouldHideNewObservationForTrial } from "@/lib/trial-observation-access";
 
 export const metadata: Metadata = {
@@ -25,6 +26,7 @@ export default async function DashboardHomePage() {
 
   const plan = getPlan(session.plan);
   const planLabels = getPlanLabels(session.plan, locale);
+  const snapshotUi = getSnapshotCapabilityCopy(locale, session.plan);
   const overageUsd = getOveragePerObservationUsd();
   const overagePriceLabel =
     overageUsd != null
@@ -69,6 +71,8 @@ export default async function DashboardHomePage() {
             {planLabels.coverageLabel}
             {plan.csvExport ? " · CSV" : ""}
           </p>
+          <p className="mt-2 text-xs font-medium text-ink">{snapshotUi.marketing}</p>
+          <p className="mt-0.5 text-[11px] leading-snug text-ink-muted">{snapshotUi.technical}</p>
           <p className="mt-3 text-xs text-ink-muted">
             {t.cardPlanMeta
               .replace("{days}", String(plan.retentionDays))

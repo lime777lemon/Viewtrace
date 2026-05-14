@@ -15,7 +15,10 @@ export type PlanDefinition = {
   audienceLabel: string;
   csvExport: boolean;
   allUsStates: boolean;
-  /** Microlink でフルページスクリーンショット（Pro） */
+  /**
+   * 技術仕様: キャプチャをフルページ相当まで広げるか（Pro のみ true）。
+   * 料金表・設定画面の文言は `getSnapshotCapabilityCopy` / i18n のマーケ表記と併用する。
+   */
   snapshotFullPage: boolean;
   /** Starter / Pro: URL を定期自動観測しメール通知 */
   autoObservationWatch: boolean;

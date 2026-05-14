@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { PrintReportButton } from "@/components/dashboard/PrintReportButton";
 import { getSession } from "@/lib/auth/session";
 import { getObservationMergedForPlan } from "@/lib/demo/user-observations";
@@ -35,7 +35,9 @@ export default async function ObservationReportPage({ params }: Props) {
   const t = copy[locale].observationReport;
 
   const session = await getSession();
-  if (!session) notFound();
+  if (!session) {
+    redirect(`/login?next=${encodeURIComponent(`/dashboard/observations/${id}/report`)}`);
+  }
   let obs = await getObservationMergedForPlan(id, session.plan);
   if (!obs) notFound();
 

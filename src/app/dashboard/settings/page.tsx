@@ -88,9 +88,12 @@ export default async function SettingsPage() {
                   <li>{labels?.coverageLabel ?? plan.coverageLabel}</li>
                   <li>{plan.csvExport ? t.csvAvailable : t.csvProOnly}</li>
                   <li>
-                    {plan.snapshotFullPage
-                      ? t.snapshotFullPage
-                      : t.snapshotViewport}
+                    <span className="font-medium text-ink">
+                      {plan.snapshotFullPage ? t.snapshotMarketingPro : t.snapshotMarketingStarter}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-ink-muted">
+                      {plan.snapshotFullPage ? t.snapshotTechnicalPro : t.snapshotTechnicalStarter}
+                    </span>
                   </li>
                 </>
               )}

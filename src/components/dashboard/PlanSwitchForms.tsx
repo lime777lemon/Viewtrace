@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { copy, type Locale } from "@/lib/i18n";
 import { PLANS, type PlanId } from "@/lib/plans";
+import { getSnapshotCapabilityCopy } from "@/lib/plans/snapshot-ui";
 
 export function PlanSwitchForms({
   currentPlan,
@@ -30,6 +31,7 @@ export function PlanSwitchForms({
       <div className="grid gap-3 sm:grid-cols-2">
         {(["starter", "pro"] as const).map((id) => {
           const p = PLANS[id];
+          const snap = getSnapshotCapabilityCopy(locale, id);
           const active = currentPlan === id;
           const href = `/checkout?plan=${id}`;
           const className = `block w-full rounded-xl border px-4 py-3 text-left text-sm transition ${
@@ -57,6 +59,8 @@ export function PlanSwitchForms({
                   .replace("{days}", String(p.retentionDays))
                   .replace("{csv}", p.csvExport ? t.csvYes : t.csvNo)}
               </span>
+              <span className="mt-2 block text-xs font-medium text-ink">{snap.marketing}</span>
+              <span className="mt-0.5 block text-[11px] leading-snug text-ink-muted">{snap.technical}</span>
             </>
           );
 

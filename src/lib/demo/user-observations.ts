@@ -13,8 +13,62 @@ export const USER_OBSERVATIONS_COOKIE = "viewtrace_user_obs";
 const MAX_ITEMS = 35;
 const MAX_COOKIE_BYTES = 4200;
 
+const OBSERVATION_ROW_SELECT =
+  "id,url,region,region_label,status,note,page_title,snapshot_image_url,captured_at,events,content_hash,snapshot_sha256,snapshot_phash,snapshot_bytes,snapshot_content_type" as const;
+
 function sortByCapturedAtDesc(list: Observation[]): Observation[] {
   return list.slice().sort((a, b) => new Date(b.capturedAt).getTime() - new Date(a.capturedAt).getTime());
+}
+
+/** DB 行 → `Observation`（`readUserObservations` と同じ正規化。メールの直リンク用に ID 単体取得でも使う） */
+function mapDbRowToObservation(
+  row: Record<string, unknown>,
+  planForRegionFallback: PlanId,
+): Observation | null {
+  const capturedAt = typeof row.captured_at === "string" ? row.captured_at : new Date().toISOString();
+  const regionValue = typeof row.region === "string" ? row.region : "";
+  const labelFromDb =
+    typeof row.region_label === "string" && row.region_label.trim() ? row.region_label.trim() : null;
+  const labelFromOptions =
+    getRegionOptions(planForRegionFallback).find((r) => r.value === regionValue)?.label ?? regionValue;
+
+  const statusRaw = typeof row.status === "string" ? row.status : "pending";
+  const status =
+    statusRaw === "success" || statusRaw === "failure" || statusRaw === "pending" ? statusRaw : "pending";
+
+  const obs: Observation = {
+    id: String(row.id),
+    url: typeof row.url === "string" ? row.url : "",
+    regionValue: regionValue,
+    regionLabel: labelFromDb ?? labelFromOptions,
+    capturedAt,
+    status,
+    note: typeof row.note === "string" ? row.note : undefined,
+    pageTitle: typeof row.page_title === "string" ? row.page_title : undefined,
+    snapshotImageUrl: typeof row.snapshot_image_url === "string" ? row.snapshot_image_url : undefined,
+    events: Array.isArray(row.events) ? (row.events as ObservationHistoryEvent[]) : undefined,
+    contentHash:
+      typeof row.content_hash === "string" && row.content_hash.length === 64
+        ? row.content_hash.toLowerCase()
+        : undefined,
+    snapshotSha256:
+      typeof row.snapshot_sha256 === "string" && row.snapshot_sha256.length === 64
+        ? row.snapshot_sha256.toLowerCase()
+        : undefined,
+    snapshotPhash:
+      typeof row.snapshot_phash === "string" && row.snapshot_phash.length >= 8
+        ? row.snapshot_phash.toLowerCase()
+        : undefined,
+    snapshotBytes:
+      typeof row.snapshot_bytes === "number" && Number.isFinite(row.snapshot_bytes)
+        ? row.snapshot_bytes
+        : undefined,
+    snapshotContentType:
+      typeof row.snapshot_content_type === "string" && row.snapshot_content_type.trim()
+        ? row.snapshot_content_type.trim()
+        : undefined,
+  };
+  return isObservation(obs) ? obs : null;
 }
 
 function isHistoryEvent(x: unknown): x is ObservationHistoryEvent {
@@ -91,64 +145,36 @@ export async function readUserObservations(): Promise<Observation[]> {
 
   const { data, error } = await supabase
     .from("observations")
-    .select(
-      "id,url,region,region_label,status,note,page_title,snapshot_image_url,captured_at,events,content_hash,snapshot_sha256,snapshot_phash,snapshot_bytes,snapshot_content_type",
-    )
+    .select(OBSERVATION_ROW_SELECT)
     .order("captured_at", { ascending: false })
     .limit(200);
   if (error || !data) return [];
 
   return data
-    .map((row) => {
-      const capturedAt = typeof row.captured_at === "string" ? row.captured_at : new Date().toISOString();
-      const regionValue = typeof row.region === "string" ? row.region : "";
-      // When region_label is missing, derive from the logged-in plan so labels match what content_hash was computed with.
-      const labelFromDb =
-        typeof row.region_label === "string" && row.region_label.trim() ? row.region_label.trim() : null;
-      const labelFromOptions =
-        getRegionOptions(planForRegionFallback).find((r) => r.value === regionValue)?.label ?? regionValue;
-
-      const statusRaw = typeof row.status === "string" ? row.status : "pending";
-      const status =
-        statusRaw === "success" || statusRaw === "failure" || statusRaw === "pending"
-          ? statusRaw
-          : "pending";
-
-      const obs: Observation = {
-        id: String(row.id),
-        url: typeof row.url === "string" ? row.url : "",
-        regionValue: regionValue,
-        regionLabel: labelFromDb ?? labelFromOptions,
-        capturedAt,
-        status,
-        note: typeof row.note === "string" ? row.note : undefined,
-        pageTitle: typeof row.page_title === "string" ? row.page_title : undefined,
-        snapshotImageUrl: typeof row.snapshot_image_url === "string" ? row.snapshot_image_url : undefined,
-        events: Array.isArray(row.events) ? (row.events as ObservationHistoryEvent[]) : undefined,
-        contentHash:
-          typeof row.content_hash === "string" && row.content_hash.length === 64
-            ? row.content_hash.toLowerCase()
-            : undefined,
-        snapshotSha256:
-          typeof row.snapshot_sha256 === "string" && row.snapshot_sha256.length === 64
-            ? row.snapshot_sha256.toLowerCase()
-            : undefined,
-        snapshotPhash:
-          typeof row.snapshot_phash === "string" && row.snapshot_phash.length >= 8
-            ? row.snapshot_phash.toLowerCase()
-            : undefined,
-        snapshotBytes:
-          typeof row.snapshot_bytes === "number" && Number.isFinite(row.snapshot_bytes)
-            ? row.snapshot_bytes
-            : undefined,
-        snapshotContentType:
-          typeof row.snapshot_content_type === "string" && row.snapshot_content_type.trim()
-            ? row.snapshot_content_type.trim()
-            : undefined,
-      };
-      return isObservation(obs) ? obs : null;
-    })
+    .map((row) => mapDbRowToObservation(row as unknown as Record<string, unknown>, planForRegionFallback))
     .filter((x): x is Observation => Boolean(x));
+}
+
+/** 一覧の件数上限外でも、RLS 下で自分の行なら ID だけで取得できる（メールの「記録を開く」用） */
+async function fetchObservationByIdForCurrentUser(
+  id: string,
+  planForRegionFallback: PlanId,
+): Promise<Observation | undefined> {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user?.id) return undefined;
+
+  const { data: row, error } = await supabase
+    .from("observations")
+    .select(OBSERVATION_ROW_SELECT)
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error || !row) return undefined;
+  const obs = mapDbRowToObservation(row as unknown as Record<string, unknown>, planForRegionFallback);
+  return obs ?? undefined;
 }
 
 /** `trial_started_at` 以降に記録されたオブザベーション数（無料トライアル枠の集計用） */
@@ -270,7 +296,10 @@ export async function getObservationMergedForPlan(
   id: string,
   planId: PlanId,
 ): Promise<Observation | undefined> {
-  const obs = await getObservationMerged(id);
+  let obs = await getObservationMerged(id);
+  if (!obs) {
+    obs = await fetchObservationByIdForCurrentUser(id, planId);
+  }
   if (!obs) return undefined;
   const retentionDays = getPlan(planId).retentionDays;
   if (!filterObservationsByRetention([obs], retentionDays).length) return undefined;

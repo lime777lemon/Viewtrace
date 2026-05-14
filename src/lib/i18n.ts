@@ -259,7 +259,7 @@ export const copy = {
           "月80回のオブザベーション",
           "米国＋主要国",
           "7日間の保持",
-          "フルページのビジュアルスナップショット",
+          "クイックな画面確認（ビューポート相当のスナップショット）",
           "ステータス履歴",
           "サーバー記録・記録内容のチェック用コード（ずれ検知の補助）",
           "自動観測（日／週／月の回数を設定）とメール通知",
@@ -277,7 +277,7 @@ export const copy = {
           "月250回のオブザベーション",
           "米国全州＋主要国",
           "60日間の保持",
-          "フルページのビジュアルスナップショット",
+          "存証向けフルページのビジュアル記録",
           "継続監視（日／週／月・回数設定）",
           "メール通知（毎回または差分が大きいとき）",
           "差分検知（画像）",
@@ -295,9 +295,9 @@ export const copy = {
     accountSignup: {
       title: "アカウントを作成",
       intro:
-        "メールアドレスとパスワードで登録すると、無料トライアル（最大20回・14日間）でダッシュボードをご利用いただけます。クレジットカードは不要です。",
+        "メールアドレスとパスワードで登録すると、無料トライアル（最大20回・14日間）でダッシュボードをご利用いただけます。",
       ctaPrimary: "無料で始める",
-      ctaSecondary: "すでにアカウントの方はログイン",
+      ctaSecondary: "ログイン",
     },
     faqTitle: "よくある質問",
     faqMonthlyOverage: {
@@ -669,8 +669,13 @@ export const copy = {
       planRetentionDays: "保存 {days} 日間",
       csvAvailable: "CSVエクスポート：利用可",
       csvProOnly: "CSVエクスポート：Pro で利用可",
-      snapshotFullPage: "ビジュアルスナップショット：フルページ取得（プレビュー API）",
-      snapshotViewport: "ビジュアルスナップショット：ビューポート相当（Pro でフルページ）",
+      snapshotMarketingStarter: "クイックな画面確認",
+      snapshotTechnicalStarter: "ビューポート相当（表示範囲のスナップショット）",
+      snapshotMarketingPro: "存証向けの完全記録",
+      snapshotTechnicalPro: "フルページのスクリーンショット取得",
+      observationNewIntro:
+        "Web で表示を確認した URL と地域を指定し、観測を実行して記録します。{marketing}（{technical}）。",
+      observationNewTitle: "新規オブザベーション",
       overageNote:
         "枠超過：${price} / 回（本番では次回インボイスに加算・取得継続の想定。デモでは上限後も記録可）",
       demoSwitchTitle: "デモ：プランを切り替え",
@@ -1026,7 +1031,7 @@ export const copy = {
           "80 observations / month",
           "US + major countries",
           "7-day retention",
-          "Full-page visual snapshots",
+          "Quick visual checks (viewport-sized snapshots)",
           "Status history",
           "Server timestamps & record check codes (drift detection aid)",
           "Auto-observation (daily / weekly / monthly cadence) with email",
@@ -1045,7 +1050,7 @@ export const copy = {
           "250 observations / month",
           "All US states + major countries",
           "60-day retention",
-          "Full-page visual snapshots",
+          "Complete archival captures (full-page screenshots)",
           "Scheduled monitoring (day / week / month with run count)",
           "Email: every run or only on large visual change (threshold)",
           "Pixel-based diff detection",
@@ -1063,9 +1068,9 @@ export const copy = {
     accountSignup: {
       title: "Create your account",
       intro:
-        "Sign up with email and password to start your free trial (up to 20 observations, 14 days). No credit card required.",
+        "Sign up with email and password to start your free trial (up to 20 observations, 14 days).",
       ctaPrimary: "Start for free",
-      ctaSecondary: "Log in if you already have an account",
+      ctaSecondary: "Log in",
     },
     faqTitle: "FAQ",
     faqMonthlyOverage: {
@@ -1465,8 +1470,13 @@ export const copy = {
       planRetentionDays: "{days}-day retention",
       csvAvailable: "CSV export: available",
       csvProOnly: "CSV export: available on Pro",
-      snapshotFullPage: "Visual snapshots: full-page capture (preview API)",
-      snapshotViewport: "Visual snapshots: viewport (full-page on Pro)",
+      snapshotMarketingStarter: "Quick visual checks",
+      snapshotTechnicalStarter: "Viewport capture (visible area)",
+      snapshotMarketingPro: "Complete archival captures",
+      snapshotTechnicalPro: "Full-page screenshots",
+      observationNewIntro:
+        "Pick a URL and region to capture how the page renders. {marketing} ({technical}).",
+      observationNewTitle: "New observation",
       overageNote:
         "Overage: ${price}/observation (assumed to be billed on next invoice in production; demo keeps recording past the cap).",
       demoSwitchTitle: "Demo: switch plan",

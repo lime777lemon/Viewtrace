@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ObservationDetailSnapshotSection } from "@/components/dashboard/ObservationDetailSnapshotSection";
 import { ObservationDigitalSeal } from "@/components/dashboard/ObservationDigitalSeal";
 import { ObservationSnapshotBinaryPanel } from "@/components/dashboard/ObservationSnapshotBinaryPanel";
@@ -57,7 +57,9 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
   const t = copy[locale].observationDetail;
   const autoObsCopy = copy[locale].dashboardAutoObs;
   const session = await getSession();
-  if (!session) notFound();
+  if (!session) {
+    redirect(`/login?next=${encodeURIComponent(`/dashboard/observations/${id}`)}`);
+  }
   let obs = await getObservationMergedForPlan(id, session.plan);
   if (!obs) notFound();
 
@@ -65,7 +67,9 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user?.id) notFound();
+  if (!user?.id) {
+    redirect(`/login?next=${encodeURIComponent(`/dashboard/observations/${id}`)}`);
+  }
 
   obs = await reconcileObservationContentHashIfNeeded(supabase, obs);
 

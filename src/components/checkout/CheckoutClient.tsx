@@ -7,6 +7,7 @@ import { copy, type Locale } from "@/lib/i18n";
 import { LOCALE_COOKIE } from "@/lib/i18n/locale-cookie";
 import type { PlanId } from "@/lib/plans";
 import { getPlan } from "@/lib/plans";
+import { getSnapshotCapabilityCopy } from "@/lib/plans/snapshot-ui";
 import { getPlanLabels } from "@/lib/plans/labels";
 import type { StripeMode } from "@/lib/stripe";
 
@@ -26,6 +27,7 @@ export function CheckoutClient({
   const t = copy[locale].checkout;
   const plan = getPlan(planId);
   const planLabels = getPlanLabels(planId, locale);
+  const snapshotUi = getSnapshotCapabilityCopy(locale, planId);
   const [state, formAction, pending] = useActionState(demoCheckoutAction, null);
   const emailId = useId();
 
@@ -203,6 +205,10 @@ export function CheckoutClient({
                 {locale === "ja" ? "日" : "days"}
               </li>
               <li>{planLabels.coverageLabel}</li>
+              <li>
+                <span className="font-medium text-ink">{snapshotUi.marketing}</span>
+                <span className="mt-0.5 block text-xs text-ink-muted">{snapshotUi.technical}</span>
+              </li>
               {plan.csvExport ? (
                 <li>{locale === "ja" ? "CSVエクスポート" : "CSV export"}</li>
               ) : null}

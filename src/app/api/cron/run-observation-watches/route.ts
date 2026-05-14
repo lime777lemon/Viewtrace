@@ -62,6 +62,13 @@ function getNum(o: Record<string, unknown>, k: string, fallback: number): number
   return fallback;
 }
 
+/** Align with client-side `isObservation` guard (note length under 500). */
+const OBSERVATION_NOTE_MAX = 498;
+function truncateObservationNote(s: string): string {
+  if (s.length <= OBSERVATION_NOTE_MAX) return s;
+  return `${s.slice(0, OBSERVATION_NOTE_MAX - 1)}…`;
+}
+
 export async function GET(req: Request) {
   return POST(req);
 }
@@ -198,7 +205,9 @@ export async function POST(req: Request) {
       return blobResult.message ? ` — ${blobResult.message}` : "";
     })();
 
-    const note = blobUrl ? "自動観測（定期）" : `自動観測（画像保存に失敗${blobFailureNote}）`;
+    const note = truncateObservationNote(
+      blobUrl ? "自動観測（定期）" : `自動観測（画像保存に失敗${blobFailureNote}）`,
+    );
 
     const obsForHash: Observation = {
       id: obsId,
@@ -213,7 +222,7 @@ export async function POST(req: Request) {
     };
     const contentHash = computeObservationContentHash(obsForHash);
 
-    await svc.from("observations").insert({
+    const { error: insertObsError } = await svc.from("observations").insert({
       id: obsId,
       user_id: userId,
       url,
@@ -230,6 +239,20 @@ export async function POST(req: Request) {
       snapshot_bytes: snapshotBytesStored,
       snapshot_content_type: snapshotContentTypeStored,
     });
+
+    if (insertObsError) {
+      console.error("[cron] observation insert failed", {
+        watchId,
+        userId,
+        obsId,
+        message: insertObsError.message,
+      });
+      await svc
+        .from("observation_watches")
+        .update({ last_run_at: capturedAt, next_run_at: nextRun })
+        .eq("id", watchId);
+      continue;
+    }
 
     await svc
       .from("observation_watches")
