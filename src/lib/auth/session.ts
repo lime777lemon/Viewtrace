@@ -58,6 +58,7 @@ function logGetSessionNull(error: AuthError | null, user: { id: string; email?: 
 }
 
 export type SessionPayload = {
+  userId: string;
   email: string;
   plan: PlanId;
   stripeCustomerId: string | null;
@@ -85,9 +86,8 @@ export type SessionPayload = {
 
 /**
  * Supabase Auth のユーザー（JWT 検証は getUser 側で実施）。
- * React `cache` で同一リクエスト内の重複呼び出しをまとめる。layout と page が並列で
- * getSession すると getUser が二重に走り、リフレッシュトークンのローテーション競合で
- * 一瞬セッションが無い扱いになり /login に飛ぶことがある。
+ * React `cache` で同一リクエスト内の重複呼び出しをまとめる。
+ * トークン更新は middleware（`updateSupabaseSession`）で先に行い、ここでは検証のみ。
  */
 export const getSession = cache(async (): Promise<SessionPayload | null> => {
   const supabase = await createSupabaseServerClient();
@@ -143,6 +143,7 @@ export const getSession = cache(async (): Promise<SessionPayload | null> => {
   }
 
   return {
+    userId: user.id,
     email: user.email,
     plan,
     stripeCustomerId,

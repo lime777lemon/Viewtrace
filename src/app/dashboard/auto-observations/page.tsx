@@ -88,17 +88,11 @@ export default async function AutoObservationsPage({
   }
 
   const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user?.id) {
-    redirect("/login");
-  }
 
   const { data: watchRows } = await supabase
     .from("observation_watches")
     .select("id,url,region,enabled,schedule_frequency,repeat_count,notify_mode,updated_at")
-    .eq("user_id", user.id)
+    .eq("user_id", session.userId)
     .order("updated_at", { ascending: false });
 
   const watches = (watchRows ?? []).map((r) => ({

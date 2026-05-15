@@ -135,14 +135,11 @@ function trimToFitCookie(list: Observation[]): Observation[] {
 }
 
 export async function readUserObservations(): Promise<Observation[]> {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user?.id) return [];
-
   const session = await getSession();
-  const planForRegionFallback = session?.plan ?? "freeplan";
+  if (!session) return [];
+
+  const supabase = await createSupabaseServerClient();
+  const planForRegionFallback = session.plan;
 
   const { data, error } = await supabase
     .from("observations")
@@ -161,11 +158,10 @@ async function fetchObservationByIdForCurrentUser(
   id: string,
   planForRegionFallback: PlanId,
 ): Promise<Observation | undefined> {
+  const session = await getSession();
+  if (!session) return undefined;
+
   const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user?.id) return undefined;
 
   const { data: row, error } = await supabase
     .from("observations")

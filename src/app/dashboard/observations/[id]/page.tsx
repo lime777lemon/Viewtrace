@@ -64,12 +64,6 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
   if (!obs) notFound();
 
   const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user?.id) {
-    redirect(`/login?next=${encodeURIComponent(`/dashboard/observations/${id}`)}`);
-  }
 
   obs = await reconcileObservationContentHashIfNeeded(supabase, obs);
 
@@ -81,7 +75,7 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
           .select(
             "enabled,schedule_frequency,repeat_count,notify_mode",
           )
-          .eq("user_id", user.id)
+          .eq("user_id", session.userId)
           .eq("url", obs.url)
           .eq("region", obs.regionValue)
           .maybeSingle()
