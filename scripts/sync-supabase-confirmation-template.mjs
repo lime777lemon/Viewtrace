@@ -84,7 +84,7 @@ if (!content.includes("token_hash") || !content.includes("type=email")) {
 
 const subject =
   process.env.SUPABASE_CONFIRMATION_EMAIL_SUBJECT?.trim() ||
-  "Viewtrace: メールアドレスの確認 / Confirm your signup";
+  "Confirm your email — Viewtrace";
 
 const url = `https://api.supabase.com/v1/projects/${ref}/config/auth`;
 const res = await fetch(url, {

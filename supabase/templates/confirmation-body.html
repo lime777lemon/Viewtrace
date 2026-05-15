@@ -1,15 +1,15 @@
-<h2 style="font-family: system-ui, sans-serif; line-height: 1.5;">Viewtrace — メールアドレスの確認</h2>
+<h2 style="font-family: system-ui, sans-serif; line-height: 1.5;">Confirm your email — Viewtrace</h2>
 <p style="font-family: system-ui, sans-serif; line-height: 1.5;">
-  下のボタンを押して登録を完了してください。メールアプリ内ブラウザで開けない場合は、
-  <strong>Chrome や Safari でこのリンクを開いて</strong>ください（PKCE の <code>?code=</code> リンクは別ブラウザで失敗します）。
+  Click the button below to finish creating your account.
 </p>
 <p style="font-family: system-ui, sans-serif; line-height: 1.5;">
-  Confirm your email for Viewtrace. If the button does not work in your mail app, open the link below in Chrome or Safari.
+  If the button does not work in your mail app, open this link in <strong>Chrome or Safari</strong>
+  (in-app mail browsers often block sign-in).
 </p>
 <p style="font-family: system-ui, sans-serif; line-height: 1.5;">
-  <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email">メールアドレスを確認する / Confirm your mail</a>
+  <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email">Confirm your email</a>
 </p>
 <p style="font-family: system-ui, sans-serif; font-size: 13px; color: #444; line-height: 1.5;">
-  ボタンが開けない場合は URL をブラウザに貼り付けてください / Paste this URL if the button fails:<br />
+  If the button does not work, paste this URL into your browser:<br />
   <span style="word-break: break-all;">{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email</span>
 </p>

@@ -162,7 +162,7 @@ otp_expiry = 3600
 # Confirm signup（メール確認）。ローカル `supabase start` 時に使用。
 # ホスト済み: `npm run sync:supabase-confirmation-email` または Dashboard に confirmation-body.html を貼る。
 [auth.email.template.confirmation]
-subject = "Viewtrace: メールアドレスの確認 / Confirm your signup"
+subject = "Confirm your email — Viewtrace"
 content_path = "./supabase/templates/confirmation-body.html"
 
 [auth.sms]
