@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { LoginView } from "@/components/auth/LoginView";
-import { getAuthEmailRedirectTo } from "@/lib/auth/callback-url";
 import { getSession } from "@/lib/auth/session";
 
 export const metadata: Metadata = {
@@ -28,11 +27,8 @@ export default async function LoginPage({
     redirect("/dashboard");
   }
 
-  const callbackUrl = await getAuthEmailRedirectTo();
-
   return (
     <LoginView
-      callbackUrl={callbackUrl}
       nextPath={nextPath}
       initialMode={initialMode}
       verified={verified}

@@ -9,12 +9,10 @@ import { loginPageCopy } from "@/lib/auth/login-copy";
 type Mode = "signin" | "signup";
 
 export function LoginView({
-  callbackUrl,
   nextPath,
   initialMode,
   verified,
 }: {
-  callbackUrl: string;
   nextPath?: string;
   initialMode: Mode;
   verified: boolean;
@@ -146,7 +144,6 @@ export function LoginView({
                 <LoginForm
                   nextPath={nextPath}
                   initialMode={initialMode}
-                  authCallbackUrl={callbackUrl}
                   locale={locale}
                 />
             </>

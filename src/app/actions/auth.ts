@@ -3,8 +3,11 @@
 import { createHash } from "node:crypto";
 import { redirect } from "next/navigation";
 import { appendAuditEvent, AUDIT_ACTION } from "@/lib/audit-log";
-import { isValidEmail, mapAuthErrorForLocale } from "@/lib/auth/form-helpers";
+import { getAuthEmailRedirectTo } from "@/lib/auth/callback-url";
+import { isSignupPasswordOk, isValidEmail, mapAuthErrorForLocale } from "@/lib/auth/form-helpers";
 import type { LoginLocale } from "@/lib/auth/login-copy";
+import { loginPageCopy } from "@/lib/auth/login-copy";
+import { TRIAL_CONFIG } from "@/lib/plans";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { insertTrialSignupRow } from "@/lib/auth/trial-signup-server";
 import { getSession } from "@/lib/auth/session";
@@ -16,8 +19,7 @@ import { insertOpsSignal } from "@/lib/ops/insert-signal";
 export type AuthFormState = { error?: string; message?: string } | null;
 
 /**
- * ログインのみ（Server Action）。サインアップは PKCE の code verifier をブラウザ Cookie に確実に残すため、
- * Client Component から `createSupabaseBrowserClient().auth.signUp` で行う。
+ * ログイン（Server Action）。
  */
 export async function authFormAction(
   _prev: AuthFormState,
@@ -75,6 +77,86 @@ export async function authFormAction(
     redirect(nextRaw);
   }
   redirect("/dashboard");
+}
+
+/**
+ * サインアップ（Server Action）。
+ * ブラウザ `signUp` は PKCE 用の `pkce_…` TokenHash になり、メールの `verifyOtp` と相性が悪い。
+ * サーバー経由で送ると別ブラウザでも確認リンクが通りやすい。
+ */
+export async function signupFormAction(
+  _prev: AuthFormState,
+  formData: FormData,
+): Promise<AuthFormState> {
+  const localeRaw = String(formData.get("_locale") ?? "en");
+  const locale: LoginLocale = localeRaw === "ja" ? "ja" : "en";
+  const t = loginPageCopy[locale].form;
+
+  const email = String(formData.get("email") ?? "").trim();
+  const fullName = String(formData.get("fullName") ?? "").trim().slice(0, 200);
+  const companyName = String(formData.get("companyName") ?? "").trim().slice(0, 200);
+  const phone = String(formData.get("phone") ?? "").trim().slice(0, 40);
+  const password = String(formData.get("password") ?? "");
+  const passwordConfirm = String(formData.get("passwordConfirm") ?? "");
+
+  if (!email || !isValidEmail(email)) {
+    return { error: t.errInvalidEmail };
+  }
+  if (!fullName) {
+    return { error: t.errNameRequired };
+  }
+  if (!isSignupPasswordOk(password)) {
+    return { error: t.errPasswordRules };
+  }
+  if (password !== passwordConfirm) {
+    return { error: t.errPasswordMismatch };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const emailRedirectTo = await getAuthEmailRedirectTo();
+  const trialStartedAt = new Date().toISOString();
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo,
+      data: {
+        plan: "freeplan" as const,
+        trial_active: true,
+        trial_started_at: trialStartedAt,
+        trial_free_observations: TRIAL_CONFIG.freeObservations,
+        trial_days: TRIAL_CONFIG.trialDays,
+        full_name: fullName,
+        company_name: companyName.length > 0 ? companyName : null,
+        phone: phone.length > 0 ? phone : null,
+      },
+    },
+  });
+
+  if (error) {
+    return { error: mapAuthErrorForLocale(error.message, locale) };
+  }
+
+  if (!data.user) {
+    return { error: t.errSignupIncomplete };
+  }
+
+  if (data.session) {
+    await insertTrialSignupRow(
+      supabase,
+      email,
+      locale,
+      data.user.user_metadata as Record<string, unknown> | undefined,
+    );
+    const nextRaw = String(formData.get("next") ?? "").trim();
+    if (nextRaw.startsWith("/") && !nextRaw.startsWith("//")) {
+      redirect(nextRaw);
+    }
+    redirect("/dashboard");
+  }
+
+  return { message: t.signupSuccessMessage };
 }
 
 export async function logoutAction(): Promise<void> {

@@ -1,40 +1,24 @@
 "use client";
 
 import { useActionState, useId, useState } from "react";
-import { authFormAction } from "@/app/actions/auth";
-import {
-  isSignupPasswordOk,
-  isValidEmail,
-  mapAuthErrorForLocale,
-} from "@/lib/auth/form-helpers";
-import type { LoginLocale } from "@/lib/auth/login-copy";
-import { buildSignupEmailRedirectTo } from "@/lib/auth/signup-email-redirect";
+import { authFormAction, signupFormAction } from "@/app/actions/auth";
 import { loginPageCopy } from "@/lib/auth/login-copy";
-import { postAuthSideEffectsBeforeNavigate } from "@/lib/auth/post-auth-redirect";
-import { siteOrigin } from "@/lib/site";
-import { TRIAL_CONFIG } from "@/lib/plans";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import type { LoginLocale } from "@/lib/auth/login-copy";
 
 type Mode = "signin" | "signup";
 
 export function LoginForm({
   nextPath,
   initialMode = "signup",
-  authCallbackUrl,
   locale,
 }: {
   nextPath?: string;
   initialMode?: Mode;
-  /** Absolute `/auth/callback` URL for email confirmation & PKCE (origin must match). */
-  authCallbackUrl: string;
   locale: LoginLocale;
 }) {
   const t = loginPageCopy[locale].form;
   const [signInState, signInAction, signInPending] = useActionState(authFormAction, null);
-  const [signupFeedback, setSignupFeedback] = useState<{ error?: string; message?: string } | null>(
-    null,
-  );
-  const [signupPending, setSignupPending] = useState(false);
+  const [signupState, signupAction, signupPending] = useActionState(signupFormAction, null);
   const [showPassword, setShowPassword] = useState(false);
   const [mode, setMode] = useState<Mode>(initialMode);
   const passwordId = useId();
@@ -45,124 +29,9 @@ export function LoginForm({
   const safeNext =
     nextPath?.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "";
 
-  /** サーバー計算のコールバック URL（フォールバック用・`authCallbackUrl` と同形） */
-  function buildEmailRedirectTo(): string {
-    return authCallbackUrl;
-  }
-
-  /**
-   * 確認メールの `redirect_to`。Supabase の Redirect URLs と一致させる。
-   *
-   * - 本番で `NEXT_PUBLIC_SITE_URL` があるときは **正規オリジン**（apex 等）に固定し、
-   *   `www` と apex で別 URL になって許可リストから外れるのを防ぐ。
-   * - 未設定時（プレビュー・ローカルなど）は開いているタブの `origin` を使う。
-   */
-  function emailRedirectToForSignup(): string {
-    try {
-      if (process.env.NEXT_PUBLIC_SITE_URL?.trim()) {
-        return buildSignupEmailRedirectTo(siteOrigin);
-      }
-      return buildSignupEmailRedirectTo(window.location.origin);
-    } catch {
-      return buildEmailRedirectTo();
-    }
-  }
-
-  async function submitSignup(fd: FormData) {
-    setSignupFeedback(null);
-    const email = String(fd.get("email") ?? "").trim();
-    const fullName = String(fd.get("fullName") ?? "").trim().slice(0, 200);
-    const companyName = String(fd.get("companyName") ?? "").trim().slice(0, 200);
-    const phone = String(fd.get("phone") ?? "").trim().slice(0, 40);
-    const password = String(fd.get("password") ?? "");
-    const passwordConfirm = String(fd.get("passwordConfirm") ?? "");
-
-    if (!email || !isValidEmail(email)) {
-      setSignupFeedback({ error: t.errInvalidEmail });
-      return;
-    }
-    if (!fullName) {
-      setSignupFeedback({ error: t.errNameRequired });
-      return;
-    }
-    if (!isSignupPasswordOk(password)) {
-      setSignupFeedback({
-        error: t.errPasswordRules,
-      });
-      return;
-    }
-    if (password !== passwordConfirm) {
-      setSignupFeedback({ error: t.errPasswordMismatch });
-      return;
-    }
-
-    setSignupPending(true);
-    try {
-      const supabase = createSupabaseBrowserClient();
-      const trialStartedAt = new Date().toISOString();
-      const emailRedirectTo = emailRedirectToForSignup();
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo,
-          data: {
-            plan: "freeplan" as const,
-            trial_active: true,
-            trial_started_at: trialStartedAt,
-            trial_free_observations: TRIAL_CONFIG.freeObservations,
-            trial_days: TRIAL_CONFIG.trialDays,
-            full_name: fullName,
-            company_name: companyName.length > 0 ? companyName : null,
-            phone: phone.length > 0 ? phone : null,
-          },
-        },
-      });
-
-      if (error) {
-        console.warn("[auth] signUp failed", error.message, error);
-        setSignupFeedback({ error: mapAuthErrorForLocale(error.message, locale) });
-        return;
-      }
-
-      if (!data.user) {
-        setSignupFeedback({
-          error: t.errSignupIncomplete,
-        });
-        return;
-      }
-
-      if (data.session) {
-        await postAuthSideEffectsBeforeNavigate();
-        window.location.assign(safeNext || "/dashboard");
-        return;
-      }
-
-      const emailDomain = email.includes("@") ? email.split("@")[1] : "";
-      console.info("[auth] signup confirmation email requested (browser)", {
-        userId: data.user.id,
-        emailDomain,
-        authCallbackUrl,
-        emailRedirectTo,
-      });
-
-      setSignupFeedback({
-        message: t.signupSuccessMessage,
-      });
-    } finally {
-      setSignupPending(false);
-    }
-  }
-
   return (
     <form
-      action={mode === "signin" ? signInAction : undefined}
-      onSubmit={(e) => {
-        if (mode === "signup") {
-          e.preventDefault();
-          void submitSignup(new FormData(e.currentTarget));
-        }
-      }}
+      action={mode === "signin" ? signInAction : signupAction}
       className="mt-8 space-y-5"
     >
       <input type="hidden" name="_locale" value={locale} />
@@ -171,10 +40,7 @@ export function LoginForm({
       <div className="flex rounded-xl border border-border p-1 text-sm font-medium">
         <button
           type="button"
-          onClick={() => {
-            setMode("signup");
-            setSignupFeedback(null);
-          }}
+          onClick={() => setMode("signup")}
           className={`flex-1 rounded-lg py-2 transition ${
             mode === "signup"
               ? "bg-accent text-white shadow-sm"
@@ -185,10 +51,7 @@ export function LoginForm({
         </button>
         <button
           type="button"
-          onClick={() => {
-            setMode("signin");
-            setSignupFeedback(null);
-          }}
+          onClick={() => setMode("signin")}
           className={`flex-1 rounded-lg py-2 transition ${
             mode === "signin"
               ? "bg-accent text-white shadow-sm"
@@ -324,20 +187,20 @@ export function LoginForm({
           {signInState.message}
         </p>
       ) : null}
-      {mode === "signup" && signupFeedback?.error ? (
+      {mode === "signup" && signupState?.error ? (
         <p
           role="alert"
           className="rounded-xl border border-red-200/80 bg-red-50 px-3 py-2.5 text-sm text-red-900"
         >
-          {signupFeedback.error}
+          {signupState.error}
         </p>
       ) : null}
-      {mode === "signup" && signupFeedback?.message ? (
+      {mode === "signup" && signupState?.message ? (
         <p
           role="status"
           className="whitespace-pre-line rounded-xl border border-emerald-200/80 bg-emerald-50 px-3 py-2.5 text-sm leading-relaxed text-emerald-900"
         >
-          {signupFeedback.message}
+          {signupState.message}
         </p>
       ) : null}
       <button

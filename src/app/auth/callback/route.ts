@@ -32,6 +32,32 @@ function emailOtpTypesForVerify(rawType: string | null): EmailOtpType[] {
   return [t as EmailOtpType];
 }
 
+/**
+ * Browser PKCE signUp emails use `pkce_…` in `token_hash`; try code exchange first (same browser),
+ * then verifyOtp for server-issued signup links.
+ */
+async function completeEmailLinkSession(
+  supabase: SupabaseClient,
+  tokenHash: string,
+  rawType: string | null,
+): Promise<Error | null> {
+  if (tokenHash.startsWith("pkce_")) {
+    const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(tokenHash);
+    if (!exchangeError) return null;
+  }
+
+  let verifyError: Error | null = null;
+  for (const otpType of emailOtpTypesForVerify(rawType)) {
+    const { error } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: otpType,
+    });
+    if (!error) return null;
+    verifyError = error;
+  }
+  return verifyError;
+}
+
 async function finishSessionSideEffects(
   supabase: SupabaseClient,
   request: NextRequest,
@@ -148,18 +174,7 @@ export async function GET(request: NextRequest) {
     },
   });
 
-  let verifyError: Error | null = null;
-  for (const otpType of emailOtpTypesForVerify(type)) {
-    const { error } = await supabase.auth.verifyOtp({
-      token_hash: tokenHash,
-      type: otpType,
-    });
-    if (!error) {
-      verifyError = null;
-      break;
-    }
-    verifyError = error;
-  }
+  const verifyError = await completeEmailLinkSession(supabase, tokenHash, type);
   if (verifyError) {
     const u = new URL("/auth/auth-code-error", request.url);
     u.searchParams.set("reason", verifyError.message);
