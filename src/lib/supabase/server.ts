@@ -1,18 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies, headers } from "next/headers";
+import { authCookieContextFromHeaders } from "@/lib/supabase/auth-request-context";
 import { supabaseCookieOptions } from "@/lib/supabase/cookie-options";
 import { normalizeSupabaseUrl } from "@/lib/supabase/url";
-
-async function hostAndHttpsFromHeaders(): Promise<{ host: string; isHttps: boolean }> {
-  const h = await headers();
-  const forwarded = h.get("x-forwarded-host");
-  const host = (forwarded?.split(",")[0]?.trim() || h.get("host") || "localhost").split(
-    ":",
-  )[0];
-  const proto = h.get("x-forwarded-proto")?.split(",")[0]?.trim();
-  const isHttps = proto === "https";
-  return { host, isHttps };
-}
 
 /**
  * Server Component / Server Action / Route Handler 用。
@@ -30,7 +20,7 @@ export async function createSupabaseServerClient() {
 
   const url = normalizeSupabaseUrl(rawUrl);
   const cookieStore = await cookies();
-  const { host, isHttps } = await hostAndHttpsFromHeaders();
+  const { host, isHttps } = authCookieContextFromHeaders(await headers());
 
   return createServerClient(url, anonKey, {
     cookieOptions: supabaseCookieOptions(host, isHttps),

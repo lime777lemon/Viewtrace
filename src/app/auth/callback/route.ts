@@ -4,6 +4,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent, AUDIT_ACTION } from "@/lib/audit-log";
 import { POST_EMAIL_VERIFY_PATH } from "@/lib/auth/email-verified-copy";
 import { insertTrialSignupRow } from "@/lib/auth/trial-signup-server";
+import { authCookieContextFromNextRequest } from "@/lib/supabase/auth-request-context";
 import { supabaseCookieOptions } from "@/lib/supabase/cookie-options";
 import { normalizeSupabaseUrl } from "@/lib/supabase/url";
 
@@ -44,7 +45,7 @@ async function finishSessionSideEffects(
     await appendAuditEvent(supabase, {
       scope: "system",
       action: AUDIT_ACTION.AUTH_SIGN_IN,
-      meta: { method: "oauth" },
+      meta: { method: "email_verify" },
     });
   }
 }
@@ -76,14 +77,13 @@ export async function GET(request: NextRequest) {
     request.nextUrl.searchParams.get("token_hash") ?? request.nextUrl.searchParams.get("token");
   const type = request.nextUrl.searchParams.get("type");
 
+  const cookieCtx = authCookieContextFromNextRequest(request);
+
   if (code) {
     let redirectResponse = NextResponse.redirect(redirectTarget);
 
     const supabaseExchange = createServerClient(url, anonKey, {
-      cookieOptions: supabaseCookieOptions(
-        request.nextUrl.hostname,
-        request.nextUrl.protocol === "https:",
-      ),
+      cookieOptions: supabaseCookieOptions(cookieCtx.host, cookieCtx.isHttps),
       cookies: {
         getAll() {
           return request.cookies.getAll();
@@ -122,10 +122,7 @@ export async function GET(request: NextRequest) {
   let redirectResponse = NextResponse.redirect(redirectTarget);
 
   const supabase = createServerClient(url, anonKey, {
-    cookieOptions: supabaseCookieOptions(
-      request.nextUrl.hostname,
-      request.nextUrl.protocol === "https:",
-    ),
+    cookieOptions: supabaseCookieOptions(cookieCtx.host, cookieCtx.isHttps),
     cookies: {
       getAll() {
         return request.cookies.getAll();

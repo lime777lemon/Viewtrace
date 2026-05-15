@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { EmailVerifiedView } from "@/components/auth/EmailVerifiedView";
 import { getSession } from "@/lib/auth/session";
 
@@ -12,5 +13,9 @@ export const metadata: Metadata = {
 
 export default async function EmailVerifiedPage() {
   const session = await getSession();
-  return <EmailVerifiedView hasSession={Boolean(session)} />;
+  // 確認リンクでセッションが付いているときは再ログインさせずダッシュボードへ（二重 sign-in によるトークン競合を避ける）
+  if (session) {
+    redirect("/dashboard");
+  }
+  return <EmailVerifiedView hasSession={false} />;
 }
