@@ -1,38 +1,52 @@
 <!--
-  【本番 Supabase Dashboard】
-  Authentication → Email Templates → Confirm signup の「本文」には、
-  下の <body> の中身だけをコピーして貼ってください（<html> 等は Dashboard には書かない）。
+  【このファイルの読み方】
 
-  【必須チェックリスト】
-  1) Authentication → URL Configuration
-     - Site URL: アプリの正規オリジン（例 https://viewtrace.net）を Vercel の NEXT_PUBLIC_SITE_URL と揃える。
-     - Redirect URLs: 少なくとも次を両方登録（コードの authCallbackUrlsForSupabaseAllowlist と同趣旨）
-         https://viewtrace.net/auth/callback
-         https://www.viewtrace.net/auth/callback
-       ローカル・プレビュー用の http(s)://localhost:PORT/auth/callback や https://*.vercel.app/auth/callback も追加。
-  2) 本文は **{{ .ConfirmationURL }} だけにしない**（PKCE・別ブラウザで code verifier 不足になりやすい）。
-     下記の **{{ .RedirectTo }}?token_hash=…** を使う（サーバーで verifyOtp）。
+  ■ 本番（Supabase Dashboard）
+    Authentication → Email Templates → Confirm signup の「本文」には、
+    下の <body> の中身だけをコピーして貼ってください。
+    （<html>・<head>・<body> のタグは Dashboard には書かないでください。）
+    または supabase/templates/confirmation-body.html をそのままコピーしても同じです。
+
+  ■ なぜ ConfirmationURL を使わないか
+    {{ .ConfirmationURL }} は PKCE 用で、メールを開いたブラウザに
+    「サインアップ時と同じ code verifier Cookie」が必要です。
+    別端末・別ブラウザ・localhost と本番の混在では
+    「PKCE code verifier not found in storage」になりやすいです。
+
+  ■ このテンプレート
+    アプリの /auth/callback へ token_hash を渡し、サーバーで verifyOtp します
+    （src/app/auth/callback/route.ts）。PKCE verifier は不要です。
 
   ■ RedirectTo について
     signUp の emailRedirectTo（例: https://viewtrace.net/auth/callback）が入ります。
+    クエリを自分で付けない限り `?token_hash=…&type=signup` で問題ありません。
+
+  ■ CLI で同期する場合
+    npm run sync:supabase-confirmation-email
+    （要 SUPABASE_ACCESS_TOKEN + SUPABASE_PROJECT_REF）
 -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Confirm your signup</title>
 </head>
 <body style="font-family: system-ui, sans-serif; line-height: 1.5;">
-  <h2>Confirm your signup / メールアドレスの確認</h2>
-  <p>Follow this link to confirm your user:</p>
-  <p>
-    <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=signup">Confirm your mail / メールを確認する</a>
-  </p>
-  <p style="font-size: 13px; color: #444;">
-    上のボタンが開けない場合は、次の URL をブラウザのアドレスバーに貼り付けてください。<br />
-    If the button does not work, paste this URL into your browser:<br />
-    <span style="word-break: break-all;">{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=signup</span>
-  </p>
+<h2 style="font-family: system-ui, sans-serif; line-height: 1.5;">Viewtrace — メールアドレスの確認</h2>
+<p style="font-family: system-ui, sans-serif; line-height: 1.5;">
+  下のボタンを押して登録を完了してください。メールアプリ内ブラウザで開けない場合は、
+  <strong>Chrome や Safari でこのリンクを開いて</strong>ください（PKCE の <code>?code=</code> リンクは別ブラウザで失敗します）。
+</p>
+<p style="font-family: system-ui, sans-serif; line-height: 1.5;">
+  Confirm your email for Viewtrace. If the button does not work in your mail app, open the link below in Chrome or Safari.
+</p>
+<p style="font-family: system-ui, sans-serif; line-height: 1.5;">
+  <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=signup">メールアドレスを確認する / Confirm your mail</a>
+</p>
+<p style="font-family: system-ui, sans-serif; font-size: 13px; color: #444; line-height: 1.5;">
+  ボタンが開けない場合は URL をブラウザに貼り付けてください / Paste this URL if the button fails:<br />
+  <span style="word-break: break-all;">{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=signup</span>
+</p>
 </body>
 </html>
