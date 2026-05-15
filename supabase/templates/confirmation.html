@@ -1,24 +1,20 @@
 <!--
-  【このファイルの読み方】
+  【本番 Supabase Dashboard】
+  Authentication → Email Templates → Confirm signup の「本文」には、
+  下の <body> の中身だけをコピーして貼ってください（<html> 等は Dashboard には書かない）。
 
-  ■ 本番（Supabase Dashboard）
-    Authentication → Email Templates → Confirm signup の「本文」には、
-    下の <body> の中身だけをコピーして貼ってください。
-    （<html>・<head>・<body> のタグは Dashboard には書かないでください。）
-
-  ■ なぜ ConfirmationURL を使わないか
-    {{ .ConfirmationURL }} は PKCE 用で、メールを開いたブラウザに
-    「サインアップ時と同じ code verifier Cookie」が必要です。
-    別端末・別ブラウザ・localhost と本番の混在では
-    「PKCE code verifier not found in storage」になりやすいです。
-
-  ■ このテンプレート
-    アプリの /auth/callback へ token_hash を渡し、サーバーで verifyOtp します
-    （src/app/auth/callback/route.ts）。PKCE verifier は不要です。
+  【必須チェックリスト】
+  1) Authentication → URL Configuration
+     - Site URL: アプリの正規オリジン（例 https://viewtrace.net）を Vercel の NEXT_PUBLIC_SITE_URL と揃える。
+     - Redirect URLs: 少なくとも次を両方登録（コードの authCallbackUrlsForSupabaseAllowlist と同趣旨）
+         https://viewtrace.net/auth/callback
+         https://www.viewtrace.net/auth/callback
+       ローカル・プレビュー用の http(s)://localhost:PORT/auth/callback や https://*.vercel.app/auth/callback も追加。
+  2) 本文は **{{ .ConfirmationURL }} だけにしない**（PKCE・別ブラウザで code verifier 不足になりやすい）。
+     下記の **{{ .RedirectTo }}?token_hash=…** を使う（サーバーで verifyOtp）。
 
   ■ RedirectTo について
     signUp の emailRedirectTo（例: https://viewtrace.net/auth/callback）が入ります。
-    クエリを自分で付けない限り `?token_hash=…` で問題ありません。
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -28,10 +24,15 @@
   <title>Confirm your signup</title>
 </head>
 <body style="font-family: system-ui, sans-serif; line-height: 1.5;">
-  <h2>Confirm your signup</h2>
+  <h2>Confirm your signup / メールアドレスの確認</h2>
   <p>Follow this link to confirm your user:</p>
   <p>
-    <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=signup">Confirm your mail</a>
+    <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=signup">Confirm your mail / メールを確認する</a>
+  </p>
+  <p style="font-size: 13px; color: #444;">
+    上のボタンが開けない場合は、次の URL をブラウザのアドレスバーに貼り付けてください。<br />
+    If the button does not work, paste this URL into your browser:<br />
+    <span style="word-break: break-all;">{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=signup</span>
   </p>
 </body>
 </html>

@@ -15,7 +15,7 @@ import { uploadObservationSnapshotPng } from "@/lib/observation-snapshot-storage
 import pixelmatch from "pixelmatch";
 import { PNG } from "pngjs";
 import { sendResendEmail, isResendConfigured } from "@/lib/resend";
-import { siteOrigin } from "@/lib/site";
+import { getAppOriginForEmailLinks } from "@/lib/site";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -259,7 +259,7 @@ export async function POST(req: Request) {
       .update({ last_run_at: capturedAt, next_run_at: nextRun })
       .eq("id", watchId);
 
-    const detailUrl = `${siteOrigin}/dashboard/observations/${obsId}`;
+    const detailUrl = `${getAppOriginForEmailLinks()}/dashboard/observations/${obsId}`;
 
     if (notifyMode === "always") {
       if (!userEmail) {

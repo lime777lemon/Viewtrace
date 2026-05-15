@@ -92,7 +92,8 @@ function isObservation(x: unknown): x is Observation {
     o.id.length < 120 &&
     typeof o.url === "string" &&
     o.url.length < 2000 &&
-    (o.regionValue === undefined || (typeof o.regionValue === "string" && o.regionValue.length < 20)) &&
+    (o.regionValue === undefined ||
+      (typeof o.regionValue === "string" && o.regionValue.length < 64)) &&
     typeof o.regionLabel === "string" &&
     o.regionLabel.length < 200 &&
     typeof o.capturedAt === "string" &&
@@ -292,6 +293,10 @@ export async function getObservationMerged(id: string): Promise<Observation | un
   return user.find((o) => o.id === id);
 }
 
+/**
+ * 記録詳細・レポート・メール直リンク用。
+ * 保持期間外でも DB に行があれば返す（一覧・CSV は `getMergedObservationsForPlan` で保持期間フィルタ）。
+ */
 export async function getObservationMergedForPlan(
   id: string,
   planId: PlanId,
@@ -301,8 +306,6 @@ export async function getObservationMergedForPlan(
     obs = await fetchObservationByIdForCurrentUser(id, planId);
   }
   if (!obs) return undefined;
-  const retentionDays = getPlan(planId).retentionDays;
-  if (!filterObservationsByRetention([obs], retentionDays).length) return undefined;
   return obs;
 }
 

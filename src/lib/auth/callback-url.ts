@@ -38,13 +38,31 @@ function originFromForwardedHeaders(h: Headers): string | null {
 /** 環境変数のみ（Server Action 外でも利用可） */
 export function resolveStaticSiteOrigin(): string {
   const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-  if (explicit) return trimTrailingSlash(explicit);
+  // `NEXT_PUBLIC_SITE_URL=viewtrace.net` のように scheme 欠けでも site.ts と同じ正規化に揃える
+  if (explicit) return trimTrailingSlash(siteOrigin);
   const vercel = process.env.VERCEL_URL?.trim();
   if (vercel) {
     const host = vercel.replace(/^https?:\/\//, "").replace(/\/+$/, "");
     return `https://${host}`;
   }
   return siteOrigin;
+}
+
+/**
+ * Supabase Dashboard → Authentication → URL Configuration の「Redirect URLs」に
+ * 追加するコールバック URL の候補（本番ドメインの apex / www の両方）。
+ * 実際の Site URL / NEXT_PUBLIC_SITE_URL がどちらでも、もう一方のホストから開いたときの verify 用。
+ */
+export function authCallbackUrlsForSupabaseAllowlist(): readonly string[] {
+  const set = new Set<string>();
+  try {
+    set.add(`${trimTrailingSlash(siteOrigin)}/auth/callback`);
+  } catch {
+    /* ignore */
+  }
+  set.add(`https://${siteDomain}/auth/callback`);
+  set.add(`https://www.${siteDomain}/auth/callback`);
+  return [...set];
 }
 
 function isAllowedRedirectOrigin(origin: string): boolean {
@@ -67,7 +85,10 @@ function isAllowedRedirectOrigin(origin: string): boolean {
  * フォーム送信時の Origin が取れる場合はそれを優先（ローカル別ポート・Preview で emailRedirectTo が本番固定になるのを防ぐ）。
  *
  * Supabase Dashboard → Authentication → URL Configuration:
- * 「Redirect URLs」に少なくとも `https://<本番ドメイン>/auth/callback` とローカル用 `http://localhost:<port>/auth/callback` を追加する。
+ * 「Redirect URLs」に本番の `/auth/callback` を登録する。候補の一覧はコード上
+ * `authCallbackUrlsForSupabaseAllowlist()`（`src/lib/auth/callback-url.ts`）と同じく、
+ * apex / www の両方を含めることを推奨。
+ * ローカルは `http://localhost:<port>/auth/callback` 等を Redirect URLs と `supabase/config.toml` の `additional_redirect_urls` に追加。
  * クエリ付き URL はワイルドカード（例 `https://viewtrace.net/**`）も検討（[Redirect URLs](https://supabase.com/docs/guides/auth/redirect-urls)）。
  * 未登録だと `redirect_to` が無効になり、メールの verify リンクで `redirect_to` が Site URL のみになり（`/auth/callback` が消える）、トップだけ開くことがある。
  *
