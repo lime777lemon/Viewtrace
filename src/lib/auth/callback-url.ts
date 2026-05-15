@@ -95,7 +95,7 @@ function isAllowedRedirectOrigin(origin: string): boolean {
  * 本番で `NEXT_PUBLIC_SITE_URL` が設定されているときは、この関数は **必ずそのオリジン** の `/auth/callback` を返す（ヘッダより優先）。
  *
  * Email Templates の「Confirm signup」は `supabase/templates/confirmation.html` に合わせる。
- * **推奨**: `href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=signup"`（サーバーで verifyOtp。別ブラウザ可）。
+ * **推奨**: `href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email"`（サーバーで verifyOtp。別ブラウザ可）。
  * `{{ .ConfirmationURL }}` は PKCE 用で、サインアップと違う環境で開くと code verifier 不足になりやすい。
  * `{{ .SiteURL }}` のみにしない（Site URL 直下に落ち、callback を踏めなくなることがある）。
  *

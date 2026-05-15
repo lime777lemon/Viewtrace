@@ -19,7 +19,7 @@
 
   ■ RedirectTo について
     signUp の emailRedirectTo（例: https://viewtrace.net/auth/callback）が入ります。
-    クエリを自分で付けない限り `?token_hash=…&type=signup` で問題ありません。
+    クエリは `?token_hash=…&type=email`（signup は非推奨で verifyOtp が失敗しやすい）。
 
   ■ CLI で同期する場合
     npm run sync:supabase-confirmation-email
@@ -42,11 +42,11 @@
   Confirm your email for Viewtrace. If the button does not work in your mail app, open the link below in Chrome or Safari.
 </p>
 <p style="font-family: system-ui, sans-serif; line-height: 1.5;">
-  <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=signup">メールアドレスを確認する / Confirm your mail</a>
+  <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email">メールアドレスを確認する / Confirm your mail</a>
 </p>
 <p style="font-family: system-ui, sans-serif; font-size: 13px; color: #444; line-height: 1.5;">
   ボタンが開けない場合は URL をブラウザに貼り付けてください / Paste this URL if the button fails:<br />
-  <span style="word-break: break-all;">{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=signup</span>
+  <span style="word-break: break-all;">{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email</span>
 </p>
 </body>
 </html>

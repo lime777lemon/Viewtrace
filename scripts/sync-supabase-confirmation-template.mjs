@@ -77,8 +77,8 @@ if (content.includes("{{ .ConfirmationURL }}") && !content.includes("token_hash"
   console.error("confirmation-body.html still uses ConfirmationURL only — aborting.");
   process.exit(1);
 }
-if (!content.includes("token_hash") || !content.includes("type=signup")) {
-  console.error("confirmation-body.html must include token_hash and type=signup.");
+if (!content.includes("token_hash") || !content.includes("type=email")) {
+  console.error("confirmation-body.html must include token_hash and type=email.");
   process.exit(1);
 }
 
@@ -106,6 +106,6 @@ if (!res.ok) {
 }
 
 console.log(`OK: Confirm signup template updated on project ${ref}`);
-console.log("  - Uses {{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=signup");
+console.log("  - Uses {{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email");
 console.log("  - Matches src/app/auth/callback/route.ts verifyOtp branch");
 console.log("\nSend a new signup test email and confirm the link has token_hash= (not ?code= only).");

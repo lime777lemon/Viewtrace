@@ -1,5 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { EmailOtpType, SupabaseClient } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 import { appendAuditEvent, AUDIT_ACTION } from "@/lib/audit-log";
 import { POST_EMAIL_VERIFY_PATH } from "@/lib/auth/email-verified-copy";
@@ -21,6 +21,15 @@ function resolveNextPath(searchParams: URLSearchParams): string {
 function localeFromRequest(request: NextRequest): "ja" | "en" {
   const accept = request.headers.get("accept-language")?.toLowerCase() ?? "";
   return accept.startsWith("ja") ? "ja" : "en";
+}
+
+/** Confirm signup links should use `type=email` (signup/magiclink are deprecated in verifyOtp). */
+function emailOtpTypesForVerify(rawType: string | null): EmailOtpType[] {
+  const t = rawType?.trim();
+  if (!t) return ["email"];
+  if (t === "signup" || t === "magiclink") return ["email"];
+  if (t === "email") return ["email"];
+  return [t as EmailOtpType];
 }
 
 async function finishSessionSideEffects(
@@ -139,13 +148,21 @@ export async function GET(request: NextRequest) {
     },
   });
 
-  const { error } = await supabase.auth.verifyOtp({
-    token_hash: tokenHash,
-    type: type as "signup" | "email" | "recovery" | "invite" | "magiclink" | "email_change",
-  });
-  if (error) {
+  let verifyError: Error | null = null;
+  for (const otpType of emailOtpTypesForVerify(type)) {
+    const { error } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: otpType,
+    });
+    if (!error) {
+      verifyError = null;
+      break;
+    }
+    verifyError = error;
+  }
+  if (verifyError) {
     const u = new URL("/auth/auth-code-error", request.url);
-    u.searchParams.set("reason", error.message);
+    u.searchParams.set("reason", verifyError.message);
     return NextResponse.redirect(u);
   }
 
