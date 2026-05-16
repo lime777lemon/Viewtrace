@@ -7,6 +7,7 @@ import { getPlan } from "@/lib/plans";
 import { getRegionOptions } from "@/lib/regions";
 import type { PostgrestError } from "@supabase/supabase-js";
 import { computeObservationContentHash } from "@/lib/observation-content-hash";
+import { sanitizeObservationRouteId } from "@/lib/observation-route-id";
 
 export const USER_OBSERVATIONS_COOKIE = "viewtrace_user_obs";
 
@@ -164,14 +165,13 @@ async function fetchObservationByIdForCurrentUser(
 
   const supabase = await createSupabaseServerClient();
 
-  const trimmed = id.trim();
-  /** メール・ブックマーク由来の末尾空白・改行を除去 */
-  if (!trimmed || trimmed.length >= 120) return undefined;
+  const sanitized = sanitizeObservationRouteId(id);
+  if (!sanitized) return undefined;
 
   const { data: row, error } = await supabase
     .from("observations")
     .select(OBSERVATION_ROW_SELECT)
-    .eq("id", trimmed)
+    .eq("id", sanitized)
     .maybeSingle();
 
   if (error) {
@@ -297,7 +297,7 @@ export async function getMergedObservationsForPlan(planId: PlanId): Promise<Obse
 }
 
 export async function getObservationMerged(id: string): Promise<Observation | undefined> {
-  const needle = id.trim();
+  const needle = sanitizeObservationRouteId(id);
   const user = await readUserObservations();
   return user.find((o) => o.id === needle);
 }
@@ -313,7 +313,7 @@ export async function getObservationMergedForPlan(
   /** メール直リンクは一覧 200 件外でも DB の id があれば表示するため、単体 SELECT を先に試す */
   const obs =
     (await fetchObservationByIdForCurrentUser(id, planId)) ??
-    (await getObservationMerged(id.trim()));
+    (await getObservationMerged(id));
   return obs;
 }
 

@@ -26,13 +26,20 @@ import {
 import { copy } from "@/lib/i18n";
 import { localizeObservationNote } from "@/lib/i18n/observation-persisted-copy";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
+import { sanitizeObservationRouteId } from "@/lib/observation-route-id";
 
 type PageProps = { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string }> };
 
 export async function generateMetadata({ params }: Pick<PageProps, "params">): Promise<Metadata> {
   const { id: idRaw } = await params;
-  const id = idRaw.trim();
+  const id = sanitizeObservationRouteId(idRaw);
   const locale = await getRequestLocale();
+  if (!id) {
+    return {
+      title: locale === "ja" ? "記録 | Viewtrace" : "Record | Viewtrace",
+      robots: { index: false, follow: false },
+    };
+  }
   const session = await getSession();
   const obs = session
     ? await getObservationMergedForPlan(id, session.plan)
@@ -52,7 +59,8 @@ export async function generateMetadata({ params }: Pick<PageProps, "params">): P
 
 export default async function ObservationDetailPage({ params, searchParams }: PageProps) {
   const { id: idRaw } = await params;
-  const id = idRaw.trim();
+  const id = sanitizeObservationRouteId(idRaw);
+  if (!id) notFound();
   const sp = await searchParams;
   const locale = await getRequestLocale();
   const rt = copy[locale].observationReport;

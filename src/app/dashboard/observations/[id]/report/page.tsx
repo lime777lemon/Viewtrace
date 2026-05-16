@@ -10,6 +10,7 @@ import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
 import { copy } from "@/lib/i18n";
 import { localizeObservationNote } from "@/lib/i18n/observation-persisted-copy";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
+import { sanitizeObservationRouteId } from "@/lib/observation-route-id";
 import {
   OBSERVATION_CONTENT_HASH_VERSION,
   verifyObservationStoredHash,
@@ -19,11 +20,14 @@ type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id: idRaw } = await params;
-  const id = idRaw.trim();
-  const session = await getSession();
+  const id = sanitizeObservationRouteId(idRaw);
   const locale = await getRequestLocale();
-  const obs = session ? await getObservationMergedForPlan(id, session.plan) : undefined;
   const t = copy[locale].observationReport;
+  if (!id) {
+    return { title: t.title, robots: { index: false, follow: false } };
+  }
+  const session = await getSession();
+  const obs = session ? await getObservationMergedForPlan(id, session.plan) : undefined;
   return {
     title: obs ? `${t.title} · ${obs.id}` : t.title,
     robots: { index: false, follow: false },
@@ -32,7 +36,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ObservationReportPage({ params }: Props) {
   const { id: idRaw } = await params;
-  const id = idRaw.trim();
+  const id = sanitizeObservationRouteId(idRaw);
+  if (!id) notFound();
   const locale = await getRequestLocale();
   const t = copy[locale].observationReport;
 

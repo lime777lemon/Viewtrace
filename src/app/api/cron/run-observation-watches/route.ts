@@ -277,6 +277,8 @@ export async function POST(req: Request) {
           blobUrl ? `Snapshot / スナップショット: ${blobUrl}` : "Snapshot: not stored (check dashboard).",
           "",
           `Open record / 記録を開く: ${detailUrl}`,
+          "",
+          detailUrl,
         ].join("\n");
         const html = [
           "<p>A new scheduled observation was recorded.</p>",
@@ -286,7 +288,7 @@ export async function POST(req: Request) {
           blobUrl
             ? `<p><a href="${escapeHtml(blobUrl)}">Snapshot link</a></p>`
             : "<p>Snapshot was not stored to Blob; open the dashboard for details.</p>",
-          `<p><a href="${escapeHtml(detailUrl)}">Open record / 記録を開く</a></p>`,
+          observationRecordLinkHtml(detailUrl),
         ].join("");
 
         const res = await sendResendEmail({ to: userEmail, subject, text, html });
@@ -337,10 +339,22 @@ export async function POST(req: Request) {
             `最新スナップショット: ${a.snapshot_image_url}`,
             `前回スナップショット: ${b.snapshot_image_url}`,
             "",
-            `記録: ${detailUrl}`,
+            `Open record / 記録を開く: ${detailUrl}`,
+            "",
+            detailUrl,
           ].join("\n");
 
-          const res = await sendResendEmail({ to: userEmail, subject, text });
+          const html = [
+            "<p>差分が大きい変更を検知しました。</p>",
+            `<p><strong>URL</strong><br/>${escapeHtml(url)}</p>`,
+            `<p><strong>地域</strong><br/>${escapeHtml(region)}</p>`,
+            `<p><strong>差分率</strong><br/>${Math.round(ratio * 1000) / 10}%</p>`,
+            `<p><a href="${escapeHtml(a.snapshot_image_url)}">最新スナップショット</a></p>`,
+            `<p><a href="${escapeHtml(b.snapshot_image_url)}">前回スナップショット</a></p>`,
+            observationRecordLinkHtml(detailUrl),
+          ].join("");
+
+          const res = await sendResendEmail({ to: userEmail, subject, text, html });
           if (res.ok) {
             notified += 1;
             await svc
@@ -364,4 +378,17 @@ function escapeHtml(s: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+/** iOS メール等で長い URL が折り返し・長押しで壊れにくいよう、リンクと生 URL を併記する */
+function observationRecordLinkHtml(detailUrl: string): string {
+  const href = escapeHtml(detailUrl);
+  return [
+    '<p style="margin:12px 0;line-height:1.5;word-break:break-all;overflow-wrap:anywhere;-webkit-hyphens:none;hyphens:none;">',
+    `<a href="${href}" style="color:#2563eb;text-decoration:underline;word-break:break-all;overflow-wrap:anywhere;">Open record / 記録を開く</a>`,
+    "</p>",
+    '<p style="margin:8px 0 0;font-size:13px;color:#444;line-height:1.45;word-break:break-all;overflow-wrap:anywhere;-webkit-hyphens:none;hyphens:none;">',
+    href,
+    "</p>",
+  ].join("");
 }
