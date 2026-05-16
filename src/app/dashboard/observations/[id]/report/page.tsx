@@ -18,7 +18,8 @@ import {
 type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { id } = await params;
+  const { id: idRaw } = await params;
+  const id = idRaw.trim();
   const session = await getSession();
   const locale = await getRequestLocale();
   const obs = session ? await getObservationMergedForPlan(id, session.plan) : undefined;
@@ -30,7 +31,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ObservationReportPage({ params }: Props) {
-  const { id } = await params;
+  const { id: idRaw } = await params;
+  const id = idRaw.trim();
   const locale = await getRequestLocale();
   const t = copy[locale].observationReport;
 

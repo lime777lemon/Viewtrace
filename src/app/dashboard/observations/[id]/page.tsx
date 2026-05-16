@@ -30,7 +30,8 @@ import { getRequestLocale } from "@/lib/i18n/locale-server";
 type PageProps = { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string }> };
 
 export async function generateMetadata({ params }: Pick<PageProps, "params">): Promise<Metadata> {
-  const { id } = await params;
+  const { id: idRaw } = await params;
+  const id = idRaw.trim();
   const locale = await getRequestLocale();
   const session = await getSession();
   const obs = session
@@ -50,7 +51,8 @@ export async function generateMetadata({ params }: Pick<PageProps, "params">): P
 }
 
 export default async function ObservationDetailPage({ params, searchParams }: PageProps) {
-  const { id } = await params;
+  const { id: idRaw } = await params;
+  const id = idRaw.trim();
   const sp = await searchParams;
   const locale = await getRequestLocale();
   const rt = copy[locale].observationReport;

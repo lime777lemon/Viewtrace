@@ -101,7 +101,8 @@ function isObservation(x: unknown): x is Observation {
     (o.note === undefined || (typeof o.note === "string" && o.note.length < 500)) &&
     (o.pageTitle === undefined || (typeof o.pageTitle === "string" && o.pageTitle.length < 400)) &&
     (o.snapshotImageUrl === undefined ||
-      (typeof o.snapshotImageUrl === "string" && o.snapshotImageUrl.length < 2048)) &&
+      (typeof o.snapshotImageUrl === "string" &&
+        o.snapshotImageUrl.length < 8192 /* Blob / CDN の長いクエリ URL 対応・DB text */)) &&
     (o.events === undefined ||
       (Array.isArray(o.events) && o.events.length <= 24 && o.events.every(isHistoryEvent))) &&
     (o.contentHash === undefined ||
@@ -163,13 +164,24 @@ async function fetchObservationByIdForCurrentUser(
 
   const supabase = await createSupabaseServerClient();
 
+  const trimmed = id.trim();
+  /** メール・ブックマーク由来の末尾空白・改行を除去 */
+  if (!trimmed || trimmed.length >= 120) return undefined;
+
   const { data: row, error } = await supabase
     .from("observations")
     .select(OBSERVATION_ROW_SELECT)
-    .eq("id", id)
+    .eq("id", trimmed)
     .maybeSingle();
 
-  if (error || !row) return undefined;
+  if (error) {
+    if (process.env.NODE_ENV === "development") {
+      console.warn("[observations] fetchObservationByIdForCurrentUser", error.message);
+    }
+    return undefined;
+  }
+
+  if (!row) return undefined;
   const obs = mapDbRowToObservation(row as unknown as Record<string, unknown>, planForRegionFallback);
   return obs ?? undefined;
 }
@@ -285,8 +297,9 @@ export async function getMergedObservationsForPlan(planId: PlanId): Promise<Obse
 }
 
 export async function getObservationMerged(id: string): Promise<Observation | undefined> {
+  const needle = id.trim();
   const user = await readUserObservations();
-  return user.find((o) => o.id === id);
+  return user.find((o) => o.id === needle);
 }
 
 /**
@@ -297,10 +310,10 @@ export async function getObservationMergedForPlan(
   id: string,
   planId: PlanId,
 ): Promise<Observation | undefined> {
-  let obs = await getObservationMerged(id);
-  if (!obs) {
-    obs = await fetchObservationByIdForCurrentUser(id, planId);
-  }
+  /** メール直リンクは一覧 200 件外でも DB の id があれば表示するため、単体 SELECT を先に試す */
+  let obs =
+    (await fetchObservationByIdForCurrentUser(id, planId)) ??
+    (await getObservationMerged(id.trim()));
   if (!obs) return undefined;
   return obs;
 }
