@@ -7,6 +7,7 @@ import { insertTrialSignupRow } from "@/lib/auth/trial-signup-server";
 import { authCookieContextFromNextRequest } from "@/lib/supabase/auth-request-context";
 import { supabaseCookieOptions } from "@/lib/supabase/cookie-options";
 import { normalizeSupabaseUrl } from "@/lib/supabase/url";
+import { sanitizeDashboardObservationHrefPath } from "@/lib/observation-route-id";
 
 /**
  * メール確認の redirect で `next` が落ちると `/dashboard` へ行き「認証完了」画面を踏めなくなる。
@@ -15,7 +16,9 @@ import { normalizeSupabaseUrl } from "@/lib/supabase/url";
  */
 function resolveNextPath(searchParams: URLSearchParams): string {
   const nextRaw = searchParams.get("next")?.trim() ?? POST_EMAIL_VERIFY_PATH;
-  return nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : POST_EMAIL_VERIFY_PATH;
+  const base =
+    nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : POST_EMAIL_VERIFY_PATH;
+  return sanitizeDashboardObservationHrefPath(base);
 }
 
 function localeFromRequest(request: NextRequest): "ja" | "en" {

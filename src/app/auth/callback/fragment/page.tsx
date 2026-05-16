@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { POST_EMAIL_VERIFY_PATH } from "@/lib/auth/email-verified-copy";
 import {
@@ -8,6 +8,7 @@ import {
   postAuthSideEffectsBeforeNavigate,
 } from "@/lib/auth/post-auth-redirect";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { sanitizeDashboardObservationHrefPath } from "@/lib/observation-route-id";
 
 type Status = "working" | "error";
 
@@ -33,9 +34,12 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
  */
 export default function AuthCallbackFragmentPage() {
   const sp = useSearchParams();
-  const nextRaw = sp?.get("next")?.trim() ?? POST_EMAIL_VERIFY_PATH;
-  const nextPath =
-    nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : POST_EMAIL_VERIFY_PATH;
+  const nextPath = useMemo(() => {
+    const nextRaw = sp?.get("next")?.trim() ?? POST_EMAIL_VERIFY_PATH;
+    const base =
+      nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : POST_EMAIL_VERIFY_PATH;
+    return sanitizeDashboardObservationHrefPath(base);
+  }, [sp]);
   const [status, setStatus] = useState<Status>("working");
   const [detail, setDetail] = useState<string | null>(null);
 

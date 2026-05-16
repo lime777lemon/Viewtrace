@@ -15,6 +15,7 @@ import { parsePlanId } from "@/lib/plans";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { syncPublicUserPlanMirror } from "@/lib/supabase/sync-public-user-plan";
 import { insertOpsSignal } from "@/lib/ops/insert-signal";
+import { sanitizeDashboardObservationHrefPath } from "@/lib/observation-route-id";
 
 export type AuthFormState = { error?: string; message?: string } | null;
 
@@ -74,7 +75,7 @@ export async function authFormAction(
 
   const nextRaw = String(formData.get("next") ?? "").trim();
   if (nextRaw.startsWith("/") && !nextRaw.startsWith("//")) {
-    redirect(nextRaw);
+    redirect(sanitizeDashboardObservationHrefPath(nextRaw));
   }
   redirect("/dashboard");
 }
@@ -151,7 +152,7 @@ export async function signupFormAction(
     );
     const nextRaw = String(formData.get("next") ?? "").trim();
     if (nextRaw.startsWith("/") && !nextRaw.startsWith("//")) {
-      redirect(nextRaw);
+      redirect(sanitizeDashboardObservationHrefPath(nextRaw));
     }
     redirect("/dashboard");
   }

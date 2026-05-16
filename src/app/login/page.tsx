@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { LoginView } from "@/components/auth/LoginView";
 import { getSession } from "@/lib/auth/session";
+import { sanitizeDashboardObservationHrefPath } from "@/lib/observation-route-id";
 
 export const metadata: Metadata = {
   title: "Sign in | Viewtrace",
@@ -15,7 +16,11 @@ export default async function LoginPage({
 }) {
   const sp = await searchParams;
   const nextParam = sp.next?.trim() ?? "";
-  const nextPath = nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : undefined;
+  const nextPathRaw =
+    nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : undefined;
+  const nextPath = nextPathRaw
+    ? sanitizeDashboardObservationHrefPath(nextPathRaw)
+    : undefined;
   const modeParam = sp.mode?.trim().toLowerCase();
   const verified = sp.verified === "1";
   const initialMode = verified || modeParam === "signin" ? ("signin" as const) : ("signup" as const);
