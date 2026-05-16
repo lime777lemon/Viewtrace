@@ -311,10 +311,9 @@ export async function getObservationMergedForPlan(
   planId: PlanId,
 ): Promise<Observation | undefined> {
   /** メール直リンクは一覧 200 件外でも DB の id があれば表示するため、単体 SELECT を先に試す */
-  let obs =
+  const obs =
     (await fetchObservationByIdForCurrentUser(id, planId)) ??
     (await getObservationMerged(id.trim()));
-  if (!obs) return undefined;
   return obs;
 }
 
