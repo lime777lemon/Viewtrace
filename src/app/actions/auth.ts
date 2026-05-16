@@ -16,6 +16,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { syncPublicUserPlanMirror } from "@/lib/supabase/sync-public-user-plan";
 import { insertOpsSignal } from "@/lib/ops/insert-signal";
 import { sanitizeDashboardObservationHrefPath } from "@/lib/observation-route-id";
+import { pwnedPasswordCount, pwnedPasswordErrorMessage } from "@/lib/auth/pwned-passwords";
 
 export type AuthFormState = { error?: string; message?: string } | null;
 
@@ -111,6 +112,15 @@ export async function signupFormAction(
   }
   if (password !== passwordConfirm) {
     return { error: t.errPasswordMismatch };
+  }
+
+  /**
+   * HaveIBeenPwned k-anonymity チェック（Supabase Free でも漏洩済みパスワードを弾く）。
+   * 失敗時は fail-open で従来通り進める（UX 維持）。
+   */
+  const pwnedCount = await pwnedPasswordCount(password);
+  if (pwnedCount >= 1) {
+    return { error: pwnedPasswordErrorMessage(locale, pwnedCount) };
   }
 
   const supabase = await createSupabaseServerClient();

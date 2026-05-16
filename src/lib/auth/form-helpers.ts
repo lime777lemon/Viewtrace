@@ -28,6 +28,14 @@ function mapAuthErrorEn(message: string): string {
   if (m.includes("user already registered") || m.includes("already been registered")) {
     return "This email is already registered. Try signing in instead.";
   }
+  if (
+    m.includes("pwned") ||
+    m.includes("data breach") ||
+    m.includes("leaked password") ||
+    (m.includes("password") && m.includes("compromised"))
+  ) {
+    return "This password has appeared in known data breaches. Please choose a different one.";
+  }
   if (m.includes("password")) {
     return "Check your password format (letters and numbers only, at least 8 characters).";
   }
@@ -69,6 +77,14 @@ function mapAuthErrorJa(message: string): string {
   }
   if (m.includes("user already registered") || m.includes("already been registered")) {
     return "このメールアドレスは既に登録されています。ログインをお試しください。";
+  }
+  if (
+    m.includes("pwned") ||
+    m.includes("data breach") ||
+    m.includes("leaked password") ||
+    (m.includes("password") && m.includes("compromised"))
+  ) {
+    return "このパスワードは既知の漏洩リストに含まれています。別のパスワードを設定してください。";
   }
   if (m.includes("password")) {
     return "パスワードの形式を確認してください（半角英数字・8文字以上）。";
