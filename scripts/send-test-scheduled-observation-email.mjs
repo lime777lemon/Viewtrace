@@ -224,6 +224,8 @@ const textIntro = usesRealObsId
       "[Test] Sample mail — same layout as scheduled auto-observation (dummy observation id).",
     ].join("\n");
 
+const accountHintText = `※ このリンクは ${toRaw} でログインした状態でタップしてください（別アカウントでログインしていると「アカウント不一致」画面が表示されます）。 / Please tap this link while signed in as ${toRaw}.`;
+
 const text = [
   textIntro,
   "",
@@ -237,12 +239,25 @@ const text = [
   "",
   `Full URL / 従来のURL: ${detailUrl}`,
   "",
+  accountHintText,
+  "",
   realRecordNote,
 ].join("\n");
 
 const htmlIntro = usesRealObsId
   ? "<p><strong>【テスト送信】</strong>定期自動観測メールと同じ体裁です。リンクは<strong>実際の記録 ID</strong>です。<br/><span style=\"font-size:13px;color:#555\">[Test] Same layout as production; links use a real observation id.</span></p>"
   : "<p><strong>【テスト送信】</strong>定期自動観測メールと同じ体裁のサンプルです（記録 ID はダミー）。<br/><span style=\"font-size:13px;color:#555\">[Test] Layout sample — dummy observation id.</span></p>";
+
+const accountHintHtml = [
+  '<p style="margin:14px 0 0;padding:10px 12px;background:#f6faf2;border:1px solid #c9e1c4;border-radius:8px;font-size:12px;line-height:1.55;color:#1f3a23;word-break:break-all;overflow-wrap:anywhere;">',
+  "※ このリンクは <strong>",
+  escapeHtml(toRaw),
+  "</strong> でログインした状態でタップしてください（別アカウントでログインしていると「アカウント不一致」画面が表示されます）。<br/>",
+  "Please tap this link while signed in as <strong>",
+  escapeHtml(toRaw),
+  "</strong>.",
+  "</p>",
+].join("");
 
 const html = [
   htmlIntro,
@@ -252,6 +267,7 @@ const html = [
     ? "<p>スナップショットはテストのため本文では省略しています。記録ページからご確認ください。<br/><span style=\"font-size:12px;color:#666\">Snapshot omitted in this test — see the record page.</span></p>"
     : `<p><a href="${escapeHtml(demoSnapshot)}">Snapshot link</a> (example)</p>`,
   observationRecordLinkHtml(openUrl, detailUrl),
+  accountHintHtml,
   `<p style="font-size:12px;color:#666">${escapeHtml(realRecordNote)}</p>`,
 ].join("");
 

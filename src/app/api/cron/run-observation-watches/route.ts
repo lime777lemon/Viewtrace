@@ -280,6 +280,8 @@ export async function POST(req: Request) {
           `Open record / 記録を開く (short URL / 短いURL): ${openUrl}`,
           "",
           `Full URL / 従来のURL: ${detailUrl}`,
+          "",
+          emailAccountHintText(userEmail),
         ].join("\n");
         const html = [
           "<p>A new scheduled observation was recorded.</p>",
@@ -290,6 +292,7 @@ export async function POST(req: Request) {
             ? `<p><a href="${escapeHtml(blobUrl)}">Snapshot link</a></p>`
             : "<p>Snapshot was not stored to Blob; open the dashboard for details.</p>",
           observationRecordLinkHtml(openUrl, detailUrl),
+          emailAccountHintHtml(userEmail),
         ].join("");
 
         const res = await sendResendEmail({ to: userEmail, subject, text, html });
@@ -343,6 +346,8 @@ export async function POST(req: Request) {
             `Open record / 記録を開く (short URL / 短いURL): ${openUrl}`,
             "",
             `Full URL / 従来のURL: ${detailUrl}`,
+            "",
+            emailAccountHintText(userEmail),
           ].join("\n");
 
           const html = [
@@ -353,6 +358,7 @@ export async function POST(req: Request) {
             `<p><a href="${escapeHtml(a.snapshot_image_url)}">最新スナップショット</a></p>`,
             `<p><a href="${escapeHtml(b.snapshot_image_url)}">前回スナップショット</a></p>`,
             observationRecordLinkHtml(openUrl, detailUrl),
+            emailAccountHintHtml(userEmail),
           ].join("");
 
           const res = await sendResendEmail({ to: userEmail, subject, text, html });
@@ -379,6 +385,28 @@ function escapeHtml(s: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+/**
+ * 複数アカウント運用時に「届いた宛先と違うアカウントでログイン中だった」事故を防ぐ。
+ * リンクを踏む直前に、その端末でどのアドレスにログインすべきか提示する。
+ */
+function emailAccountHintText(recipientEmail: string): string {
+  return `※ このリンクは ${recipientEmail} でログインした状態でタップしてください（別アカウントでログインしていると 「アカウント不一致」 画面が表示されます）。 / Please tap this link while signed in as ${recipientEmail}.`;
+}
+
+function emailAccountHintHtml(recipientEmail: string): string {
+  const safe = escapeHtml(recipientEmail);
+  return [
+    '<p style="margin:14px 0 0;padding:10px 12px;background:#f6faf2;border:1px solid #c9e1c4;border-radius:8px;font-size:12px;line-height:1.55;color:#1f3a23;word-break:break-all;overflow-wrap:anywhere;">',
+    "※ このリンクは <strong>",
+    safe,
+    "</strong> でログインした状態でタップしてください（別アカウントでログインしていると「アカウント不一致」画面が表示されます）。<br/>",
+    'Please tap this link while signed in as <strong>',
+    safe,
+    "</strong>.",
+    "</p>",
+  ].join("");
 }
 
 /**

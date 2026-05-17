@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { ObservationNotVisible } from "@/components/dashboard/ObservationNotVisible";
 import { PrintReportButton } from "@/components/dashboard/PrintReportButton";
 import { getSession } from "@/lib/auth/session";
 import { getObservationMergedForPlan } from "@/lib/demo/user-observations";
@@ -46,7 +47,15 @@ export default async function ObservationReportPage({ params }: Props) {
     redirect(`/login?next=${encodeURIComponent(`/dashboard/observations/${id}/report`)}`);
   }
   let obs = await getObservationMergedForPlan(id, session.plan);
-  if (!obs) notFound();
+  if (!obs) {
+    return (
+      <ObservationNotVisible
+        signedInEmail={session.email}
+        observationId={id}
+        locale={locale}
+      />
+    );
+  }
 
   const supabase = await createSupabaseServerClient();
   obs = await reconcileObservationContentHashIfNeeded(supabase, obs);

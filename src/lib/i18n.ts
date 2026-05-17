@@ -551,6 +551,13 @@ export const copy = {
       integrityMismatch:
         "保存内容が記録作成時と食い違っている可能性があります。再取得や環境の変更で直る場合があります。",
       integrityStoredPrefix: "保存していた値: ",
+      notVisibleTitle: "この記録は現在のアカウントからは見えません",
+      notVisibleBody:
+        "この記録は今ログイン中のアカウントには紐づいていません。複数のアカウントを使い分けている場合、自動観測メールが届いた宛先のアカウントでログインしているかをご確認ください。",
+      notVisibleAccountLabel: "現在のログイン中アカウント",
+      notVisibleSignOut: "ログアウトして別アカウントへ",
+      notVisibleBackToList: "観測一覧に戻る",
+      notVisibleRecordIdLabel: "対象の記録 ID",
     },
     observationsTable: {
       colCaptured: "取得日時（JST）",
@@ -1354,6 +1361,13 @@ export const copy = {
       integrityMismatch:
         "Something no longer matches what was stored. Re-capturing or updating your setup may fix it.",
       integrityStoredPrefix: "Previously stored: ",
+      notVisibleTitle: "This record isn’t visible from your current account",
+      notVisibleBody:
+        "This record isn’t linked to the account you’re currently signed in to. If you use more than one Viewtrace account, make sure you’re signed in with the address that received the automated observation email.",
+      notVisibleAccountLabel: "Signed in as",
+      notVisibleSignOut: "Sign out and switch account",
+      notVisibleBackToList: "Back to observations",
+      notVisibleRecordIdLabel: "Record ID",
     },
     observationsTable: {
       colCaptured: "Captured (JST)",

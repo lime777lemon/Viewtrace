@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ObservationDetailSnapshotSection } from "@/components/dashboard/ObservationDetailSnapshotSection";
 import { ObservationDigitalSeal } from "@/components/dashboard/ObservationDigitalSeal";
+import { ObservationNotVisible } from "@/components/dashboard/ObservationNotVisible";
 import { ObservationSnapshotBinaryPanel } from "@/components/dashboard/ObservationSnapshotBinaryPanel";
 import { getSession } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -71,7 +72,20 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
     redirect(`/login?next=${encodeURIComponent(`/dashboard/observations/${id}`)}`);
   }
   let obs = await getObservationMergedForPlan(id, session.plan);
-  if (!obs) notFound();
+  if (!obs) {
+    /**
+     * 自動観測メールを「別アカウント」でログイン中の端末で開くと RLS で行が見えず、
+     * 真っ白な 404 になっていた。ID 自体は本人のメールに既に届いているので、
+     * どのアカウントで見ているかを案内してログアウト導線を出す。
+     */
+    return (
+      <ObservationNotVisible
+        signedInEmail={session.email}
+        observationId={id}
+        locale={locale}
+      />
+    );
+  }
 
   const supabase = await createSupabaseServerClient();
 
