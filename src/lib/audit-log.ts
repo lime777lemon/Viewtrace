@@ -53,7 +53,32 @@ export async function appendAuditEvent(supabase: SupabaseClient, input: AppendAu
     data: { user },
   } = await supabase.auth.getUser();
   if (!user?.id) return;
+  await appendAuditEventInternal(supabase, user.id, input);
+}
 
+/**
+ * Cron / バックグラウンドジョブ用。`service_role` クライアントは `auth.getUser()` から
+ * ユーザーを引けないため、userId を呼び出し側で指定する。RLS をバイパスする経路なので、
+ * 呼び出し側が正しい `userId` を保証すること。
+ */
+export async function appendAuditEventAsService(
+  supabase: SupabaseClient,
+  userId: string,
+  input: AppendAuditEventInput,
+): Promise<void> {
+  const id = userId.trim();
+  if (!UUID_RE.test(id)) {
+    console.warn("[audit] skip insert (service): invalid userId", { action: input.action });
+    return;
+  }
+  await appendAuditEventInternal(supabase, id, input);
+}
+
+async function appendAuditEventInternal(
+  supabase: SupabaseClient,
+  userId: string,
+  input: AppendAuditEventInput,
+): Promise<void> {
   let resourceType: string | null = null;
   let resourceId: string | null = null;
   if (input.scope === "observation") {
@@ -69,7 +94,7 @@ export async function appendAuditEvent(supabase: SupabaseClient, input: AppendAu
   const { data: lastRow } = await supabase
     .from("audit_events")
     .select("chain_hash")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -78,7 +103,7 @@ export async function appendAuditEvent(supabase: SupabaseClient, input: AppendAu
   const createdAt = new Date().toISOString();
   const payload = [
     prev,
-    user.id,
+    userId,
     input.action,
     resourceType ?? "",
     resourceId ?? "",
@@ -89,7 +114,7 @@ export async function appendAuditEvent(supabase: SupabaseClient, input: AppendAu
   const chainHash = createHash("sha256").update(payload, "utf8").digest("hex");
 
   const { error } = await supabase.from("audit_events").insert({
-    user_id: user.id,
+    user_id: userId,
     action: input.action,
     resource_type: resourceType,
     resource_id: resourceId,

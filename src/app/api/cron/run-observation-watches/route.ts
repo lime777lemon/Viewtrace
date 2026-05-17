@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { AUDIT_ACTION, appendAuditEventAsService } from "@/lib/audit-log";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { runBrowserlessScreenshot } from "@/lib/browserless-screenshot";
 import type { Observation } from "@/lib/demo/observations";
@@ -68,6 +69,14 @@ const OBSERVATION_NOTE_MAX = 498;
 function truncateObservationNote(s: string): string {
   if (s.length <= OBSERVATION_NOTE_MAX) return s;
   return `${s.slice(0, OBSERVATION_NOTE_MAX - 1)}…`;
+}
+
+function observationUrlHost(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return "";
+  }
 }
 
 export async function GET(req: Request) {
@@ -254,6 +263,27 @@ export async function POST(req: Request) {
         .eq("id", watchId);
       continue;
     }
+
+    /**
+     * 監査ログにも追記する。手動の `appendUserObservation` と違って Cron は service_role
+     * クライアントなので `auth.getUser()` でユーザーを引けず、これまでは audit_events が
+     * 空のまま「定期観測が記録に残らない」と見える gap になっていた。
+     * 失敗してもメール通知へ進む（best-effort）。
+     */
+    await appendAuditEventAsService(svc, userId, {
+      scope: "observation",
+      action: AUDIT_ACTION.OBSERVATION_RECORD,
+      observationId: obsId,
+      meta: {
+        result: "saved",
+        status: blobUrl ? "success" : "failure",
+        urlHost: observationUrlHost(url),
+        region,
+        source: "cron_auto",
+        watchId,
+        snapshotStored: Boolean(blobUrl),
+      },
+    });
 
     await svc
       .from("observation_watches")
