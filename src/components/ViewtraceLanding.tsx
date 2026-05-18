@@ -1,11 +1,24 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { RegionSearchSection } from "@/components/RegionSearchSection";
 import { copy, type Locale } from "@/lib/i18n";
 import { LOCALE_COOKIE } from "@/lib/i18n/locale-cookie";
-import { getTopicSectionsForLanding } from "@/lib/seo/topic-pages";
+import { getTopicSectionsForLanding, type TopicSlug } from "@/lib/seo/topic-pages";
+
+/** 検索意図カードの背景に薄く敷くアイコン。slug 単位で追加していく */
+const TOPIC_BACKDROP_ICON: Partial<Record<TopicSlug, string>> = {
+  "geo-screenshot-tool": "/marketing/icons/geo-screenshot.png",
+  "website-screenshot-from-another-country": "/marketing/icons/website-screenshot.png",
+  "ad-verification-tool": "/marketing/icons/ad-verification.png",
+  "localized-qa": "/marketing/icons/localized-qa.png",
+  "geo-testing-tool": "/marketing/icons/geo-testing.png",
+  "how-to-check-website-from-another-country": "/marketing/icons/how-to-check.png",
+  "landing-page-qa": "/marketing/icons/landing-page-qa.png",
+  "proof-for-ad-agencies": "/marketing/icons/proof-for-ad-agencies.png",
+};
 
 function formatOverageUsdLabel(usd: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -759,23 +772,39 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
               {t.seoTopics.intro}
             </p>
             <div className="mt-10 space-y-16 border-t border-border pt-10">
-              {topicSections.map(({ slug, label, h1, paragraphs }) => (
-                <article
-                  key={slug}
-                  id={`topic-${slug}`}
-                  className="scroll-mt-24 rounded-2xl border border-border bg-surface-elevated p-6 sm:p-8"
-                >
-                  <p className="text-xs font-medium uppercase tracking-wider text-ink-muted">{label}</p>
-                  <h3 className="mt-2 font-display text-xl font-semibold leading-snug text-ink sm:text-2xl">
-                    {h1}
-                  </h3>
-                  <div className="mt-5 space-y-4 text-sm leading-relaxed text-ink-muted sm:text-base">
-                    {paragraphs.map((p, i) => (
-                      <p key={i}>{p}</p>
-                    ))}
-                  </div>
-                </article>
-              ))}
+              {topicSections.map(({ slug, label, h1, paragraphs }) => {
+                const backdrop = TOPIC_BACKDROP_ICON[slug];
+                return (
+                  <article
+                    key={slug}
+                    id={`topic-${slug}`}
+                    className="relative scroll-mt-24 overflow-hidden rounded-2xl border border-border bg-surface-elevated p-6 sm:p-8"
+                  >
+                    {backdrop ? (
+                      <Image
+                        src={backdrop}
+                        alt=""
+                        aria-hidden="true"
+                        width={800}
+                        height={800}
+                        priority={false}
+                        className="pointer-events-none absolute -right-12 -bottom-16 h-88 w-88 select-none object-contain opacity-[0.08] sm:-right-16 sm:-bottom-20 sm:h-112 sm:w-md"
+                      />
+                    ) : null}
+                    <div className="relative">
+                      <p className="text-xs font-medium uppercase tracking-wider text-ink-muted">{label}</p>
+                      <h3 className="mt-2 font-display text-xl font-semibold leading-snug text-ink sm:text-2xl">
+                        {h1}
+                      </h3>
+                      <div className="mt-5 space-y-4 text-sm leading-relaxed text-ink-muted sm:text-base">
+                        {paragraphs.map((p, i) => (
+                          <p key={i}>{p}</p>
+                        ))}
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
             <div className="mt-12 flex flex-wrap gap-3 border-t border-border pt-10">
               <Link
