@@ -98,7 +98,16 @@ export async function POST(req: Request) {
   const svc = admin;
 
   const threshold = Number(process.env.OBS_DIFF_THRESHOLD ?? 0.07);
-  const nowIso = new Date().toISOString();
+  /**
+   * Vercel Cron は best-effort で 0〜数十分遅れて起動するため、`next_run_at` を
+   * 「now」だけで比較すると、毎回 cron がほんの少し遅れるたびに `last_run_at + 24h`
+   * がさらに後ろへドリフトし、ある日 cron の起動時刻を追い越して **その日の処理を
+   * 丸ごとスキップしてしまう**（2026-05-18 朝に発生）。
+   * 1 時間先まで「実行対象」として拾い、cron が定刻起動した日に時刻を自動補正する。
+   */
+  const SCHEDULE_HORIZON_MS = 60 * 60 * 1000;
+  const now = new Date();
+  const horizonIso = new Date(now.getTime() + SCHEDULE_HORIZON_MS).toISOString();
 
   const emailCache = new Map<string, string | null>();
   async function getUserEmail(userId: string): Promise<string | null> {
@@ -143,7 +152,7 @@ export async function POST(req: Request) {
       "id,user_id,url,region,enabled,last_notified_at,schedule_frequency,repeat_count,notify_mode,snapshot_full_page,next_run_at,last_run_at",
     )
     .eq("enabled", true)
-    .or(`next_run_at.is.null,next_run_at.lte.${nowIso}`)
+    .or(`next_run_at.is.null,next_run_at.lte.${horizonIso}`)
     .order("next_run_at", { ascending: true, nullsFirst: true })
     .limit(40);
 
