@@ -7,8 +7,10 @@ import { computeObservationContentHash } from "@/lib/observation-content-hash";
 import {
   clampRepeatCount,
   computeNextRunAfter,
+  isDailyWatchDueOnCronDay,
   parseWatchFrequency,
   parseWatchNotifyMode,
+  startOfUtcDay,
   type WatchFrequency,
   type WatchNotifyMode,
 } from "@/lib/observation-watch-schedule";
@@ -99,15 +101,14 @@ export async function POST(req: Request) {
 
   const threshold = Number(process.env.OBS_DIFF_THRESHOLD ?? 0.07);
   /**
-   * Vercel Cron は best-effort で 0〜数十分遅れて起動するため、`next_run_at` を
-   * 「now」だけで比較すると、毎回 cron がほんの少し遅れるたびに `last_run_at + 24h`
-   * がさらに後ろへドリフトし、ある日 cron の起動時刻を追い越して **その日の処理を
-   * 丸ごとスキップしてしまう**（2026-05-18 朝に発生）。
-   * 1 時間先まで「実行対象」として拾い、cron が定刻起動した日に時刻を自動補正する。
+   * Vercel Cron: `0 0 * * *` = 00:00 UTC = 09:00 JST = 前日 20:00 ET (EDT)。
+   * daily ウォッチは UTC 0:00 起点。Cron は数十分遅れることがあるため 1 時間先まで拾う。
+   * さらに「今日（UTC）の定刻スロットを未実行」の daily は `next_run_at` が未来でも実行する。
    */
   const SCHEDULE_HORIZON_MS = 60 * 60 * 1000;
   const now = new Date();
   const horizonIso = new Date(now.getTime() + SCHEDULE_HORIZON_MS).toISOString();
+  const todayStartIso = startOfUtcDay(now).toISOString();
 
   const emailCache = new Map<string, string | null>();
   async function getUserEmail(userId: string): Promise<string | null> {
@@ -152,7 +153,9 @@ export async function POST(req: Request) {
       "id,user_id,url,region,enabled,last_notified_at,schedule_frequency,repeat_count,notify_mode,snapshot_full_page,next_run_at,last_run_at",
     )
     .eq("enabled", true)
-    .or(`next_run_at.is.null,next_run_at.lte.${horizonIso}`)
+    .or(
+      `next_run_at.is.null,next_run_at.lte.${horizonIso},and(schedule_frequency.eq.daily,or(last_run_at.is.null,last_run_at.lt.${todayStartIso}))`,
+    )
     .order("next_run_at", { ascending: true, nullsFirst: true })
     .limit(40);
 
@@ -176,6 +179,14 @@ export async function POST(req: Request) {
     const fullPage = getBool(row, "snapshot_full_page", false);
 
     if (!url || !region || !watchId || !userId) continue;
+
+    const nextRunAtRaw = getString(row, "next_run_at");
+    const lastRunAtRaw = getString(row, "last_run_at");
+    const dueByNextRun =
+      !nextRunAtRaw || new Date(nextRunAtRaw).getTime() <= new Date(horizonIso).getTime();
+    const dueByDailyAnchor =
+      freq === "daily" && isDailyWatchDueOnCronDay(now, lastRunAtRaw || null, repeatCount);
+    if (!dueByNextRun && !dueByDailyAnchor) continue;
 
     const userEmail = await getUserEmail(userId);
 

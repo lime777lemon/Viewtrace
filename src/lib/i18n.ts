@@ -532,7 +532,7 @@ export const copy = {
       watchIntro:
         "Starter / Pro では、この URL（{region}）を選んだ間隔で自動スクリーンショットし、登録メールへ結果を送れます。月間のオブザベーション枠を消費します。",
       watchFrequencyLabel: "くり返しの単位",
-      watchFrequencyDaily: "毎日（1日のなかで均等に）",
+      watchFrequencyDaily: "毎日（0:00 UTC＝日本 9:00／NY 前日 20:00 起点）",
       watchFrequencyWeekly: "毎週（7日のなかで均等に）",
       watchFrequencyMonthly: "毎月（約30日のなかで均等に）",
       watchRepeatLabel: "単位あたりの回数（1日／1週間／1か月に何回）",
@@ -1343,7 +1343,7 @@ export const copy = {
       watchIntro:
         "On Starter and Pro, we capture this URL ({region}) on your schedule (spread across each day, week, or month) and email results to your account address. Each run counts toward your monthly observation limit.",
       watchFrequencyLabel: "Repeat every",
-      watchFrequencyDaily: "Day (spread runs across 24h)",
+      watchFrequencyDaily: "Daily (from 00:00 UTC = 09:00 JST / 20:00 ET prior day)",
       watchFrequencyWeekly: "Week (spread runs across 7 days)",
       watchFrequencyMonthly: "Month (spread runs across ~30 days)",
       watchRepeatLabel: "Runs per period (per day / week / month)",
