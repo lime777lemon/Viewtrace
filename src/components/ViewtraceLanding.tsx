@@ -1070,6 +1070,11 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                       {t.footer.links.tokushoho}
                     </a>
                   </li>
+                  <li>
+                    <a href="/about" className="text-surface/80 hover:text-white">
+                      {t.footer.links.about}
+                    </a>
+                  </li>
                 </ul>
               </div>
               <div>

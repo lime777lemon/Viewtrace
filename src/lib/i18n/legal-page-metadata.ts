@@ -6,7 +6,8 @@ export type LegalPageKey =
   | "privacy"
   | "acceptableUse"
   | "tokushoho"
-  | "contact";
+  | "contact"
+  | "about";
 
 const SEO: Record<LegalPageKey, Record<Locale, { title: string; description: string }>> = {
   terms: {
@@ -65,6 +66,18 @@ const SEO: Record<LegalPageKey, Record<Locale, { title: string; description: str
     en: {
       title: "Contact",
       description: "Contact Viewtrace for questions or support requests.",
+    },
+  },
+  about: {
+    ja: {
+      title: "私たちについて",
+      description:
+        "Viewtraceを提供する The Establish合同会社の会社情報（所在地・ウェブサイト）。",
+    },
+    en: {
+      title: "About us",
+      description:
+        "Company information for The Establish LLC, the operator of Viewtrace.",
     },
   },
 };

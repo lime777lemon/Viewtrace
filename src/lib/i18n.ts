@@ -798,6 +798,7 @@ export const copy = {
         privacy: "プライバシーポリシー",
         acceptable: "許容される利用方針",
         tokushoho: "特定商取引法に基づく表記",
+        about: "私たちについて",
         contact: "お問い合わせ",
       },
       disclaimer:
@@ -1631,6 +1632,7 @@ export const copy = {
         privacy: "Privacy policy",
         acceptable: "Acceptable use",
         tokushoho: "Commercial disclosure (Japan)",
+        about: "About us",
         contact: "Contact",
       },
       disclaimer:
