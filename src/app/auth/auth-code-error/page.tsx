@@ -112,7 +112,7 @@ export default async function AuthCodeErrorPage({
         </p>
       </div>
       <Link
-        href="/login"
+        href="/login?mode=signin"
         className="mt-8 inline-flex justify-center rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent-hover"
       >
         ログインへ

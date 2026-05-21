@@ -151,7 +151,7 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
               <a href="#faq" className="transition hover:text-ink">
                 {t.nav.faq}
               </a>
-              <a href="/login" className="transition hover:text-ink">
+              <a href="/login?mode=signin" className="transition hover:text-ink">
                 {t.nav.login}
               </a>
             </nav>
@@ -220,7 +220,7 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                       {t.nav.faq}
                     </a>
                     <a
-                      href="/login"
+                      href="/login?mode=signin"
                       role="menuitem"
                       className="block px-4 py-2.5 text-sm font-medium text-ink-muted transition hover:bg-border/30 hover:text-ink"
                       onClick={() => setMobileNavOpen(false)}
@@ -814,7 +814,7 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                 {t.seoTopics.backLabel}
               </Link>
               <Link
-                href="/login"
+                href="/login?mode=signin"
                 className="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-accent-hover"
               >
                 {t.seoTopics.ctaLogin}
@@ -1088,7 +1088,7 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                     </a>
                   </li>
                   <li id="login">
-                    <a href="/login" className="text-surface/80 hover:text-white">
+                    <a href="/login?mode=signin" className="text-surface/80 hover:text-white">
                       {t.nav.login}
                     </a>
                   </li>

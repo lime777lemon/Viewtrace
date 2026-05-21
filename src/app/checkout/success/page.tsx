@@ -123,7 +123,7 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
         ) : null}
         <div className="mt-10 flex flex-col gap-3 sm:flex-row">
           <Link
-            href="/login"
+            href="/login?mode=signin"
             className="bg-accent hover:bg-accent-hover inline-flex justify-center rounded-full px-6 py-3 text-sm font-semibold text-white"
           >
             {t.successCtaLogin}

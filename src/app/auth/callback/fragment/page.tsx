@@ -114,7 +114,7 @@ export default function AuthCallbackFragmentPage() {
           <p>リンクの有効期限切れ、または設定の不整合の可能性があります。</p>
           <p className="mt-3">
             <a
-              href="/login"
+              href="/login?mode=signin"
               className="font-semibold text-accent hover:text-accent-hover"
             >
               ログイン画面
