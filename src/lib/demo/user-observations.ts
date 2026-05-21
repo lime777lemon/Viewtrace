@@ -56,10 +56,18 @@ function mapDbRowToObservation(
       typeof row.snapshot_sha256 === "string" && row.snapshot_sha256.length === 64
         ? row.snapshot_sha256.toLowerCase()
         : undefined,
-    snapshotPhash:
-      typeof row.snapshot_phash === "string" && row.snapshot_phash.length >= 8
-        ? row.snapshot_phash.toLowerCase()
-        : undefined,
+    snapshotPhash: (() => {
+      if (typeof row.snapshot_phash !== "string") return undefined;
+      const v = row.snapshot_phash.toLowerCase();
+      /**
+       * 古い行は 16,384 文字級の phash が入っていることがある（imghash の `bits` 引数を
+       * grid side ではなく総ビット数として渡していた時期があったため）。
+       * `Observation` 検証で弾かれて一覧から消えてしまうのを避けるため、上限を超えるものは
+       * 表示用には捨てる（DB のデータは保持）。
+       */
+      if (v.length < 8 || v.length > 128 || !/^[a-f0-9]+$/.test(v)) return undefined;
+      return v;
+    })(),
     snapshotBytes:
       typeof row.snapshot_bytes === "number" && Number.isFinite(row.snapshot_bytes)
         ? row.snapshot_bytes

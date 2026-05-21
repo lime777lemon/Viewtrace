@@ -14,9 +14,9 @@ export type SnapshotVerifyVerdict =
   | "visual_strong"
   /** 知覚距離 6〜10（かなり近い） */
   | "visual_weak"
-  /** 知覚距離が大きい、または保存 phash なしでバイト不一致 */
+  /** 知覚距離が大きい（明確に別の画像） */
   | "different"
-  /** 取得はできたが phash 計算不可・形式不整合 */
+  /** 取得はできたが phash 計算不可・形式不整合・保存 phash 欠落で近似判定不能 */
   | "unverified";
 
 /**
@@ -77,7 +77,12 @@ export async function verifyObservationSnapshotBinaryAction(
 
   const storedPhash = obs.snapshotPhash?.trim();
   if (!storedPhash) {
-    return { ok: true, verdict: "different", sha256Match: false, phashDistance: null };
+    /**
+     * pHash は補助指標。保存時に欠落しているだけのケースを「different（改ざんの疑い）」と
+     * 断定すると誤解を招くため、近似判定不能として `unverified` を返す。
+     * SHA-256 一致は上で判定済みなので、ここに来た時点でバイト列が違うことだけは確定。
+     */
+    return { ok: true, verdict: "unverified", sha256Match: false, phashDistance: null };
   }
 
   const freshPhash = await computeSnapshotPerceptualHash(body);
