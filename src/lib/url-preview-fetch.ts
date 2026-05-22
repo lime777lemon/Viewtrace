@@ -6,6 +6,24 @@ import {
 } from "@/lib/url-preview";
 import { getGeoProxyAgent } from "@/lib/geo/proxy";
 
+/**
+ * 取得用のリクエストヘッダ。
+ *
+ * 大手ドメインレジストラ・CDN（Akamai/Imperva 系）は `Viewtrace-UrlPreview/1.0` のような
+ * 明らかな非ブラウザ UA を 403/406/429 で即弾く。プレビュー失敗→観測失敗の連鎖を避けるため、
+ * デスクトップ Chrome を装った構成にする。`Accept-Language` も付けないと
+ * 日本語サイトが地域弾きをかける場合がある。
+ */
+const BROWSER_LIKE_HEADERS: Record<string, string> = {
+  "User-Agent":
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36",
+  Accept:
+    "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+  "Accept-Language": "ja-JP,ja;q=0.9,en-US;q=0.8,en;q=0.7",
+  "Cache-Control": "no-cache",
+  Pragma: "no-cache",
+};
+
 export type UrlPreviewResult =
   | {
       ok: true;
@@ -74,10 +92,7 @@ export async function runUrlPreviewFetch(
         redirect: "follow",
         signal: ac.signal,
         ...(dispatcher ? { dispatcher } : {}),
-        headers: {
-          Accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
-          "User-Agent": "Viewtrace-UrlPreview/1.0 (+https://viewtrace.net)",
-        },
+        headers: BROWSER_LIKE_HEADERS,
       });
     } finally {
       clearTimeout(timer);
@@ -165,6 +180,20 @@ export async function runUrlPreviewFetch(
     }
 
     if (!res.ok) {
+      /**
+       * 非 2xx 応答（403/406/429/5xx 等）。ボット保護に弾かれた場合などはここに来る。
+       * 切り分けに使えるよう、最終 URL とステータスをサーバーログに残す。
+       * `screenshotFallback` が有効なら、せめて Microlink のスナップショット URL だけ拾って
+       * UI 上の真っ白を避ける。
+       */
+      console.warn("[url-preview] upstream non-2xx", {
+        finalUrl,
+        status: res.status,
+        viaProxy: usedProxy,
+        region: regionValue ?? null,
+      });
+      const ml = await tryMicrolinkAfterFetchFailure();
+      if (ml) return ml;
       return { ok: false, error: `fetch_failed:${res.status}` };
     }
 

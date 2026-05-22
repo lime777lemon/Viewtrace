@@ -44,6 +44,14 @@ export async function POST(req: Request) {
   if (!result.ok) {
     const status =
       result.error.startsWith("forbidden") ? 403 : result.error === "invalid_url" ? 400 : 502;
+    if (status >= 500) {
+      // 502 を返す時は本番ログに原因（fetch_failed:NNN / network_error / timeout など）を残す
+      console.warn("[url-preview-api] upstream failure", {
+        target,
+        error: result.error,
+        status,
+      });
+    }
     return NextResponse.json({ ok: false, error: result.error }, { status });
   }
 
