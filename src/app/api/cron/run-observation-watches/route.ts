@@ -310,7 +310,7 @@ export async function POST(req: Request) {
       .update({ last_run_at: capturedAt, next_run_at: nextRun })
       .eq("id", watchId);
 
-    const { openUrl, detailUrl } = buildObservationRecordOpenUrls(getAppOriginForEmailLinks(), obsId);
+    const { openUrl } = buildObservationRecordOpenUrls(getAppOriginForEmailLinks(), obsId);
 
     if (notifyMode === "always") {
       if (!userEmail) {
@@ -327,9 +327,7 @@ export async function POST(req: Request) {
           `Region / 地域: ${region}`,
           blobUrl ? `Snapshot / スナップショット: ${blobUrl}` : "Snapshot: not stored (check dashboard).",
           "",
-          `Open record / 記録を開く (short URL / 短いURL): ${openUrl}`,
-          "",
-          `Full URL / 従来のURL: ${detailUrl}`,
+          `Open record / 記録を開く: ${openUrl}`,
           "",
           emailAccountHintText(userEmail),
         ].join("\n");
@@ -341,7 +339,7 @@ export async function POST(req: Request) {
           blobUrl
             ? `<p><a href="${escapeHtml(blobUrl)}">Snapshot link</a></p>`
             : "<p>Snapshot was not stored to Blob; open the dashboard for details.</p>",
-          observationRecordLinkHtml(openUrl, detailUrl),
+          observationRecordLinkHtml(openUrl),
           emailAccountHintHtml(userEmail),
         ].join("");
 
@@ -393,9 +391,7 @@ export async function POST(req: Request) {
             `最新スナップショット: ${a.snapshot_image_url}`,
             `前回スナップショット: ${b.snapshot_image_url}`,
             "",
-            `Open record / 記録を開く (short URL / 短いURL): ${openUrl}`,
-            "",
-            `Full URL / 従来のURL: ${detailUrl}`,
+            `Open record / 記録を開く: ${openUrl}`,
             "",
             emailAccountHintText(userEmail),
           ].join("\n");
@@ -407,7 +403,7 @@ export async function POST(req: Request) {
             `<p><strong>差分率</strong><br/>${Math.round(ratio * 1000) / 10}%</p>`,
             `<p><a href="${escapeHtml(a.snapshot_image_url)}">最新スナップショット</a></p>`,
             `<p><a href="${escapeHtml(b.snapshot_image_url)}">前回スナップショット</a></p>`,
-            observationRecordLinkHtml(openUrl, detailUrl),
+            observationRecordLinkHtml(openUrl),
             emailAccountHintHtml(userEmail),
           ].join("");
 
@@ -460,22 +456,17 @@ function emailAccountHintHtml(recipientEmail: string): string {
 }
 
 /**
- * 主リンクは `/api/open/observation?id=`（パスが短く iOS で壊れにくい）。
- * 併記で従来のフル URL も載せる。
+ * 主リンクは `/api/open/observation?id=`（パスが短く iOS で壊れにくく、API で 302→ダッシュボード）。
+ * クリックできない環境向けに、同じ短い URL をプレーンテキストでも併記する。
  */
-function observationRecordLinkHtml(openUrl: string, detailUrl: string): string {
+function observationRecordLinkHtml(openUrl: string): string {
   const primary = escapeHtml(openUrl);
-  const full = escapeHtml(detailUrl);
   return [
     '<p style="margin:12px 0;line-height:1.5;word-break:break-all;overflow-wrap:anywhere;-webkit-hyphens:none;hyphens:none;">',
     `<a href="${primary}" style="color:#2563eb;text-decoration:underline;word-break:break-all;overflow-wrap:anywhere;">Open record / 記録を開く</a>`,
     "</p>",
     '<p style="margin:8px 0 0;font-size:13px;color:#444;line-height:1.45;word-break:break-all;overflow-wrap:anywhere;-webkit-hyphens:none;hyphens:none;">',
     primary,
-    "</p>",
-    '<p style="margin:10px 0 0;font-size:12px;color:#666;line-height:1.45;word-break:break-all;overflow-wrap:anywhere;-webkit-hyphens:none;hyphens:none;">',
-    "Alternate (long URL) / 別形式のURL:<br/>",
-    full,
     "</p>",
   ].join("");
 }

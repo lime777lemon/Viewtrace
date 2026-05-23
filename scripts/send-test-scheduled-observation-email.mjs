@@ -118,20 +118,15 @@ function escapeHtml(s) {
     .replace(/"/g, "&quot;");
 }
 
-/** Cron と同様: 主リンクは短い open URL、併記でフル URL */
-function observationRecordLinkHtml(openUrl, detailUrl) {
+/** Cron と同じ体裁: クリック用ボタンと、コピペ用の短い URL を併記 */
+function observationRecordLinkHtml(openUrl) {
   const primary = escapeHtml(openUrl);
-  const full = escapeHtml(detailUrl);
   return [
     '<p style="margin:12px 0;line-height:1.5;word-break:break-all;overflow-wrap:anywhere;-webkit-hyphens:none;hyphens:none;">',
     `<a href="${primary}" style="color:#2563eb;text-decoration:underline;word-break:break-all;overflow-wrap:anywhere;">Open record / 記録を開く</a>`,
     "</p>",
     '<p style="margin:8px 0 0;font-size:13px;color:#444;line-height:1.45;word-break:break-all;overflow-wrap:anywhere;-webkit-hyphens:none;hyphens:none;">',
     primary,
-    "</p>",
-    '<p style="margin:10px 0 0;font-size:12px;color:#666;line-height:1.45;word-break:break-all;overflow-wrap:anywhere;-webkit-hyphens:none;hyphens:none;">',
-    "Alternate (long URL) / 別形式のURL:<br/>",
-    full,
     "</p>",
   ].join("");
 }
@@ -206,7 +201,6 @@ function localeNoteRealRecord(row) {
   return `記録日時（UTC）: ${when}`;
 }
 
-const detailUrl = `${origin}/dashboard/observations/${obsId}`;
 const openUrl = `${origin}/api/open/observation?id=${encodeURIComponent(obsId)}`;
 
 const from = process.env.RESEND_FROM?.trim() || "Viewtrace <onboarding@resend.dev>";
@@ -235,9 +229,7 @@ const text = [
     ? "スナップショット: テストのため本文には添付していません（記録ページで確認できます）。"
     : `Snapshot / スナップショット: ${demoSnapshot} (example — not a real capture)`,
   "",
-  `Open record / 記録を開く (short URL / 短いURL): ${openUrl}`,
-  "",
-  `Full URL / 従来のURL: ${detailUrl}`,
+  `Open record / 記録を開く: ${openUrl}`,
   "",
   accountHintText,
   "",
@@ -266,7 +258,7 @@ const html = [
   usesRealObsId
     ? "<p>スナップショットはテストのため本文では省略しています。記録ページからご確認ください。<br/><span style=\"font-size:12px;color:#666\">Snapshot omitted in this test — see the record page.</span></p>"
     : `<p><a href="${escapeHtml(demoSnapshot)}">Snapshot link</a> (example)</p>`,
-  observationRecordLinkHtml(openUrl, detailUrl),
+  observationRecordLinkHtml(openUrl),
   accountHintHtml,
   `<p style="font-size:12px;color:#666">${escapeHtml(realRecordNote)}</p>`,
 ].join("");
@@ -294,5 +286,4 @@ try {
 }
 console.log("OK: test email sent to", toRaw);
 console.log("  Resend id:", id);
-console.log("  Short open URL (primary in email):", openUrl);
-console.log("  Full dashboard URL:", detailUrl);
+console.log("  Open URL (in email):", openUrl);
