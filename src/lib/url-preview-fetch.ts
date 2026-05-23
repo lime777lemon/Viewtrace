@@ -1,3 +1,4 @@
+import { BROWSER_LIKE_HEADERS } from "@/lib/browser-fingerprint";
 import { fetchMicrolinkScreenshotUrl } from "@/lib/microlink-screenshot";
 import {
   extractHtmlPreviewMeta,
@@ -5,24 +6,6 @@ import {
   readHtmlHeadForPreview,
 } from "@/lib/url-preview";
 import { getGeoProxyAgent } from "@/lib/geo/proxy";
-
-/**
- * 取得用のリクエストヘッダ。
- *
- * 大手ドメインレジストラ・CDN（Akamai/Imperva 系）は `Viewtrace-UrlPreview/1.0` のような
- * 明らかな非ブラウザ UA を 403/406/429 で即弾く。プレビュー失敗→観測失敗の連鎖を避けるため、
- * デスクトップ Chrome を装った構成にする。`Accept-Language` も付けないと
- * 日本語サイトが地域弾きをかける場合がある。
- */
-const BROWSER_LIKE_HEADERS: Record<string, string> = {
-  "User-Agent":
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36",
-  Accept:
-    "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-  "Accept-Language": "ja-JP,ja;q=0.9,en-US;q=0.8,en;q=0.7",
-  "Cache-Control": "no-cache",
-  Pragma: "no-cache",
-};
 
 export type UrlPreviewResult =
   | {

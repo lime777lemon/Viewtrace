@@ -16,6 +16,7 @@ import {
 } from "@/lib/observation-snapshot-storage";
 import { getPlan, TRIAL_CONFIG } from "@/lib/plans";
 import { getRegionOptions } from "@/lib/regions";
+import { fetchMicrolinkScreenshotUrl } from "@/lib/microlink-screenshot";
 import { normalizeUserUrlInput } from "@/lib/url-preview";
 import { runUrlPreviewFetch } from "@/lib/url-preview-fetch";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -157,15 +158,19 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
     }
   }
 
-  if (!snapshotImageUrl && preview.ok) {
-    const fallback = await runUrlPreviewFetch(url, {
-      screenshotFallback: true,
-      fullPageScreenshot: plan.snapshotFullPage,
-      regionValue,
-      retryWithoutProxyOnFailure: true,
+  if (!snapshotImageUrl) {
+    /**
+     * 最後の砦：プレビュー HTML 取得や Browserless キャプチャが失敗していても、
+     * Microlink 側だけは別経路（独立した取得サーバ＋スクリーンショット）なので
+     * 直接スクリーンショット URL の取得を試みる。
+     * これにより onamae.com など強いボット保護のサイトでも、少なくとも
+     * 画像 URL が記録に残せる可能性が上がる（バイト列は保存しない＝ pHash 比較不可）。
+     */
+    const microlinkImage = await fetchMicrolinkScreenshotUrl(url, {
+      fullPage: plan.snapshotFullPage,
     });
-    if (fallback.ok && fallback.image && /^https?:\/\//i.test(fallback.image)) {
-      snapshotImageUrl = fallback.image.slice(0, 2048);
+    if (microlinkImage && /^https?:\/\//i.test(microlinkImage)) {
+      snapshotImageUrl = microlinkImage.slice(0, 2048);
     }
   }
 
