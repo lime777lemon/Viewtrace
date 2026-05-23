@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ViewtraceLogo } from "@/components/brand/ViewtraceLogo";
 import { copy } from "@/lib/i18n";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { getPlan, parsePlanId } from "@/lib/plans";
@@ -80,11 +81,8 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
     <div className="min-h-screen bg-surface text-ink">
       <header className="border-b border-border bg-surface-elevated">
         <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-4 sm:px-6">
-          <Link
-            href="/"
-            className="font-display text-xl font-semibold tracking-tight text-[#276248] transition hover:opacity-90"
-          >
-            Viewtrace
+          <Link href="/" className="inline-flex items-center transition hover:opacity-90">
+            <ViewtraceLogo className="h-8 w-auto sm:h-9" />
           </Link>
         </div>
       </header>

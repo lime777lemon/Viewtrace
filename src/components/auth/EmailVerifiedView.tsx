@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { ViewtraceLogo } from "@/components/brand/ViewtraceLogo";
 import {
   emailVerifiedCopy,
   type EmailVerifiedLocale,
@@ -25,11 +26,8 @@ export function EmailVerifiedView({ hasSession }: { hasSession: boolean }) {
 
       <header className="relative z-10 border-b border-border/80 bg-surface-elevated/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
-          <Link
-            href="/"
-            className="font-display text-xl font-semibold tracking-tight text-[#276248] transition hover:opacity-90"
-          >
-            Viewtrace
+          <Link href="/" className="inline-flex items-center transition hover:opacity-90">
+            <ViewtraceLogo className="h-8 w-auto sm:h-9" />
           </Link>
           <div className="flex flex-wrap items-center gap-3 text-sm sm:gap-4">
             <div

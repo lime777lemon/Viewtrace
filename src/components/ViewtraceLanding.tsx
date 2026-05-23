@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { RegionSearchSection } from "@/components/RegionSearchSection";
+import { ViewtraceLogo } from "@/components/brand/ViewtraceLogo";
 import { copy, type Locale } from "@/lib/i18n";
 import { LOCALE_COOKIE } from "@/lib/i18n/locale-cookie";
 import { getTopicSectionsForLanding, type TopicSlug } from "@/lib/seo/topic-pages";
@@ -132,11 +133,8 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
       <header className="sticky top-0 z-50 border-b border-border bg-surface/90 backdrop-blur-md">
         <div className="mx-auto max-w-6xl px-4 py-3 sm:px-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <a
-              href="#top"
-              className="font-display text-xl font-semibold tracking-tight text-[#276248] transition hover:opacity-90"
-            >
-              Viewtrace
+            <a href="#top" className="inline-flex items-center transition hover:opacity-90">
+              <ViewtraceLogo className="h-8 w-auto sm:h-9" />
             </a>
             <nav className="hidden items-center gap-6 text-sm font-medium text-ink-muted lg:flex xl:gap-8">
               <a href="#pricing" className="transition hover:text-ink">
@@ -1019,8 +1017,8 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
         <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
           <div className="flex flex-col gap-10 lg:flex-row lg:justify-between">
             <div>
-              <p className="font-display text-2xl font-semibold tracking-tight text-[#276248]">Viewtrace</p>
-              <p className="mt-2 max-w-sm text-sm text-surface/70">
+              <ViewtraceLogo className="h-9 w-auto sm:h-10" onDark priority={false} />
+              <p className="mt-3 max-w-sm text-sm text-surface/70">
                 {t.footer.tagline}
               </p>
             </div>

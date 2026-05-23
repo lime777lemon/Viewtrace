@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { ViewtraceLogo } from "@/components/brand/ViewtraceLogo";
 import { ObservationNotVisible } from "@/components/dashboard/ObservationNotVisible";
 import { PrintReportButton } from "@/components/dashboard/PrintReportButton";
 import { getSession } from "@/lib/auth/session";
@@ -100,8 +101,8 @@ export default async function ObservationReportPage({ params }: Props) {
 
       <article className="mx-auto max-w-3xl space-y-6 px-4 pb-12 sm:px-6 sm:pb-16">
         <header className="border-b border-border pb-6">
-          <p className="text-sm font-semibold uppercase tracking-wider text-[#276248]">Viewtrace</p>
-          <h1 className="mt-2 font-display text-2xl font-semibold text-ink">{t.title}</h1>
+          <ViewtraceLogo className="h-7 w-auto sm:h-8" priority={false} />
+          <h1 className="mt-3 font-display text-2xl font-semibold text-ink">{t.title}</h1>
           <p className="mt-2 font-mono text-sm text-ink">{obs.id}</p>
           <p className="mt-4 text-sm text-ink-muted">{t.disclaimer}</p>
         </header>

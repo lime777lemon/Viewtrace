@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { LoginForm } from "@/components/auth/LoginForm";
+import { ViewtraceLogo } from "@/components/brand/ViewtraceLogo";
 import type { LoginLocale } from "@/lib/auth/login-copy";
 import { loginPageCopy } from "@/lib/auth/login-copy";
 
@@ -33,11 +34,8 @@ export function LoginView({
 
       <header className="relative z-10 border-b border-border/80 bg-surface-elevated/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
-          <Link
-            href="/"
-            className="font-display text-xl font-semibold tracking-tight text-[#276248] transition hover:opacity-90"
-          >
-            Viewtrace
+          <Link href="/" className="inline-flex items-center transition hover:opacity-90">
+            <ViewtraceLogo className="h-8 w-auto sm:h-9" />
           </Link>
           <div className="flex flex-wrap items-center gap-3 text-sm sm:gap-4">
             <div
@@ -107,9 +105,9 @@ export function LoginView({
 
         <section className="order-1 lg:order-2">
           <div className="mx-auto w-full max-w-md rounded-2xl border border-border bg-surface-elevated p-6 shadow-lg shadow-ink/5 sm:p-8">
-            <div className="text-center">
-              <p className="font-display text-2xl font-semibold tracking-tight text-[#276248]">Viewtrace</p>
-              <p className="mt-1 text-sm text-ink-muted">{t.cardSubtitle}</p>
+            <div className="flex flex-col items-center text-center">
+              <ViewtraceLogo className="h-12 w-auto" priority={false} />
+              <p className="mt-2 text-sm text-ink-muted">{t.cardSubtitle}</p>
             </div>
 
             <>

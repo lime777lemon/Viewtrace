@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ViewtraceLogo } from "@/components/brand/ViewtraceLogo";
 import type { Locale } from "@/lib/i18n";
 import { copy } from "@/lib/i18n";
 import { LegalLocaleToggle } from "@/components/legal/LegalLocaleToggle";
@@ -16,11 +17,8 @@ export function LegalDocShell({ locale = "ja", title, updated, children }: Legal
     <div className="min-h-screen bg-surface text-ink">
       <header className="border-b border-border bg-surface-elevated">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-          <Link
-            href="/"
-            className="font-display text-xl font-semibold tracking-tight text-[#276248] transition hover:opacity-90"
-          >
-            Viewtrace
+          <Link href="/" className="inline-flex items-center transition hover:opacity-90">
+            <ViewtraceLogo className="h-8 w-auto sm:h-9" />
           </Link>
           <div className="flex items-center gap-3">
             <LegalLocaleToggle locale={locale} />

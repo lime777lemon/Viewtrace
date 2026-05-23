@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState, useId, useState } from "react";
 import { demoCheckoutAction } from "@/app/actions/checkout";
+import { ViewtraceLogo } from "@/components/brand/ViewtraceLogo";
 import { copy, type Locale } from "@/lib/i18n";
 import { LOCALE_COOKIE } from "@/lib/i18n/locale-cookie";
 import type { PlanId } from "@/lib/plans";
@@ -125,11 +126,8 @@ export function CheckoutClient({
     <div className="min-h-screen bg-surface text-ink">
       <header className="border-b border-border bg-surface-elevated/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
-          <Link
-            href="/"
-            className="font-display text-xl font-semibold tracking-tight text-[#276248] transition hover:opacity-90"
-          >
-            Viewtrace
+          <Link href="/" className="inline-flex items-center transition hover:opacity-90">
+            <ViewtraceLogo className="h-8 w-auto sm:h-9" />
           </Link>
           <div className="flex items-center gap-3">
             <div className="flex rounded-full border border-border bg-surface p-0.5 text-xs font-semibold">

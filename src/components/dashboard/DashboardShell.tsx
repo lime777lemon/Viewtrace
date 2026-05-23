@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ViewtraceLogo } from "@/components/brand/ViewtraceLogo";
 import { LogoutButton } from "@/components/dashboard/LogoutButton";
 import type { Locale } from "@/lib/i18n";
 import { copy } from "@/lib/i18n";
@@ -68,11 +69,8 @@ export function DashboardShell({
       <div className="flex min-h-screen">
         <aside className="hidden w-56 shrink-0 flex-col border-r border-border bg-surface-elevated md:flex">
           <div className="border-b border-border px-4 py-4">
-            <Link
-              href="/dashboard"
-              className="font-display text-xl font-semibold tracking-tight text-[#276248]"
-            >
-              Viewtrace
+            <Link href="/dashboard" className="inline-flex items-center transition hover:opacity-90">
+              <ViewtraceLogo className="h-9 w-auto" />
             </Link>
             <p className="mt-1 text-[10px] font-medium uppercase tracking-wider text-ink-muted">
               {t.productLabel}
@@ -110,11 +108,8 @@ export function DashboardShell({
           <header className="sticky top-0 z-40 border-b border-border bg-surface/95 backdrop-blur-md">
             <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
               <div className="flex min-w-0 items-center gap-3 md:hidden">
-                <Link
-                  href="/dashboard"
-                  className="font-display text-lg font-semibold tracking-tight text-[#276248]"
-                >
-                  Viewtrace
+                <Link href="/dashboard" className="inline-flex items-center transition hover:opacity-90">
+                  <ViewtraceLogo className="h-7 w-auto" />
                 </Link>
               </div>
               <div className="hidden min-w-0 flex-1 md:block" aria-hidden />
