@@ -165,6 +165,74 @@ export async function POST(req: Request) {
 
   let ran = 0;
   let notified = 0;
+  let failureNotified = 0;
+
+  const dashboardUrl = `${getAppOriginForEmailLinks()}/dashboard/observations`;
+
+  async function markWatchNotified(watchId: string): Promise<void> {
+    await svc
+      .from("observation_watches")
+      .update({ last_notified_at: new Date().toISOString() })
+      .eq("id", watchId);
+  }
+
+  async function sendCronWatchFailureEmail(params: {
+    userEmail: string | null;
+    url: string;
+    region: string;
+    watchId: string;
+    stage: "screenshot" | "save";
+    errorCode: string;
+    errorDetail?: string;
+  }): Promise<boolean> {
+    const { userEmail, url, region, watchId, stage, errorCode, errorDetail } = params;
+    if (!userEmail) {
+      console.warn("[cron] failure email skipped: user_email_missing", { watchId });
+      return false;
+    }
+    if (!isResendConfigured()) {
+      console.warn("[cron] failure email skipped: resend_not_configured", { watchId });
+      return false;
+    }
+
+    const stageJa = stage === "screenshot" ? "スクリーンショット取得" : "記録の保存";
+    const stageEn = stage === "screenshot" ? "Screenshot capture" : "Saving the record";
+    const detailLine = errorDetail?.trim() ? `\nDetail / 詳細: ${errorDetail.trim().slice(0, 400)}` : "";
+
+    const subject = "Viewtrace: scheduled observation failed / 定期自動観測に失敗";
+    const text = [
+      "Scheduled auto-observation did not complete.",
+      "定期自動観測を完了できませんでした（記録は追加されていません）。",
+      "",
+      `URL: ${url}`,
+      `Region / 地域: ${region}`,
+      `Stage / 段階: ${stageEn} / ${stageJa}`,
+      `Error / エラー: ${errorCode}${detailLine}`,
+      "",
+      `Dashboard / ダッシュボード: ${dashboardUrl}`,
+      "",
+      emailAccountHintText(userEmail),
+    ].join("\n");
+
+    const html = [
+      "<p>Scheduled auto-observation did not complete.</p>",
+      "<p>定期自動観測を完了できませんでした（記録は追加されていません）。</p>",
+      `<p><strong>URL</strong><br/>${escapeHtml(url)}</p>`,
+      `<p><strong>Region</strong> / 地域<br/>${escapeHtml(region)}</p>`,
+      `<p><strong>Stage</strong> / 段階<br/>${escapeHtml(stageEn)} / ${escapeHtml(stageJa)}</p>`,
+      `<p><strong>Error</strong> / エラー<br/><code style="word-break:break-all;">${escapeHtml(errorCode)}</code></p>`,
+      errorDetail?.trim()
+        ? `<p style="font-size:13px;color:#666;word-break:break-all;"><strong>Detail</strong> / 詳細<br/>${escapeHtml(errorDetail.trim().slice(0, 400))}</p>`
+        : "",
+      `<p><a href="${escapeHtml(dashboardUrl)}" style="color:#2563eb;text-decoration:underline;">Open dashboard / ダッシュボードを開く</a></p>`,
+      emailAccountHintHtml(userEmail),
+    ].join("");
+
+    const res = await sendResendEmail({ to: userEmail, subject, text, html });
+    if (res.ok) return true;
+    console.warn("[cron] failure email failed", { watchId, error: res.error });
+    return false;
+  }
 
   for (const w of watches ?? []) {
     ran += 1;
@@ -204,10 +272,44 @@ export async function POST(req: Request) {
 
     if (!shot.ok) {
       console.warn("[cron] screenshot failed", { watchId, url, region, error: shot.error, detail: shot.detail });
+      const failedAt = new Date().toISOString();
       await svc
         .from("observation_watches")
-        .update({ last_run_at: new Date().toISOString(), next_run_at: nextRun })
+        .update({ last_run_at: failedAt, next_run_at: nextRun })
         .eq("id", watchId);
+
+      await appendAuditEventAsService(svc, userId, {
+        scope: "system",
+        action: "observation.cron_auto_failed",
+        meta: {
+          stage: "screenshot",
+          status: "failure",
+          urlHost: observationUrlHost(url),
+          region,
+          watchId,
+          error: shot.error,
+          detail: shot.detail?.slice(0, 300),
+        },
+      });
+
+      const sent = await sendCronWatchFailureEmail({
+        userEmail,
+        url,
+        region,
+        watchId,
+        stage: "screenshot",
+        errorCode: shot.error,
+        errorDetail:
+          typeof shot.detail === "string"
+            ? shot.detail
+            : shot.upstreamStatus
+              ? `upstream HTTP ${shot.upstreamStatus}`
+              : undefined,
+      });
+      if (sent) {
+        failureNotified += 1;
+        await markWatchNotified(watchId);
+      }
       continue;
     }
 
@@ -281,6 +383,34 @@ export async function POST(req: Request) {
         .from("observation_watches")
         .update({ last_run_at: capturedAt, next_run_at: nextRun })
         .eq("id", watchId);
+
+      await appendAuditEventAsService(svc, userId, {
+        scope: "system",
+        action: "observation.cron_auto_failed",
+        meta: {
+          stage: "save",
+          status: "failure",
+          urlHost: observationUrlHost(url),
+          region,
+          watchId,
+          error: "observation_insert_failed",
+          detail: insertObsError.message.slice(0, 300),
+        },
+      });
+
+      const sent = await sendCronWatchFailureEmail({
+        userEmail,
+        url,
+        region,
+        watchId,
+        stage: "save",
+        errorCode: "observation_insert_failed",
+        errorDetail: insertObsError.message,
+      });
+      if (sent) {
+        failureNotified += 1;
+        await markWatchNotified(watchId);
+      }
       continue;
     }
 
@@ -346,10 +476,7 @@ export async function POST(req: Request) {
         const res = await sendResendEmail({ to: userEmail, subject, text, html });
         if (res.ok) {
           notified += 1;
-          await svc
-            .from("observation_watches")
-            .update({ last_notified_at: new Date().toISOString() })
-            .eq("id", watchId);
+          await markWatchNotified(watchId);
         } else {
           console.warn("[cron] email failed", { watchId, userId, error: res.error });
         }
@@ -410,10 +537,7 @@ export async function POST(req: Request) {
           const res = await sendResendEmail({ to: userEmail, subject, text, html });
           if (res.ok) {
             notified += 1;
-            await svc
-              .from("observation_watches")
-              .update({ last_notified_at: new Date().toISOString() })
-              .eq("id", watchId);
+            await markWatchNotified(watchId);
           } else {
             console.warn("[cron] email failed", { watchId, userId, error: res.error });
           }
@@ -422,7 +546,7 @@ export async function POST(req: Request) {
     }
   }
 
-  return okJson({ ran, notified });
+  return okJson({ ran, notified, failureNotified });
 }
 
 function escapeHtml(s: string): string {
