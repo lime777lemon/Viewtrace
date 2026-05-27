@@ -1,5 +1,9 @@
 import type { AuthError } from "@supabase/supabase-js";
 import { cache } from "react";
+import {
+  isBenignMissingSessionError,
+  isStaleRefreshTokenError,
+} from "@/lib/auth/supabase-auth-errors";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { TRIAL_CONFIG, parsePlanId, type PlanId } from "@/lib/plans";
 
@@ -11,23 +15,19 @@ function authErrorStatus(error: AuthError): number | undefined {
 /**
  * 開発: 詳細。本番: message は出さず分類用フィールドのみ（ログ漏えい対策）。
  * 「セッション Cookie が無い」系は /login の初回表示でも毎回起きうるため既定ではログしない。
+ * 失効 refresh token も Middleware で Cookie 掃除済みのため本番ではログしない。
  * 追うときだけ `VIEWTRACE_AUTH_DEBUG_GET_SESSION=1`（.env.local）を付与。
  */
-function isBenignMissingSessionError(error: AuthError): boolean {
-  if (error.name === "AuthSessionMissingError") return true;
-  const m = error.message?.toLowerCase() ?? "";
-  return m.includes("auth session missing");
-}
-
 function logGetSessionNull(error: AuthError | null, user: { id: string; email?: string | null } | null) {
   const isDev = process.env.NODE_ENV === "development";
   const verboseAuth = process.env.VIEWTRACE_AUTH_DEBUG_GET_SESSION === "1";
 
   if (error) {
-    if (isBenignMissingSessionError(error)) {
+    if (isBenignMissingSessionError(error) || isStaleRefreshTokenError(error)) {
       if (isDev && verboseAuth) {
-        console.debug("[Viewtrace auth] getSession → null (no session cookie)", {
+        console.debug("[Viewtrace auth] getSession → null (no valid session cookie)", {
           name: error.name,
+          code: error.code,
           message: error.message,
           status: authErrorStatus(error),
         });

@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
+import { isStaleRefreshTokenError } from "@/lib/auth/supabase-auth-errors";
 import { authCookieContextFromNextRequest } from "@/lib/supabase/auth-request-context";
 import { supabaseCookieOptions } from "@/lib/supabase/cookie-options";
 import { normalizeSupabaseUrl } from "@/lib/supabase/url";
@@ -8,6 +9,9 @@ import { normalizeSupabaseUrl } from "@/lib/supabase/url";
  * 各リクエストの先頭で Auth トークンを更新し、Cookie を request / response 両方に書く。
  * Server Component 側の getUser が古い refresh token で再更新し、ローテーション競合で
  * `/login` に戻るのを防ぐ（@supabase/ssr の Next.js 推奨パターン）。
+ *
+ * refresh token が Supabase 側で失効している場合は signOut で Auth Cookie を消し、
+ * 未ログインとして静かに続行する（checkout 等で `refresh_token_not_found` ログを減らす）。
  */
 export async function updateSupabaseSession(request: NextRequest): Promise<NextResponse> {
   let supabaseResponse = NextResponse.next({ request });
@@ -44,7 +48,10 @@ export async function updateSupabaseSession(request: NextRequest): Promise<NextR
     },
   });
 
-  await supabase.auth.getUser();
+  const { error } = await supabase.auth.getUser();
+  if (error && isStaleRefreshTokenError(error)) {
+    await supabase.auth.signOut();
+  }
 
   return supabaseResponse;
 }
