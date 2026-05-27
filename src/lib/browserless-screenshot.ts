@@ -98,14 +98,14 @@ export async function runBrowserlessScreenshot(params: {
 
   /**
    * Browserless v2 のペイロード。
-   * - `userAgent`: 既定の `HeadlessChrome/...` を上書きしてボット保護に弾かれにくくする
+   * - `userAgent.userAgent`: v2 では object 必須。既定の `HeadlessChrome/...` を上書き
    * - `setExtraHTTPHeaders.Accept-Language`: 日本語サイトが地域フィルタで弾くのを回避
    * - `gotoOptions.waitUntil`: ボット保護の challenge 解決やリダイレクト後の本体描画を待つ
    * - `options.fullPage`: 既存仕様どおり Pro 等で全画面キャプチャ
    */
   const payload: Record<string, unknown> = {
     url: target,
-    userAgent: BROWSER_LIKE_USER_AGENT,
+    userAgent: { userAgent: BROWSER_LIKE_USER_AGENT },
     setExtraHTTPHeaders: { "Accept-Language": BROWSER_LIKE_ACCEPT_LANGUAGE },
     gotoOptions: { waitUntil: "networkidle2", timeout: 30_000 },
   };
