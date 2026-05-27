@@ -16,10 +16,8 @@ export type LoginFormStrings = {
   passwordPlaceholderSignin: string;
   showPassword: string;
   hidePassword: string;
-  passwordHint: string;
   confirmPassword: string;
   confirmPasswordPlaceholder: string;
-  confirmPasswordHint: string;
   signingIn: string;
   signInSubmit: string;
   creatingAccount: string;
@@ -77,10 +75,8 @@ const formEn: LoginFormStrings = {
   passwordPlaceholderSignin: "Password",
   showPassword: "Show",
   hidePassword: "Hide",
-  passwordHint: "Use letters and numbers only, at least 8 characters.",
   confirmPassword: "Confirm password",
   confirmPasswordPlaceholder: "Re-enter password",
-  confirmPasswordHint: "Enter the same password again.",
   signingIn: "Signing in…",
   signInSubmit: "Sign in",
   creatingAccount: "Creating account…",
@@ -110,10 +106,8 @@ const formJa: LoginFormStrings = {
   passwordPlaceholderSignin: "パスワード",
   showPassword: "表示",
   hidePassword: "隠す",
-  passwordHint: "半角英字・数字のみ、8文字以上で設定してください。",
   confirmPassword: "パスワード（確認）",
   confirmPasswordPlaceholder: "もう一度入力",
-  confirmPasswordHint: "上と同じパスワードを入力してください。",
   signingIn: "ログイン中…",
   signInSubmit: "ログイン",
   creatingAccount: "登録中…",

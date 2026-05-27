@@ -146,9 +146,6 @@ export function LoginForm({
           placeholder={mode === "signup" ? t.passwordPlaceholderSignup : t.passwordPlaceholderSignin}
           className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm outline-none ring-accent/25 transition placeholder:text-ink-muted/60 focus:border-accent/40 focus:ring-2"
         />
-        {mode === "signup" ? (
-          <p className="mt-1 text-xs text-ink-muted">{t.passwordHint}</p>
-        ) : null}
       </div>
       {mode === "signup" ? (
         <div>
@@ -168,7 +165,6 @@ export function LoginForm({
             placeholder={t.confirmPasswordPlaceholder}
             className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm outline-none ring-accent/25 transition placeholder:text-ink-muted/60 focus:border-accent/40 focus:ring-2"
           />
-          <p className="mt-1 text-xs text-ink-muted">{t.confirmPasswordHint}</p>
         </div>
       ) : null}
       {mode === "signin" && signInState?.error ? (

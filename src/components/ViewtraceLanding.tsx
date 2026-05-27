@@ -149,6 +149,9 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
               <a href="#faq" className="transition hover:text-ink">
                 {t.nav.faq}
               </a>
+              <Link href="/contact" className="transition hover:text-ink">
+                {t.nav.contact}
+              </Link>
               <a href="/login?mode=signin" className="transition hover:text-ink">
                 {t.nav.login}
               </a>
@@ -217,6 +220,14 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                     >
                       {t.nav.faq}
                     </a>
+                    <Link
+                      href="/contact"
+                      role="menuitem"
+                      className="block px-4 py-2.5 text-sm font-medium text-ink-muted transition hover:bg-border/30 hover:text-ink"
+                      onClick={() => setMobileNavOpen(false)}
+                    >
+                      {t.nav.contact}
+                    </Link>
                     <a
                       href="/login?mode=signin"
                       role="menuitem"

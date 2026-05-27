@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { ContactForm } from "@/components/contact/ContactForm";
 import { LegalDocShell } from "@/components/legal/LegalDocShell";
+import { getContactPageCopy } from "@/lib/i18n/contact-page-copy";
 import { legalPageMetadata } from "@/lib/i18n/legal-page-metadata";
-import { contactEmail } from "@/lib/site";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -12,23 +12,18 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function ContactPage() {
   const locale = await getRequestLocale();
+  const t = getContactPageCopy(locale);
+
   return (
     <LegalDocShell
       locale={locale}
       title={locale === "en" ? "Contact" : "お問い合わせ"}
-      updated="2026-05-04"
+      updated="2026-05-28"
     >
-      <p>
-        {locale === "en"
-          ? "For questions or requests, email us below. Replies may take some time."
-          : "ご質問・ご相談は、下記メールアドレスまでお送りください。返信までにお時間をいただく場合があります。"}
-      </p>
-      <p className="text-lg font-semibold text-ink">
-        <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
-      </p>
-      <p>
-        <Link href="/">{locale === "en" ? "Back to home" : "トップページへ戻る"}</Link>
-      </p>
+      <div className="max-w-xl space-y-8">
+        <p className="text-base leading-relaxed text-ink-muted">{t.intro}</p>
+        <ContactForm locale={locale} />
+      </div>
     </LegalDocShell>
   );
 }
