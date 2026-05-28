@@ -1,3 +1,9 @@
+import { aboutPageCopyEn, aboutPageCopyJa } from "./i18n/about-page-copy";
+import { acceptableUsePageCopyEn, acceptableUsePageCopyJa } from "./i18n/acceptable-use-page-copy";
+import { privacyPageCopyEn, privacyPageCopyJa } from "./i18n/privacy-page-copy";
+import { termsPageCopyEn, termsPageCopyJa } from "./i18n/terms-page-copy";
+import { tokushohoPageCopyEn, tokushohoPageCopyJa } from "./i18n/tokushoho-page-copy";
+
 export type Locale = "ja" | "en";
 
 export const copy = {
@@ -728,65 +734,11 @@ export const copy = {
       langJa: "日本語",
       langEn: "English",
     },
-    termsPage: {
-      pageTitle: "利用規約",
-      callouts: [
-        {
-          kicker: "【法的リスク回避】",
-          body:
-            "本サービスの記録は参考情報であり、確認記録としての完全性・正確性を保証するものではありません。",
-        },
-        {
-          kicker: "【広告用途向け】",
-          body:
-            "本サービスは広告配信の正常性を保証するものではなく、観測時点の状態のみを記録するものです。",
-        },
-      ],
-      intro:
-        "本サービス「Viewtrace」（以下「当社サービス」）は、ユーザーが指定したURLについて、特定の地域および時刻における表示状態のスナップショット記録を提供するものです。",
-      s1: {
-        title: "第1条（サービス内容）",
-        paragraphs: [
-          "当社は、指定条件に基づくウェブページの表示記録を提供します。",
-          "当該記録は取得時点の情報であり、継続的な表示や正確性を保証するものではありません。",
-        ],
-      },
-      s2: {
-        title: "第2条（保証の否認）",
-        listIntro: "当社サービスは以下を保証しません：",
-        listItems: [
-          "広告配信の正常性",
-          "地域ターゲティングの正確性",
-          "表示内容の完全性",
-          "外部サービスの動作",
-        ],
-      },
-      s3: {
-        title: "3. 禁止された利用",
-        listIntro: "次のようなことはしてはいけません。",
-        listItems: [
-          "違法なウェブサイトを監視すること。",
-          "主に個人データを収集する目的でサービスを利用すること。",
-          "過負荷を引き起こすこと。",
-          "スクレイピングや自動化を乱用すること。",
-        ],
-        acceptablePrefix: "詳細は",
-        acceptableLink: "許容される利用方針",
-        acceptableSuffix: "をご覧ください。",
-      },
-      s4: {
-        title: "4. 責任の制限",
-        listIntro: "当社は、次の事項について責任を負いません。",
-        listItems: ["広告費の損失", "機会損失", "間接的な損害"],
-        liabilityCap: "当社の責任の上限は、該当する月に支払われた利用料に限られます。",
-      },
-      s5: {
-        title: "5. 変更",
-        body: "サービスおよび価格を変更する場合があります。",
-      },
-      draftNotice:
-        "本規約は簡易ドラフトです。公開前に管轄法・決済条件・法人情報と整合させ、弁護士等のレビューを推奨します。",
-    },
+    termsPage: termsPageCopyJa,
+    privacyPage: privacyPageCopyJa,
+    tokushohoPage: tokushohoPageCopyJa,
+    acceptableUsePage: acceptableUsePageCopyJa,
+    aboutPage: aboutPageCopyJa,
     footer: {
       tagline: "説明責任・証跡・監査性のためのジオ証跡インフラ。",
       product: "プロダクト",
@@ -1564,64 +1516,11 @@ export const copy = {
       langJa: "日本語",
       langEn: "English",
     },
-    termsPage: {
-      pageTitle: "Terms of Service",
-      callouts: [
-        {
-          kicker: "Reference for verification and sharing.",
-          body:
-            "Outputs are reference information. We do not warrant completeness or accuracy as confirmation records.",
-        },
-        {
-          kicker: "Advertising workflows.",
-          body:
-            "Viewtrace does not guarantee ad delivery health; it records only what was observed at capture time.",
-        },
-      ],
-      intro:
-        "Viewtrace provides timestamped snapshots of how a user-specified URL appeared in a specific region at a specific time.",
-      s1: {
-        title: "1. Service",
-        paragraphs: [
-          "We provide visual records of web page rendering under specified conditions.",
-          "Records reflect a point in time and do not guarantee ongoing availability or correctness.",
-        ],
-      },
-      s2: {
-        title: "2. Disclaimer",
-        listIntro: "We do not guarantee:",
-        listItems: [
-          "ad delivery health",
-          "geo-targeting accuracy",
-          "completeness of captured content",
-          "behavior of third-party services",
-        ],
-      },
-      s3: {
-        title: "3. Prohibited use",
-        listIntro: "You must not:",
-        listItems: [
-          "monitor illegal websites",
-          "use the service primarily to collect personal data",
-          "cause excessive load",
-          "abuse scraping or automation",
-        ],
-        acceptablePrefix: "See ",
-        acceptableLink: "Acceptable Use",
-        acceptableSuffix: " for details.",
-      },
-      s4: {
-        title: "4. Limitation of liability",
-        listIntro: "We are not liable for:",
-        listItems: ["ad spend loss", "lost opportunities", "indirect damages"],
-        liabilityCap: "Our liability is capped at the fees paid for the applicable month.",
-      },
-      s5: {
-        title: "5. Changes",
-        body: "We may change the service and pricing.",
-      },
-      draftNotice: "",
-    },
+    termsPage: termsPageCopyEn,
+    privacyPage: privacyPageCopyEn,
+    tokushohoPage: tokushohoPageCopyEn,
+    acceptableUsePage: acceptableUsePageCopyEn,
+    aboutPage: aboutPageCopyEn,
     footer: {
       tagline: "Accountability, evidence trails, and auditability for geo-targeted experiences.",
       product: "Product",

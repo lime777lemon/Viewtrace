@@ -26,36 +26,36 @@ const SEO: Record<LegalPageKey, Record<Locale, { title: string; description: str
     ja: {
       title: "プライバシーポリシー",
       description:
-        "Viewtraceにおける個人情報の取得項目、利用目的、第三者提供、保存期間、セキュリティについて。",
+        "Viewtraceの個人情報の取得項目、利用目的、委託先、越境移転、保存期間、Cookie・GA4、利用者の権利について。",
     },
     en: {
       title: "Privacy Policy",
       description:
-        "How Viewtrace handles personal data: what we collect, purposes, sharing, retention, and security.",
+        "How Viewtrace handles personal data: collection, purposes, subprocessors, international transfers, retention, cookies, and your rights.",
     },
   },
   acceptableUse: {
     ja: {
       title: "許容される利用方針",
       description:
-        "Viewtraceの許容される利用方針。禁止事項と適正利用の要点。利用規約第3条と併せてご確認ください。",
+        "Viewtraceの許容される利用方針。禁止事項、URL・自動観測、記録の取り扱い。利用規約第8条と併せてご確認ください。",
     },
     en: {
       title: "Acceptable Use",
       description:
-        "Viewtrace acceptable use policy: prohibited activities and fair-use expectations. Read with the Terms of Service.",
+        "Viewtrace acceptable use policy: prohibited activities, URL monitoring, record handling. Read with Terms of Service Section 8.",
     },
   },
   tokushoho: {
     ja: {
       title: "特定商取引法に基づく表記",
       description:
-        "Viewtraceの特定商取引法に基づく表記（事業者情報・代金・支払・返品等）。",
+        "Viewtraceの特商法表記。事業者情報、料金、支払、解約方法、返金、無料トライアルについて。",
     },
     en: {
       title: "Commercial Disclosure (Japan)",
       description:
-        "Japan Act on Specified Commercial Transactions disclosures for Viewtrace: seller information, pricing, payment, and related terms.",
+        "Japan Act on Specified Commercial Transactions disclosures for Viewtrace: seller, pricing, payment, cancellation, and refunds.",
     },
   },
   contact: {
@@ -72,12 +72,12 @@ const SEO: Record<LegalPageKey, Record<Locale, { title: string; description: str
     ja: {
       title: "私たちについて",
       description:
-        "Viewtraceを提供する The Establish合同会社の会社情報（所在地・ウェブサイト）。",
+        "Viewtraceを運営する The Establish合同会社。ミッション、サービス概要、会社情報、お問い合わせ先。",
     },
     en: {
       title: "About us",
       description:
-        "Company information for The Establish LLC, the operator of Viewtrace.",
+        "The Establish LLC, operator of Viewtrace: mission, product focus, company details, and contact.",
     },
   },
 };
