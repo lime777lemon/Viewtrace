@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Noto_Sans_JP, Sora } from "next/font/google";
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { siteSeoKeywordPhrases } from "@/lib/seo/site-keywords";
@@ -64,6 +65,7 @@ export default function RootLayout({
     <html lang="en" className={`${notoSansJp.variable} ${sora.variable}`}>
       <body className="font-sans">
         {children}
+        <GoogleAnalytics />
         <Analytics />
         <SpeedInsights />
       </body>

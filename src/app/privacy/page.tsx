@@ -15,7 +15,7 @@ export default async function PrivacyPage() {
     <LegalDocShell
       locale={locale}
       title={locale === "en" ? "Privacy Policy" : "プライバシーポリシー"}
-      updated="2026-05-04"
+      updated="2026-05-28"
     >
       {locale === "en" ? (
         <>
@@ -49,11 +49,22 @@ export default async function PrivacyPage() {
           </section>
 
           <section className="space-y-3">
+            <h2>Cookies &amp; analytics</h2>
+            <p>
+              We use essential cookies for sign-in and preferences. With your consent, we also use
+              Google Analytics (GA4) to understand how the site is used and improve the service.
+              You can accept or decline analytics cookies via the banner on first visit. Vercel
+              Analytics may also collect aggregated usage metrics as part of hosting.
+            </p>
+          </section>
+
+          <section className="space-y-3">
             <h2>Sharing</h2>
             <p>We do not share your data except:</p>
             <ul>
               <li>when required by law</li>
               <li>payment processing (e.g., Stripe)</li>
+              <li>analytics (Google Analytics, when you consent)</li>
             </ul>
           </section>
 
@@ -102,11 +113,22 @@ export default async function PrivacyPage() {
           </section>
 
           <section className="space-y-3">
+            <h2>Cookie・分析</h2>
+            <p>
+              ログインや言語設定などに必要な Cookie を使用します。同意いただいた場合、Google
+              Analytics（GA4）でサイトの利用状況を把握し、サービス改善に利用します。初回訪問時のバナーで分析
+              Cookie の許可・拒否を選べます。ホスティングの一環として Vercel Analytics
+              による集計も行う場合があります。
+            </p>
+          </section>
+
+          <section className="space-y-3">
             <h2>第三者提供</h2>
             <p>以下の場合を除き提供しません：</p>
             <ul>
               <li>法令に基づく場合</li>
               <li>決済処理（例：Stripe）</li>
+              <li>分析（同意いただいた場合の Google Analytics）</li>
             </ul>
           </section>
 
@@ -127,7 +149,7 @@ export default async function PrivacyPage() {
 
           <div className="muted-box text-sm text-ink-muted">
             <p>
-              本ポリシーは実務向けドラフトです。Cookie・アクセス解析・委託先・越境移転等は事業実態に合わせて追記してください。
+              委託先・越境移転等の詳細は事業実態に合わせて追記してください。
             </p>
           </div>
         </>
