@@ -178,45 +178,49 @@ export function RegionSearchPanel({
         onSubmit={handleSubmit}
         className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-sm sm:p-8"
       >
-        <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
-          {labels.planLabel}
-        </p>
-        {lockedPlanId ? (
-          <p className="mt-2 text-sm text-[var(--color-ink-muted)]">
-            {lockedPlanId === "pro"
-              ? `${labels.planPro} · ${labels.planProHint}`
-              : `${labels.planStarter} · ${labels.planStarterHint}`}
-          </p>
-        ) : (
-          <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label={labels.planLabel}>
-            {(
-              [
-                { id: "starter" as const, title: labels.planStarter, hint: labels.planStarterHint },
-                { id: "pro" as const, title: labels.planPro, hint: labels.planProHint },
-              ] as const
-            ).map((tab) => {
-              const active = planTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setPlanTab(tab.id)}
-                  className={`rounded-xl border px-4 py-3 text-left text-sm transition ${
-                    active
-                      ? "border-[var(--color-accent)] bg-[var(--color-accent-soft)]/50 ring-2 ring-[var(--color-accent)]/20"
-                      : "border-[var(--color-border)] bg-[var(--color-surface-elevated)] hover:border-[var(--color-ink-muted)]/35"
-                  }`}
-                  aria-pressed={active}
-                >
-                  <span className="font-semibold text-[var(--color-ink)]">{tab.title}</span>
-                  <span className="mt-0.5 block text-xs text-[var(--color-ink-muted)]">{tab.hint}</span>
-                </button>
-              );
-            })}
-          </div>
+        {mode === "dashboard" && (
+          <>
+            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
+              {labels.planLabel}
+            </p>
+            {lockedPlanId ? (
+              <p className="mt-2 text-sm text-[var(--color-ink-muted)]">
+                {lockedPlanId === "pro"
+                  ? `${labels.planPro} · ${labels.planProHint}`
+                  : `${labels.planStarter} · ${labels.planStarterHint}`}
+              </p>
+            ) : (
+              <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label={labels.planLabel}>
+                {(
+                  [
+                    { id: "starter" as const, title: labels.planStarter, hint: labels.planStarterHint },
+                    { id: "pro" as const, title: labels.planPro, hint: labels.planProHint },
+                  ] as const
+                ).map((tab) => {
+                  const active = planTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setPlanTab(tab.id)}
+                      className={`rounded-xl border px-4 py-3 text-left text-sm transition ${
+                        active
+                          ? "border-[var(--color-accent)] bg-[var(--color-accent-soft)]/50 ring-2 ring-[var(--color-accent)]/20"
+                          : "border-[var(--color-border)] bg-[var(--color-surface-elevated)] hover:border-[var(--color-ink-muted)]/35"
+                      }`}
+                      aria-pressed={active}
+                    >
+                      <span className="font-semibold text-[var(--color-ink)]">{tab.title}</span>
+                      <span className="mt-0.5 block text-xs text-[var(--color-ink-muted)]">{tab.hint}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </>
         )}
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-2 lg:gap-8">
+        <div className={`grid gap-6 lg:grid-cols-2 lg:gap-8 ${mode === "dashboard" ? "mt-8" : ""}`}>
           <div>
             <label htmlFor={regionFieldId} className="block text-sm font-medium text-[var(--color-ink)]">
               {labels.regionLabel}
