@@ -19,7 +19,7 @@ export function getRegionLabelForLocale(option: RegionOption, locale: Locale): s
   return MAJOR_COUNTRY_EN[option.value] ?? option.label;
 }
 
-/** 主要国・地域（両プラン共通で選択可） */
+/** 主要国・地域（両プラン共通で選択可）— UI では米国より先に表示 */
 const MAJOR_COUNTRIES: RegionOption[] = [
   { value: "GB", label: "英国" },
   { value: "DE", label: "ドイツ" },
@@ -28,6 +28,9 @@ const MAJOR_COUNTRIES: RegionOption[] = [
   { value: "AU", label: "オーストラリア" },
   { value: "CA", label: "カナダ" },
 ];
+
+/** 地域選択の初期値（主要国の先頭） */
+export const DEFAULT_OBSERVATION_REGION = MAJOR_COUNTRIES[0]!.value;
 
 /** Starter：米国の代表州 */
 const STARTER_US: RegionOption[] = [
@@ -99,10 +102,10 @@ const PRO_US: RegionOption[] = US_STATES.map(([abbr, name]) => ({
 
 export function getRegionOptions(planId: PlanId): RegionOption[] {
   if (planId === "pro") {
-    return [...PRO_US, ...MAJOR_COUNTRIES];
+    return [...MAJOR_COUNTRIES, ...PRO_US];
   }
-  /** Starter: 代表州 + 主要国（UI の地域欄と一致） */
-  return [...STARTER_US, ...MAJOR_COUNTRIES];
+  /** Starter: 主要国 + 代表州（UI の地域欄と一致） */
+  return [...MAJOR_COUNTRIES, ...STARTER_US];
 }
 
 const ALL_OBSERVATION_REGION_VALUES = new Set([

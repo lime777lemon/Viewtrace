@@ -15,6 +15,7 @@ import {
   type WatchFrequency,
   type WatchNotifyMode,
 } from "@/lib/observation-watch-schedule";
+import { DEFAULT_OBSERVATION_REGION } from "@/lib/regions";
 
 function ObserveNowSubmitButton({ label, pendingLabel }: { label: string; pendingLabel: string }) {
   const { pending } = useFormStatus();
@@ -96,7 +97,7 @@ export function AutoObservationsClient({
   showSaveErrorBanner,
   showSavedRowBanner,
 }: Props) {
-  const defaultRegion = regions[0]?.value ?? "US-CA";
+  const defaultRegion = regions[0]?.value ?? DEFAULT_OBSERVATION_REGION;
 
   const [addUrl, setAddUrl] = useState("");
   const [addRegion, setAddRegion] = useState(defaultRegion);

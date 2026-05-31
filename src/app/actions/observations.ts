@@ -3,7 +3,10 @@
 import { redirect } from "next/navigation";
 import { appendAuditEvent, AUDIT_ACTION } from "@/lib/audit-log";
 import { getSession } from "@/lib/auth/session";
-import { isBrowserlessConfigured, runBrowserlessScreenshot } from "@/lib/browserless-screenshot";
+import {
+  isBrowserlessConfigured,
+  runBrowserlessScreenshotWithProxyRetry,
+} from "@/lib/browserless-screenshot";
 import type { Observation } from "@/lib/demo/observations";
 import {
   appendUserObservation,
@@ -121,7 +124,7 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
 
   let browserlessShotOk = false;
   if (browserlessOn) {
-    const shot = await runBrowserlessScreenshot({
+    const shot = await runBrowserlessScreenshotWithProxyRetry({
       url,
       region: regionValue,
       fullPage: plan.snapshotFullPage,

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { AUDIT_ACTION, appendAuditEventAsService } from "@/lib/audit-log";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { runBrowserlessScreenshot } from "@/lib/browserless-screenshot";
+import { runBrowserlessScreenshotWithProxyRetry } from "@/lib/browserless-screenshot";
 import type { Observation } from "@/lib/demo/observations";
 import { computeObservationContentHash } from "@/lib/observation-content-hash";
 import {
@@ -258,15 +258,7 @@ export async function POST(req: Request) {
 
     const userEmail = await getUserEmail(userId);
 
-    let shot = await runBrowserlessScreenshot({ url, region, fullPage });
-    if (
-      !shot.ok &&
-      shot.error === "browserless_error" &&
-      typeof shot.detail === "string" &&
-      /third-party proxy/i.test(shot.detail)
-    ) {
-      shot = await runBrowserlessScreenshot({ url, region, fullPage, disableProxy: true });
-    }
+    const shot = await runBrowserlessScreenshotWithProxyRetry({ url, region, fullPage });
 
     const nextRun = computeNextRunAfter(new Date(), freq, repeatCount).toISOString();
 

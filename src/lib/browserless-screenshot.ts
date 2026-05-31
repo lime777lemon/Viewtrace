@@ -153,3 +153,21 @@ export async function runBrowserlessScreenshot(params: {
   const png = await upstream.arrayBuffer();
   return { ok: true, png, normalizedUrl: target };
 }
+
+/** Browserless が外部プロキシ非対応プラン等で 401 等を返したとき、プロキシなしで 1 回だけ再試行する */
+export async function runBrowserlessScreenshotWithProxyRetry(params: {
+  url: string;
+  region?: string;
+  fullPage: boolean;
+}): Promise<BrowserlessScreenshotResult> {
+  let shot = await runBrowserlessScreenshot(params);
+  if (
+    !shot.ok &&
+    shot.error === "browserless_error" &&
+    typeof shot.detail === "string" &&
+    /third-party proxy/i.test(shot.detail)
+  ) {
+    shot = await runBrowserlessScreenshot({ ...params, disableProxy: true });
+  }
+  return shot;
+}
