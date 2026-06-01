@@ -146,7 +146,7 @@ export function DashboardShell({
                 <span className="hidden max-w-[200px] truncate text-sm text-ink-muted sm:inline" title={email}>
                   {email}
                 </span>
-                <LogoutButton label={t.logout} />
+                <LogoutButton label={t.logout} pendingLabel={locale === "ja" ? "処理中…" : "Processing…"} />
               </div>
             </div>
             <nav className="flex gap-1 overflow-x-auto border-t border-border px-2 py-2 md:hidden">
@@ -156,10 +156,10 @@ export function DashboardShell({
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
+                    className={`shrink-0 cursor-pointer rounded-full px-3 py-1.5 text-xs font-semibold transition active:translate-y-px ${
                       active
-                        ? "bg-ink text-white"
-                        : "bg-surface-elevated text-ink-muted"
+                        ? "bg-ink text-white shadow-sm hover:bg-ink/90 hover:shadow"
+                        : "bg-surface-elevated text-ink-muted hover:bg-surface hover:text-ink hover:shadow-sm"
                     }`}
                   >
                     {item.label}

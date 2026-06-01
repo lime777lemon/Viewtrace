@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useId, useMemo, useState } from "react";
-import { useFormStatus } from "react-dom";
+import { PendingSubmitButton } from "@/components/ui/PendingSubmitButton";
 import { recordWebVerifiedObservationAction } from "@/app/actions/observations";
 import type { Locale } from "@/lib/i18n";
 import type { PlanId } from "@/lib/plans";
@@ -141,34 +141,16 @@ export function RegionSearchPanel({
       : "2026-05-04 14:32 UTC (example)";
 
   const hintText = mode === "marketing" ? labels.hint : labels.dashboardHint;
-  const recordPendingText = locale === "ja" ? "記録中…" : "Saving…";
+  const recordPendingText = locale === "ja" ? "処理中…" : "Processing…";
 
   function RecordAsObservationSubmitButton() {
-    const { pending } = useFormStatus();
     return (
-      <button
-        type="submit"
-        disabled={pending}
-        aria-disabled={pending}
-        aria-busy={pending}
-        className={`inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--color-ink)] px-5 py-3 text-sm font-semibold text-white shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface)] sm:w-auto ${
-          pending
-            ? "cursor-not-allowed opacity-80"
-            : "hover:-translate-y-[1px] hover:bg-[color-mix(in_oklab,var(--color-ink)_92%,white)] hover:shadow-md active:translate-y-0 active:shadow-sm"
-        }`}
-      >
-        {pending ? (
-          <>
-            <span
-              aria-hidden
-              className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
-            />
-            <span>{recordPendingText}</span>
-          </>
-        ) : (
-          labels.recordAsObservation
-        )}
-      </button>
+      <PendingSubmitButton
+        label={labels.recordAsObservation}
+        pendingLabel={recordPendingText}
+        className="w-full rounded-full bg-ink px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-ink/92 hover:shadow-md active:translate-y-0 active:shadow-sm disabled:hover:shadow-sm sm:w-auto"
+        pendingClassName="hover:bg-ink"
+      />
     );
   }
 
@@ -176,15 +158,15 @@ export function RegionSearchPanel({
     <div className="space-y-8">
       <form
         onSubmit={handleSubmit}
-        className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-sm sm:p-8"
+        className="rounded-2xl border border-border bg-surface p-5 shadow-sm sm:p-8"
       >
         {mode === "dashboard" && (
           <>
-            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink-muted)]">
+            <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
               {labels.planLabel}
             </p>
             {lockedPlanId ? (
-              <p className="mt-2 text-sm text-[var(--color-ink-muted)]">
+              <p className="mt-2 text-sm text-ink-muted">
                 {lockedPlanId === "pro"
                   ? `${labels.planPro} · ${labels.planProHint}`
                   : `${labels.planStarter} · ${labels.planStarterHint}`}
@@ -205,13 +187,13 @@ export function RegionSearchPanel({
                       onClick={() => setPlanTab(tab.id)}
                       className={`rounded-xl border px-4 py-3 text-left text-sm transition ${
                         active
-                          ? "border-[var(--color-accent)] bg-[var(--color-accent-soft)]/50 ring-2 ring-[var(--color-accent)]/20"
-                          : "border-[var(--color-border)] bg-[var(--color-surface-elevated)] hover:border-[var(--color-ink-muted)]/35"
+                          ? "border-accent bg-accent-soft/50 ring-2 ring-accent/20"
+                          : "border-border bg-surface-elevated hover:border-ink-muted/35"
                       }`}
                       aria-pressed={active}
                     >
-                      <span className="font-semibold text-[var(--color-ink)]">{tab.title}</span>
-                      <span className="mt-0.5 block text-xs text-[var(--color-ink-muted)]">{tab.hint}</span>
+                      <span className="font-semibold text-ink">{tab.title}</span>
+                      <span className="mt-0.5 block text-xs text-ink-muted">{tab.hint}</span>
                     </button>
                   );
                 })}
@@ -222,7 +204,7 @@ export function RegionSearchPanel({
 
         <div className={`grid gap-6 lg:grid-cols-2 lg:gap-8 ${mode === "dashboard" ? "mt-8" : ""}`}>
           <div>
-            <label htmlFor={regionFieldId} className="block text-sm font-medium text-[var(--color-ink)]">
+            <label htmlFor={regionFieldId} className="block text-sm font-medium text-ink">
               {labels.regionLabel}
             </label>
             <select
@@ -230,7 +212,7 @@ export function RegionSearchPanel({
               aria-label={labels.regionAria}
               value={region}
               onChange={(e) => setRegion(e.target.value)}
-              className="mt-2 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-4 py-3 text-sm text-[var(--color-ink)] outline-none ring-[var(--color-accent)]/25 focus:border-[var(--color-accent)]/40 focus:ring-2"
+              className="mt-2 w-full rounded-xl border border-border bg-surface-elevated px-4 py-3 text-sm text-ink outline-none ring-accent/25 focus:border-accent/40 focus:ring-2"
             >
               {options.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -240,7 +222,7 @@ export function RegionSearchPanel({
             </select>
           </div>
           <div>
-            <label htmlFor={queryFieldId} className="block text-sm font-medium text-[var(--color-ink)]">
+            <label htmlFor={queryFieldId} className="block text-sm font-medium text-ink">
               {labels.queryLabel}
             </label>
             <input
@@ -251,7 +233,7 @@ export function RegionSearchPanel({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={labels.queryPlaceholder}
-              className="mt-2 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-4 py-3 text-sm text-[var(--color-ink)] outline-none ring-[var(--color-accent)]/25 placeholder:text-[var(--color-ink-muted)]/65 focus:border-[var(--color-accent)]/40 focus:ring-2"
+              className="mt-2 w-full rounded-xl border border-border bg-surface-elevated px-4 py-3 text-sm text-ink outline-none ring-accent/25 placeholder:text-ink-muted/65 focus:border-accent/40 focus:ring-2"
             />
           </div>
         </div>
@@ -259,59 +241,59 @@ export function RegionSearchPanel({
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <button
             type="submit"
-            className="inline-flex rounded-full bg-[var(--color-accent)] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--color-accent-hover)]"
+            className="inline-flex cursor-pointer rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-accent-hover hover:shadow-md active:translate-y-px"
           >
             {labels.submit}
           </button>
           {mode === "marketing" ? (
             <Link
               href="/login"
-              className="text-sm font-semibold text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+              className="text-sm font-semibold text-accent hover:text-accent-hover"
             >
               {locale === "ja" ? "無料で始める →" : "Start for free →"}
             </Link>
           ) : (
             <Link
               href="/dashboard/observations/new"
-              className="text-sm font-semibold text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+              className="text-sm font-semibold text-accent hover:text-accent-hover"
             >
               {labels.dashboardCta}
             </Link>
           )}
         </div>
-        <p className="mt-4 text-xs leading-relaxed text-[var(--color-ink-muted)]">{hintText}</p>
+        <p className="mt-4 text-xs leading-relaxed text-ink-muted">{hintText}</p>
       </form>
 
       {previewOn ? (
-        <div className="rounded-2xl border border-[var(--color-accent)]/25 bg-[var(--color-accent-soft)]/30 p-6 sm:p-8">
-          <h3 className="font-display text-sm font-semibold text-[var(--color-ink)]">{labels.mockTitle}</h3>
-          <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-sm">
-            <div className="flex items-center gap-2 text-xs font-medium text-[var(--color-ink-muted)]">
+        <div className="rounded-2xl border border-accent/25 bg-accent-soft/30 p-6 sm:p-8">
+          <h3 className="font-display text-sm font-semibold text-ink">{labels.mockTitle}</h3>
+          <div className="mt-4 rounded-xl border border-border bg-surface p-5 shadow-sm">
+            <div className="flex items-center gap-2 text-xs font-medium text-ink-muted">
               <span className="h-2 w-2 rounded-full bg-emerald-600" aria-hidden />
               <span>
                 {labels.mockSnapshot} · {selectedLabel} · {exampleTime}
               </span>
             </div>
-            <p className="mt-3 break-all text-sm font-medium text-[var(--color-ink)]">
+            <p className="mt-3 break-all text-sm font-medium text-ink">
               {query.trim() ? query.trim() : labels.mockEmptyQuery}
             </p>
 
             {query.trim() ? (
-              <div className="mt-4 border-t border-[var(--color-border)] pt-4">
+              <div className="mt-4 border-t border-border pt-4">
                 {livePreview.status === "loading" ? (
-                  <p className="text-sm text-[var(--color-ink-muted)]">{labels.previewLoading}</p>
+                  <p className="text-sm text-ink-muted">{labels.previewLoading}</p>
                 ) : null}
                 {livePreview.status === "not_url" ? (
-                  <p className="text-sm text-[var(--color-ink-muted)]">{labels.previewNotUrl}</p>
+                  <p className="text-sm text-ink-muted">{labels.previewNotUrl}</p>
                 ) : null}
                 {livePreview.status === "error" ? (
                   <div className="space-y-3">
-                    <p className="text-sm text-[var(--color-ink-muted)]">{labels.previewError}</p>
+                    <p className="text-sm text-ink-muted">{labels.previewError}</p>
                     <a
                       href={livePreview.openHref}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex text-sm font-semibold text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+                      className="inline-flex text-sm font-semibold text-accent hover:text-accent-hover"
                     >
                       {labels.previewOpenLive}
                     </a>
@@ -320,7 +302,7 @@ export function RegionSearchPanel({
                 {livePreview.status === "ok" ? (
                   <div className="space-y-3">
                     {livePreview.title ? (
-                      <p className="text-sm font-semibold text-[var(--color-ink)]">{livePreview.title}</p>
+                      <p className="text-sm font-semibold text-ink">{livePreview.title}</p>
                     ) : null}
                     {livePreview.image ? (
                       <Image
@@ -328,17 +310,17 @@ export function RegionSearchPanel({
                         alt=""
                         width={768}
                         height={384}
-                        className="max-h-48 w-full max-w-lg rounded-lg border border-[var(--color-border)] object-cover object-top"
+                        className="max-h-48 w-full max-w-lg rounded-lg border border-border object-cover object-top"
                         loading="lazy"
                         unoptimized
                       />
                     ) : null}
-                    <p className="text-xs leading-relaxed text-[var(--color-ink-muted)]">{labels.previewLiveNote}</p>
+                    <p className="text-xs leading-relaxed text-ink-muted">{labels.previewLiveNote}</p>
                     <a
                       href={livePreview.canonicalUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex text-sm font-semibold text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+                      className="inline-flex text-sm font-semibold text-accent hover:text-accent-hover"
                     >
                       {labels.previewOpenLive}
                     </a>
@@ -350,19 +332,19 @@ export function RegionSearchPanel({
                         <input type="hidden" name="verifiedTitle" value={livePreview.title ?? ""} />
                         <input type="hidden" name="verifiedImageUrl" value={livePreview.image ?? ""} />
                         <RecordAsObservationSubmitButton />
-                        <p className="text-xs leading-relaxed text-[var(--color-ink-muted)]">
+                        <p className="text-xs leading-relaxed text-ink-muted">
                           {labels.recordAsObservationHint}
                         </p>
                       </form>
                     ) : (
-                      <p className="mt-4 text-xs text-[var(--color-ink-muted)]">
+                      <p className="mt-4 text-xs text-ink-muted">
                         <Link
                           href="/login?next=/dashboard/region-search"
-                          className="font-semibold text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+                          className="font-semibold text-accent hover:text-accent-hover"
                         >
                           {labels.recordAsObservationLogin}
                         </Link>
-                        <span className="text-[var(--color-ink-muted)]">{labels.recordAsObservationLoginSuffix}</span>
+                        <span className="text-ink-muted">{labels.recordAsObservationLoginSuffix}</span>
                       </p>
                     )}
                   </div>

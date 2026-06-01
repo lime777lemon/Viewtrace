@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useFormStatus } from "react-dom";
+import { PendingSubmitButton } from "@/components/ui/PendingSubmitButton";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { recordWebVerifiedObservationAction } from "@/app/actions/observations";
 import { saveObservationWatchAction, deleteObservationWatchAction } from "@/app/actions/observation-watches";
@@ -16,19 +16,6 @@ import {
   type WatchNotifyMode,
 } from "@/lib/observation-watch-schedule";
 import { DEFAULT_OBSERVATION_REGION } from "@/lib/regions";
-
-function ObserveNowSubmitButton({ label, pendingLabel }: { label: string; pendingLabel: string }) {
-  const { pending } = useFormStatus();
-  return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="inline-flex rounded-full border border-accent/50 bg-accent-soft px-5 py-2.5 text-sm font-semibold text-ink hover:bg-accent-soft/80 disabled:cursor-not-allowed disabled:opacity-60"
-    >
-      {pending ? pendingLabel : label}
-    </button>
-  );
-}
 
 export type AutoObsWatchRow = {
   id: string;
@@ -70,6 +57,7 @@ export type AutoObservationsCopy = {
   savedListRowBody: string;
   observeNow: string;
   observeNowPending: string;
+  savePending: string;
 };
 
 type RegionOption = { value: string; label: string };
@@ -252,12 +240,12 @@ export function AutoObservationsClient({
             <p className="mt-1 text-sm leading-snug text-ink">{addPreviewLine}</p>
             <p className="mt-1.5 text-xs text-ink-muted">{copy.addPreviewFootnote}</p>
           </div>
-          <button
-            type="submit"
-            className="inline-flex rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent-hover"
-          >
-            {copy.saveNew}
-          </button>
+          <PendingSubmitButton
+            label={copy.saveNew}
+            pendingLabel={copy.savePending}
+            className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-accent-hover hover:shadow-md active:translate-y-px disabled:hover:shadow-sm"
+            pendingClassName="hover:bg-accent"
+          />
         </form>
       </section>
 
@@ -296,7 +284,7 @@ export function AutoObservationsClient({
                       <input type="hidden" name="watch_id" value={w.id} />
                       <button
                         type="submit"
-                        className="rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-ink hover:border-ink-muted/40"
+                        className="cursor-pointer rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-ink transition hover:border-ink-muted/50 hover:bg-surface hover:shadow-sm active:translate-y-px"
                         onClick={(e) => {
                           if (!window.confirm(copy.deleteConfirm)) e.preventDefault();
                         }}
@@ -323,6 +311,9 @@ export function AutoObservationsClient({
                     <input type="hidden" name="save_origin" value="list_row" />
                     <input type="hidden" name="url" value={w.url} />
                     <input type="hidden" name="region" value={w.region} />
+                    <input type="hidden" name="regionLabel" value={regionLabel} />
+                    <input type="hidden" name="verifiedTitle" value="" />
+                    <input type="hidden" name="verifiedImageUrl" value="" />
                     <WatchScheduleFields
                       copy={scheduleCopy}
                       initialEnabled={w.enabled}
@@ -331,24 +322,22 @@ export function AutoObservationsClient({
                       initialNotify={notify}
                       onValuesChange={(v) => setRowSnapshot(w.id, v)}
                     />
+                    <div className="flex flex-wrap items-center gap-3">
+                      <PendingSubmitButton
+                        label={copy.observeNow}
+                        pendingLabel={copy.observeNowPending}
+                        formAction={recordWebVerifiedObservationAction}
+                        className="rounded-full border border-accent/50 bg-accent-soft px-5 py-2.5 text-sm font-semibold text-ink shadow-sm hover:border-accent/70 hover:bg-accent-soft/70 hover:shadow-md active:translate-y-px disabled:hover:shadow-sm"
+                        pendingClassName="hover:bg-accent-soft"
+                      />
+                      <PendingSubmitButton
+                        label={copy.saveRow}
+                        pendingLabel={copy.savePending}
+                        className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-ink/92 hover:shadow-md active:translate-y-px disabled:hover:shadow-sm"
+                        pendingClassName="hover:bg-ink"
+                      />
+                    </div>
                   </form>
-                  <div className="mt-2 flex flex-wrap items-center gap-3">
-                    <form action={recordWebVerifiedObservationAction} className="inline">
-                      <input type="hidden" name="url" value={w.url} />
-                      <input type="hidden" name="region" value={w.region} />
-                      <input type="hidden" name="regionLabel" value={regionLabel} />
-                      <input type="hidden" name="verifiedTitle" value="" />
-                      <input type="hidden" name="verifiedImageUrl" value="" />
-                      <ObserveNowSubmitButton label={copy.observeNow} pendingLabel={copy.observeNowPending} />
-                    </form>
-                    <button
-                      type="submit"
-                      form={`auto-watch-save-${w.id}`}
-                      className="inline-flex rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90"
-                    >
-                      {copy.saveRow}
-                    </button>
-                  </div>
                 </li>
               );
             })}

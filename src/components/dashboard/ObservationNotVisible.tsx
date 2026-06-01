@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { logoutAction } from "@/app/actions/auth";
+import { PendingSubmitButton } from "@/components/ui/PendingSubmitButton";
 import { copy } from "@/lib/i18n";
 import type { LoginLocale } from "@/lib/auth/login-copy";
 
@@ -45,12 +46,12 @@ export function ObservationNotVisible({ signedInEmail, observationId, locale }: 
 
       <div className="flex flex-wrap items-center gap-3">
         <form action={logoutAction}>
-          <button
-            type="submit"
-            className="inline-flex items-center rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent-hover"
-          >
-            {t.notVisibleSignOut}
-          </button>
+          <PendingSubmitButton
+            label={t.notVisibleSignOut}
+            pendingLabel={locale === "ja" ? "処理中…" : "Processing…"}
+            className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-accent-hover hover:shadow-md active:translate-y-px disabled:hover:shadow-sm"
+            pendingClassName="hover:bg-accent"
+          />
         </form>
         <Link
           href="/dashboard/observations"

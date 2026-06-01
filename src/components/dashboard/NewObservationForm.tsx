@@ -3,15 +3,28 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { recordWebVerifiedObservationAction } from "@/app/actions/observations";
+import { PendingSubmitButton } from "@/components/ui/PendingSubmitButton";
 import type { RegionOption } from "@/lib/regions";
+
+type FormLabels = {
+  observationSubmit: string;
+  observationSubmitPending: string;
+  observationCancel: string;
+};
 
 type Props = {
   regions: RegionOption[];
+  labels: FormLabels;
   defaultUrl?: string;
   defaultRegion?: string;
 };
 
-export function NewObservationForm({ regions, defaultUrl = "", defaultRegion }: Props) {
+export function NewObservationForm({
+  regions,
+  labels,
+  defaultUrl = "",
+  defaultRegion,
+}: Props) {
   const initialRegion = defaultRegion ?? regions[0]?.value ?? "";
   const [region, setRegion] = useState(initialRegion);
 
@@ -21,12 +34,15 @@ export function NewObservationForm({ regions, defaultUrl = "", defaultRegion }: 
   );
 
   return (
-    <form action={recordWebVerifiedObservationAction} className="space-y-5 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-6">
+    <form
+      action={recordWebVerifiedObservationAction}
+      className="space-y-5 rounded-2xl border border-border bg-surface-elevated p-6"
+    >
       <input type="hidden" name="regionLabel" value={regionLabel} />
       <input type="hidden" name="verifiedTitle" value="" />
       <input type="hidden" name="verifiedImageUrl" value="" />
       <div>
-        <label htmlFor="url" className="block text-sm font-medium text-[var(--color-ink)]">
+        <label htmlFor="url" className="block text-sm font-medium text-ink">
           URL
         </label>
         <input
@@ -36,11 +52,11 @@ export function NewObservationForm({ regions, defaultUrl = "", defaultRegion }: 
           required
           defaultValue={defaultUrl}
           placeholder="https://example.com/landing"
-          className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm outline-none ring-[var(--color-accent)]/30 focus:ring-2"
+          className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm outline-none ring-accent/30 focus:ring-2"
         />
       </div>
       <div>
-        <label htmlFor="region" className="block text-sm font-medium text-[var(--color-ink)]">
+        <label htmlFor="region" className="block text-sm font-medium text-ink">
           地域
         </label>
         <select
@@ -48,7 +64,7 @@ export function NewObservationForm({ regions, defaultUrl = "", defaultRegion }: 
           name="region"
           value={region}
           onChange={(e) => setRegion(e.target.value)}
-          className="mt-1.5 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-sm outline-none ring-[var(--color-accent)]/30 focus:ring-2"
+          className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm outline-none ring-accent/30 focus:ring-2"
         >
           {regions.map((r) => (
             <option key={r.value} value={r.value}>
@@ -57,21 +73,21 @@ export function NewObservationForm({ regions, defaultUrl = "", defaultRegion }: 
           ))}
         </select>
       </div>
-      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-sm text-[var(--color-ink-muted)]">
+      <div className="rounded-xl border border-border bg-surface p-4 text-sm text-ink-muted">
         Web で表示を確認したうえで「観測を実行」すると、確認内容に基づく記録が一覧に追加されます（フルキャプチャは本番API接続後）。
       </div>
       <div className="flex flex-wrap gap-3">
-        <button
-          type="submit"
-          className="rounded-full bg-[var(--color-accent)] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[var(--color-accent-hover)]"
-        >
-          観測を実行
-        </button>
+        <PendingSubmitButton
+          label={labels.observationSubmit}
+          pendingLabel={labels.observationSubmitPending}
+          className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-accent-hover hover:shadow-md active:translate-y-px disabled:hover:shadow-sm"
+          pendingClassName="hover:bg-accent"
+        />
         <Link
           href="/dashboard/observations"
-          className="inline-flex items-center rounded-full border border-[var(--color-border)] px-5 py-2.5 text-sm font-semibold text-[var(--color-ink)] hover:border-[var(--color-ink-muted)]/40"
+          className="inline-flex cursor-pointer items-center rounded-full border border-border px-5 py-2.5 text-sm font-semibold text-ink transition hover:border-ink-muted/50 hover:bg-surface hover:shadow-sm active:translate-y-px"
         >
-          キャンセル
+          {labels.observationCancel}
         </Link>
       </div>
     </form>

@@ -73,7 +73,16 @@ export default async function NewObservationPage({
         </p>
       </div>
 
-      <NewObservationForm regions={regions} defaultUrl={defaultUrl} defaultRegion={defaultRegion} />
+      <NewObservationForm
+        regions={regions}
+        defaultUrl={defaultUrl}
+        defaultRegion={defaultRegion}
+        labels={{
+          observationSubmit: tSettings.observationSubmit,
+          observationSubmitPending: tSettings.observationSubmitPending,
+          observationCancel: tSettings.observationCancel,
+        }}
+      />
     </div>
   );
 }

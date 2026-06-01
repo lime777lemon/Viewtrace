@@ -474,7 +474,8 @@ export const copy = {
       savedListRowTitle: "保存済み",
       savedListRowBody: "この行の設定をサーバーに保存しました。下の要約と一覧は、保存された内容を表示しています。",
       observeNow: "今観測する",
-      observeNowPending: "観測を実行中…",
+      observeNowPending: "処理中…",
+      savePending: "処理中…",
     },
     dashboardAudit: {
       back: "概要へ",
@@ -714,6 +715,9 @@ export const copy = {
       observationNewIntro:
         "Web で表示を確認した URL と地域を指定し、観測を実行して記録します。{marketing}（{technical}）。",
       observationNewTitle: "新規オブザベーション",
+      observationSubmit: "観測を実行",
+      observationSubmitPending: "処理中…",
+      observationCancel: "キャンセル",
       overageNote:
         "枠超過：${price} / 回（本番では次回インボイスに加算・取得継続の想定。デモでは上限後も記録可）",
       demoSwitchTitle: "デモ：プランを切り替え",
@@ -1232,7 +1236,8 @@ export const copy = {
       savedListRowBody:
         "This row’s settings were saved. The summary and list below reflect what is stored on the server.",
       observeNow: "Run observation now",
-      observeNowPending: "Running…",
+      observeNowPending: "Processing…",
+      savePending: "Processing…",
     },
     dashboardAudit: {
       back: "Overview",
@@ -1495,6 +1500,9 @@ export const copy = {
       observationNewIntro:
         "Pick a URL and region to capture how the page renders. {marketing} ({technical}).",
       observationNewTitle: "New observation",
+      observationSubmit: "Run observation",
+      observationSubmitPending: "Processing…",
+      observationCancel: "Cancel",
       overageNote:
         "Overage: ${price}/observation (assumed to be billed on next invoice in production; demo keeps recording past the cap).",
       demoSwitchTitle: "Demo: switch plan",
