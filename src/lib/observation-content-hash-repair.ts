@@ -2,34 +2,59 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { appendAuditEvent, AUDIT_ACTION } from "@/lib/audit-log";
 import type { Observation } from "@/lib/demo/observations";
 import {
-  computeObservationContentHash,
+  computeObservationContentHashFromDbRow,
   OBSERVATION_CONTENT_HASH_VERSION,
-  verifyObservationStoredHash,
+  verifyObservationStoredHashFromDbRow,
+  type ObservationContentIntegrity,
 } from "@/lib/observation-content-hash";
 
+const HASH_ROW_SELECT =
+  "id,url,region,region_label,status,note,page_title,snapshot_image_url,captured_at,events,content_hash" as const;
+
+export type ReconcileContentHashResult = {
+  obs: Observation;
+  integrity: ObservationContentIntegrity;
+};
+
 /**
- * 一覧・詳細で読み込んだオブザベーションについて、保存されている content_hash を
- * 現在の行から再計算した値へ揃える（欠落の埋め戻し・表示経路とのズレの修復）。
- * いまの DB 上のフィールドを正とする自己整合処理であり、第三者改ざん検知の代替ではない。
+ * 詳細・レポート表示時に DB 行から content_hash を検証し、欠落・不一致なら
+ * 現在の DB カラム値に合わせて更新する（UI 用 regionLabel フォールバックは使わない）。
  */
 export async function reconcileObservationContentHashIfNeeded(
   supabase: SupabaseClient,
   obs: Observation,
-): Promise<Observation> {
+): Promise<ReconcileContentHashResult> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user?.id) return obs;
+  if (!user?.id) {
+    return { obs, integrity: obs.contentHash?.trim() ? "ok" : "missing" };
+  }
 
-  const integrity = verifyObservationStoredHash(obs);
-  if (integrity === "ok") return obs;
+  const { data: row, error: fetchError } = await supabase
+    .from("observations")
+    .select(HASH_ROW_SELECT)
+    .eq("id", obs.id)
+    .eq("user_id", user.id)
+    .maybeSingle();
 
-  const recomputed = computeObservationContentHash(obs).toLowerCase();
-  const stored = obs.contentHash?.trim().toLowerCase() ?? "";
+  if (fetchError || !row) {
+    console.warn("[observation-content-hash-repair] fetch failed", fetchError?.message);
+    return { obs, integrity: obs.contentHash?.trim() ? "ok" : "missing" };
+  }
 
-  if (integrity === "mismatch" && recomputed === stored) return obs;
+  const dbRow = row as Record<string, unknown>;
+  const integrity = verifyObservationStoredHashFromDbRow(dbRow);
+  if (integrity === "ok") {
+    const stored =
+      typeof dbRow.content_hash === "string" ? dbRow.content_hash.toLowerCase() : obs.contentHash;
+    return { obs: { ...obs, contentHash: stored ?? obs.contentHash }, integrity: "ok" };
+  }
 
-  const { error } = await supabase
+  const recomputed = computeObservationContentHashFromDbRow(dbRow).toLowerCase();
+  const stored = typeof dbRow.content_hash === "string" ? dbRow.content_hash.trim().toLowerCase() : "";
+
+  const { error: updateError } = await supabase
     .from("observations")
     .update({
       content_hash: recomputed,
@@ -38,9 +63,9 @@ export async function reconcileObservationContentHashIfNeeded(
     .eq("id", obs.id)
     .eq("user_id", user.id);
 
-  if (error) {
-    console.warn("[observation-content-hash-repair] update failed", error.code, error.message);
-    return obs;
+  if (updateError) {
+    console.warn("[observation-content-hash-repair] update failed", updateError.code, updateError.message);
+    return { obs, integrity };
   }
 
   const reason = integrity === "missing" ? "content_hash_backfill" : "content_hash_repaired";
@@ -57,5 +82,5 @@ export async function reconcileObservationContentHashIfNeeded(
     },
   });
 
-  return { ...obs, contentHash: recomputed };
+  return { obs: { ...obs, contentHash: recomputed }, integrity: "ok" };
 }

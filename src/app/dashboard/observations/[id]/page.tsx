@@ -13,7 +13,6 @@ import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
 import { reconcileObservationContentHashIfNeeded } from "@/lib/observation-content-hash-repair";
 import {
   OBSERVATION_CONTENT_HASH_VERSION,
-  verifyObservationStoredHash,
 } from "@/lib/observation-content-hash";
 import { ObservationWatchPanel } from "@/components/dashboard/ObservationWatchPanel";
 import { getPlan } from "@/lib/plans";
@@ -89,7 +88,9 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
 
   const supabase = await createSupabaseServerClient();
 
-  obs = await reconcileObservationContentHashIfNeeded(supabase, obs);
+  const reconciled = await reconcileObservationContentHashIfNeeded(supabase, obs);
+  obs = reconciled.obs;
+  const contentIntegrity = reconciled.integrity;
 
   const plan = getPlan(session.plan);
   const { data: watchRow } =
@@ -123,7 +124,6 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
   const displayTitle = obs.pageTitle ?? live?.title ?? null;
   const displayImageUrl = obs.snapshotImageUrl ?? live?.image ?? null;
   const resolvedCanonical = live?.canonicalUrl ?? null;
-  const contentIntegrity = verifyObservationStoredHash(obs);
 
   return (
     <div className="mx-auto max-w-4xl space-y-8">

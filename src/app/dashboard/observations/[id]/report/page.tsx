@@ -13,10 +13,7 @@ import { copy } from "@/lib/i18n";
 import { localizeObservationNote } from "@/lib/i18n/observation-persisted-copy";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { sanitizeObservationRouteId } from "@/lib/observation-route-id";
-import {
-  OBSERVATION_CONTENT_HASH_VERSION,
-  verifyObservationStoredHash,
-} from "@/lib/observation-content-hash";
+import { OBSERVATION_CONTENT_HASH_VERSION } from "@/lib/observation-content-hash";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -59,9 +56,9 @@ export default async function ObservationReportPage({ params }: Props) {
   }
 
   const supabase = await createSupabaseServerClient();
-  obs = await reconcileObservationContentHashIfNeeded(supabase, obs);
-
-  const integrity = verifyObservationStoredHash(obs);
+  const reconciled = await reconcileObservationContentHashIfNeeded(supabase, obs);
+  obs = reconciled.obs;
+  const integrity = reconciled.integrity;
   const integrityLabel =
     integrity === "ok"
       ? locale === "ja"
