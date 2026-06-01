@@ -14,6 +14,7 @@ import { localizeObservationNote } from "@/lib/i18n/observation-persisted-copy";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { sanitizeObservationRouteId } from "@/lib/observation-route-id";
 import { OBSERVATION_CONTENT_HASH_VERSION } from "@/lib/observation-content-hash";
+import { resolveObservationCaptureTier } from "@/lib/observation-capture-tier";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -59,6 +60,30 @@ export default async function ObservationReportPage({ params }: Props) {
   const reconciled = await reconcileObservationContentHashIfNeeded(supabase, obs);
   obs = reconciled.obs;
   const integrity = reconciled.integrity;
+  const captureTier = resolveObservationCaptureTier(obs);
+  const ct = copy[locale].observationCaptureTier;
+  const captureTierBadge =
+    captureTier === "failed"
+      ? null
+      : (
+          {
+            geo_saved: ct.badgeGeoSaved,
+            preview_fallback: ct.badgePreviewFallback,
+            form_image: ct.badgeFormImage,
+            none: ct.badgeNoImage,
+          } as const
+        )[captureTier];
+  const captureTierHint =
+    captureTier === "failed"
+      ? null
+      : (
+          {
+            geo_saved: ct.hintGeoSaved,
+            preview_fallback: ct.hintPreviewFallback,
+            form_image: ct.hintFormImage,
+            none: ct.hintNoImage,
+          } as const
+        )[captureTier];
   const integrityLabel =
     integrity === "ok"
       ? locale === "ja"
@@ -115,6 +140,16 @@ export default async function ObservationReportPage({ params }: Props) {
             </div>
           </dl>
         </section>
+
+        {captureTierBadge ? (
+          <section>
+            <h2 className="text-sm font-semibold text-ink">{ct.reportLabel}</h2>
+            <p className="mt-2 text-sm font-medium text-ink">{captureTierBadge}</p>
+            {captureTierHint ? (
+              <p className="mt-1 text-sm leading-relaxed text-ink-muted">{captureTierHint}</p>
+            ) : null}
+          </section>
+        ) : null}
 
         <section>
           <h2 className="text-sm font-semibold text-ink">{t.sectionUrl}</h2>

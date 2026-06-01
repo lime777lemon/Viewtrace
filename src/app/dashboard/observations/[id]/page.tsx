@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { ObservationCaptureTierBanner } from "@/components/dashboard/ObservationCaptureTierBanner";
 import { ObservationDetailSnapshotSection } from "@/components/dashboard/ObservationDetailSnapshotSection";
 import { ObservationDigitalSeal } from "@/components/dashboard/ObservationDigitalSeal";
 import { ObservationNotVisible } from "@/components/dashboard/ObservationNotVisible";
@@ -155,6 +156,8 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
           {rt.openReport} →
         </Link>
       </div>
+
+      <ObservationCaptureTierBanner obs={obs} locale={locale} />
 
       <ObservationDigitalSeal obs={obs} locale={locale} />
 

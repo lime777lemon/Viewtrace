@@ -567,6 +567,22 @@ export const copy = {
       notVisibleBackToList: "観測一覧に戻る",
       notVisibleRecordIdLabel: "対象の記録 ID",
     },
+    observationCaptureTier: {
+      badgeGeoSaved: "地域指定で取得・保存済み",
+      badgePreviewFallback: "参考プレビュー",
+      badgeFormImage: "確認画像で記録",
+      badgeNoImage: "記録済み（画像なし）",
+      hintGeoSaved:
+        "指定地域のルーティング設定で取得し、画像を Viewtrace 上に保存しました。説明・照合の土台として使えます（参考情報）。",
+      hintPreviewFallback:
+        "指定地域からの取得はできず、代替経路のプレビュー画像を記録しました。地域指定の保存取得が必要な場合は再観測してください。",
+      hintFormImage:
+        "観測フォームで確認した画像を記録しました。サーバー側の地域取得とは別経路です。",
+      hintNoImage:
+        "記録は保存されていますが、スクリーンショット画像はありません。",
+      retryLink: "同じ URL・地域でもう一度観測する",
+      reportLabel: "取得の種類",
+    },
     observationsTable: {
       colCaptured: "取得日時（JST）",
       colUrl: "URL",
@@ -1328,6 +1344,21 @@ export const copy = {
       notVisibleSignOut: "Sign out and switch account",
       notVisibleBackToList: "Back to observations",
       notVisibleRecordIdLabel: "Record ID",
+    },
+    observationCaptureTier: {
+      badgeGeoSaved: "Geo-routed capture saved",
+      badgePreviewFallback: "Reference preview",
+      badgeFormImage: "Recorded from confirmation image",
+      badgeNoImage: "Saved (no image)",
+      hintGeoSaved:
+        "Captured with your selected region routing and saved on Viewtrace. Use for explanation and reconciliation (reference only).",
+      hintPreviewFallback:
+        "Regional capture was unavailable; we saved a preview from an alternate path. Run another observation if you need a geo-routed save.",
+      hintFormImage:
+        "Saved from the image you confirmed in the form—not from a server-side regional capture.",
+      hintNoImage: "The record was saved but no screenshot image is attached.",
+      retryLink: "Observe again with the same URL and region",
+      reportLabel: "Capture type",
     },
     observationsTable: {
       colCaptured: "Captured (JST)",
