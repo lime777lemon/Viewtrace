@@ -3,13 +3,20 @@ import {
   BROWSER_LIKE_USER_AGENT,
 } from "@/lib/browser-fingerprint";
 import { resolveGeoProxyUrl } from "@/lib/geo/proxy";
-import { isValidObservationRegion } from "@/lib/regions";
+import { isValidObservationRegion, resolveBrowserlessResidentialTarget } from "@/lib/regions";
 import { isBlockedPreviewHost, normalizeUserUrlInput } from "@/lib/url-preview";
 
 const DEFAULT_BROWSERLESS_SCREENSHOT = "https://production-sfo.browserless.io/screenshot";
 
 export function isBrowserlessConfigured(): boolean {
   return Boolean(process.env.BROWSERLESS_TOKEN?.trim());
+}
+
+/** 内蔵 residential（`proxy=residential`）を region 指定時に使う。`VIEWTRACE_BROWSERLESS_RESIDENTIAL=0` で無効。 */
+export function isBrowserlessResidentialEnabled(): boolean {
+  const raw = process.env.VIEWTRACE_BROWSERLESS_RESIDENTIAL?.trim().toLowerCase();
+  if (raw === "0" || raw === "false" || raw === "off") return false;
+  return true;
 }
 
 function browserlessScreenshotEndpointWithToken(): string | null {
@@ -27,7 +34,7 @@ function browserlessScreenshotEndpointWithToken(): string | null {
 }
 
 export type BrowserlessScreenshotResult =
-  | { ok: true; png: ArrayBuffer; normalizedUrl: string }
+  | { ok: true; png: ArrayBuffer; normalizedUrl: string; viaResidential?: boolean; viaExternalProxy?: boolean }
   | {
       ok: false;
       error: string;
@@ -35,8 +42,22 @@ export type BrowserlessScreenshotResult =
       detail?: string;
     };
 
+function applyBrowserlessResidentialParams(endpoint: URL, regionRaw: string): boolean {
+  const target = resolveBrowserlessResidentialTarget(regionRaw);
+  if (!target) return false;
+  endpoint.searchParams.set("proxy", "residential");
+  endpoint.searchParams.set("proxyCountry", target.country);
+  if (target.state) {
+    endpoint.searchParams.set("proxyState", target.state);
+  }
+  endpoint.searchParams.set("proxySticky", "true");
+  return true;
+}
+
 /**
- * Browserless の /screenshot を呼び、PNG を返す（Bright Data は externalProxyServer クエリで連携）。
+ * Browserless の /screenshot を呼び、PNG を返す。
+ * - 内蔵 residential: `proxy=residential` + `proxyCountry` (+ US 州は `proxyState`)
+ * - 任意: `VIEWTRACE_GEO_PROXY_*` があれば `externalProxyServer`（Bright Data 等）を優先
  */
 export async function runBrowserlessScreenshot(params: {
   url: string;
@@ -68,7 +89,7 @@ export async function runBrowserlessScreenshot(params: {
 
   const hasGeoTemplate = Boolean(process.env.VIEWTRACE_GEO_PROXY_URL_TEMPLATE?.trim());
   const hasGeoFixed = Boolean(process.env.VIEWTRACE_GEO_PROXY_URL?.trim());
-  const wantsGeoProxy = hasGeoTemplate || hasGeoFixed;
+  const wantsExternalGeoProxy = hasGeoTemplate || hasGeoFixed;
   const disableProxy = params.disableProxy === true;
 
   const regionRaw = params.region?.trim() ?? "";
@@ -85,16 +106,27 @@ export async function runBrowserlessScreenshot(params: {
   const geoProxyForBrowserless = disableProxy
     ? null
     : resolveGeoProxyUrl(hasGeoTemplate ? regionRaw : regionRaw || undefined);
-  if (wantsGeoProxy && !disableProxy && !geoProxyForBrowserless) {
+  if (wantsExternalGeoProxy && !disableProxy && !geoProxyForBrowserless) {
     return { ok: false, error: "geo_proxy_misconfigured" };
   }
 
-  let browserlessEndpoint = endpoint;
+  let viaResidential = false;
+  let viaExternalProxy = false;
+
+  const endpointUrl = new URL(endpoint);
   if (geoProxyForBrowserless) {
-    const u = new URL(endpoint);
-    u.searchParams.set("externalProxyServer", geoProxyForBrowserless);
-    browserlessEndpoint = u.href;
+    endpointUrl.searchParams.set("externalProxyServer", geoProxyForBrowserless);
+    viaExternalProxy = true;
+  } else if (
+    !disableProxy &&
+    isBrowserlessResidentialEnabled() &&
+    regionRaw &&
+    isValidObservationRegion(regionRaw)
+  ) {
+    viaResidential = applyBrowserlessResidentialParams(endpointUrl, regionRaw);
   }
+
+  const browserlessEndpoint = endpointUrl.href;
 
   /**
    * Browserless v2 のペイロード。
@@ -151,10 +183,25 @@ export async function runBrowserlessScreenshot(params: {
   }
 
   const png = await upstream.arrayBuffer();
-  return { ok: true, png, normalizedUrl: target };
+  return {
+    ok: true,
+    png,
+    normalizedUrl: target,
+    viaResidential,
+    viaExternalProxy,
+  };
 }
 
-/** Browserless が外部プロキシ非対応プラン等で 401 等を返したとき、プロキシなしで 1 回だけ再試行する */
+function geoRoutingRequested(regionRaw: string | undefined, disableProxy: boolean): boolean {
+  if (disableProxy) return false;
+  const hasGeoTemplate = Boolean(process.env.VIEWTRACE_GEO_PROXY_URL_TEMPLATE?.trim());
+  const hasGeoFixed = Boolean(process.env.VIEWTRACE_GEO_PROXY_URL?.trim());
+  if (hasGeoTemplate || hasGeoFixed) return true;
+  if (!regionRaw?.trim()) return false;
+  return isBrowserlessResidentialEnabled() && isValidObservationRegion(regionRaw);
+}
+
+/** 地理ルーティング（内蔵 residential または外部プロキシ）失敗時、プロキシなしで 1 回だけ再試行する */
 export async function runBrowserlessScreenshotWithProxyRetry(params: {
   url: string;
   region?: string;
@@ -164,8 +211,7 @@ export async function runBrowserlessScreenshotWithProxyRetry(params: {
   if (
     !shot.ok &&
     shot.error === "browserless_error" &&
-    typeof shot.detail === "string" &&
-    /third-party proxy/i.test(shot.detail)
+    geoRoutingRequested(params.region, false)
   ) {
     shot = await runBrowserlessScreenshot({ ...params, disableProxy: true });
   }

@@ -1353,23 +1353,17 @@ export const copy = {
       processingLabel: "Fetched via regional access",
       captureLabel: "Recorded snapshot",
       statusLabel: "Observation saved",
-      statusDetailSuccess: "Success — verification data saved to the database",
-      statusDetailFailure: "Failure — verification data saved to the database",
+      statusDetailSuccess: "Success — verification data saved",
+      statusDetailFailure: "Failure — verification data saved",
       captureFormImage: "Confirmation image from the form",
-      captureBrowserlessBlob: "Browserless snapshot (Vercel Blob)",
-      capturePreviewOg: "Preview image (OG / Microlink, etc.)",
-      captureNoUrlToken:
-        "No snapshot_image_url — could not upload to Vercel Blob (BLOB_READ_WRITE_TOKEN is not set)",
-      captureNoUrlBlobUrlLong:
-        "No snapshot_image_url — skipped save because the Blob public URL was too long",
-      captureNoUrlBrowserlessOkNoUrl:
-        "No snapshot_image_url — Browserless succeeded but no image URL could be determined",
-      captureNoUrlBrowserlessFail:
-        "No snapshot_image_url — Browserless capture failed and preview did not return an image URL",
-      captureNoUrlNoPreview:
-        "No snapshot_image_url — could not get an image URL from screenshot or preview",
+      captureSavedSnapshot: "Saved screenshot",
+      capturePreviewFallback: "Preview image",
+      captureNoUrlSaveFailed: "Could not save the screenshot image",
+      captureNoUrlScreenshotFailed: "Could not capture a screenshot",
+      captureNoUrlPreviewFailed: "Could not fetch page information",
+      captureNoUrlNoPreview: "Could not obtain an image",
       processingRecordedWithImageSuffix: "Recorded with confirmation image",
-      processingScreenshotVerifiedPrefix: "Verified with screenshot",
+      processingScreenshotVerifiedSuffix: "Verified with screenshot",
     },
     snapshotVisuals: {
       snapshotTitle: "Snapshot",

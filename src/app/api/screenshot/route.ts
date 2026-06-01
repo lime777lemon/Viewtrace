@@ -31,8 +31,8 @@ function jsonError(
  * 認証: ログイン済みセッション、または `VIEWTRACE_SCREENSHOT_SECRET` がある場合は
  * `Authorization: Bearer <secret>`（curl 用）。
  *
- * 本番: `VIEWTRACE_GEO_PROXY_URL` または `VIEWTRACE_GEO_PROXY_URL_TEMPLATE` があれば、
- * Browserless の `externalProxyServer` に Bright Data 等を渡す（実装は `runBrowserlessScreenshot`）。
+ * 本番: 地域指定時は Browserless 内蔵 residential（`proxy=residential`）。
+ * 任意で `VIEWTRACE_GEO_PROXY_*` があれば externalProxyServer を優先。
  */
 export async function POST(req: Request) {
   if (!(await authorize(req))) {

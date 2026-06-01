@@ -69,8 +69,8 @@ export function ObservationDetailSnapshotSection({
         >
           <p className="font-semibold text-amber-900 dark:text-amber-100">
             {locale === "ja"
-              ? "保存されたスナップショット画像（snapshot_image_url）がありません"
-              : "No persisted snapshot image (snapshot_image_url) was saved"}
+              ? "スクリーンショット画像は保存されていません"
+              : "No screenshot image was saved"}
           </p>
           <p className="mt-1 text-ink-muted">{captureEventDetail ?? ""}</p>
         </div>

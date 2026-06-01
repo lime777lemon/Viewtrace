@@ -26,8 +26,10 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   formatCaptureNoUrlPreviewFail,
   formatCaptureNoUrlUploadFail,
+  formatProcessingDetailFailure,
   formatProcessingDetailRecordedWithImage,
   formatProcessingDetailScreenshotVerified,
+  formatProcessingDetailSuccess,
   observationEventJa,
 } from "@/lib/i18n/observation-event-strings";
 
@@ -114,7 +116,6 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
   });
 
   let uploadedBrowserlessUrl: string | null = null;
-  let browserlessDetail = "";
   let blobUploadResult: ObservationSnapshotUploadResult | null = null;
   /** Blob アップロード直前のバイト列ハッシュ（外部プレビュー URL のみのときは未設定） */
   let snapshotBinarySha256: string | undefined;
@@ -147,17 +148,7 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
           snapshotPhash = blobUploadResult.snapshotPhash;
         }
         snapshotImageUrl = snapshotImageUrl ?? uploadedBrowserlessUrl;
-        browserlessDetail = "Browserless→Blob 保存成功";
-      } else if (blobUploadResult.code === "token_missing") {
-        browserlessDetail =
-          "Browserless 成功・BLOB_READ_WRITE_TOKEN 未設定のため Vercel Blob に保存できません（環境変数を設定してください）";
-      } else if (blobUploadResult.code === "url_too_long") {
-        browserlessDetail = "Browserless 成功・Blob の返却URLが長すぎるため snapshot_image_url に保存できませんでした";
-      } else {
-        browserlessDetail = `Browserless 成功・Blob 保存失敗${blobUploadResult.message ? `: ${blobUploadResult.message}` : ""}`;
       }
-    } else {
-      browserlessDetail = `Browserless 失敗: ${shot.error}`;
     }
   }
 
@@ -181,24 +172,18 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
     if (snapshotImageUrl) {
       if (verifiedSnap && snapshotImageUrl === verifiedSnap) return observationEventJa.captureFormImage;
       if (uploadedBrowserlessUrl && snapshotImageUrl === uploadedBrowserlessUrl) {
-        return observationEventJa.captureBrowserlessBlob;
+        return observationEventJa.captureSavedSnapshot;
       }
-      return observationEventJa.capturePreviewOg;
+      return observationEventJa.capturePreviewFallback;
     }
     if (blobUploadResult && !blobUploadResult.ok) {
-      if (blobUploadResult.code === "token_missing") {
-        return observationEventJa.captureNoUrlToken;
-      }
-      if (blobUploadResult.code === "url_too_long") {
-        return observationEventJa.captureNoUrlBlobUrlLong;
-      }
       return formatCaptureNoUrlUploadFail(blobUploadResult.message);
     }
     if (browserlessShotOk) {
-      return observationEventJa.captureNoUrlBrowserlessOkNoUrl;
+      return observationEventJa.captureNoUrlSaveFailed;
     }
     if (browserlessOn && !browserlessShotOk) {
-      return observationEventJa.captureNoUrlBrowserlessFail;
+      return observationEventJa.captureNoUrlScreenshotFailed;
     }
     if (!preview.ok) {
       return formatCaptureNoUrlPreviewFail(preview.error);
@@ -217,12 +202,12 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
   const processingDetailWithoutPreview =
     !preview.ok && ok
       ? browserlessShotOk
-        ? formatProcessingDetailScreenshotVerified(regionValue, browserlessDetail)
-        : formatProcessingDetailRecordedWithImage(regionValue)
+        ? formatProcessingDetailScreenshotVerified(regionLabel)
+        : formatProcessingDetailRecordedWithImage(regionLabel)
       : null;
 
   const successNote = (() => {
-    if (!ok) return `取得に失敗しました（${preview.error}）`;
+    if (!ok) return "取得に失敗しました";
     if (preview.ok) return noteParts.join(" — ");
     if (browserlessShotOk) return `${noteParts.join(" — ")} — スクリーンショットで確認済み`;
     if (userVerifiedCapture) return `${noteParts.join(" — ")} — 確認画像で記録済み`;
@@ -249,11 +234,11 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
         kind: "processing",
         label: observationEventJa.labels.processing,
         detail: !ok
-          ? `region=${regionValue} error=${preview.error}`
+          ? formatProcessingDetailFailure(regionLabel)
           : processingDetailWithoutPreview ??
             (preview.ok
-              ? `region=${regionValue} status=${preview.status} proxy=${preview.viaProxy ? "on" : "off"}${browserlessDetail ? ` · ${browserlessDetail}` : ""}`
-              : `region=${regionValue} error=${preview.error}`),
+              ? formatProcessingDetailSuccess(regionLabel, preview.status)
+              : formatProcessingDetailFailure(regionLabel)),
       },
       {
         at: capturedAt,

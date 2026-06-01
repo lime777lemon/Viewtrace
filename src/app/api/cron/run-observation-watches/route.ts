@@ -81,6 +81,24 @@ function observationUrlHost(url: string): string {
   }
 }
 
+/** 定期観測の失敗メール・記録メモ用（内部エラーコードは出さない） */
+function cronFailureMessageForUser(
+  errorCode: string,
+  stage: "screenshot" | "save",
+): { ja: string; en: string } {
+  if (stage === "save") {
+    return {
+      ja: "記録の保存に失敗しました",
+      en: "Could not save the record",
+    };
+  }
+  void errorCode;
+  return {
+    ja: "スクリーンショットの取得に失敗しました",
+    en: "Screenshot capture failed",
+  };
+}
+
 export async function GET(req: Request) {
   return POST(req);
 }
@@ -185,7 +203,7 @@ export async function POST(req: Request) {
     errorCode: string;
     errorDetail?: string;
   }): Promise<boolean> {
-    const { userEmail, url, region, watchId, stage, errorCode, errorDetail } = params;
+    const { userEmail, url, region, watchId, stage, errorCode } = params;
     if (!userEmail) {
       console.warn("[cron] failure email skipped: user_email_missing", { watchId });
       return false;
@@ -197,7 +215,7 @@ export async function POST(req: Request) {
 
     const stageJa = stage === "screenshot" ? "スクリーンショット取得" : "記録の保存";
     const stageEn = stage === "screenshot" ? "Screenshot capture" : "Saving the record";
-    const detailLine = errorDetail?.trim() ? `\nDetail / 詳細: ${errorDetail.trim().slice(0, 400)}` : "";
+    const userMsg = cronFailureMessageForUser(errorCode, stage);
 
     const subject = "Viewtrace: scheduled observation failed / 定期自動観測に失敗";
     const text = [
@@ -207,7 +225,7 @@ export async function POST(req: Request) {
       `URL: ${url}`,
       `Region / 地域: ${region}`,
       `Stage / 段階: ${stageEn} / ${stageJa}`,
-      `Error / エラー: ${errorCode}${detailLine}`,
+      `Message / 内容: ${userMsg.en} / ${userMsg.ja}`,
       "",
       `Dashboard / ダッシュボード: ${dashboardUrl}`,
       "",
@@ -220,10 +238,7 @@ export async function POST(req: Request) {
       `<p><strong>URL</strong><br/>${escapeHtml(url)}</p>`,
       `<p><strong>Region</strong> / 地域<br/>${escapeHtml(region)}</p>`,
       `<p><strong>Stage</strong> / 段階<br/>${escapeHtml(stageEn)} / ${escapeHtml(stageJa)}</p>`,
-      `<p><strong>Error</strong> / エラー<br/><code style="word-break:break-all;">${escapeHtml(errorCode)}</code></p>`,
-      errorDetail?.trim()
-        ? `<p style="font-size:13px;color:#666;word-break:break-all;"><strong>Detail</strong> / 詳細<br/>${escapeHtml(errorDetail.trim().slice(0, 400))}</p>`
-        : "",
+      `<p><strong>Message</strong> / 内容<br/>${escapeHtml(userMsg.en)} / ${escapeHtml(userMsg.ja)}</p>`,
       `<p><a href="${escapeHtml(dashboardUrl)}" style="color:#2563eb;text-decoration:underline;">Open dashboard / ダッシュボードを開く</a></p>`,
       emailAccountHintHtml(userEmail),
     ].join("");
@@ -318,19 +333,8 @@ export async function POST(req: Request) {
     const snapshotContentTypeStored = blobResult.ok ? blobResult.snapshotContentType : null;
     const capturedAt = new Date().toISOString();
 
-    const blobFailureNote = (() => {
-      if (blobResult.ok) return "";
-      if (blobResult.code === "token_missing") {
-        return " — BLOB_READ_WRITE_TOKEN 未設定のため Blob に保存できません";
-      }
-      if (blobResult.code === "url_too_long") {
-        return " — Blob の返却URLが長すぎるため保存できませんでした";
-      }
-      return blobResult.message ? ` — ${blobResult.message}` : "";
-    })();
-
     const note = truncateObservationNote(
-      blobUrl ? "自動観測（定期）" : `自動観測（画像保存に失敗${blobFailureNote}）`,
+      blobUrl ? "自動観測（定期）" : "自動観測（スクリーンショットの保存に失敗）",
     );
 
     const obsForHash: Observation = {

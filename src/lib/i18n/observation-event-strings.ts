@@ -1,6 +1,7 @@
 /**
  * Japanese copy persisted on observation `events` in the database.
- * Keep in sync with `localizeObservationEventDetail` / EN keys in `copy.en.observationEvent`.
+ * Consumer-facing only — no vendor names (Browserless, Blob env vars, etc.).
+ * Legacy technical strings are normalized on read in `observation-persisted-copy.ts`.
  */
 export const observationEventJa = {
   labels: {
@@ -8,38 +9,37 @@ export const observationEventJa = {
     capture: "スナップショットを記録",
     status: "オブザベーション登録",
   },
-  statusDetailSuccess: "成功 — 確認情報をDBに保存",
-  statusDetailFailure: "失敗 — 確認情報をDBに保存",
+  statusDetailSuccess: "成功 — 確認情報を保存しました",
+  statusDetailFailure: "失敗 — 確認情報を保存しました",
   captureFormImage: "フォームの確認画像",
-  captureBrowserlessBlob: "Browserless スナップショット（Vercel Blob）",
-  capturePreviewOg: "プレビュー画像（OG / Microlink 等）",
-  captureNoUrlToken:
-    "snapshot_image_url なし — BLOB_READ_WRITE_TOKEN が未設定のため Vercel Blob にアップロードできません",
-  captureNoUrlBlobUrlLong:
-    "snapshot_image_url なし — Blob の公開URLが長すぎるため保存をスキップしました",
-  captureNoUrlBrowserlessOkNoUrl:
-    "snapshot_image_url なし — Browserless は成功しましたが画像URLが確定しませんでした",
-  captureNoUrlBrowserlessFail:
-    "snapshot_image_url なし — Browserless キャプチャに失敗し、プレビューからも画像URLを得られませんでした",
-  captureNoUrlNoPreview:
-    "snapshot_image_url なし — スクリーンショット・プレビューのいずれからも画像URLを取得できませんでした",
+  captureSavedSnapshot: "保存済みスクリーンショット",
+  capturePreviewFallback: "プレビュー画像",
+  captureNoUrlSaveFailed: "スクリーンショット画像を保存できませんでした",
+  captureNoUrlScreenshotFailed: "スクリーンショットを取得できませんでした",
+  captureNoUrlPreviewFailed: "ページ情報の取得に失敗しました",
+  captureNoUrlNoPreview: "画像を取得できませんでした",
 } as const;
 
-export function formatProcessingDetailRecordedWithImage(region: string): string {
-  return `region=${region} · 確認画像で記録済み`;
+export function formatProcessingDetailSuccess(regionLabel: string, httpStatus: number): string {
+  return `${regionLabel} から取得 · HTTP ${httpStatus}`;
 }
 
-export function formatProcessingDetailScreenshotVerified(
-  region: string,
-  browserlessDetail: string,
-): string {
-  return `region=${region} · スクリーンショットで確認済み${browserlessDetail ? `（${browserlessDetail}）` : ""}`;
+export function formatProcessingDetailRecordedWithImage(regionLabel: string): string {
+  return `${regionLabel} · 確認画像で記録`;
 }
 
-export function formatCaptureNoUrlUploadFail(message?: string): string {
-  return `snapshot_image_url なし — Vercel Blob アップロード失敗${message ? `（${message}）` : ""}`;
+export function formatProcessingDetailScreenshotVerified(regionLabel: string): string {
+  return `${regionLabel} · スクリーンショットで確認`;
 }
 
-export function formatCaptureNoUrlPreviewFail(error: string): string {
-  return `snapshot_image_url なし — プレビュー取得失敗（${error}）`;
+export function formatProcessingDetailFailure(regionLabel: string): string {
+  return `${regionLabel} · 取得に失敗`;
+}
+
+export function formatCaptureNoUrlUploadFail(_message?: string): string {
+  return observationEventJa.captureNoUrlSaveFailed;
+}
+
+export function formatCaptureNoUrlPreviewFail(_error: string): string {
+  return observationEventJa.captureNoUrlPreviewFailed;
 }

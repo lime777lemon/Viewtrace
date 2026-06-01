@@ -134,3 +134,33 @@ export function isValidObservationRegionForPlan(planId: PlanId, value: string): 
 export function isValidObservationRegion(value: string): boolean {
   return ALL_OBSERVATION_REGION_VALUES.has(normalizeObservationRegionInput(value));
 }
+
+const US_STATE_ABBR_TO_NAME: Record<string, string> = Object.fromEntries(US_STATES);
+
+/**
+ * Browserless 内蔵 residential プロキシ向けの国・州ターゲット。
+ * @see https://docs.browserless.io/rest-apis/proxies — proxy=residential, proxyCountry, proxyState
+ */
+export function resolveBrowserlessResidentialTarget(regionValue: string): {
+  country: string;
+  state?: string;
+} | null {
+  const rv = normalizeObservationRegionInput(regionValue);
+  if (!rv) return null;
+
+  const us = rv.match(/^US-([A-Z]{2})$/);
+  if (us) {
+    const name = US_STATE_ABBR_TO_NAME[us[1]!];
+    if (!name) return null;
+    return {
+      country: "us",
+      state: name.toLowerCase().replace(/\s+/g, "_"),
+    };
+  }
+
+  if (/^[A-Z]{2}$/.test(rv)) {
+    return { country: rv.toLowerCase() };
+  }
+
+  return null;
+}
