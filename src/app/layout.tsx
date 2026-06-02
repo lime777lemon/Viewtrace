@@ -54,6 +54,9 @@ export const metadata: Metadata = {
     description:
       "Accountability infrastructure: geo-routed visual evidence with timestamps—audit-friendly trails and shared truth when teams must explain what was live.",
   },
+  verification: {
+    google: "hWP7-fbRH5By6ftqXkQOAO73beDcZx4B2XAZ8Jtbx5s",
+  },
 };
 
 export default function RootLayout({
