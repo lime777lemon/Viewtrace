@@ -514,6 +514,56 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
               {t.competitorCompare.footnote}
             </p>
 
+            <div className="mt-10 rounded-2xl border border-border bg-surface p-6 sm:p-8">
+              <h3 className="font-display text-xl font-semibold text-ink sm:text-2xl">
+                {t.competitorCompare.monitorVsEvidence.title}
+              </h3>
+              <p className="mt-3 max-w-3xl text-sm leading-relaxed text-ink-muted">
+                {t.competitorCompare.monitorVsEvidence.intro}
+              </p>
+              <div className="mt-8 grid gap-6 lg:grid-cols-2">
+                <article className="rounded-xl border border-border bg-surface-elevated p-5">
+                  <p className="text-xs font-bold uppercase tracking-wider text-ink-muted">
+                    {t.competitorCompare.monitorVsEvidence.monitorTitle}
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-ink">
+                    {t.competitorCompare.monitorVsEvidence.monitorExamples}
+                  </p>
+                  <ul className="mt-4 space-y-2 text-sm text-ink-muted">
+                    {t.competitorCompare.monitorVsEvidence.monitorBullets.map((line) => (
+                      <li key={line} className="flex gap-2">
+                        <span className="shrink-0 text-ink-muted" aria-hidden>
+                          —
+                        </span>
+                        <span>{line}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+                <article className="rounded-xl border border-accent/30 bg-accent-soft/35 p-5">
+                  <p className="text-xs font-bold uppercase tracking-wider text-accent">
+                    {t.competitorCompare.monitorVsEvidence.evidenceTitle}
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-ink">
+                    {t.competitorCompare.monitorVsEvidence.evidenceExamples}
+                  </p>
+                  <ul className="mt-4 space-y-2 text-sm text-ink">
+                    {t.competitorCompare.monitorVsEvidence.evidenceBullets.map((line) => (
+                      <li key={line} className="flex gap-2">
+                        <span className="shrink-0 text-accent" aria-hidden>
+                          ✓
+                        </span>
+                        <span>{line}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              </div>
+              <p className="mt-6 max-w-3xl text-sm leading-relaxed text-ink-muted">
+                {t.competitorCompare.monitorVsEvidence.together}
+              </p>
+            </div>
+
             <div className="mt-12 border-t border-border pt-10">
               <h3 className="font-display text-xl font-semibold text-ink sm:text-2xl">
                 {t.competitorCompare.integrationsTitle}

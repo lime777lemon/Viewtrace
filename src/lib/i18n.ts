@@ -138,7 +138,7 @@ export const copy = {
       yes: "✓",
       no: "—",
       footnote:
-        "一般的な変更監視＝Visualping 等のページ監視・差分通知サービスを想定した比較です。",
+        "一般的な変更監視＝Visualping、PageCrawl.io 等のページ監視・差分通知サービスを想定した比較です（例: PageCrawl の料金・機能は pagecrawl.io/pricing を参照）。",
       rows: [
         { feature: "地域ルーティングで取得（州・国）", viewtrace: true, generic: false },
         { feature: "改ざん検知可能な記録（チェック値付き）", viewtrace: true, generic: false },
@@ -146,6 +146,29 @@ export const copy = {
         { feature: "Slack / Sheets / Teams への通知", viewtrace: true, generic: true },
         { feature: "テキスト・HTML 要素単位の差分", viewtrace: false, generic: true },
       ],
+      monitorVsEvidence: {
+        title: "監視ツール vs 証跡ツール",
+        intro:
+          "どちらも「Web の変化」に触れますが、解く問題が違います。大量 URL を高頻度で追う監視と、条件付きの表示記録を残す証跡は、併用されることも多いです。",
+        monitorTitle: "変更監視ツール",
+        monitorExamples: "Visualping · PageCrawl.io 等",
+        monitorBullets: [
+          "数百〜数千 URL を定期チェック",
+          "数分〜数十分間隔の差分アラート",
+          "Slack / Sheets / AI 要約が主役",
+          "「変わったか？」に答える",
+        ],
+        evidenceTitle: "Viewtrace（証跡）",
+        evidenceExamples: "Geo-routed visual records",
+        evidenceBullets: [
+          "指定地域から見えた表示を記録",
+          "URL・時刻・地域・チェック値をセットで保存",
+          "印刷 / PDF・CSV・Webhook で報告",
+          "「その地域で何が見えていたか？」に答える",
+        ],
+        together:
+          "監視で変化に気づき、Viewtrace でクライアント説明・社内照合の根拠を残す——という使い分けが自然です。",
+      },
       integrationsTitle: "すぐ使える連携",
       integrationsIntro:
         "運用を重くしない範囲で、よく使うツールにつなげられます。",
@@ -955,7 +978,7 @@ export const copy = {
       yes: "✓",
       no: "—",
       footnote:
-        "“Typical change monitor” means page-monitoring / diff-alert products such as Visualping.",
+        "“Typical change monitor” means page-monitoring / diff-alert products such as Visualping and PageCrawl.io (see pagecrawl.io/pricing for their plans).",
       rows: [
         { feature: "Geo-routed capture (states & countries)", viewtrace: true, generic: false },
         { feature: "Tamper-evident records (integrity checks)", viewtrace: true, generic: false },
@@ -963,6 +986,29 @@ export const copy = {
         { feature: "Slack / Sheets / Teams notifications", viewtrace: true, generic: true },
         { feature: "Text / HTML element-level diffs", viewtrace: false, generic: true },
       ],
+      monitorVsEvidence: {
+        title: "Monitoring tools vs evidence trails",
+        intro:
+          "Both touch “what changed on the web,” but they solve different jobs. High-volume change alerts and geo-conditioned visual records are often used together—not as substitutes.",
+        monitorTitle: "Change monitors",
+        monitorExamples: "Visualping · PageCrawl.io, etc.",
+        monitorBullets: [
+          "Track hundreds or thousands of URLs on a schedule",
+          "Alerts every few minutes when content shifts",
+          "Slack, Sheets, and AI summaries at the center",
+          "Answer: “Did it change?”",
+        ],
+        evidenceTitle: "Viewtrace (evidence layer)",
+        evidenceExamples: "Geo-routed visual records",
+        evidenceBullets: [
+          "Capture what actually rendered from a chosen region",
+          "Store URL, time, region, and integrity checks together",
+          "Report via print / PDF, CSV, and webhooks",
+          "Answer: “What did it look like from there?”",
+        ],
+        together:
+          "Use monitoring to catch drift early; use Viewtrace when you need proof stakeholders can open later.",
+      },
       integrationsTitle: "Lightweight integrations",
       integrationsIntro: "Connect to tools you already open—without turning Viewtrace into an ops platform.",
       integrationsItems: [
