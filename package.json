@@ -9,6 +9,10 @@
     "lint": "eslint",
     "typecheck": "tsc -p tsconfig.typecheck.json --noEmit",
     "sync:supabase-confirmation-email": "node scripts/sync-supabase-confirmation-template.mjs",
+    "db:check": "bash scripts/supabase-cli-check.sh",
+    "db:migrations:list": "supabase migration list --linked",
+    "db:push": "supabase db push",
+    "db:migration:new": "supabase migration new",
     "test:scheduled-obs-email": "node scripts/send-test-scheduled-observation-email.mjs"
   },
   "dependencies": {
