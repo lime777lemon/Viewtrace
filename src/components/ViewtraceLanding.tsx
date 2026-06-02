@@ -465,6 +465,77 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
           </div>
         </section>
 
+        <section id="compare" className="border-b border-border bg-surface-elevated">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+            <p className="text-xs font-bold uppercase tracking-wider text-accent">
+              {t.competitorCompare.kicker}
+            </p>
+            <h2 className="mt-3 font-display max-w-3xl text-2xl font-semibold leading-snug text-ink sm:text-3xl">
+              {t.competitorCompare.title}
+            </h2>
+            <p className="mt-4 max-w-3xl text-sm leading-relaxed text-ink-muted sm:text-base">
+              {t.competitorCompare.intro}
+            </p>
+            <div className="mt-10 overflow-x-auto rounded-2xl border border-border bg-surface shadow-sm">
+              <table className="min-w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-surface-elevated">
+                    <th scope="col" className="px-4 py-3 font-semibold text-ink sm:px-6">
+                      {t.competitorCompare.colFeature}
+                    </th>
+                    <th scope="col" className="px-4 py-3 font-semibold text-accent sm:px-6">
+                      {t.competitorCompare.colViewtrace}
+                    </th>
+                    <th scope="col" className="px-4 py-3 font-semibold text-ink-muted sm:px-6">
+                      {t.competitorCompare.colGeneric}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {t.competitorCompare.rows.map((row) => (
+                    <tr key={row.feature} className="border-b border-border last:border-0">
+                      <td className="px-4 py-3.5 text-ink sm:px-6">{row.feature}</td>
+                      <td className="px-4 py-3.5 text-center font-semibold text-accent sm:px-6">
+                        <span aria-label={row.viewtrace ? t.competitorCompare.yes : t.competitorCompare.no}>
+                          {row.viewtrace ? t.competitorCompare.yes : t.competitorCompare.no}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3.5 text-center font-semibold text-ink-muted sm:px-6">
+                        <span aria-label={row.generic ? t.competitorCompare.yes : t.competitorCompare.no}>
+                          {row.generic ? t.competitorCompare.yes : t.competitorCompare.no}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-4 text-xs leading-relaxed text-ink-muted">
+              {t.competitorCompare.footnote}
+            </p>
+
+            <div className="mt-12 border-t border-border pt-10">
+              <h3 className="font-display text-xl font-semibold text-ink sm:text-2xl">
+                {t.competitorCompare.integrationsTitle}
+              </h3>
+              <p className="mt-3 max-w-3xl text-sm leading-relaxed text-ink-muted">
+                {t.competitorCompare.integrationsIntro}
+              </p>
+              <div className="mt-8 grid gap-4 sm:grid-cols-3">
+                {t.competitorCompare.integrationsItems.map((item) => (
+                  <article
+                    key={item.title}
+                    className="rounded-2xl border border-border bg-surface p-5 shadow-sm"
+                  >
+                    <h4 className="font-display text-base font-semibold text-ink">{item.title}</h4>
+                    <p className="mt-2 text-sm leading-relaxed text-ink-muted">{item.body}</p>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section id="audience-benefits" className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
             <p className="text-xs font-bold uppercase tracking-wider text-accent">

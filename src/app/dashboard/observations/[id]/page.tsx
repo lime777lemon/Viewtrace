@@ -28,6 +28,7 @@ import { copy } from "@/lib/i18n";
 import { localizeObservationNote } from "@/lib/i18n/observation-persisted-copy";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { sanitizeObservationRouteId } from "@/lib/observation-route-id";
+import { findPreviousObservationWithSnapshot } from "@/lib/observation-previous";
 
 type PageProps = { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string }> };
 
@@ -99,13 +100,16 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
       ? await supabase
           .from("observation_watches")
           .select(
-            "enabled,schedule_frequency,repeat_count,notify_mode",
+            "enabled,schedule_frequency,repeat_count,notify_mode,webhook_url",
           )
           .eq("user_id", session.userId)
           .eq("url", obs.url)
           .eq("region", obs.regionValue)
           .maybeSingle()
       : { data: null as Record<string, unknown> | null };
+
+  const watchWebhookUrl =
+    typeof watchRow?.webhook_url === "string" ? watchRow.webhook_url.trim() : "";
 
   const watchEnabled = Boolean(watchRow?.enabled);
   const watchFrequency: WatchFrequency =
@@ -125,6 +129,25 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
   const displayTitle = obs.pageTitle ?? live?.title ?? null;
   const displayImageUrl = obs.snapshotImageUrl ?? live?.image ?? null;
   const resolvedCanonical = live?.canonicalUrl ?? null;
+
+  const previousRaw =
+    obs.regionValue && displayImageUrl
+      ? await findPreviousObservationWithSnapshot(supabase, {
+          userId: session.userId,
+          url: obs.url,
+          region: obs.regionValue,
+          beforeCapturedAt: obs.capturedAt,
+          excludeId: obs.id,
+        })
+      : null;
+
+  const comparePrevious = previousRaw
+    ? {
+        id: previousRaw.id,
+        snapshotImageUrl: previousRaw.snapshotImageUrl,
+        capturedAtLabel: `${formatJaDateTime(previousRaw.capturedAt)} · ${formatUtcLabel(previousRaw.capturedAt)}`,
+      }
+    : null;
 
   return (
     <div className="mx-auto max-w-4xl space-y-8">
@@ -273,7 +296,11 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
               monitoringOff: t.watchMonitoringOff,
               monitoringStateLabel: t.watchMonitoringStateLabel,
               save: t.watchSave,
+              webhookLabel: t.watchWebhookLabel,
+              webhookHint: t.watchWebhookHint,
+              webhookPlaceholder: t.watchWebhookPlaceholder,
             }}
+            initialWebhookUrl={watchWebhookUrl || null}
           />
         ) : null}
       </dl>
@@ -284,6 +311,7 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
         displayImageUrl={displayImageUrl}
         resolvedCanonical={resolvedCanonical}
         locale={locale}
+        comparePrevious={comparePrevious}
       />
     </div>
   );

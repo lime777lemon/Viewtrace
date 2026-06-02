@@ -49,6 +49,15 @@ export default async function AutoObservationsPage({
     monitoringOff: tDetail.watchMonitoringOff,
     monitoringStateLabel: tDetail.watchMonitoringStateLabel,
     save: tDetail.watchSave,
+    webhookLabel: tDetail.watchWebhookLabel,
+    webhookHint: tDetail.watchWebhookHint,
+    webhookPlaceholder: tDetail.watchWebhookPlaceholder,
+  };
+
+  const webhookCopy = {
+    label: tDetail.watchWebhookLabel,
+    hint: tDetail.watchWebhookHint,
+    placeholder: tDetail.watchWebhookPlaceholder,
   };
 
   const scheduleCopy = {
@@ -91,7 +100,7 @@ export default async function AutoObservationsPage({
 
   const { data: watchRows } = await supabase
     .from("observation_watches")
-    .select("id,url,region,enabled,schedule_frequency,repeat_count,notify_mode,updated_at")
+    .select("id,url,region,enabled,schedule_frequency,repeat_count,notify_mode,webhook_url,updated_at")
     .eq("user_id", session.userId)
     .order("updated_at", { ascending: false });
 
@@ -103,6 +112,7 @@ export default async function AutoObservationsPage({
     schedule_frequency: r.schedule_frequency as string | null,
     repeat_count: typeof r.repeat_count === "number" ? r.repeat_count : null,
     notify_mode: r.notify_mode as string | null,
+    webhook_url: typeof r.webhook_url === "string" ? r.webhook_url : null,
   }));
 
   const regionOpts = getRegionOptions(session.plan).map((o) => ({
@@ -116,9 +126,11 @@ export default async function AutoObservationsPage({
       regions={regionOpts}
       copy={t}
       scheduleCopy={scheduleCopy}
+      webhookCopy={webhookCopy}
       showInvalidBanner={sp.error === "invalid"}
       showInvalidUrlBanner={sp.error === "invalid_url"}
       showInvalidRegionBanner={sp.error === "invalid_region"}
+      showInvalidWebhookBanner={sp.error === "invalid_webhook"}
       showSaveErrorBanner={sp.error === "save"}
       showSavedRowBanner={sp.saved === "row"}
     />

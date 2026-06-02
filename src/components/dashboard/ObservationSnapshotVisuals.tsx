@@ -7,6 +7,12 @@ import { copy } from "@/lib/i18n";
 
 type Phase = "ready" | "loading" | "error";
 
+export type ComparePreviousSnapshot = {
+  id: string;
+  capturedAtLabel: string;
+  snapshotImageUrl: string;
+};
+
 function useHydratedSnapshotImage(
   observationUrl: string,
   serverImageUrl: string | null,
@@ -69,6 +75,7 @@ type Props = {
   displayTitle: string | null;
   metaLine: string;
   locale: Locale;
+  comparePrevious?: ComparePreviousSnapshot | null;
 };
 
 export function ObservationSnapshotVisuals({
@@ -79,6 +86,7 @@ export function ObservationSnapshotVisuals({
   displayTitle,
   metaLine,
   locale,
+  comparePrevious = null,
 }: Props) {
   const t = copy[locale].snapshotVisuals;
   const { imageUrl, phase } = useHydratedSnapshotImage(
@@ -86,6 +94,48 @@ export function ObservationSnapshotVisuals({
     serverImageUrl,
     fetchSnapshot,
   );
+
+  const [diffRatioLabel, setDiffRatioLabel] = useState<string | null>(null);
+  const [diffPhase, setDiffPhase] = useState<"idle" | "loading" | "error">("idle");
+
+  const currentForDiff = serverImageUrl ?? imageUrl;
+  const previousUrl = comparePrevious?.snapshotImageUrl ?? null;
+
+  useEffect(() => {
+    if (!currentForDiff || !previousUrl) {
+      setDiffRatioLabel(null);
+      setDiffPhase("idle");
+      return;
+    }
+
+    let cancelled = false;
+    setDiffPhase("loading");
+    setDiffRatioLabel(null);
+
+    (async () => {
+      try {
+        const res = await fetch("/api/observations/snapshot-diff", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ currentUrl: currentForDiff, previousUrl }),
+        });
+        const data = (await res.json()) as { ok?: boolean; ratioLabel?: string };
+        if (cancelled) return;
+        if (data.ok && data.ratioLabel) {
+          setDiffRatioLabel(data.ratioLabel);
+          setDiffPhase("idle");
+        } else {
+          setDiffPhase("error");
+        }
+      } catch {
+        if (!cancelled) setDiffPhase("error");
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentForDiff, previousUrl]);
 
   const showImg = Boolean(imageUrl);
   const showLoading = !showImg && phase === "loading";
@@ -110,9 +160,7 @@ export function ObservationSnapshotVisuals({
           ) : showLoading ? (
             <div className="flex aspect-16/10 flex-col justify-center gap-2 bg-linear-to-br from-[#dfe9e6] to-[#c8d9d3] px-6 py-10 text-center">
               <p className="text-sm font-medium text-ink">{t.loadingTitle}</p>
-              <p className="text-xs text-ink-muted">
-                {t.loadingHint}
-              </p>
+              <p className="text-xs text-ink-muted">{t.loadingHint}</p>
             </div>
           ) : (
             <div className="flex aspect-16/10 flex-col justify-center gap-2 bg-linear-to-br from-[#dfe9e6] to-[#c8d9d3] px-6 py-10 text-center">
@@ -137,10 +185,19 @@ export function ObservationSnapshotVisuals({
       </section>
 
       <section>
-        <h2 className="font-display text-lg font-semibold text-ink">{t.diffTitle}</h2>
-        <p className="mt-1 text-sm text-ink-muted">
-          {t.diffHint}
-        </p>
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <h2 className="font-display text-lg font-semibold text-ink">{t.diffTitle}</h2>
+          {diffRatioLabel ? (
+            <p className="rounded-full border border-accent/30 bg-accent-soft/40 px-3 py-1 text-xs font-semibold text-accent">
+              {t.diffRatioLabel}: {diffRatioLabel}
+            </p>
+          ) : diffPhase === "loading" ? (
+            <p className="text-xs text-ink-muted">{t.diffComputing}</p>
+          ) : diffPhase === "error" ? (
+            <p className="text-xs text-amber-800 dark:text-amber-200">{t.diffFailed}</p>
+          ) : null}
+        </div>
+        <p className="mt-1 text-sm text-ink-muted">{t.diffHint}</p>
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
           <div className="rounded-xl border border-border bg-surface-elevated p-4">
             <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
@@ -161,19 +218,45 @@ export function ObservationSnapshotVisuals({
               )}
             </div>
           </div>
-          <div className="rounded-xl border border-dashed border-border bg-surface/80 p-4">
+          <div
+            className={`rounded-xl border p-4 ${
+              comparePrevious
+                ? "border-border bg-surface-elevated"
+                : "border-dashed border-border bg-surface/80"
+            }`}
+          >
             <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
               {t.compareTo}
             </p>
-            <p className="mt-3 text-sm text-ink-muted">
-              {t.compareHint}
-            </p>
-            <Link
-              href="/dashboard/observations"
-              className="mt-4 inline-flex text-sm font-semibold text-accent hover:text-accent-hover"
-            >
-              {t.backToObservations}
-            </Link>
+            {comparePrevious ? (
+              <>
+                <p className="mt-2 text-xs text-ink-muted">{comparePrevious.capturedAtLabel}</p>
+                <div className="mt-3 aspect-video overflow-hidden rounded-lg border border-border bg-surface">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={comparePrevious.snapshotImageUrl}
+                    alt=""
+                    className="h-full w-full object-cover object-top"
+                  />
+                </div>
+                <Link
+                  href={`/dashboard/observations/${comparePrevious.id}`}
+                  className="mt-4 inline-flex text-sm font-semibold text-accent hover:text-accent-hover"
+                >
+                  {t.viewPrevious}
+                </Link>
+              </>
+            ) : (
+              <>
+                <p className="mt-3 text-sm text-ink-muted">{t.compareHint}</p>
+                <Link
+                  href="/dashboard/observations"
+                  className="mt-4 inline-flex text-sm font-semibold text-accent hover:text-accent-hover"
+                >
+                  {t.backToObservations}
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </section>

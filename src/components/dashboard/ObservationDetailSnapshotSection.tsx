@@ -1,4 +1,4 @@
-import { ObservationSnapshotVisuals } from "@/components/dashboard/ObservationSnapshotVisuals";
+import { ObservationSnapshotVisuals, type ComparePreviousSnapshot } from "@/components/dashboard/ObservationSnapshotVisuals";
 import type { Observation, ObservationHistoryEvent } from "@/lib/demo/observations";
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
 import type { Locale } from "@/lib/i18n";
@@ -41,6 +41,7 @@ type Props = {
   displayImageUrl: string | null;
   resolvedCanonical: string | null;
   locale: Locale;
+  comparePrevious?: ComparePreviousSnapshot | null;
 };
 
 export function ObservationDetailSnapshotSection({
@@ -49,6 +50,7 @@ export function ObservationDetailSnapshotSection({
   displayImageUrl,
   resolvedCanonical,
   locale,
+  comparePrevious = null,
 }: Props) {
   const history = obs.events?.length ? obs.events : defaultHistory(obs, locale);
   const openUrl = resolvedCanonical ?? obs.url;
@@ -83,6 +85,7 @@ export function ObservationDetailSnapshotSection({
         displayTitle={displayTitle}
         metaLine={metaLine}
         locale={locale}
+        comparePrevious={comparePrevious}
       />
 
       <section>

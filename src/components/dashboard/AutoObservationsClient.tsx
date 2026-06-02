@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { recordWebVerifiedObservationAction } from "@/app/actions/observations";
 import { saveObservationWatchAction, deleteObservationWatchAction } from "@/app/actions/observation-watches";
 import { WatchScheduleFields, type WatchScheduleFieldsCopy, type WatchScheduleValues } from "@/components/dashboard/WatchScheduleFields";
+import { WatchWebhookField } from "@/components/dashboard/WatchWebhookField";
 import { WatchSettingsReadout } from "@/components/dashboard/WatchSettingsReadout";
 import {
   clampRepeatCount,
@@ -25,6 +26,7 @@ export type AutoObsWatchRow = {
   schedule_frequency: string | null;
   repeat_count: number | null;
   notify_mode: string | null;
+  webhook_url: string | null;
 };
 
 export type AutoObservationsCopy = {
@@ -58,6 +60,13 @@ export type AutoObservationsCopy = {
   observeNow: string;
   observeNowPending: string;
   savePending: string;
+  invalidWebhookQuery: string;
+};
+
+type WebhookCopy = {
+  label: string;
+  hint: string;
+  placeholder: string;
 };
 
 type RegionOption = { value: string; label: string };
@@ -67,9 +76,11 @@ type Props = {
   regions: RegionOption[];
   copy: AutoObservationsCopy;
   scheduleCopy: WatchScheduleFieldsCopy;
+  webhookCopy: WebhookCopy;
   showInvalidBanner: boolean;
   showInvalidUrlBanner: boolean;
   showInvalidRegionBanner: boolean;
+  showInvalidWebhookBanner: boolean;
   showSaveErrorBanner: boolean;
   showSavedRowBanner: boolean;
 };
@@ -79,9 +90,11 @@ export function AutoObservationsClient({
   regions,
   copy,
   scheduleCopy,
+  webhookCopy,
   showInvalidBanner,
   showInvalidUrlBanner,
   showInvalidRegionBanner,
+  showInvalidWebhookBanner,
   showSaveErrorBanner,
   showSavedRowBanner,
 }: Props) {
@@ -167,6 +180,12 @@ export function AutoObservationsClient({
         </p>
       ) : null}
 
+      {showInvalidWebhookBanner ? (
+        <p className="rounded-lg border border-amber-300/80 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+          {copy.invalidWebhookQuery}
+        </p>
+      ) : null}
+
       {showSaveErrorBanner ? (
         <div
           role="alert"
@@ -229,6 +248,11 @@ export function AutoObservationsClient({
             initialRepeat={1}
             initialNotify="always"
             onValuesChange={handleAddScheduleChange}
+          />
+          <WatchWebhookField
+            label={webhookCopy.label}
+            hint={webhookCopy.hint}
+            placeholder={webhookCopy.placeholder}
           />
           <div
             className="rounded-lg border border-dashed border-border bg-surface px-3 py-2.5"
@@ -321,6 +345,12 @@ export function AutoObservationsClient({
                       initialRepeat={rep}
                       initialNotify={notify}
                       onValuesChange={(v) => setRowSnapshot(w.id, v)}
+                    />
+                    <WatchWebhookField
+                      label={webhookCopy.label}
+                      hint={webhookCopy.hint}
+                      placeholder={webhookCopy.placeholder}
+                      initialValue={w.webhook_url}
                     />
                     <div className="flex flex-wrap items-center gap-3">
                       <PendingSubmitButton

@@ -24,11 +24,11 @@ const sora = Sora({
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin),
   title: {
-    default: "Viewtrace — Proof infrastructure for geo-routed captures",
+    default: "Viewtrace — Tamper-evident records of what sites showed",
     template: "%s | Viewtrace",
   },
   description:
-    "Accountability infrastructure: geo-routed visual evidence with timestamps—audit-friendly trails and shared truth when teams must explain what was live.",
+    "Keep tamper-evident records of what a website actually showed—geo-routed captures with timestamps and integrity checks for teams that need shared truth.",
   keywords: [...siteSeoKeywordPhrases, "Viewtrace"],
   applicationName: "Viewtrace",
   alternates: {
@@ -44,15 +44,15 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "/",
     siteName: "Viewtrace",
-    title: "Viewtrace — Proof infrastructure for geo-routed captures",
+    title: "Viewtrace — Tamper-evident records of what sites showed",
     description:
-      "Accountability infrastructure: geo-routed visual evidence with timestamps—audit-friendly trails and shared truth when teams must explain what was live.",
+      "Keep tamper-evident records of what a website actually showed—geo-routed captures with timestamps and integrity checks for teams that need shared truth.",
   },
   twitter: {
     card: "summary",
-    title: "Viewtrace — Proof infrastructure for geo-routed captures",
+    title: "Viewtrace — Tamper-evident records of what sites showed",
     description:
-      "Accountability infrastructure: geo-routed visual evidence with timestamps—audit-friendly trails and shared truth when teams must explain what was live.",
+      "Keep tamper-evident records of what a website actually showed—geo-routed captures with timestamps and integrity checks for teams that need shared truth.",
   },
   verification: {
     google: "hWP7-fbRH5By6ftqXkQOAO73beDcZx4B2XAZ8Jtbx5s",

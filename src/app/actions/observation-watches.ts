@@ -13,6 +13,7 @@ import {
 } from "@/lib/observation-watch-schedule";
 import { isValidObservationRegionForPlan, normalizeObservationRegionInput } from "@/lib/regions";
 import { normalizeUserUrlInput } from "@/lib/url-preview";
+import { normalizeObservationWebhookUrl } from "@/lib/observation-webhook";
 
 function redirectToLogin(): never {
   redirect("/login");
@@ -72,6 +73,18 @@ export async function saveObservationWatchAction(formData: FormData): Promise<vo
   const notifyMode: WatchNotifyMode = parseWatchNotifyMode(notifyRaw) ?? "always";
   const repeatCount = clampRepeatCount(scheduleFrequency, repeatRaw);
 
+  const webhookRaw = String(formData.get("webhook_url") ?? "").trim();
+  const webhookUrl = webhookRaw ? normalizeObservationWebhookUrl(webhookRaw) : null;
+  if (webhookRaw && !webhookUrl) {
+    if (redirectAfter === "auto-observations") {
+      redirect("/dashboard/auto-observations?error=invalid_webhook");
+    }
+    if (observationId) {
+      redirect(`/dashboard/observations/${observationId}?error=invalid_webhook`);
+    }
+    redirectToObservations();
+  }
+
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -94,6 +107,7 @@ export async function saveObservationWatchAction(formData: FormData): Promise<vo
     notify_mode: notifyMode,
     snapshot_full_page: snapshotFullPage,
     plan_id: session.plan,
+    webhook_url: webhookUrl,
     updated_at: nowIso,
   };
 

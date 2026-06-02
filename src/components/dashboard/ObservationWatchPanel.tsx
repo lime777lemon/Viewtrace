@@ -2,12 +2,16 @@
 
 import { saveObservationWatchAction } from "@/app/actions/observation-watches";
 import { WatchScheduleFields, type WatchScheduleFieldsCopy } from "@/components/dashboard/WatchScheduleFields";
+import { WatchWebhookField } from "@/components/dashboard/WatchWebhookField";
 import type { WatchFrequency, WatchNotifyMode } from "@/lib/observation-watch-schedule";
 
 export type ObservationWatchPanelCopy = WatchScheduleFieldsCopy & {
   title: string;
   intro: string;
   save: string;
+  webhookLabel: string;
+  webhookHint: string;
+  webhookPlaceholder: string;
 };
 
 type Props = {
@@ -20,6 +24,7 @@ type Props = {
   initialRepeat: number;
   initialNotify: WatchNotifyMode;
   copy: ObservationWatchPanelCopy;
+  initialWebhookUrl?: string | null;
   /** 保存後の遷移（未指定かつ observationId あり→詳細へ） */
   redirectAfter?: "auto-observations" | "observations";
 };
@@ -34,6 +39,7 @@ export function ObservationWatchPanel({
   initialRepeat,
   initialNotify,
   copy,
+  initialWebhookUrl,
   redirectAfter,
 }: Props) {
   const scheduleCopy: WatchScheduleFieldsCopy = copy;
@@ -55,6 +61,13 @@ export function ObservationWatchPanel({
             initialFrequency={initialFrequency}
             initialRepeat={initialRepeat}
             initialNotify={initialNotify}
+          />
+
+          <WatchWebhookField
+            label={copy.webhookLabel}
+            hint={copy.webhookHint}
+            placeholder={copy.webhookPlaceholder}
+            initialValue={initialWebhookUrl}
           />
 
           <button

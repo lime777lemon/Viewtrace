@@ -19,15 +19,15 @@ export const copy = {
       menu: "メニュー",
     },
     hero: {
-      title: "説明責任と監査性のための証跡インフラ。地域ルーティングで取り、チームの shared truth をメールまで届ける。",
-      catchKicker: "High-fidelity geo routing",
+      title: "Webサイトが実際に何を表示していたか、改ざん検知可能な記録を残す",
+      catchKicker: "Geo-routed visual records",
       catchLine:
-        "実ユーザーに近い地域ルーティングで「いつ・どこで・何が見えていたか」をインフラとして積み上げる。説明責任に耐える証跡と、関係者が同じ前提で見られる shared truth へ。",
-      catchLexicon: "説明責任 · 証跡 · 監査性 · shared truth · verification · routing · replay",
+        "指定地域から取得した表示を、タイムスタンプとチェック値付きで保存。後から内容の食い違いに気づきやすい証跡として、チームで共有・照合できます。",
+      catchLexicon: "tamper-evident · 証跡 · 整合性 · shared truth · geo routing · audit trail",
       subtitle:
-        "URL と地域を指定すると、表示状態をタイムスタンプ付きのビジュアル証跡として保存します。実行ごとに概要と記録へのリンクを送り、視覚差分が大きいときだけ通知する設定も選べます。地理テスト（geo testing tool）や海外からの見え方、広告表示の検証（ad verification）、ランディングの地域別 QA（landing page QA）、代理店まわりの根拠出し（proof for ad agencies）など、越境の説明負荷が高いワークを想定しています。",
+        "URL と地域を指定すると、実際にレンダリングされた画面を記録として残します。実行ごとに概要と記録へのリンクを送り、視覚差分が大きいときだけ通知する設定も選べます。広告 LP の地域別 QA、海外からの見え方の確認、代理店向けの根拠出しなど、説明負荷の高いワークを想定しています。",
       punch:
-        "添付の山や口頭の代替ではなく、URL・時刻・地域が揃った再現可能な証跡として、説明・照合・監査のたたき台を共有する。",
+        "使い捨てのスクショではなく、URL・時刻・地域が揃った改ざん検知可能な記録として、説明・照合・監査のたたき台を共有する。",
       disclaimer:
         "取得したビジュアル記録は説明・照合・共有用の証跡です（サービス利用上の保証は別途規約に従います）。",
       trial: "無料で始める",
@@ -35,9 +35,9 @@ export const copy = {
     },
     heroTrust: {
       items: [
-        "説明責任：いつ・誰が・どの条件で見たかを言い切れる",
-        "証跡：取得内容が履歴に残り、後追いしやすい",
-        "監査性・shared truth：同じURL・時刻・地域で関係者が同じ前提を共有",
+        "改ざん検知可能：チェック値で記録内容の食い違いに気づきやすい",
+        "証跡：いつ・どの地域設定で・何が見えていたかを履歴に残す",
+        "shared truth：同じ記録を関係者が開き、説明の前提を揃える",
       ],
     },
     valuePillars: [
@@ -106,7 +106,7 @@ export const copy = {
           body: "フォルダやスレッドに散在し、誰がどの条件で見たかが揃わず、監査や説明に使いづらい。",
         },
       ],
-      solutionTitle: "Viewtrace は、観測を証跡として残すためのレイヤです。",
+      solutionTitle: "Viewtrace は、実際の表示を改ざん検知可能な記録として残すレイヤです。",
       solutionBullets: [
         "ワンクリックでビジュアル記録",
         "自動で履歴化（欠落しにくい）",
@@ -124,6 +124,43 @@ export const copy = {
         {
           title: "監査性",
           body: "保存した内容のずれを、照合しやすい形で追える",
+        },
+      ],
+    },
+    competitorCompare: {
+      kicker: "比較",
+      title: "一般的な変更監視ツールとの違い",
+      intro:
+        "Viewtrace は「Geo ＋ 改ざん検知可能な記録 ＋ 報告」に集中します。Slack 連携やテキスト差分が主役のツールとは、向いている仕事が違います。",
+      colFeature: "機能",
+      colViewtrace: "Viewtrace",
+      colGeneric: "一般的な変更監視",
+      yes: "✓",
+      no: "—",
+      footnote:
+        "一般的な変更監視＝Visualping 等のページ監視・差分通知サービスを想定した比較です。",
+      rows: [
+        { feature: "地域ルーティングで取得（州・国）", viewtrace: true, generic: false },
+        { feature: "改ざん検知可能な記録（チェック値付き）", viewtrace: true, generic: false },
+        { feature: "印刷 / PDF レポート・CSV エクスポート", viewtrace: true, generic: false },
+        { feature: "Slack / Sheets / Teams への通知", viewtrace: true, generic: true },
+        { feature: "テキスト・HTML 要素単位の差分", viewtrace: false, generic: true },
+      ],
+      integrationsTitle: "すぐ使える連携",
+      integrationsIntro:
+        "運用を重くしない範囲で、よく使うツールにつなげられます。",
+      integrationsItems: [
+        {
+          title: "Outgoing Webhook",
+          body: "自動観測が成功したら JSON を POST。Slack Incoming Webhook、Zapier、Make 経由で Teams や Google Sheets に流せます。",
+        },
+        {
+          title: "メール通知",
+          body: "実行のたび、または見た目の差が大きいときだけ、登録アドレスへ結果を送ります。",
+        },
+        {
+          title: "CSV（Pro）",
+          body: "一覧を CSV で書き出し、Google Sheets や BI に取り込めます。",
         },
       ],
     },
@@ -244,9 +281,9 @@ export const copy = {
       ctaLogin: "無料で始める",
     },
     trustBand: {
-      title: "観測を、説明責任・照合・監査に耐える証跡へ",
+      title: "実際の表示を、改ざん検知可能な証跡として残す",
       subtitle:
-        "いつ・どこで・何を根拠にしたかを残し、チームとクライアントが同じ事実を見られるようにします。特別な証明手続の代替ではありません。",
+        "いつ・どの地域設定で・何が見えていたかを記録し、チームとクライアントが同じ事実を見られるようにします。参考情報であり、特別な証明手続の代替ではありません。",
       items: [
         "記録の履歴はログイン中のアカウントだけがダッシュボードで確認できる",
         "保存した内容にチェック用の印を付け、あとからずれがないか見られる",
@@ -461,6 +498,8 @@ export const copy = {
         "URL の形式を確認してください。`https://` で始まる有効なアドレス（例: https://example.com）を入力してください。コピー時の不可視文字や全角記号があると失敗することがあります。",
       invalidRegionQuery:
         "地域の指定が無効でした。一覧から選び直してください。Starter では米国の代表州と主要国のみ選べます。",
+      invalidWebhookQuery:
+        "Webhook URL は https で始まる有効な URL を指定してください（Slack Incoming Webhook 等）。",
       upgradeHint:
         "自動観測は Starter または Pro でご利用いただけます。プランは設定またはチェックアウトから変更できます。",
       addPreviewLabel: "入力内容の確認（同期）",
@@ -551,6 +590,10 @@ export const copy = {
       watchMonitoringOff: "監視をオフにする",
       watchMonitoringStateLabel: "監視の状態",
       watchSave: "設定を保存",
+      watchWebhookLabel: "Webhook URL（任意）",
+      watchWebhookHint:
+        "https の Incoming Webhook を指定すると、自動観測の成功時に JSON を POST します（Slack / Zapier / Make 等）。空欄で無効。",
+      watchWebhookPlaceholder: "https://hooks.slack.com/services/…",
       integrityTitle: "記録の内容がきちんと残っているか",
       integrityOk:
         "保存した情報どうしが一致しています。共有や説明の土台として使えます（確認方式 v{version}）。",
@@ -614,13 +657,16 @@ export const copy = {
       emptyHint: "URL が無効か、プレビュー API が利用できない状態です。",
       openInNewTab: "新しいタブでページを開く",
       diffTitle: "差分",
-      diffHint: "同一 URL・別時刻のオブザベーション同士でピクセル差分を表示します（本番実装）。",
+      diffHint: "同一 URL・地域の直前の記録と、ピクセル単位の差分率を表示します。",
       thisRecord: "この記録",
-      compareTo: "比較先",
+      compareTo: "前回の記録",
       fetchingShort: "取得中…",
       noImageShort: "画像なし",
-      compareHint:
-        "一覧から別のオブザベーションを選ぶと、ここに並べてハイライト差分を表示する想定です。",
+      compareHint: "同一 URL・地域で、これより前のスナップショット付き記録がありません。",
+      diffComputing: "差分を計算中…",
+      diffFailed: "差分を計算できませんでした",
+      diffRatioLabel: "ピクセル差分",
+      viewPrevious: "前回の記録を開く",
       backToObservations: "オブザベーション一覧へ →",
     },
     snapshotBinary: {
@@ -791,15 +837,15 @@ export const copy = {
       menu: "Menu",
     },
     hero: {
-      title: "Accountability infrastructure—geo-routed evidence and shared truth, in your inbox on schedule",
-      catchKicker: "High-fidelity geo routing",
+      title: "Keep tamper-evident records of what a website actually showed.",
+      catchKicker: "Geo-routed visual records",
       catchLine:
-        "Route like real users, then persist what rendered as an evidence trail teams can defend. Built for accountability, auditability, and shared truth—not disposable captures.",
-      catchLexicon: "accountability · evidence · auditability · shared truth · verification · routing · replay",
+        "Capture from the region you specify, store with timestamps and integrity checks, and share a trail teams can reconcile—not disposable screenshots.",
+      catchLexicon: "tamper-evident · evidence · integrity · shared truth · geo routing · audit trail",
       subtitle:
-        "Set a URL and region and we persist timestamped visual evidence of what rendered. After each run you get a short summary and a link to the saved trail—or choose alerts only when the visual change is large. Teams come from searches like geo screenshot tool, website screenshot from another country, geo testing tool, ad verification tool, localized QA, landing page QA, how to check website from another country, and proof for ad agencies—Viewtrace keeps those workflows on one accountable trail.",
+        "Set a URL and region and we persist what actually rendered as a structured record. After each run you get a short summary and a link to the saved trail—or alerts only when the visual change is large. Built for landing-page QA by region, cross-border checks, and proof workflows for agencies.",
       punch:
-        "Not a screenshot utility—a replayable evidence layer where URL, timestamp, and vantage point stay attached for reviews and audits.",
+        "Not throwaway captures—a tamper-evident record with URL, time, and vantage point attached for reviews and audits.",
       disclaimer:
         "Captured visuals are evidence trails for explanation, reconciliation, and sharing—not a substitute for formal warranties; see terms of use.",
       trial: "Start for free",
@@ -807,9 +853,9 @@ export const copy = {
     },
     heroTrust: {
       items: [
-        "Accountability: say when, who, and under which vantage point",
-        "Evidence: renders land on a timeline you can reopen",
-        "Auditability & shared truth: one URL + time + region for every stakeholder",
+        "Tamper-evident: integrity checks help spot when stored details no longer line up",
+        "Evidence trail: when, which region, and what rendered—kept on a timeline",
+        "Shared truth: stakeholders open the same record instead of swapping screenshots",
       ],
     },
     valuePillars: [
@@ -877,7 +923,7 @@ export const copy = {
           body: "No single timeline or shared truth when compliance, finance, or the client asks what the team actually saw.",
         },
       ],
-      solutionTitle: "Viewtrace is the layer that turns observations into accountable, auditable evidence.",
+      solutionTitle: "Viewtrace is the layer that keeps tamper-evident records of what actually showed.",
       solutionBullets: [
         "Capture in one click—same URL, region, and moment, every time",
         "History builds as you work—harder to lose than manual filing",
@@ -895,6 +941,42 @@ export const copy = {
         {
           title: "Auditability",
           body: "Spot drift between what you stored and what you fetch later",
+        },
+      ],
+    },
+    competitorCompare: {
+      kicker: "Compare",
+      title: "How Viewtrace differs from generic change monitors",
+      intro:
+        "Viewtrace focuses on geo-routed, tamper-evident records and reporting—not on being a full collaboration suite. Tools built around Slack alerts and text diffs solve a different job.",
+      colFeature: "Capability",
+      colViewtrace: "Viewtrace",
+      colGeneric: "Typical change monitor",
+      yes: "✓",
+      no: "—",
+      footnote:
+        "“Typical change monitor” means page-monitoring / diff-alert products such as Visualping.",
+      rows: [
+        { feature: "Geo-routed capture (states & countries)", viewtrace: true, generic: false },
+        { feature: "Tamper-evident records (integrity checks)", viewtrace: true, generic: false },
+        { feature: "Print / PDF reports & CSV export", viewtrace: true, generic: false },
+        { feature: "Slack / Sheets / Teams notifications", viewtrace: true, generic: true },
+        { feature: "Text / HTML element-level diffs", viewtrace: false, generic: true },
+      ],
+      integrationsTitle: "Lightweight integrations",
+      integrationsIntro: "Connect to tools you already open—without turning Viewtrace into an ops platform.",
+      integrationsItems: [
+        {
+          title: "Outgoing webhook",
+          body: "POST JSON after each successful scheduled run. Point at a Slack Incoming Webhook, or Zapier / Make to reach Teams or Google Sheets.",
+        },
+        {
+          title: "Email alerts",
+          body: "Every run, or only when the visual change exceeds your threshold—sent to the account email.",
+        },
+        {
+          title: "CSV (Pro)",
+          body: "Export the observation list for Sheets, spreadsheets, or BI.",
         },
       ],
     },
@@ -1016,9 +1098,9 @@ export const copy = {
       ctaLogin: "Start for free",
     },
     trustBand: {
-      title: "Turn observations into evidence teams can cite under scrutiny",
+      title: "Keep tamper-evident records of what sites actually showed",
       subtitle:
-        "Capture when, where, and what you relied on—for client updates, internal reconciliation, and audit-friendly reviews. Not a substitute for formal legal proof.",
+        "Capture when, which region, and what rendered—so teams and clients can align on the same facts. Reference records only; not a substitute for formal legal proof.",
       items: [
         "Timestamped history you review in your own dashboard",
         "Fingerprints on saved page data so you can spot drift later",
@@ -1237,6 +1319,8 @@ export const copy = {
         "Check the URL. Use a valid address starting with https:// (e.g. https://example.com). Invisible characters or full-width punctuation from copy-paste can cause this to fail.",
       invalidRegionQuery:
         "Invalid region. Pick again from the list. On Starter, only the listed US states and major countries are available.",
+      invalidWebhookQuery:
+        "Webhook URL must be a valid HTTPS URL (e.g. a Slack Incoming Webhook).",
       upgradeHint:
         "Auto observations are available on Starter or Pro. Change your plan in Settings or checkout.",
       addPreviewLabel: "Live preview",
@@ -1329,6 +1413,10 @@ export const copy = {
       watchMonitoringOff: "Turn monitoring off",
       watchMonitoringStateLabel: "Monitoring state",
       watchSave: "Save settings",
+      watchWebhookLabel: "Webhook URL (optional)",
+      watchWebhookHint:
+        "HTTPS incoming webhook URL. We POST JSON after each successful scheduled run (Slack, Zapier, Make, etc.). Leave blank to disable.",
+      watchWebhookPlaceholder: "https://hooks.slack.com/services/…",
       integrityTitle: "Is this record complete and consistent?",
       integrityOk:
         "Saved details line up—ready to share or report with confidence (check v{version}).",
@@ -1407,13 +1495,16 @@ export const copy = {
       emptyHint: "The URL may be invalid, or preview is unavailable.",
       openInNewTab: "Open page in a new tab",
       diffTitle: "Diff",
-      diffHint: "Shows pixel diffs between observations for the same URL at different times (planned for production).",
+      diffHint: "Pixel diff vs the previous snapshot for the same URL and region.",
       thisRecord: "This record",
-      compareTo: "Compare to",
+      compareTo: "Previous record",
       fetchingShort: "Fetching…",
       noImageShort: "No image",
-      compareHint:
-        "Select another observation from the list to show side-by-side diffs here.",
+      compareHint: "No earlier snapshot exists for this URL and region.",
+      diffComputing: "Computing diff…",
+      diffFailed: "Could not compute diff",
+      diffRatioLabel: "Pixel diff",
+      viewPrevious: "Open previous record",
       backToObservations: "Back to observations →",
     },
     snapshotBinary: {

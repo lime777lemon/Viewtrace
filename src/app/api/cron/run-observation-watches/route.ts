@@ -15,8 +15,11 @@ import {
   type WatchNotifyMode,
 } from "@/lib/observation-watch-schedule";
 import { uploadObservationSnapshotPng } from "@/lib/observation-snapshot-storage";
-import pixelmatch from "pixelmatch";
-import { PNG } from "pngjs";
+import { computeSnapshotDiffRatio } from "@/lib/snapshot-diff";
+import {
+  normalizeObservationWebhookUrl,
+  postObservationWebhook,
+} from "@/lib/observation-webhook";
 import { sendResendEmail, isResendConfigured } from "@/lib/resend";
 import { buildObservationRecordOpenUrls } from "@/lib/observation-record-open-urls";
 import { getAppOriginForEmailLinks } from "@/lib/site";
@@ -137,38 +140,10 @@ export async function POST(req: Request) {
     return email;
   }
 
-  async function computePngDiffRatio(aUrl: string, bUrl: string): Promise<number | null> {
-    try {
-      const [aRes, bRes] = await Promise.all([fetch(aUrl), fetch(bUrl)]);
-      if (!aRes.ok || !bRes.ok) return null;
-      const [aBuf, bBuf] = await Promise.all([aRes.arrayBuffer(), bRes.arrayBuffer()]);
-      const aPng = PNG.sync.read(Buffer.from(aBuf));
-      const bPng = PNG.sync.read(Buffer.from(bBuf));
-      const width = Math.min(aPng.width, bPng.width);
-      const height = Math.min(aPng.height, bPng.height);
-      if (width <= 0 || height <= 0) return null;
-
-      const aCropped = new PNG({ width, height });
-      const bCropped = new PNG({ width, height });
-      PNG.bitblt(aPng, aCropped, 0, 0, width, height, 0, 0);
-      PNG.bitblt(bPng, bCropped, 0, 0, width, height, 0, 0);
-
-      const diff = new PNG({ width, height });
-      const diffPixels = pixelmatch(aCropped.data, bCropped.data, diff.data, width, height, {
-        threshold: 0.1,
-      });
-      const total = width * height;
-      return total > 0 ? diffPixels / total : null;
-    } catch (e) {
-      console.warn("[cron] diff failed", e);
-      return null;
-    }
-  }
-
   const { data: watches, error } = await svc
     .from("observation_watches")
     .select(
-      "id,user_id,url,region,enabled,last_notified_at,schedule_frequency,repeat_count,notify_mode,snapshot_full_page,next_run_at,last_run_at",
+      "id,user_id,url,region,enabled,last_notified_at,schedule_frequency,repeat_count,notify_mode,snapshot_full_page,next_run_at,last_run_at,webhook_url",
     )
     .eq("enabled", true)
     .or(
@@ -260,6 +235,7 @@ export async function POST(req: Request) {
     const repeatCount = clampRepeatCount(freq, getNum(row, "repeat_count", 1));
     const notifyMode: WatchNotifyMode = parseWatchNotifyMode(getString(row, "notify_mode")) ?? "always";
     const fullPage = getBool(row, "snapshot_full_page", false);
+    const webhookUrl = normalizeObservationWebhookUrl(getString(row, "webhook_url") || null);
 
     if (!url || !region || !watchId || !userId) continue;
 
@@ -438,6 +414,45 @@ export async function POST(req: Request) {
 
     const { openUrl } = buildObservationRecordOpenUrls(getAppOriginForEmailLinks(), obsId);
 
+    if (webhookUrl) {
+      let diffRatio: number | undefined;
+      if (blobUrl) {
+        const { data: previous } = await svc
+          .from("observations")
+          .select("snapshot_image_url")
+          .eq("user_id", userId)
+          .eq("url", url)
+          .eq("region", region)
+          .neq("id", obsId)
+          .not("snapshot_image_url", "is", null)
+          .order("captured_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        const prevUrl =
+          typeof previous?.snapshot_image_url === "string" ? previous.snapshot_image_url : "";
+        if (prevUrl) {
+          const ratio = await computeSnapshotDiffRatio(blobUrl, prevUrl);
+          if (ratio !== null) diffRatio = ratio;
+        }
+      }
+
+      const posted = await postObservationWebhook(webhookUrl, {
+        event: "observation.auto_saved",
+        observationId: obsId,
+        url,
+        region,
+        capturedAt,
+        status: blobUrl ? "success" : "failure",
+        snapshotUrl: blobUrl ?? undefined,
+        snapshotSha256: snapshotSha256Stored ?? undefined,
+        diffRatio,
+        recordUrl: openUrl,
+      });
+      if (!posted) {
+        console.warn("[cron] webhook post failed", { watchId, userId });
+      }
+    }
+
     if (notifyMode === "always") {
       if (!userEmail) {
         console.warn("[cron] email skipped: user_email_missing", { watchId, userId });
@@ -494,7 +509,7 @@ export async function POST(req: Request) {
       const [a, b] = recent;
       if (!a.snapshot_image_url || !b.snapshot_image_url) continue;
 
-      const ratio = await computePngDiffRatio(a.snapshot_image_url, b.snapshot_image_url);
+      const ratio = await computeSnapshotDiffRatio(a.snapshot_image_url, b.snapshot_image_url);
       await svc.from("observation_watches").update({ last_diff_ratio: ratio }).eq("id", watchId);
 
       if (ratio !== null && ratio >= threshold) {
