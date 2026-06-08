@@ -317,6 +317,34 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
             <p className="mt-5 max-w-3xl text-base font-semibold leading-snug text-ink sm:text-lg">
               {t.hero.punch}
             </p>
+            <div className="mt-8 max-w-4xl rounded-2xl border border-accent/30 bg-accent-soft/25 p-5 sm:p-6">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
+                {t.hero.retention.kicker}
+              </p>
+              <h2 className="mt-2 font-display text-xl font-semibold tracking-tight text-ink sm:text-2xl">
+                {t.hero.retention.title}
+              </h2>
+              <p className="mt-3 text-sm leading-relaxed text-ink-muted sm:text-base">
+                {t.hero.retention.body}
+              </p>
+              <ul
+                className="mt-5 grid gap-3 sm:grid-cols-3"
+                aria-label={locale === "ja" ? "記録の参照例" : "When you reopen saved records"}
+              >
+                {t.hero.retention.timeline.map((item) => (
+                  <li
+                    key={item.label}
+                    className="rounded-xl border border-border/80 bg-surface/90 px-4 py-3"
+                  >
+                    <p className="font-display text-base font-semibold text-ink">{item.label}</p>
+                    <p className="mt-1 text-xs leading-relaxed text-ink-muted">{item.hint}</p>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-4 text-xs leading-relaxed text-ink-muted">
+                {t.hero.retention.planNote}
+              </p>
+            </div>
             <div
               className="mt-8 grid max-w-5xl gap-4 sm:grid-cols-3"
               aria-label={locale === "ja" ? "主な価値" : "Why teams use Viewtrace"}

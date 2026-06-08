@@ -28,6 +28,17 @@ export const copy = {
         "URL と地域を指定すると、実際にレンダリングされた画面を記録として残します。実行ごとに概要と記録へのリンクを送り、視覚差分が大きいときだけ通知する設定も選べます。広告 LP の地域別 QA、海外からの見え方の確認、代理店向けの根拠出しなど、説明負荷の高いワークを想定しています。",
       punch:
         "使い捨てのスクショではなく、URL・時刻・地域が揃った改ざん検知可能な記録として、説明・照合・監査のたたき台を共有する。",
+      retention: {
+        kicker: "記録を残す",
+        title: "昨日・先週の表示も、ダッシュボードに蓄積",
+        body: "取得時点のスクリーンショットとチェック値を記録として保存します。あとから同じ証跡を開き直し、クライアント説明や社内照合に使えます。",
+        timeline: [
+          { label: "昨日", hint: "直近のキャンペーン表示" },
+          { label: "先週", hint: "先週時点の LP・広告 LP" },
+          { label: "先月まで", hint: "Pro で最大60日分の履歴" },
+        ],
+        planNote: "Starter は7日間、Pro は60日間まで保持（詳細は料金表）。",
+      },
       disclaimer:
         "取得したビジュアル記録は説明・照合・共有用の証跡です（サービス利用上の保証は別途規約に従います）。",
       trial: "無料で始める",
@@ -989,6 +1000,17 @@ export const copy = {
         "Set a URL and region and we persist what actually rendered as a structured record. After each run you get a short summary and a link to the saved trail—or alerts only when the visual change is large. Built for landing-page QA by region, cross-border checks, and proof workflows for agencies.",
       punch:
         "Not throwaway captures—a tamper-evident record with URL, time, and vantage point attached for reviews and audits.",
+      retention: {
+        kicker: "Persist the record",
+        title: "Yesterday and last week—saved in your dashboard",
+        body: "We store each capture’s screenshot and integrity fingerprints as a record you can reopen later—for client updates and internal reconciliation.",
+        timeline: [
+          { label: "Yesterday", hint: "Latest campaign view" },
+          { label: "Last week", hint: "LP or ad lander from a week ago" },
+          { label: "Up to ~2 months", hint: "Pro keeps up to 60 days of history" },
+        ],
+        planNote: "Starter: 7-day retention · Pro: 60-day retention (see pricing).",
+      },
       disclaimer:
         "Captured visuals are evidence trails for explanation, reconciliation, and sharing—not a substitute for formal warranties; see terms of use.",
       trial: "Start for free",
