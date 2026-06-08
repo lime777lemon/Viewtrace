@@ -215,7 +215,7 @@ export async function runBrowserlessScreenshotWithProxyRetry(params: {
   region?: string;
   fullPage: boolean;
 }): Promise<BrowserlessScreenshotResult> {
-  let shot = await runBrowserlessScreenshot(params);
+  const shot = await runBrowserlessScreenshot(params);
   if (
     !shot.ok &&
     shot.error === "browserless_error" &&
