@@ -34,7 +34,15 @@ function browserlessScreenshotEndpointWithToken(): string | null {
 }
 
 export type BrowserlessScreenshotResult =
-  | { ok: true; png: ArrayBuffer; normalizedUrl: string; viaResidential?: boolean; viaExternalProxy?: boolean }
+  | {
+      ok: true;
+      png: ArrayBuffer;
+      normalizedUrl: string;
+      viaResidential?: boolean;
+      viaExternalProxy?: boolean;
+      /** 地理ルーティング失敗後、プロキシなしで再試行して成功した */
+      usedRetryWithoutProxy?: boolean;
+    }
   | {
       ok: false;
       error: string;
@@ -213,7 +221,14 @@ export async function runBrowserlessScreenshotWithProxyRetry(params: {
     shot.error === "browserless_error" &&
     geoRoutingRequested(params.region, false)
   ) {
-    shot = await runBrowserlessScreenshot({ ...params, disableProxy: true });
+    const retry = await runBrowserlessScreenshot({ ...params, disableProxy: true });
+    if (retry.ok) {
+      return { ...retry, usedRetryWithoutProxy: true };
+    }
+    return retry;
+  }
+  if (shot.ok) {
+    return { ...shot, usedRetryWithoutProxy: false };
   }
   return shot;
 }

@@ -4,9 +4,18 @@ import { redirect } from "next/navigation";
 import { appendAuditEvent, AUDIT_ACTION } from "@/lib/audit-log";
 import { getSession } from "@/lib/auth/session";
 import {
+  buildCaptureConditionsFromBrowserless,
+  buildCaptureConditionsFromDirectFetch,
+  buildCaptureConditionsFromFormUpload,
+  buildCaptureConditionsFromMicrolink,
+  type CaptureConditionsV1,
+} from "@/lib/capture-conditions";
+import {
   isBrowserlessConfigured,
   runBrowserlessScreenshotWithProxyRetry,
+  type BrowserlessScreenshotResult,
 } from "@/lib/browserless-screenshot";
+import { getPngDimensions } from "@/lib/png-dimensions";
 import type { Observation } from "@/lib/demo/observations";
 import {
   appendUserObservation,
@@ -124,6 +133,8 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
   let snapshotContentType: string | undefined;
 
   let browserlessShotOk = false;
+  let lastBrowserlessShot: Extract<BrowserlessScreenshotResult, { ok: true }> | null = null;
+  let usedMicrolink = false;
   if (browserlessOn) {
     const shot = await runBrowserlessScreenshotWithProxyRetry({
       url,
@@ -132,6 +143,7 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
     });
     if (shot.ok) {
       browserlessShotOk = true;
+      lastBrowserlessShot = shot;
       // Keep text/UI readable: Starter is slightly more compressed, Pro keeps higher quality.
       const webpQuality = session.plan === "pro" ? 86 : 78;
       blobUploadResult = await uploadObservationSnapshotPng(id, shot.png, {
@@ -164,6 +176,7 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
       fullPage: plan.snapshotFullPage,
     });
     if (microlinkImage && /^https?:\/\//i.test(microlinkImage)) {
+      usedMicrolink = true;
       snapshotImageUrl = microlinkImage.slice(0, 2048);
     }
   }
@@ -214,6 +227,53 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
     return noteParts.join(" — ");
   })();
 
+  let captureConditions: CaptureConditionsV1;
+  if (lastBrowserlessShot) {
+    const dims = await getPngDimensions(lastBrowserlessShot.png);
+    const webpQuality = session.plan === "pro" ? 86 : 78;
+    captureConditions = buildCaptureConditionsFromBrowserless({
+      capturedAt,
+      regionInput: regionValue,
+      regionLabel,
+      fullPageRequested: plan.snapshotFullPage,
+      viaResidential: lastBrowserlessShot.viaResidential ?? false,
+      viaExternalProxy: lastBrowserlessShot.viaExternalProxy ?? false,
+      usedRetryWithoutProxy: lastBrowserlessShot.usedRetryWithoutProxy ?? false,
+      storageFormat: "webp",
+      webpQuality,
+      imageWidthPx: dims?.width ?? null,
+      imageHeightPx: dims?.height ?? null,
+      snapshotBytes: snapshotBytes ?? null,
+      snapshotContentType: snapshotContentType ?? null,
+      snapshotSha256Present: Boolean(snapshotBinarySha256),
+    });
+  } else if (userVerifiedCapture) {
+    captureConditions = buildCaptureConditionsFromFormUpload({
+      capturedAt,
+      regionInput: regionValue,
+      regionLabel,
+    });
+  } else if (usedMicrolink) {
+    captureConditions = buildCaptureConditionsFromMicrolink({
+      capturedAt,
+      regionInput: regionValue,
+      regionLabel,
+      fullPageRequested: plan.snapshotFullPage,
+      snapshotBytes: snapshotBytes ?? null,
+      snapshotContentType: snapshotContentType ?? null,
+      snapshotSha256Present: Boolean(snapshotBinarySha256),
+    });
+  } else {
+    captureConditions = buildCaptureConditionsFromDirectFetch({
+      capturedAt,
+      regionInput: regionValue,
+      regionLabel,
+      fullPageRequested: plan.snapshotFullPage,
+      viaProxy: preview.ok ? preview.viaProxy : false,
+      httpStatus: preview.ok ? preview.status : null,
+    });
+  }
+
   const obs: Observation = {
     id,
     url,
@@ -228,6 +288,7 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
     snapshotPhash,
     snapshotBytes,
     snapshotContentType,
+    captureConditions,
     events: [
       {
         at: capturedAt,

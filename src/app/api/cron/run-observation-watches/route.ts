@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { AUDIT_ACTION, appendAuditEventAsService } from "@/lib/audit-log";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { buildCaptureConditionsFromBrowserless } from "@/lib/capture-conditions";
 import { runBrowserlessScreenshotWithProxyRetry } from "@/lib/browserless-screenshot";
+import { getPngDimensions } from "@/lib/png-dimensions";
 import type { Observation } from "@/lib/demo/observations";
 import { computeObservationContentHash } from "@/lib/observation-content-hash";
 import {
@@ -313,6 +315,24 @@ export async function POST(req: Request) {
       blobUrl ? "自動観測（定期）" : "自動観測（スクリーンショットの保存に失敗）",
     );
 
+    const pngDims = await getPngDimensions(shot.png);
+    const captureConditions = buildCaptureConditionsFromBrowserless({
+      capturedAt,
+      regionInput: region,
+      regionLabel: region,
+      fullPageRequested: fullPage,
+      viaResidential: shot.viaResidential ?? false,
+      viaExternalProxy: shot.viaExternalProxy ?? false,
+      usedRetryWithoutProxy: shot.usedRetryWithoutProxy ?? false,
+      storageFormat: "webp",
+      webpQuality: 86,
+      imageWidthPx: pngDims?.width ?? null,
+      imageHeightPx: pngDims?.height ?? null,
+      snapshotBytes: snapshotBytesStored,
+      snapshotContentType: snapshotContentTypeStored,
+      snapshotSha256Present: Boolean(snapshotSha256Stored),
+    });
+
     const obsForHash: Observation = {
       id: obsId,
       url,
@@ -322,6 +342,7 @@ export async function POST(req: Request) {
       status: blobUrl ? "success" : "failure",
       note,
       snapshotImageUrl: blobUrl ?? undefined,
+      captureConditions,
       events: undefined,
     };
     const contentHash = computeObservationContentHash(obsForHash);
@@ -342,6 +363,7 @@ export async function POST(req: Request) {
       snapshot_phash: snapshotPhashStored,
       snapshot_bytes: snapshotBytesStored,
       snapshot_content_type: snapshotContentTypeStored,
+      capture_conditions: captureConditions,
     });
 
     if (insertObsError) {

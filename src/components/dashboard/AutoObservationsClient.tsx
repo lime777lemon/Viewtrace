@@ -7,6 +7,9 @@ import { recordWebVerifiedObservationAction } from "@/app/actions/observations";
 import { saveObservationWatchAction, deleteObservationWatchAction } from "@/app/actions/observation-watches";
 import { WatchScheduleFields, type WatchScheduleFieldsCopy, type WatchScheduleValues } from "@/components/dashboard/WatchScheduleFields";
 import { WatchWebhookField } from "@/components/dashboard/WatchWebhookField";
+import { ObservationRecordShareButton } from "@/components/dashboard/ObservationRecordShareButton";
+import { ObservationWatchCsvExport } from "@/components/dashboard/ObservationWatchCsvExport";
+import type { ObservationWatchPanelCopy } from "@/components/dashboard/ObservationWatchPanel";
 import { WatchSettingsReadout } from "@/components/dashboard/WatchSettingsReadout";
 import {
   clampRepeatCount,
@@ -77,6 +80,10 @@ type Props = {
   copy: AutoObservationsCopy;
   scheduleCopy: WatchScheduleFieldsCopy;
   webhookCopy: WebhookCopy;
+  panelCopy: ObservationWatchPanelCopy;
+  latestObservationIdByWatchKey: Record<string, string>;
+  showShare: boolean;
+  showCsvExport: boolean;
   showInvalidBanner: boolean;
   showInvalidUrlBanner: boolean;
   showInvalidRegionBanner: boolean;
@@ -91,6 +98,10 @@ export function AutoObservationsClient({
   copy,
   scheduleCopy,
   webhookCopy,
+  panelCopy,
+  latestObservationIdByWatchKey,
+  showShare,
+  showCsvExport,
   showInvalidBanner,
   showInvalidUrlBanner,
   showInvalidRegionBanner,
@@ -292,6 +303,8 @@ export function AutoObservationsClient({
                   repeat: rep,
                   notify,
                 };
+              const watchKey = `${w.url}\u0000${w.region}`;
+              const latestObservationId = latestObservationIdByWatchKey[watchKey];
               return (
                 <li
                   key={w.id}
@@ -329,6 +342,29 @@ export function AutoObservationsClient({
                       footnote={copy.summarySavedFootnote}
                     />
                   </div>
+                  {showShare || showCsvExport ? (
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      {showShare && latestObservationId ? (
+                        <ObservationRecordShareButton
+                          observationId={latestObservationId}
+                          label={panelCopy.shareButton}
+                          copiedLabel={panelCopy.shareCopied}
+                          failedLabel={panelCopy.shareFailed}
+                        />
+                      ) : null}
+                      {showCsvExport ? (
+                        <ObservationWatchCsvExport
+                          url={w.url}
+                          region={w.region}
+                          label={panelCopy.csvExportButton}
+                          pendingLabel={panelCopy.csvExportPending}
+                          auditCheckbox={panelCopy.csvAuditCheckbox}
+                          modeStandard={panelCopy.csvModeStandard}
+                          modeAudit={panelCopy.csvModeAudit}
+                        />
+                      ) : null}
+                    </div>
+                  ) : null}
                   <form id={`auto-watch-save-${w.id}`} action={saveObservationWatchAction} className="mt-4 space-y-4">
                     <input type="hidden" name="observationId" value="" />
                     <input type="hidden" name="redirect_after" value="auto-observations" />

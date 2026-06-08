@@ -1,11 +1,16 @@
 export type ObservationStatus = "success" | "failure" | "pending";
 
+/** Annotation: レビュー用ステータス（証跡の取得結果 status とは別） */
+export type ObservationReviewStatus = "open" | "reviewed" | "archived" | "flagged";
+
 export type ObservationHistoryEvent = {
   at: string;
   kind: "capture" | "status" | "processing";
   label: string;
   detail?: string;
 };
+
+import type { CaptureConditionsV1 } from "@/lib/capture-conditions";
 
 export type Observation = {
   id: string;
@@ -14,8 +19,16 @@ export type Observation = {
   regionValue?: string;
   regionLabel: string;
   capturedAt: string;
+  /** Evidence: 取得結果（固定） */
   status: ObservationStatus;
+  /** Annotation: メモ（編集可） */
   note?: string;
+  /** Annotation: タグ（編集可） */
+  tags?: string[];
+  /** Annotation: フォルダ（編集可） */
+  folder?: string;
+  /** Annotation: レビュー用ステータス（編集可） */
+  reviewStatus?: ObservationReviewStatus;
   /** 取得時点のページタイトル（OG / title 要素） */
   pageTitle?: string;
   /** プレビュー用画像 URL（OG 等）。本番ではフルキャプチャの CDN URL に置き換え */
@@ -32,6 +45,8 @@ export type Observation = {
   snapshotBytes?: number;
   /** image/webp 等 */
   snapshotContentType?: string;
+  /** 取得時点の固定パラメータ（v2 以降の新規行） */
+  captureConditions?: CaptureConditionsV1 | null;
 };
 
 export const demoObservations: Observation[] = [

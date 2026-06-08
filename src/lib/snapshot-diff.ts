@@ -36,12 +36,12 @@ function cropRgbaTopLeft(src: RgbaImage, width: number, height: number): Buffer 
   return out;
 }
 
-/** 2 つのスナップショット URL 間のピクセル差分率（0–1）。取得・デコード失敗時は null。 */
-export async function computeSnapshotDiffRatio(aUrl: string, bUrl: string): Promise<number | null> {
+/** 2 つの画像バッファ間のピクセル差分率（0–1）。デコード失敗時は null。 */
+export async function computeSnapshotDiffRatioBetweenBuffers(
+  aBuf: Buffer,
+  bBuf: Buffer,
+): Promise<number | null> {
   try {
-    const [aBuf, bBuf] = await Promise.all([fetchImageBuffer(aUrl), fetchImageBuffer(bUrl)]);
-    if (!aBuf || !bBuf) return null;
-
     const [aImg, bImg] = await Promise.all([decodeImageToRgba(aBuf), decodeImageToRgba(bBuf)]);
     if (!aImg || !bImg) return null;
 
@@ -56,6 +56,17 @@ export async function computeSnapshotDiffRatio(aUrl: string, bUrl: string): Prom
     const diffPixels = pixelmatch(aData, bData, diff, width, height, { threshold: 0.1 });
     const total = width * height;
     return total > 0 ? diffPixels / total : null;
+  } catch {
+    return null;
+  }
+}
+
+/** 2 つのスナップショット URL 間のピクセル差分率（0–1）。取得・デコード失敗時は null。 */
+export async function computeSnapshotDiffRatio(aUrl: string, bUrl: string): Promise<number | null> {
+  try {
+    const [aBuf, bBuf] = await Promise.all([fetchImageBuffer(aUrl), fetchImageBuffer(bUrl)]);
+    if (!aBuf || !bBuf) return null;
+    return computeSnapshotDiffRatioBetweenBuffers(aBuf, bBuf);
   } catch {
     return null;
   }

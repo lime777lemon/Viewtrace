@@ -2,7 +2,7 @@ import type { Observation } from "@/lib/demo/observations";
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
 import type { Locale } from "@/lib/i18n";
 import { copy } from "@/lib/i18n";
-import { OBSERVATION_CONTENT_HASH_VERSION } from "@/lib/observation-content-hash";
+import { contentHashVersionForObservation } from "@/lib/observation-content-hash";
 
 type Props = {
   obs: Observation;
@@ -34,15 +34,15 @@ export function ObservationDigitalSeal({ obs, locale }: Props) {
       </div>
       <dl className="mt-4 grid gap-2 text-xs text-ink-muted">
         <div className="flex justify-between gap-4 border-t border-border/80 pt-2">
-          <dt className="shrink-0 font-semibold text-ink">{t.contentHash}</dt>
-          <dd className="break-all font-mono text-[10px]" title={obs.contentHash}>
-            v{OBSERVATION_CONTENT_HASH_VERSION} · {short(obs.contentHash, 6)}
-          </dd>
-        </div>
-        <div className="flex justify-between gap-4 border-t border-border/80 pt-2">
           <dt className="shrink-0 font-semibold text-ink">{t.snapshotSha}</dt>
           <dd className="break-all font-mono text-[10px]" title={obs.snapshotSha256}>
             {short(obs.snapshotSha256, 8)}
+          </dd>
+        </div>
+        <div className="flex justify-between gap-4 border-t border-border/80 pt-2">
+          <dt className="shrink-0 font-semibold text-ink">{t.contentHash}</dt>
+          <dd className="break-all font-mono text-[10px]" title={obs.contentHash}>
+            v{contentHashVersionForObservation(obs)} · {short(obs.contentHash, 6)}
           </dd>
         </div>
         <div className="flex justify-between gap-4 border-t border-border/80 pt-2">

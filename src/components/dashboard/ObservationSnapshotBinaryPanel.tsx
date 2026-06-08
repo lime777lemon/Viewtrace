@@ -77,52 +77,49 @@ export function ObservationSnapshotBinaryPanel({
 
   if (!snapshotSha256) {
     return (
-      <div className="rounded-xl border border-border bg-surface-elevated p-4 sm:col-span-2">
-        <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
-          {t.titleBinary}
-        </p>
-        <p className="mt-1 text-sm text-ink-muted">
-          {t.hintNoHash}
-        </p>
-      </div>
+      <section className="rounded-2xl border border-dashed border-border bg-surface-elevated p-5 sm:p-6">
+        <h2 className="text-sm font-semibold text-ink">{t.titleIntegrity}</h2>
+        <p className="mt-2 text-sm leading-relaxed text-ink-muted">{t.hintNoHash}</p>
+      </section>
     );
   }
 
   return (
-    <div className="rounded-xl border border-border bg-surface-elevated p-4 sm:col-span-2">
-      <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
+    <section className="rounded-2xl border-2 border-accent/35 bg-surface-elevated p-5 shadow-sm sm:p-6">
+      <h2 className="font-display text-lg font-semibold tracking-tight text-ink">
         {t.titleIntegrity}
-      </p>
-      <div className="mt-1 space-y-3 text-sm text-ink">
-        <p className="text-xs text-ink-muted">
-          {t.hintHow}
+      </h2>
+      <p className="mt-2 text-sm leading-relaxed text-ink-muted">{t.titleIntegrityHint}</p>
+
+      <div className="mt-5 rounded-xl border border-border bg-surface px-4 py-4">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-accent">
+          {t.sha256Label}
         </p>
+        <p className="mt-2 break-all font-mono text-sm leading-relaxed text-ink">
+          {snapshotSha256}
+        </p>
+      </div>
+
+      <div className="mt-4 space-y-3 text-sm text-ink">
         {typeof snapshotBytes === "number" ? (
           <p className="text-xs text-ink-muted">
             {t.bytesAtCapture}: {snapshotBytes.toLocaleString()} bytes
             {snapshotContentType ? ` · ${snapshotContentType}` : ""}
           </p>
         ) : null}
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-muted">
-            SHA-256
-          </p>
-          <p className="break-all font-mono text-xs text-ink-muted">{snapshotSha256}</p>
-        </div>
         {snapshotPhash ? (
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-muted">
               {t.phashAtCapture}
             </p>
-            <p className="break-all font-mono text-xs text-ink-muted">{snapshotPhash}</p>
+            <p className="mt-1 break-all font-mono text-xs text-ink-muted">{snapshotPhash}</p>
           </div>
         ) : (
-          <p className="text-xs text-ink-muted">
-            {t.phashMissing}
-          </p>
+          <p className="text-xs text-ink-muted">{t.phashMissing}</p>
         )}
+        <p className="text-xs text-ink-muted">{t.hintHow}</p>
         {snapshotImageUrl && /^https?:\/\//i.test(snapshotImageUrl) ? (
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3 pt-1">
             <button
               type="button"
               disabled={pending}
@@ -136,6 +133,6 @@ export function ObservationSnapshotBinaryPanel({
         ) : null}
         {message ? <p className="text-sm text-ink">{message}</p> : null}
       </div>
-    </div>
+    </section>
   );
 }

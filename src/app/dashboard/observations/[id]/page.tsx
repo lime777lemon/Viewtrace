@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { ObservationAnnotationPanel } from "@/components/dashboard/ObservationAnnotationPanel";
+import { ObservationCaptureConditionsPanel } from "@/components/dashboard/ObservationCaptureConditionsPanel";
 import { ObservationCaptureTierBanner } from "@/components/dashboard/ObservationCaptureTierBanner";
 import { ObservationDetailSnapshotSection } from "@/components/dashboard/ObservationDetailSnapshotSection";
 import { ObservationDigitalSeal } from "@/components/dashboard/ObservationDigitalSeal";
 import { ObservationNotVisible } from "@/components/dashboard/ObservationNotVisible";
+import { ObservationLivePageComparePanel } from "@/components/dashboard/ObservationLivePageComparePanel";
 import { ObservationSnapshotBinaryPanel } from "@/components/dashboard/ObservationSnapshotBinaryPanel";
 import { getSession } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -12,9 +15,7 @@ import { getCachedUrlPreviewForObservation } from "@/lib/demo/observation-snapsh
 import { getObservationMergedForPlan } from "@/lib/demo/user-observations";
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
 import { reconcileObservationContentHashIfNeeded } from "@/lib/observation-content-hash-repair";
-import {
-  OBSERVATION_CONTENT_HASH_VERSION,
-} from "@/lib/observation-content-hash";
+import { contentHashVersionForObservation } from "@/lib/observation-content-hash";
 import { ObservationWatchPanel } from "@/components/dashboard/ObservationWatchPanel";
 import { getPlan } from "@/lib/plans";
 import {
@@ -25,7 +26,6 @@ import {
   type WatchNotifyMode,
 } from "@/lib/observation-watch-schedule";
 import { copy } from "@/lib/i18n";
-import { localizeObservationNote } from "@/lib/i18n/observation-persisted-copy";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { sanitizeObservationRouteId } from "@/lib/observation-route-id";
 import { findPreviousObservationWithSnapshot } from "@/lib/observation-previous";
@@ -66,7 +66,9 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
   const sp = await searchParams;
   const locale = await getRequestLocale();
   const rt = copy[locale].observationReport;
+  const vr = copy[locale].observationVerificationReport;
   const t = copy[locale].observationDetail;
+  const csvExportCopy = copy[locale].observationsCsvExport;
   const autoObsCopy = copy[locale].dashboardAutoObs;
   const session = await getSession();
   if (!session) {
@@ -141,6 +143,36 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
         })
       : null;
 
+  const contentHashVersion = contentHashVersionForObservation(obs);
+
+  const captureConditionsCopy = {
+    title: t.captureConditionsTitle,
+    legacyMissing: t.captureConditionsLegacy,
+    browser: t.captureBrowser,
+    userAgent: t.captureUserAgent,
+    country: t.captureCountry,
+    state: t.captureState,
+    viewport: t.captureViewport,
+    captureScope: t.captureScope,
+    captureScopeFullPage: t.captureScopeFullPage,
+    captureScopeViewport: t.captureScopeViewport,
+    proxyMode: t.captureProxyMode,
+    proxyProvider: t.captureProxyProvider,
+    engine: t.captureEngine,
+    engineBrowserless: t.captureEngineBrowserless,
+    engineMicrolink: t.captureEngineMicrolink,
+    engineDirectFetch: t.captureEngineDirectFetch,
+    engineFormUpload: t.captureEngineFormUpload,
+    browserlessHost: t.captureBrowserlessHost,
+    browserlessApi: t.captureBrowserlessApi,
+    waitUntil: t.captureWaitUntil,
+    imageSize: t.captureImageSize,
+    proxyModeNone: t.captureProxyNone,
+    proxyModeResidential: t.captureProxyResidential,
+    proxyModeExternal: t.captureProxyExternal,
+    proxyModeRetryWithout: t.captureProxyRetryWithout,
+  };
+
   const comparePrevious = previousRaw
     ? {
         id: previousRaw.id,
@@ -172,15 +204,50 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
 
       <div className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="font-display text-2xl font-semibold tracking-tight">{t.title}</h1>
-        <Link
-          href={`/dashboard/observations/${obs.id}/report`}
-          className="text-sm font-semibold text-accent hover:text-accent-hover"
-        >
-          {rt.openReport} →
-        </Link>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-semibold">
+          <Link
+            href={`/dashboard/observations/${obs.id}/verification`}
+            className="text-accent hover:text-accent-hover"
+          >
+            {vr.openReport} →
+          </Link>
+          <Link
+            href={`/dashboard/observations/${obs.id}/report`}
+            className="text-ink-muted hover:text-accent"
+          >
+            {rt.openReport} →
+          </Link>
+        </div>
       </div>
 
       <ObservationCaptureTierBanner obs={obs} locale={locale} />
+
+      <div className="space-y-1">
+        <h2 className="font-display text-lg font-semibold text-ink">{t.evidenceTitle}</h2>
+        <p className="text-sm text-ink-muted">{t.evidenceHint}</p>
+      </div>
+
+      <ObservationSnapshotBinaryPanel
+        observationId={obs.id}
+        locale={locale}
+        snapshotSha256={obs.snapshotSha256}
+        snapshotPhash={obs.snapshotPhash}
+        snapshotBytes={obs.snapshotBytes}
+        snapshotContentType={obs.snapshotContentType}
+        snapshotImageUrl={obs.snapshotImageUrl}
+      />
+
+      <ObservationLivePageComparePanel
+        observationId={obs.id}
+        locale={locale}
+        regionLabel={obs.regionLabel}
+        canCompare={
+          obs.status === "success" &&
+          Boolean(obs.snapshotImageUrl?.trim()) &&
+          Boolean(obs.regionValue?.trim()) &&
+          Boolean(obs.url?.trim())
+        }
+      />
 
       <ObservationDigitalSeal obs={obs} locale={locale} />
 
@@ -216,7 +283,7 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
         </div>
         <div className="rounded-xl border border-border bg-surface-elevated p-4 sm:col-span-2">
           <dt className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
-            {t.status}
+            {t.captureOutcome}
           </dt>
           <dd className="mt-1 text-sm text-ink">
             {obs.status === "success"
@@ -224,18 +291,18 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
               : obs.status === "failure"
                 ? t.statusFailure
                 : t.statusPending}
-            {obs.note ? ` — ${localizeObservationNote(obs.note, locale)}` : ""}
           </dd>
         </div>
         <div className="rounded-xl border border-border bg-surface-elevated p-4 sm:col-span-2">
           <dt className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
             {t.integrityTitle}
           </dt>
-          <dd className="mt-1 space-y-2 text-sm text-ink">
+          <dd className="mt-1 text-xs leading-relaxed text-ink-muted">{t.integritySubtitle}</dd>
+          <dd className="mt-2 space-y-2 text-sm text-ink">
             {contentIntegrity === "ok" ? (
               <>
                 <p>
-                  {t.integrityOk.replace("{version}", String(OBSERVATION_CONTENT_HASH_VERSION))}
+                  {t.integrityOk.replace("{version}", String(contentHashVersion))}
                 </p>
                 {obs.contentHash ? (
                   <p className="break-all font-mono text-xs text-ink-muted">
@@ -262,14 +329,10 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
             )}
           </dd>
         </div>
-        <ObservationSnapshotBinaryPanel
-          observationId={obs.id}
+        <ObservationCaptureConditionsPanel
+          conditions={obs.captureConditions}
+          copy={captureConditionsCopy}
           locale={locale}
-          snapshotSha256={obs.snapshotSha256}
-          snapshotPhash={obs.snapshotPhash}
-          snapshotBytes={obs.snapshotBytes}
-          snapshotContentType={obs.snapshotContentType}
-          snapshotImageUrl={obs.snapshotImageUrl}
         />
         {plan.autoObservationWatch && obs.regionValue ? (
           <ObservationWatchPanel
@@ -299,11 +362,30 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
               webhookLabel: t.watchWebhookLabel,
               webhookHint: t.watchWebhookHint,
               webhookPlaceholder: t.watchWebhookPlaceholder,
+              shareButton: t.watchShareButton,
+              shareCopied: t.watchShareCopied,
+              shareFailed: t.watchShareFailed,
+              csvExportButton: t.watchCsvExportButton,
+              csvExportPending: t.watchCsvExportPending,
+              csvAuditCheckbox: csvExportCopy.auditCheckbox,
+              csvModeStandard: csvExportCopy.modeStandard,
+              csvModeAudit: csvExportCopy.modeAudit,
             }}
             initialWebhookUrl={watchWebhookUrl || null}
+            showShare={plan.autoObservationWatch}
+            showCsvExport={plan.csvExport}
           />
         ) : null}
       </dl>
+
+      <ObservationAnnotationPanel
+        observationId={obs.id}
+        locale={locale}
+        initialNote={obs.note ?? ""}
+        initialTags={obs.tags ?? []}
+        initialFolder={obs.folder ?? ""}
+        initialReviewStatus={obs.reviewStatus}
+      />
 
       <ObservationDetailSnapshotSection
         obs={obs}

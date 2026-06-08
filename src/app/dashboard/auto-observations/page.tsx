@@ -33,6 +33,7 @@ export default async function AutoObservationsPage({
   const plan = getPlan(session.plan);
   const t = copy[locale].dashboardAutoObs;
   const tDetail = copy[locale].observationDetail;
+  const csvExportCopy = copy[locale].observationsCsvExport;
 
   const panelCopy: ObservationWatchPanelCopy = {
     title: tDetail.watchTitle,
@@ -52,6 +53,14 @@ export default async function AutoObservationsPage({
     webhookLabel: tDetail.watchWebhookLabel,
     webhookHint: tDetail.watchWebhookHint,
     webhookPlaceholder: tDetail.watchWebhookPlaceholder,
+    shareButton: tDetail.watchShareButton,
+    shareCopied: tDetail.watchShareCopied,
+    shareFailed: tDetail.watchShareFailed,
+    csvExportButton: tDetail.watchCsvExportButton,
+    csvExportPending: tDetail.watchCsvExportPending,
+    csvAuditCheckbox: csvExportCopy.auditCheckbox,
+    csvModeStandard: csvExportCopy.modeStandard,
+    csvModeAudit: csvExportCopy.modeAudit,
   };
 
   const webhookCopy = {
@@ -104,6 +113,23 @@ export default async function AutoObservationsPage({
     .eq("user_id", session.userId)
     .order("updated_at", { ascending: false });
 
+  const { data: observationRows } = await supabase
+    .from("observations")
+    .select("id,url,region,captured_at")
+    .eq("user_id", session.userId)
+    .order("captured_at", { ascending: false });
+
+  const latestObservationIdByWatchKey: Record<string, string> = {};
+  for (const row of observationRows ?? []) {
+    const url = String(row.url ?? "").trim();
+    const region = String(row.region ?? "").trim();
+    if (!url || !region) continue;
+    const key = `${url}\u0000${region}`;
+    if (!latestObservationIdByWatchKey[key]) {
+      latestObservationIdByWatchKey[key] = String(row.id);
+    }
+  }
+
   const watches = (watchRows ?? []).map((r) => ({
     id: String(r.id),
     url: String(r.url ?? ""),
@@ -127,6 +153,10 @@ export default async function AutoObservationsPage({
       copy={t}
       scheduleCopy={scheduleCopy}
       webhookCopy={webhookCopy}
+      panelCopy={panelCopy}
+      latestObservationIdByWatchKey={latestObservationIdByWatchKey}
+      showShare={plan.autoObservationWatch}
+      showCsvExport={plan.csvExport}
       showInvalidBanner={sp.error === "invalid"}
       showInvalidUrlBanner={sp.error === "invalid_url"}
       showInvalidRegionBanner={sp.error === "invalid_region"}

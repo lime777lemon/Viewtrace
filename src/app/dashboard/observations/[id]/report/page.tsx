@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ViewtraceLogo } from "@/components/brand/ViewtraceLogo";
+import { ObservationCaptureConditionsPanel } from "@/components/dashboard/ObservationCaptureConditionsPanel";
 import { ObservationNotVisible } from "@/components/dashboard/ObservationNotVisible";
 import { PrintReportButton } from "@/components/dashboard/PrintReportButton";
 import { getSession } from "@/lib/auth/session";
@@ -13,7 +14,7 @@ import { copy } from "@/lib/i18n";
 import { localizeObservationNote } from "@/lib/i18n/observation-persisted-copy";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { sanitizeObservationRouteId } from "@/lib/observation-route-id";
-import { OBSERVATION_CONTENT_HASH_VERSION } from "@/lib/observation-content-hash";
+import { contentHashVersionForObservation } from "@/lib/observation-content-hash";
 import { resolveObservationCaptureTier } from "@/lib/observation-capture-tier";
 
 type Props = { params: Promise<{ id: string }> };
@@ -40,6 +41,7 @@ export default async function ObservationReportPage({ params }: Props) {
   if (!id) notFound();
   const locale = await getRequestLocale();
   const t = copy[locale].observationReport;
+  const td = copy[locale].observationDetail;
 
   const session = await getSession();
   if (!session) {
@@ -84,6 +86,36 @@ export default async function ObservationReportPage({ params }: Props) {
             none: ct.hintNoImage,
           } as const
         )[captureTier];
+  const contentHashVersion = contentHashVersionForObservation(obs);
+
+  const captureConditionsCopy = {
+    title: td.captureConditionsTitle,
+    legacyMissing: td.captureConditionsLegacy,
+    browser: td.captureBrowser,
+    userAgent: td.captureUserAgent,
+    country: td.captureCountry,
+    state: td.captureState,
+    viewport: td.captureViewport,
+    captureScope: td.captureScope,
+    captureScopeFullPage: td.captureScopeFullPage,
+    captureScopeViewport: td.captureScopeViewport,
+    proxyMode: td.captureProxyMode,
+    proxyProvider: td.captureProxyProvider,
+    engine: td.captureEngine,
+    engineBrowserless: td.captureEngineBrowserless,
+    engineMicrolink: td.captureEngineMicrolink,
+    engineDirectFetch: td.captureEngineDirectFetch,
+    engineFormUpload: td.captureEngineFormUpload,
+    browserlessHost: td.captureBrowserlessHost,
+    browserlessApi: td.captureBrowserlessApi,
+    waitUntil: td.captureWaitUntil,
+    imageSize: td.captureImageSize,
+    proxyModeNone: td.captureProxyNone,
+    proxyModeResidential: td.captureProxyResidential,
+    proxyModeExternal: td.captureProxyExternal,
+    proxyModeRetryWithout: td.captureProxyRetryWithout,
+  };
+
   const integrityLabel =
     integrity === "ok"
       ? locale === "ja"
@@ -152,6 +184,17 @@ export default async function ObservationReportPage({ params }: Props) {
         ) : null}
 
         <section>
+          <h2 className="text-sm font-semibold text-ink">{t.sectionCaptureConditions}</h2>
+          <div className="mt-3">
+            <ObservationCaptureConditionsPanel
+              conditions={obs.captureConditions}
+              copy={captureConditionsCopy}
+              locale={locale}
+            />
+          </div>
+        </section>
+
+        <section>
           <h2 className="text-sm font-semibold text-ink">{t.sectionUrl}</h2>
           <p className="mt-2 break-all font-mono text-sm text-ink">{obs.url}</p>
         </section>
@@ -195,7 +238,7 @@ export default async function ObservationReportPage({ params }: Props) {
           <dl className="mt-3 space-y-3 font-mono text-xs text-ink">
             <div>
               <dt className="text-ink-muted">
-                {t.hashContent} (v{OBSERVATION_CONTENT_HASH_VERSION})
+                {t.hashContent} (v{contentHashVersion})
               </dt>
               <dd className="mt-1 break-all">{obs.contentHash ?? "—"}</dd>
               <dd className="mt-1 text-ink-muted">

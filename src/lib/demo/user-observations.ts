@@ -1,11 +1,16 @@
 import { cookies } from "next/headers";
 import { getSession } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { Observation, ObservationHistoryEvent } from "@/lib/demo/observations";
+import type {
+  Observation,
+  ObservationHistoryEvent,
+  ObservationReviewStatus,
+} from "@/lib/demo/observations";
 import type { PlanId } from "@/lib/plans";
 import { getPlan } from "@/lib/plans";
 import { getRegionOptions } from "@/lib/regions";
 import type { PostgrestError } from "@supabase/supabase-js";
+import { parseCaptureConditionsFromDb } from "@/lib/capture-conditions";
 import { computeObservationContentHash } from "@/lib/observation-content-hash";
 import { sanitizeObservationRouteId } from "@/lib/observation-route-id";
 
@@ -15,7 +20,24 @@ const MAX_ITEMS = 35;
 const MAX_COOKIE_BYTES = 4200;
 
 const OBSERVATION_ROW_SELECT =
-  "id,url,region,region_label,status,note,page_title,snapshot_image_url,captured_at,events,content_hash,snapshot_sha256,snapshot_phash,snapshot_bytes,snapshot_content_type" as const;
+  "id,url,region,region_label,status,note,tags,folder,review_status,page_title,snapshot_image_url,captured_at,events,content_hash,snapshot_sha256,snapshot_phash,snapshot_bytes,snapshot_content_type,capture_conditions" as const;
+
+const REVIEW_STATUSES = new Set<ObservationReviewStatus>([
+  "open",
+  "reviewed",
+  "archived",
+  "flagged",
+]);
+
+function parseTagsFromDb(raw: unknown): string[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const tags = raw
+    .filter((t): t is string => typeof t === "string")
+    .map((t) => t.trim())
+    .filter((t) => t.length > 0 && t.length <= 32)
+    .slice(0, 12);
+  return tags.length ? tags : undefined;
+}
 
 function sortByCapturedAtDesc(list: Observation[]): Observation[] {
   return list.slice().sort((a, b) => new Date(b.capturedAt).getTime() - new Date(a.capturedAt).getTime());
@@ -45,6 +67,17 @@ function mapDbRowToObservation(
     capturedAt,
     status,
     note: typeof row.note === "string" ? row.note : undefined,
+    tags: parseTagsFromDb(row.tags),
+    folder:
+      typeof row.folder === "string" && row.folder.trim() && row.folder.length <= 120
+        ? row.folder.trim()
+        : undefined,
+    reviewStatus: (() => {
+      const rs = typeof row.review_status === "string" ? row.review_status : "";
+      return REVIEW_STATUSES.has(rs as ObservationReviewStatus)
+        ? (rs as ObservationReviewStatus)
+        : undefined;
+    })(),
     pageTitle: typeof row.page_title === "string" ? row.page_title : undefined,
     snapshotImageUrl: typeof row.snapshot_image_url === "string" ? row.snapshot_image_url : undefined,
     events: Array.isArray(row.events) ? (row.events as ObservationHistoryEvent[]) : undefined,
@@ -76,6 +109,7 @@ function mapDbRowToObservation(
       typeof row.snapshot_content_type === "string" && row.snapshot_content_type.trim()
         ? row.snapshot_content_type.trim()
         : undefined,
+    captureConditions: parseCaptureConditionsFromDb(row.capture_conditions),
   };
   return isObservation(obs) ? obs : null;
 }
@@ -108,6 +142,12 @@ function isObservation(x: unknown): x is Observation {
     typeof o.capturedAt === "string" &&
     (o.status === "success" || o.status === "failure" || o.status === "pending") &&
     (o.note === undefined || (typeof o.note === "string" && o.note.length < 500)) &&
+    (o.tags === undefined ||
+      (Array.isArray(o.tags) &&
+        o.tags.length <= 12 &&
+        o.tags.every((t) => typeof t === "string" && t.length > 0 && t.length <= 32))) &&
+    (o.folder === undefined || (typeof o.folder === "string" && o.folder.length <= 120)) &&
+    (o.reviewStatus === undefined || REVIEW_STATUSES.has(o.reviewStatus as ObservationReviewStatus)) &&
     (o.pageTitle === undefined || (typeof o.pageTitle === "string" && o.pageTitle.length < 400)) &&
     (o.snapshotImageUrl === undefined ||
       (typeof o.snapshotImageUrl === "string" &&
@@ -259,6 +299,9 @@ export async function appendUserObservation(
     region_label: obs.regionLabel,
     status: obs.status,
     note: obs.note ?? null,
+    tags: obs.tags ?? [],
+    folder: obs.folder ?? null,
+    review_status: obs.reviewStatus ?? null,
     page_title: obs.pageTitle ?? null,
     snapshot_image_url: obs.snapshotImageUrl ?? null,
     captured_at: obs.capturedAt,
@@ -268,6 +311,7 @@ export async function appendUserObservation(
     snapshot_phash: obs.snapshotPhash ?? null,
     snapshot_bytes: obs.snapshotBytes ?? null,
     snapshot_content_type: obs.snapshotContentType ?? null,
+    capture_conditions: obs.captureConditions ?? null,
     updated_at: new Date().toISOString(),
   };
 
