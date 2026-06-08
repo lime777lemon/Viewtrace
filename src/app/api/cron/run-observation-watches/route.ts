@@ -7,6 +7,10 @@ import { getPngDimensions } from "@/lib/png-dimensions";
 import type { Observation } from "@/lib/demo/observations";
 import { computeObservationContentHash } from "@/lib/observation-content-hash";
 import {
+  buildPublicVerifyUrlForObservation,
+  generateObservationVerifyToken,
+} from "@/lib/observation-verify-token";
+import {
   clampRepeatCount,
   computeNextRunAfter,
   isDailyWatchDueOnCronDay,
@@ -346,6 +350,7 @@ export async function POST(req: Request) {
       events: undefined,
     };
     const contentHash = computeObservationContentHash(obsForHash);
+    const verifyToken = generateObservationVerifyToken();
 
     const { error: insertObsError } = await svc.from("observations").insert({
       id: obsId,
@@ -364,6 +369,7 @@ export async function POST(req: Request) {
       snapshot_bytes: snapshotBytesStored,
       snapshot_content_type: snapshotContentTypeStored,
       capture_conditions: captureConditions,
+      verify_token: verifyToken,
     });
 
     if (insertObsError) {
@@ -469,6 +475,7 @@ export async function POST(req: Request) {
         snapshotSha256: snapshotSha256Stored ?? undefined,
         diffRatio,
         recordUrl: openUrl,
+        verifyUrl: buildPublicVerifyUrlForObservation(verifyToken),
       });
       if (!posted) {
         console.warn("[cron] webhook post failed", { watchId, userId });

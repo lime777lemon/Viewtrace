@@ -24,6 +24,7 @@ export type ObservationWebhookPayload = {
   snapshotSha256?: string;
   diffRatio?: number;
   recordUrl: string;
+  verifyUrl?: string;
 };
 
 /** Slack / Teams / Zapier / Make 等の incoming webhook 向け JSON POST（失敗しても throw しない） */

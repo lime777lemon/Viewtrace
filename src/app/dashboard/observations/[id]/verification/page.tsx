@@ -1,15 +1,20 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ViewtraceLogo } from "@/components/brand/ViewtraceLogo";
+import { EvidenceReportSheet } from "@/components/dashboard/EvidenceReportSheet";
 import { ObservationNotVisible } from "@/components/dashboard/ObservationNotVisible";
 import { PrintReportButton } from "@/components/dashboard/PrintReportButton";
 import { getSession } from "@/lib/auth/session";
 import { getObservationMergedForPlan } from "@/lib/demo/user-observations";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
 import { copy } from "@/lib/i18n";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { sanitizeObservationRouteId } from "@/lib/observation-route-id";
+import {
+  buildPublicVerifyUrlForObservation,
+  ensureObservationVerifyTokenForUser,
+} from "@/lib/observation-verify-token";
 import { formatVerificationReportCountry } from "@/lib/verification-report-country";
 
 type Props = { params: Promise<{ id: string }> };
@@ -36,6 +41,7 @@ export default async function ObservationVerificationReportPage({ params }: Prop
   if (!id) notFound();
   const locale = await getRequestLocale();
   const t = copy[locale].observationVerificationReport;
+  const td = copy[locale].observationDetail;
 
   const session = await getSession();
   if (!session) {
@@ -52,17 +58,31 @@ export default async function ObservationVerificationReportPage({ params }: Prop
     );
   }
 
+  const supabase = await createSupabaseServerClient();
+  const verifyToken = await ensureObservationVerifyTokenForUser(supabase, obs.id);
+  const verifyUrl = verifyToken ? buildPublicVerifyUrlForObservation(verifyToken) : "—";
+
   const capturedLabel = `${formatJaDateTime(obs.capturedAt)} · ${formatUtcLabel(obs.capturedAt)}`;
   const country = formatVerificationReportCountry(obs);
 
-  const rows: { label: string; value: string; mono?: boolean }[] = [
-    { label: t.fieldObservationId, value: obs.id, mono: true },
-    { label: t.fieldUrl, value: obs.url, mono: true },
-    { label: t.fieldCaptureTime, value: capturedLabel },
-    { label: t.fieldCountry, value: country },
-    { label: t.fieldSha256, value: obs.snapshotSha256?.trim() || "—", mono: true },
-    { label: t.fieldPhash, value: obs.snapshotPhash?.trim() || "—", mono: true },
-  ];
+  const reportCopy = {
+    title: t.title,
+    subtitle: t.subtitle,
+    disclaimer: t.disclaimer,
+    fieldObservationId: t.fieldObservationId,
+    fieldUrl: t.fieldUrl,
+    fieldCaptureTime: t.fieldCaptureTime,
+    fieldCountry: t.fieldCountry,
+    fieldScreenshot: t.fieldScreenshot,
+    fieldSha256: t.fieldSha256,
+    fieldContentHash: t.fieldContentHash,
+    fieldVerifyUrl: t.fieldVerifyUrl,
+    fieldStatus: t.fieldStatus,
+    statusSuccess: td.statusSuccess,
+    statusFailure: td.statusFailure,
+    statusPending: td.statusPending,
+    noScreenshot: t.noScreenshot,
+  };
 
   return (
     <>
@@ -71,12 +91,12 @@ export default async function ObservationVerificationReportPage({ params }: Prop
           __html: `
             @media print {
               .no-print { display: none !important; }
-              .verification-sheet {
+              .evidence-report-sheet {
                 max-width: none !important;
                 padding: 0 !important;
                 box-shadow: none !important;
               }
-              @page { size: A4 portrait; margin: 18mm; }
+              @page { size: A4 portrait; margin: 14mm; }
             }
           `,
         }}
@@ -89,41 +109,31 @@ export default async function ObservationVerificationReportPage({ params }: Prop
           ← {t.back}
         </Link>
         <div className="flex flex-wrap items-center gap-4">
-          <PrintReportButton label={t.print} />
+          <PrintReportButton label={t.generateButton} />
           <p className="text-sm text-ink-muted">{t.printHint}</p>
         </div>
+        {verifyUrl !== "—" ? (
+          <p className="text-sm text-ink-muted">
+            {t.verifyUrlHint}{" "}
+            <a href={verifyUrl} className="break-all font-mono text-xs text-accent hover:underline">
+              {verifyUrl}
+            </a>
+          </p>
+        ) : null}
       </div>
 
-      <article className="verification-sheet mx-auto max-w-2xl px-4 pb-16 sm:px-6 sm:pb-20 print:pb-0">
-        <div className="rounded-2xl border border-border bg-surface-elevated px-6 py-8 shadow-sm print:border-0 print:shadow-none sm:px-8 sm:py-10">
-          <header className="border-b border-border pb-6">
-            <ViewtraceLogo className="h-7 w-auto sm:h-8" priority={false} />
-            <h1 className="mt-4 font-display text-xl font-semibold tracking-tight text-ink sm:text-2xl">
-              {t.title}
-            </h1>
-            <p className="mt-2 text-sm text-ink-muted">{t.subtitle}</p>
-          </header>
-
-          <dl className="mt-6 divide-y divide-border">
-            {rows.map((row) => (
-              <div key={row.label} className="grid gap-1 py-4 sm:grid-cols-[9rem_1fr] sm:gap-4">
-                <dt className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-                  {row.label}
-                </dt>
-                <dd
-                  className={`text-sm text-ink ${row.mono ? "break-all font-mono text-xs leading-relaxed" : "leading-relaxed"}`}
-                >
-                  {row.value}
-                </dd>
-              </div>
-            ))}
-          </dl>
-
-          <p className="mt-8 border-t border-border pt-6 text-xs leading-relaxed text-ink-muted">
-            {t.disclaimer}
-          </p>
-        </div>
-      </article>
+      <EvidenceReportSheet
+        copy={reportCopy}
+        observationId={obs.id}
+        url={obs.url}
+        capturedLabel={capturedLabel}
+        country={country}
+        status={obs.status}
+        snapshotImageUrl={obs.snapshotImageUrl}
+        snapshotSha256={obs.snapshotSha256}
+        contentHash={obs.contentHash}
+        verifyUrl={verifyUrl}
+      />
     </>
   );
 }

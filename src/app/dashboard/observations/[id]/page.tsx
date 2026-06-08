@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ObservationAnnotationPanel } from "@/components/dashboard/ObservationAnnotationPanel";
+import { ObservationPublicVerifyLink } from "@/components/dashboard/ObservationPublicVerifyLink";
 import { ObservationCaptureConditionsPanel } from "@/components/dashboard/ObservationCaptureConditionsPanel";
 import { ObservationCaptureTierBanner } from "@/components/dashboard/ObservationCaptureTierBanner";
 import { ObservationDetailSnapshotSection } from "@/components/dashboard/ObservationDetailSnapshotSection";
@@ -28,6 +29,10 @@ import {
 import { copy } from "@/lib/i18n";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { sanitizeObservationRouteId } from "@/lib/observation-route-id";
+import {
+  buildPublicVerifyUrlForObservation,
+  ensureObservationVerifyTokenForUser,
+} from "@/lib/observation-verify-token";
 import { findPreviousObservationWithSnapshot } from "@/lib/observation-previous";
 
 type PageProps = { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string }> };
@@ -91,6 +96,9 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
   }
 
   const supabase = await createSupabaseServerClient();
+
+  const verifyToken = await ensureObservationVerifyTokenForUser(supabase, obs.id);
+  const verifyUrl = verifyToken ? buildPublicVerifyUrlForObservation(verifyToken) : null;
 
   const reconciled = await reconcileObservationContentHashIfNeeded(supabase, obs);
   obs = reconciled.obs;
@@ -293,6 +301,15 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
                 : t.statusPending}
           </dd>
         </div>
+        {verifyUrl ? (
+          <ObservationPublicVerifyLink
+            verifyUrl={verifyUrl}
+            title={t.verifyLinkTitle}
+            copyButton={t.verifyLinkCopy}
+            copiedLabel={t.verifyLinkCopied}
+            failedLabel={t.verifyLinkCopyFailed}
+          />
+        ) : null}
         <div className="rounded-xl border border-border bg-surface-elevated p-4 sm:col-span-2">
           <dt className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
             {t.integrityTitle}

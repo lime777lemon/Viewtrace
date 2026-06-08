@@ -12,6 +12,7 @@ import { getRegionOptions } from "@/lib/regions";
 import type { PostgrestError } from "@supabase/supabase-js";
 import { parseCaptureConditionsFromDb } from "@/lib/capture-conditions";
 import { computeObservationContentHash } from "@/lib/observation-content-hash";
+import { generateObservationVerifyToken } from "@/lib/observation-verify-token";
 import { sanitizeObservationRouteId } from "@/lib/observation-route-id";
 
 export const USER_OBSERVATIONS_COOKIE = "viewtrace_user_obs";
@@ -290,6 +291,7 @@ export async function appendUserObservation(
     .lt("captured_at", retentionCutoff);
 
   const contentHash = computeObservationContentHash(obs);
+  const verifyToken = generateObservationVerifyToken();
 
   const payload = {
     id: obs.id,
@@ -312,6 +314,7 @@ export async function appendUserObservation(
     snapshot_bytes: obs.snapshotBytes ?? null,
     snapshot_content_type: obs.snapshotContentType ?? null,
     capture_conditions: obs.captureConditions ?? null,
+    verify_token: verifyToken,
     updated_at: new Date().toISOString(),
   };
 
