@@ -75,6 +75,7 @@ export default async function ObservationVerificationReportPage({ params }: Prop
     fieldCountry: t.fieldCountry,
     fieldScreenshot: t.fieldScreenshot,
     fieldSha256: t.fieldSha256,
+    fieldSha256Hint: t.fieldSha256Hint,
     fieldContentHash: t.fieldContentHash,
     fieldVerifyUrl: t.fieldVerifyUrl,
     fieldStatus: t.fieldStatus,

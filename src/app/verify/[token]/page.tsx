@@ -95,8 +95,13 @@ export default async function PublicVerifyPage({ params }: Props) {
             <dt className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
               {t.fieldSha256}
             </dt>
-            <dd className="break-all font-mono text-xs leading-relaxed text-ink">
-              {obs.snapshotSha256?.trim() || "—"}
+            <dd className="text-sm text-ink">
+              <p className="break-all font-mono text-xs leading-relaxed">
+                {obs.snapshotSha256?.trim() || "—"}
+              </p>
+              {obs.snapshotSha256?.trim() ? (
+                <p className="mt-1.5 text-xs leading-relaxed text-ink-muted">{t.fieldSha256Hint}</p>
+              ) : null}
             </dd>
           </div>
           <div className="grid gap-1 py-4 sm:grid-cols-[8.5rem_1fr] sm:gap-4">

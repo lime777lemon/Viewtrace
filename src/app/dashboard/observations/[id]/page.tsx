@@ -243,6 +243,7 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
         snapshotBytes={obs.snapshotBytes}
         snapshotContentType={obs.snapshotContentType}
         snapshotImageUrl={obs.snapshotImageUrl}
+        verifyUrl={verifyUrl}
       />
 
       <ObservationLivePageComparePanel

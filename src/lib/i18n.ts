@@ -621,6 +621,8 @@ export const copy = {
       fieldCountry: "Country",
       fieldScreenshot: "Screenshot",
       fieldSha256: "SHA256",
+      fieldSha256Hint:
+        "保存したスクリーンショット画像そのものの指紋です。取得当時のファイルと照合できます。",
       fieldContentHash: "Content Hash",
       fieldVerifyUrl: "Verify URL",
       fieldStatus: "Status",
@@ -629,11 +631,13 @@ export const copy = {
     publicVerify: {
       badge: "公開確認",
       title: "証跡の確認",
-      subtitle: "Viewtrace に記録された取得時点のスクリーンショットと指紋です。ログイン不要で確認できます。",
+      subtitle: "取得時点のスクリーンショットと SHA-256 指紋です。ログイン不要で確認できます。",
       fieldTimestamp: "Timestamp",
       fieldRegion: "Region",
       fieldStatus: "Status",
       fieldSha256: "SHA256",
+      fieldSha256Hint:
+        "保存したスクリーンショット画像そのものの指紋です。取得当時のファイルと照合できます。",
       fieldObservationId: "Observation ID",
       noScreenshot: "スクリーンショットがありません。",
       disclaimer:
@@ -796,8 +800,7 @@ export const copy = {
     snapshotBinary: {
       titleBinary: "保存した画面の詳しい確認",
       titleIntegrity: "画像ファイルの証跡（SHA-256）",
-      titleIntegrityHint:
-        "最も重要な証跡は観測メタデータではなく、保存したスクリーンショット画像そのものです。この SHA-256 で「当時のファイル」と照合できます。",
+      savedScreenshotLabel: "保存したスクリーンショット",
       sha256Label: "画像 SHA-256",
       hintNoHash:
         "画像をこちらで保管した記録だけに SHA-256 が付きます。外部リンク画像のみのときは付きません。",
@@ -810,6 +813,14 @@ export const copy = {
       verifyButton: "保存画像をいま照合する",
       verifying: "照合中…",
       clickOnce: "（押したときだけ保管先から 1 回取得）",
+      shareButton: "共有",
+      shareTitle: "Viewtrace 証跡",
+      shareHeading: "Viewtrace 証跡（Evidence）",
+      shareLabelVerifyUrl: "公開確認 URL（ログイン不要）",
+      shareLabelSnapshot: "スクリーンショット",
+      shareHint: "共有すると Verify URL・SHA-256・画像リンクなどをまとめて送れます。",
+      shareCopied: "証跡データをコピーしました",
+      shareFailed: "共有できませんでした",
       errUnauthorized: "ログインが必要です。",
       errNotFound: "記録が見つかりません。",
       errNoHash: "比較用の印がまだありません。",
@@ -1621,6 +1632,8 @@ export const copy = {
       fieldCountry: "Country",
       fieldScreenshot: "Screenshot",
       fieldSha256: "SHA256",
+      fieldSha256Hint:
+        "Fingerprint of the saved screenshot file—verify it matches the file from capture time.",
       fieldContentHash: "Content Hash",
       fieldVerifyUrl: "Verify URL",
       fieldStatus: "Status",
@@ -1630,11 +1643,13 @@ export const copy = {
       badge: "Public verify",
       title: "Evidence verification",
       subtitle:
-        "Screenshot and fingerprints from capture time—no login required.",
+        "Screenshot and SHA-256 fingerprint from capture time—no login required.",
       fieldTimestamp: "Timestamp",
       fieldRegion: "Region",
       fieldStatus: "Status",
       fieldSha256: "SHA256",
+      fieldSha256Hint:
+        "Fingerprint of the saved screenshot file—verify it matches the file from capture time.",
       fieldObservationId: "Observation ID",
       noScreenshot: "No screenshot available.",
       disclaimer:
@@ -1812,8 +1827,7 @@ export const copy = {
     snapshotBinary: {
       titleBinary: "Deep check on your saved page image",
       titleIntegrity: "Image file evidence (SHA-256)",
-      titleIntegrityHint:
-        "The primary proof is the saved screenshot file—not observation metadata. This SHA-256 lets you verify “the file from capture time.”",
+      savedScreenshotLabel: "Saved screenshot",
       sha256Label: "Image SHA-256",
       hintNoHash:
         "SHA-256 is recorded only when we store the image—not for external-link-only captures.",
@@ -1826,6 +1840,14 @@ export const copy = {
       verifyButton: "Verify stored file now",
       verifying: "Verifying…",
       clickOnce: "(Fetches once from storage when you click)",
+      shareButton: "Share",
+      shareTitle: "Viewtrace evidence",
+      shareHeading: "Viewtrace evidence",
+      shareLabelVerifyUrl: "Public verify URL (no login)",
+      shareLabelSnapshot: "Screenshot",
+      shareHint: "Share copies the verify URL, SHA-256, image link, and file details.",
+      shareCopied: "Evidence copied",
+      shareFailed: "Could not share",
       errUnauthorized: "Please log in.",
       errNotFound: "Record not found.",
       errNoHash: "No compare stamp on this record yet.",

@@ -11,6 +11,7 @@ export type EvidenceReportCopy = {
   fieldCountry: string;
   fieldScreenshot: string;
   fieldSha256: string;
+  fieldSha256Hint: string;
   fieldContentHash: string;
   fieldVerifyUrl: string;
   fieldStatus: string;
@@ -52,13 +53,24 @@ export function EvidenceReportSheet({
         ? copy.statusFailure
         : copy.statusPending;
 
-  const rows: { label: string; value: string; mono?: boolean; isUrl?: boolean }[] = [
+  const rows: {
+    label: string;
+    value: string;
+    mono?: boolean;
+    isUrl?: boolean;
+    hint?: string;
+  }[] = [
     { label: copy.fieldObservationId, value: observationId, mono: true },
     { label: copy.fieldCaptureTime, value: capturedLabel },
     { label: copy.fieldCountry, value: country },
     { label: copy.fieldStatus, value: statusLabel },
     { label: copy.fieldUrl, value: url, mono: true },
-    { label: copy.fieldSha256, value: snapshotSha256?.trim() || "—", mono: true },
+    {
+      label: copy.fieldSha256,
+      value: snapshotSha256?.trim() || "—",
+      mono: true,
+      hint: snapshotSha256?.trim() ? copy.fieldSha256Hint : undefined,
+    },
     { label: copy.fieldContentHash, value: contentHash?.trim() || "—", mono: true },
     { label: copy.fieldVerifyUrl, value: verifyUrl, mono: true, isUrl: true },
   ];
@@ -108,6 +120,9 @@ export function EvidenceReportSheet({
                 ) : (
                   row.value
                 )}
+                {row.hint ? (
+                  <p className="mt-1.5 font-sans text-xs leading-relaxed text-ink-muted">{row.hint}</p>
+                ) : null}
               </dd>
             </div>
           ))}
