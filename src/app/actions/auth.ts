@@ -160,11 +160,8 @@ export async function signupFormAction(
       locale,
       data.user.user_metadata as Record<string, unknown> | undefined,
     );
-    const nextRaw = String(formData.get("next") ?? "").trim();
-    if (nextRaw.startsWith("/") && !nextRaw.startsWith("//")) {
-      redirect(sanitizeDashboardObservationHrefPath(nextRaw));
-    }
-    redirect("/dashboard");
+    // メール確認前の自動ログインでダッシュボードへ飛ばさない（確認メール案内を表示）
+    await supabase.auth.signOut();
   }
 
   return { message: t.signupSuccessMessage };

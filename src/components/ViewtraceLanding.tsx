@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { RegionSearchSection } from "@/components/RegionSearchSection";
+import { RegionSearchSignupSection } from "@/components/RegionSearchSignupSection";
 import { ViewtraceLogo } from "@/components/brand/ViewtraceLogo";
 import { copy, type Locale } from "@/lib/i18n";
 import { LOCALE_COOKIE } from "@/lib/i18n/locale-cookie";
@@ -238,7 +239,7 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                     </a>
                     <div className="border-t border-border p-2 sm:hidden">
                       <Link
-                        href="/login"
+                        href="/login?mode=signup"
                         role="menuitem"
                         className="flex w-full items-center justify-center rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-accent-hover"
                         onClick={() => setMobileNavOpen(false)}
@@ -276,7 +277,7 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                 </button>
               </div>
               <Link
-                href="/login"
+                href="/login?mode=signup"
                 className="hidden rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-accent-hover sm:inline-flex"
               >
                 {t.nav.trial}
@@ -384,7 +385,7 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
             </ul>
             <div className="mt-10 flex flex-wrap gap-3">
               <Link
-                href="/login"
+                href="/login?mode=signup"
                 className="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-accent-hover"
               >
                 {t.hero.trial}
@@ -403,6 +404,8 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
         </section>
 
         <RegionSearchSection locale={locale} labels={t.regionSearch} />
+
+        <RegionSearchSignupSection labels={t.regionSearchSignup} />
 
         <section className="border-b border-border bg-surface-elevated">
           <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
@@ -476,8 +479,8 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                       <span className="h-2 w-2 rounded-full bg-emerald-400" />
                     </div>
                     <div className="space-y-3 p-4">
-                      <div className="h-3 w-3/5 max-w-[180px] rounded bg-slate-200" />
-                      <div className="h-3 w-4/5 max-w-[240px] rounded bg-slate-100" />
+                      <div className="h-3 w-3/5 max-w-45 rounded bg-slate-200" />
+                      <div className="h-3 w-4/5 max-w-60 rounded bg-slate-100" />
                       <div className="mt-6 grid grid-cols-2 gap-3">
                         <div className="h-20 rounded-lg bg-slate-100" />
                         <div className="h-20 rounded-lg bg-slate-100" />
@@ -1156,7 +1159,7 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <Link
-                  href="/login"
+                  href="/login?mode=signup"
                   className="inline-flex flex-1 items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-accent-hover sm:min-w-48"
                 >
                   {t.accountSignup.ctaPrimary}

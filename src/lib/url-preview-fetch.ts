@@ -35,6 +35,11 @@ export type UrlPreviewFetchOptions = {
    * - 取得成功率は上がるが「地域別アクセス」の保証はできないため、デフォルトは false。
    */
   retryWithoutProxyOnFailure?: boolean;
+  /**
+   * true のとき OG 画像より Microlink スクリーンショットを優先（LP 無課金プレビュー向け）。
+   * 地域プロキシは使わない通常アクセスに近い見え方。
+   */
+  preferScreenshotOverOg?: boolean;
 };
 
 /** サーバー側で HTML を取得し OG / title を解決（API ルートと詳細ページで共用） */
@@ -46,6 +51,7 @@ export async function runUrlPreviewFetch(
   const fullPageScreenshot = options.fullPageScreenshot === true;
   const regionValue = options.regionValue?.trim();
   const retryWithoutProxyOnFailure = options.retryWithoutProxyOnFailure === true;
+  const preferScreenshotOverOg = options.preferScreenshotOverOg === true;
   let parsed: URL;
   try {
     parsed = new URL(target);
@@ -218,10 +224,13 @@ export async function runUrlPreviewFetch(
     const { title, image } = extractHtmlPreviewMeta(chunk, finalUrl);
 
     let imageOut = image;
-    if (!imageOut && screenshotFallback) {
-      imageOut = await fetchMicrolinkScreenshotUrl(finalUrl, {
-        fullPage: fullPageScreenshot,
+    if (screenshotFallback && (preferScreenshotOverOg || !imageOut)) {
+      const shot = await fetchMicrolinkScreenshotUrl(finalUrl, {
+        fullPage: preferScreenshotOverOg ? false : fullPageScreenshot,
       });
+      if (shot) {
+        imageOut = shot;
+      }
     }
 
     return {

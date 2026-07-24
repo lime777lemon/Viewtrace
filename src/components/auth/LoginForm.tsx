@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useId, useState } from "react";
+import { useActionState, useEffect, useId, useState } from "react";
 import { authFormAction, signupFormAction } from "@/app/actions/auth";
 import { loginPageCopy } from "@/lib/auth/login-copy";
 import type { LoginLocale } from "@/lib/auth/login-copy";
@@ -21,6 +21,10 @@ export function LoginForm({
   const [signupState, signupAction, signupPending] = useActionState(signupFormAction, null);
   const [showPassword, setShowPassword] = useState(false);
   const [mode, setMode] = useState<Mode>(initialMode);
+
+  useEffect(() => {
+    setMode(initialMode);
+  }, [initialMode]);
   const passwordId = useId();
   const passwordConfirmId = useId();
   const fullNameId = useId();

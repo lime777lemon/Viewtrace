@@ -30,6 +30,9 @@ export type RegionSearchLabels = {
   dashboardHint: string;
   dashboardCta: string;
   previewLiveNote: string;
+  previewLiveNoteMarketing: string;
+  previewDirectAccess: string;
+  regionMarketingHint: string;
   previewLoading: string;
   previewError: string;
   previewOpenLive: string;
@@ -112,7 +115,10 @@ export function RegionSearchPanel({
       const res = await fetch("/api/url-preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: q }),
+        body: JSON.stringify({
+          url: q,
+          ...(mode === "marketing" ? { marketingPreview: true } : {}),
+        }),
       });
       const data = (await res.json()) as {
         ok?: boolean;
@@ -153,6 +159,9 @@ export function RegionSearchPanel({
       />
     );
   }
+
+  const previewRegionLabel =
+    mode === "marketing" ? labels.previewDirectAccess : selectedLabel;
 
   return (
     <div className="space-y-8">
@@ -220,6 +229,9 @@ export function RegionSearchPanel({
                 </option>
               ))}
             </select>
+            {mode === "marketing" ? (
+              <p className="mt-2 text-xs leading-relaxed text-ink-muted">{labels.regionMarketingHint}</p>
+            ) : null}
           </div>
           <div>
             <label htmlFor={queryFieldId} className="block text-sm font-medium text-ink">
@@ -247,7 +259,7 @@ export function RegionSearchPanel({
           </button>
           {mode === "marketing" ? (
             <Link
-              href="/login"
+              href="/login?mode=signup"
               className="text-sm font-semibold text-accent hover:text-accent-hover"
             >
               {locale === "ja" ? "無料で始める →" : "Start for free →"}
@@ -271,7 +283,7 @@ export function RegionSearchPanel({
             <div className="flex items-center gap-2 text-xs font-medium text-ink-muted">
               <span className="h-2 w-2 rounded-full bg-emerald-600" aria-hidden />
               <span>
-                {labels.mockSnapshot} · {selectedLabel} · {exampleTime}
+                {labels.mockSnapshot} · {previewRegionLabel} · {exampleTime}
               </span>
             </div>
             <p className="mt-3 break-all text-sm font-medium text-ink">
@@ -309,13 +321,19 @@ export function RegionSearchPanel({
                         src={livePreview.image}
                         alt=""
                         width={768}
-                        height={384}
-                        className="max-h-48 w-full max-w-lg rounded-lg border border-border object-cover object-top"
+                        height={480}
+                        className={`w-full max-w-lg rounded-lg border border-border object-top ${
+                          mode === "marketing"
+                            ? "max-h-[min(55vh,420px)] object-contain"
+                            : "max-h-48 object-cover"
+                        }`}
                         loading="lazy"
                         unoptimized
                       />
                     ) : null}
-                    <p className="text-xs leading-relaxed text-ink-muted">{labels.previewLiveNote}</p>
+                    <p className="text-xs leading-relaxed text-ink-muted">
+                      {mode === "marketing" ? labels.previewLiveNoteMarketing : labels.previewLiveNote}
+                    </p>
                     <a
                       href={livePreview.canonicalUrl}
                       target="_blank"
@@ -336,17 +354,7 @@ export function RegionSearchPanel({
                           {labels.recordAsObservationHint}
                         </p>
                       </form>
-                    ) : (
-                      <p className="mt-4 text-xs text-ink-muted">
-                        <Link
-                          href="/login?next=/dashboard/region-search"
-                          className="font-semibold text-accent hover:text-accent-hover"
-                        >
-                          {labels.recordAsObservationLogin}
-                        </Link>
-                        <span className="text-ink-muted">{labels.recordAsObservationLoginSuffix}</span>
-                      </p>
-                    )}
+                    ) : null}
                   </div>
                 ) : null}
               </div>

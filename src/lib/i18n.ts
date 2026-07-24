@@ -68,21 +68,21 @@ export const copy = {
     regionSearch: {
       title: "地域を選んで、確認したいページを探す",
       subtitle:
-        "プランに応じた観測ポイントを選び、URL やキーワードを入力して条件を組み立てられます（デモ・本番はログイン後のオブザベーションで実行）。",
+        "URL を入力すると、VPN なしの通常アクセスに近い形でページのプレビューを表示します。地域指定の取得・記録は登録後のオブザベーションで利用できます。",
       planLabel: "カバレッジ",
       planStarter: "Starter",
       planPro: "Pro",
       planStarterHint: "米国の代表州＋主要国",
       planProHint: "米国全州＋主要国",
-      regionLabel: "観測地域",
-      regionAria: "観測する地域を選択",
+      regionLabel: "観測地域（登録後に使用）",
+      regionAria: "登録後のオブザベーションで使う地域",
       queryLabel: "URL またはキーワード",
       queryPlaceholder: "https://example.com/campaign など",
-      submit: "この条件で確認",
-      hint: "送信しても実際の取得は行われません。トライアル登録後に同様の条件でオブザベーションできます。",
-      mockTitle: "条件プレビュー（イメージ）",
-      mockSnapshot: "スナップショット",
-      mockEmptyQuery: "（URL を入力するとここに表示イメージが出ます）",
+      submit: "プレビューを表示",
+      hint: "プレビューは 見本です。選択した地域からの取得は、登録後のオブザベーションで行えます。",
+      mockTitle: "ページプレビュー",
+      mockSnapshot: "スクリーンショット",
+      mockEmptyQuery: "（URL を入力するとここにプレビューが表示されます）",
       dashboardIntro:
         "ログイン中の環境です。プランに応じた観測ポイントと URL を組み合わせ、条件を確認できます。",
       dashboardHint:
@@ -90,7 +90,12 @@ export const copy = {
       dashboardCta: "新規オブザベーションへ →",
       previewLiveNote:
         "※ 選択した地域経由で取得したタイトル・画像です。",
-      previewLoading: "ページ情報・スナップショットを取得しています…（OG 画像が無いサイトは数十秒かかることがあります）",
+      previewLiveNoteMarketing:
+        "※ VPN や地域プロキシは使わず、通常アクセスに近い形で取得したプレビューです。地域別の取得は登録後のオブザベーションで行えます。",
+      previewDirectAccess: "通常アクセス（VPN なし）",
+      regionMarketingHint:
+        "ここで選んだ地域はプレビューには使いません。登録後、オブザベーション記録の取得地域として使えます。",
+      previewLoading: "ページのスクリーンショットを取得しています…（数十秒かかることがあります）",
       previewError: "ページ情報を取得できませんでした。URLを確認するか、下のリンクから直接開いてください。",
       previewOpenLive: "新しいタブで開いて確認",
       previewNotUrl:
@@ -100,6 +105,12 @@ export const copy = {
         "いま取得したタイトル・URL・地域を、アカウントのオブザベーション一覧に保存します。",
       recordAsObservationLogin: "登録して記録する",
       recordAsObservationLoginSuffix: "（ダッシュボードの一覧に保存）",
+    },
+    regionSearchSignup: {
+      title: "地域指定で記録するには登録が必要です",
+      body: "プレビューは見本です。選択した地域からのスクリーンショット取得・証跡の保存は、無料トライアル（最大20回・14日間・クレジットカード不要）から始められます。",
+      ctaPrimary: "無料で始める",
+      ctaSecondary: "ログイン",
     },
     pitch: {
       problemTitle: "「ちゃんと説明した」は、あとから説明責任を果たせますか？",
@@ -1074,21 +1085,21 @@ export const copy = {
     regionSearch: {
       title: "Pick a region, then search what to verify",
       subtitle:
-        "Choose an observation point for your plan, enter a URL or keyword, and preview how you’d run a check (demo—real captures run after sign-in).",
+        "Enter a URL to preview the page via normal access (no VPN). Geo-routed capture and records are available after sign-up.",
       planLabel: "Coverage",
       planStarter: "Starter",
       planPro: "Pro",
       planStarterHint: "Representative US states + major countries",
       planProHint: "All US states + major countries",
-      regionLabel: "Region",
-      regionAria: "Select observation region",
+      regionLabel: "Region (after sign-up)",
+      regionAria: "Region for observations after sign-up",
       queryLabel: "URL or keyword",
       queryPlaceholder: "https://example.com/campaign",
-      submit: "Preview this setup",
-      hint: "Nothing is fetched here. After trial signup you can run observations with the same kind of setup.",
-      mockTitle: "Setup preview (illustrative)",
-      mockSnapshot: "Snapshot",
-      mockEmptyQuery: "(Enter a URL to see a preview line here)",
+      submit: "Show preview",
+      hint: "Preview uses direct access—no VPN or geo proxy. Geo-routed capture runs after sign-up.",
+      mockTitle: "Page preview",
+      mockSnapshot: "Screenshot",
+      mockEmptyQuery: "(Enter a URL to show a preview here)",
       dashboardIntro:
         "You’re signed in. Combine a plan’s observation points with a URL to sanity-check your setup.",
       dashboardHint:
@@ -1096,7 +1107,12 @@ export const copy = {
       dashboardCta: "New observation →",
       previewLiveNote:
         "Title and image are fetched via the selected region.",
-      previewLoading: "Fetching page info and snapshot… (sites without OG images may take up to a minute)",
+      previewLiveNoteMarketing:
+        "Preview fetched without VPN or geo proxy—close to normal browsing. Geo-routed capture is available after sign-up.",
+      previewDirectAccess: "Direct access (no VPN)",
+      regionMarketingHint:
+        "The region you pick here is not used for this preview—it applies to observations after sign-up.",
+      previewLoading: "Fetching a page screenshot… (may take up to a minute)",
       previewError: "Could not fetch page info. Check the URL or open it directly below.",
       previewOpenLive: "Open in new tab to verify",
       previewNotUrl: "Enter a URL (e.g. theestablish.jp) to show title and image here.",
@@ -1105,6 +1121,12 @@ export const copy = {
         "Saves the fetched title, URL, and region to your account’s observation list.",
       recordAsObservationLogin: "Sign up to record",
       recordAsObservationLoginSuffix: " (saved to your dashboard list)",
+    },
+    regionSearchSignup: {
+      title: "Sign up to capture from a region",
+      body: "The preview is illustrative only. Geo-routed screenshots and saved evidence start with a free trial—up to 20 observations, 14 days, no credit card.",
+      ctaPrimary: "Start for free",
+      ctaSecondary: "Log in",
     },
     pitch: {
       problemTitle: "Stakeholders ask what was live—can you meet that accountability next week?",

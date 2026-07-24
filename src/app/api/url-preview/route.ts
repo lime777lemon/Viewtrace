@@ -17,6 +17,7 @@ export async function POST(req: Request) {
   }
 
   const urlInput = typeof (body as { url?: unknown }).url === "string" ? (body as { url: string }).url : "";
+  const marketingPreview = (body as { marketingPreview?: unknown }).marketingPreview === true;
   const target = normalizeUserUrlInput(urlInput);
   if (!target) {
     return NextResponse.json({ ok: false, error: "invalid_url" }, { status: 400 });
@@ -39,7 +40,8 @@ export async function POST(req: Request) {
 
   const result = await runUrlPreviewFetch(target, {
     screenshotFallback: true,
-    fullPageScreenshot,
+    fullPageScreenshot: marketingPreview ? false : fullPageScreenshot,
+    preferScreenshotOverOg: marketingPreview,
   });
   if (!result.ok) {
     const status =
@@ -61,5 +63,6 @@ export async function POST(req: Request) {
     title: result.title,
     image: result.image,
     html: result.html,
+    previewMode: marketingPreview ? "direct_access" : undefined,
   });
 }
