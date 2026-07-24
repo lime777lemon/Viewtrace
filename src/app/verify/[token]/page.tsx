@@ -113,6 +113,21 @@ export default async function PublicVerifyPage({ params }: Props) {
         </dl>
 
         <p className="mt-6 text-xs leading-relaxed text-ink-muted">{t.disclaimer}</p>
+
+        <aside className="mt-10 overflow-hidden rounded-2xl border border-accent/25 bg-accent-soft/40">
+          <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+            <div className="min-w-0">
+              <p className="font-display text-base font-semibold text-ink">{t.ctaTitle}</p>
+              <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">{t.ctaBody}</p>
+            </div>
+            <Link
+              href="/?utm_source=verify_page&utm_medium=referral&utm_campaign=powered_by"
+              className="inline-flex shrink-0 items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-accent-hover"
+            >
+              {t.ctaButton}
+            </Link>
+          </div>
+        </aside>
       </main>
     </div>
   );

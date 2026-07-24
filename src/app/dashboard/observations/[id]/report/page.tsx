@@ -282,6 +282,14 @@ export default async function ObservationReportPage({ params }: Props) {
             </ol>
           </section>
         ) : null}
+
+        <footer className="mt-8 flex items-center gap-3 border-t border-border pt-6">
+          <ViewtraceLogo className="h-6 w-auto" priority={false} />
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-ink">{t.poweredBy}</p>
+            <p className="mt-0.5 text-xs leading-relaxed text-ink-muted">{t.poweredByCta}</p>
+          </div>
+        </footer>
       </article>
     </>
   );

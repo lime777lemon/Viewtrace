@@ -615,6 +615,8 @@ export const copy = {
       hashPerceptual: "見た目の近さ（参考）",
       hashBytesType: "ファイルの大きさ / 形式",
       sectionCaptureConditions: "取得条件（記録時点）",
+      poweredBy: "この記録は Viewtrace で作成されました",
+      poweredByCta: "地域指定の改ざん検知可能な記録。無料トライアルは viewtrace.net から。",
     },
     observationVerificationReport: {
       back: "詳細へ戻る",
@@ -654,6 +656,10 @@ export const copy = {
       noScreenshot: "スクリーンショットがありません。",
       disclaimer:
         "参照用の確認ページです。法的証明の代替にはなりません。リンクを知っている方のみが開けます。",
+      ctaTitle: "この記録は Viewtrace で作成されました",
+      ctaBody:
+        "地域を指定して取得した画面を、URL・時刻・地域とセットで改ざん検知可能な記録として保存できます。無料で試せます（14日・カード不要）。",
+      ctaButton: "無料で始める",
     },
     observationDetail: {
       backToList: "← 一覧へ",
@@ -1638,6 +1644,8 @@ export const copy = {
       hashPerceptual: "Visual similarity (reference)",
       hashBytesType: "File size / type",
       sectionCaptureConditions: "Capture conditions (at record time)",
+      poweredBy: "This record was created with Viewtrace",
+      poweredByCta: "Geo-routed, tamper-evident records. Start a free trial at viewtrace.net.",
     },
     observationVerificationReport: {
       back: "Back to detail",
@@ -1678,6 +1686,10 @@ export const copy = {
       noScreenshot: "No screenshot available.",
       disclaimer:
         "Reference-only page—not a substitute for legal proof. Anyone with the link can view.",
+      ctaTitle: "This record was created with Viewtrace",
+      ctaBody:
+        "Capture how a page rendered from a chosen region and save it with URL, time, and region as a tamper-evident record. Free to try (14 days, no card).",
+      ctaButton: "Start for free",
     },
     observationDetail: {
       backToList: "← Back to list",
