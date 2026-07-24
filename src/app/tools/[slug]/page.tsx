@@ -34,13 +34,22 @@ const TOPIC_BACKDROP_ICON: Partial<Record<TopicSlug, string>> = {
 };
 
 /** ダッシュボードのスクリーンショット（ロケール別）。en 用が無ければ ja 版へフォールバック */
-const SCREENSHOT_JA = "/marketing/screenshots/dashboard-overview.png";
-const SCREENSHOT_EN = "/marketing/screenshots/dashboard-overview-en.png";
+type Screenshot = { src: string; width: number; height: number };
+const SCREENSHOT_JA: Screenshot = {
+  src: "/marketing/screenshots/dashboard-overview.png",
+  width: 1024,
+  height: 549,
+};
+const SCREENSHOT_EN: Screenshot = {
+  src: "/marketing/screenshots/dashboard-overview-en.png",
+  width: 1024,
+  height: 562,
+};
 
-async function resolveDashboardScreenshot(locale: Locale): Promise<string> {
+async function resolveDashboardScreenshot(locale: Locale): Promise<Screenshot> {
   if (locale !== "en") return SCREENSHOT_JA;
   try {
-    await access(join(process.cwd(), "public", SCREENSHOT_EN));
+    await access(join(process.cwd(), "public", SCREENSHOT_EN.src));
     return SCREENSHOT_EN;
   } catch {
     return SCREENSHOT_JA;
@@ -208,10 +217,10 @@ export default async function TopicPage({
           </h2>
           <figure className="mt-6">
             <Image
-              src={dashboardScreenshot}
+              src={dashboardScreenshot.src}
               alt={`${ui.screenshotTitle} — ${c.h1}`}
-              width={1024}
-              height={549}
+              width={dashboardScreenshot.width}
+              height={dashboardScreenshot.height}
               sizes="(min-width: 768px) 768px, 100vw"
               className="h-auto w-full rounded-2xl border border-border shadow-sm"
             />
