@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ViewtraceLogo } from "@/components/brand/ViewtraceLogo";
 import { LogoutButton } from "@/components/dashboard/LogoutButton";
 import type { Locale } from "@/lib/i18n";
@@ -44,6 +44,7 @@ export function DashboardShell({
   children,
 }: DashboardShellProps) {
   const currentPath = usePathname() ?? "";
+  const router = useRouter();
   const t = copy[locale].dashboard;
   const plan = getPlan(planId);
   const nav = [
@@ -59,9 +60,11 @@ export function DashboardShell({
   ] as const;
 
   function setLocale(next: Locale) {
+    if (next === locale) return;
     const maxAgeDays = 365;
     document.cookie = `${LOCALE_COOKIE}=${next}; path=/; max-age=${maxAgeDays * 24 * 60 * 60}`;
-    window.location.reload();
+    // フルリロードせずサーバーコンポーネントだけ再取得（INP 改善）
+    router.refresh();
   }
 
   return (

@@ -1,16 +1,20 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import type { Locale } from "@/lib/i18n";
 import { copy } from "@/lib/i18n";
 import { LOCALE_COOKIE } from "@/lib/i18n/locale-cookie";
 
 export function LegalLocaleToggle({ locale }: { locale: Locale }) {
   const t = copy[locale].legalShell;
+  const router = useRouter();
 
   function setLocale(next: Locale) {
+    if (next === locale) return;
     const maxAgeDays = 365;
     document.cookie = `${LOCALE_COOKIE}=${next}; path=/; max-age=${maxAgeDays * 24 * 60 * 60}`;
-    window.location.reload();
+    // フルリロードせずサーバーコンポーネントだけ再取得（INP 改善）
+    router.refresh();
   }
 
   return (
