@@ -472,23 +472,24 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                     <span className="h-2 w-2 rounded-full bg-emerald-600" />
                     snapshot · US-CA · 2026-05-04 14:32 UTC
                   </div>
-                  <div className="mt-4 flex-1 rounded-lg bg-white/90 shadow-sm ring-1 ring-black/5">
+                  <div className="mt-4 flex flex-1 flex-col overflow-hidden rounded-lg bg-white/90 shadow-sm ring-1 ring-black/5">
                     <div className="flex gap-2 border-b border-black/5 px-3 py-2">
                       <span className="h-2 w-2 rounded-full bg-red-400" />
                       <span className="h-2 w-2 rounded-full bg-amber-400" />
                       <span className="h-2 w-2 rounded-full bg-emerald-400" />
                     </div>
-                    <div className="space-y-3 p-4">
-                      <div className="h-3 w-3/5 max-w-45 rounded bg-slate-200" />
-                      <div className="h-3 w-4/5 max-w-60 rounded bg-slate-100" />
-                      <div className="mt-6 grid grid-cols-2 gap-3">
-                        <div className="h-20 rounded-lg bg-slate-100" />
-                        <div className="h-20 rounded-lg bg-slate-100" />
-                      </div>
+                    <div className="relative flex-1">
+                      <Image
+                        src="/marketing/snapshot-example.png"
+                        alt={locale === "ja" ? "スナップショットの例" : "Example snapshot"}
+                        fill
+                        sizes="(min-width: 1024px) 480px, 100vw"
+                        className="object-cover object-top"
+                      />
                     </div>
                   </div>
                   <p className="mt-3 text-center text-[11px] text-ink-muted">
-                    {locale === "ja" ? "イメージ図（デモ）" : "Illustrative mockup"}
+                    {locale === "ja" ? "スナップショット例" : "Example snapshot"}
                   </p>
                 </div>
               </div>
