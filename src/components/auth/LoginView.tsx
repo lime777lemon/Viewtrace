@@ -13,12 +13,14 @@ export function LoginView({
   nextPath,
   initialMode,
   verified,
+  initialLocale = "en",
 }: {
   nextPath?: string;
   initialMode: Mode;
   verified: boolean;
+  initialLocale?: LoginLocale;
 }) {
-  const [locale, setLocale] = useState<LoginLocale>("en");
+  const [locale, setLocale] = useState<LoginLocale>(initialLocale);
   const t = loginPageCopy[locale];
 
   return (

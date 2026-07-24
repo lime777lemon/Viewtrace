@@ -200,7 +200,8 @@ export function LoginForm({
           role="status"
           className="whitespace-pre-line rounded-xl border border-emerald-200/80 bg-emerald-50 px-3 py-2.5 text-sm leading-relaxed text-emerald-900"
         >
-          {signupState.message}
+          {/* サーバー返却値ではなく現在ロケールの文言を表示（言語切替後も追従させる） */}
+          {t.signupSuccessMessage}
         </p>
       ) : null}
       <button

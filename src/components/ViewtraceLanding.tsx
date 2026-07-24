@@ -8,7 +8,7 @@ import { RegionSearchSignupSection } from "@/components/RegionSearchSignupSectio
 import { ViewtraceLogo } from "@/components/brand/ViewtraceLogo";
 import { copy, type Locale } from "@/lib/i18n";
 import { LOCALE_COOKIE } from "@/lib/i18n/locale-cookie";
-import { getTopicSectionsForLanding, type TopicSlug } from "@/lib/seo/topic-pages";
+import { getTopicSectionsForLanding, topicPagePath, type TopicSlug } from "@/lib/seo/topic-pages";
 
 /** 検索意図カードの背景に薄く敷くアイコン。slug 単位で追加していく */
 const TOPIC_BACKDROP_ICON: Partial<Record<TopicSlug, string>> = {
@@ -932,14 +932,15 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
             <p className="mt-4 max-w-3xl text-sm leading-relaxed text-ink-muted sm:text-base">
               {t.seoTopics.intro}
             </p>
-            <div className="mt-10 space-y-16 border-t border-border pt-10">
+            <div className="mt-10 grid gap-5 border-t border-border pt-10 sm:grid-cols-2">
               {topicSections.map(({ slug, label, h1, paragraphs }) => {
                 const backdrop = TOPIC_BACKDROP_ICON[slug];
                 return (
-                  <article
+                  <Link
                     key={slug}
                     id={`topic-${slug}`}
-                    className="relative scroll-mt-24 overflow-hidden rounded-2xl border border-border bg-surface-elevated p-6 sm:p-8"
+                    href={topicPagePath(slug)}
+                    className="group relative flex scroll-mt-24 flex-col overflow-hidden rounded-2xl border border-border bg-surface-elevated p-6 transition hover:border-ink-muted/40 sm:p-7"
                   >
                     {backdrop ? (
                       <Image
@@ -952,18 +953,20 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                         className="pointer-events-none absolute -right-12 -bottom-16 h-88 w-88 select-none object-contain opacity-[0.08] sm:-right-16 sm:-bottom-20 sm:h-112 sm:w-md"
                       />
                     ) : null}
-                    <div className="relative">
+                    <div className="relative flex flex-1 flex-col">
                       <p className="text-xs font-medium uppercase tracking-wider text-ink-muted">{label}</p>
-                      <h3 className="mt-2 font-display text-xl font-semibold leading-snug text-ink sm:text-2xl">
+                      <h3 className="mt-2 font-display text-lg font-semibold leading-snug text-ink sm:text-xl">
                         {h1}
                       </h3>
-                      <div className="mt-5 space-y-4 text-sm leading-relaxed text-ink-muted sm:text-base">
-                        {paragraphs.map((p, i) => (
-                          <p key={i}>{p}</p>
-                        ))}
-                      </div>
+                      <p className="mt-4 line-clamp-3 flex-1 text-sm leading-relaxed text-ink-muted">
+                        {paragraphs[0]}
+                      </p>
+                      <span className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-accent transition group-hover:gap-2">
+                        {t.seoTopics.readMore}
+                        <span aria-hidden="true">→</span>
+                      </span>
                     </div>
-                  </article>
+                  </Link>
                 );
               })}
             </div>

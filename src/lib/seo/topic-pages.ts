@@ -57,6 +57,60 @@ export function getTopicSectionsForLanding(locale: Locale): {
   });
 }
 
+/** トピックページ本体の相対パス（sitemap・内部リンクで共通利用） */
+export function topicPagePath(slug: TopicSlug): string {
+  return `/tools/${slug}`;
+}
+
+/** slug → 表示ラベル（関連リンク一覧などで利用） */
+export function getTopicLinkLabels(locale: Locale): { slug: TopicSlug; label: string }[] {
+  return TOPIC_SLUGS.map((slug) => ({ slug, label: LINK_LABEL[locale][slug] }));
+}
+
+/** トピック個別ページの共通UI文言（ロケール別） */
+export const TOPIC_PAGE_UI: Record<
+  Locale,
+  {
+    eyebrow: string;
+    ctaPrimary: string;
+    ctaSecondary: string;
+    relatedTitle: string;
+    faqTitle: string;
+    screenshotTitle: string;
+    screenshotCaption: string;
+    backToHome: string;
+    allTopics: string;
+    breadcrumbHome: string;
+  }
+> = {
+  en: {
+    eyebrow: "Guide",
+    ctaPrimary: "Start for free",
+    ctaSecondary: "See pricing",
+    relatedTitle: "Related topics",
+    faqTitle: "Frequently asked questions",
+    screenshotTitle: "See it in your dashboard",
+    screenshotCaption:
+      "Recent observations with URL, region, timestamp, and status—kept together in your workspace.",
+    backToHome: "Back to home",
+    allTopics: "All topics",
+    breadcrumbHome: "Home",
+  },
+  ja: {
+    eyebrow: "ガイド",
+    ctaPrimary: "無料で始める",
+    ctaSecondary: "料金を見る",
+    relatedTitle: "関連トピック",
+    faqTitle: "よくある質問",
+    screenshotTitle: "実際のダッシュボード",
+    screenshotCaption:
+      "URL・地域・取得日時・ステータス付きの観測記録が、ワークスペースにまとまって蓄積されます。",
+    backToHome: "トップへ戻る",
+    allTopics: "トピック一覧",
+    breadcrumbHome: "ホーム",
+  },
+};
+
 type TopicBody = {
   metaTitle: string;
   metaDescription: string;
@@ -232,4 +286,299 @@ const JA: Record<TopicSlug, TopicBody> = {
 
 export function getTopicPageCopy(locale: Locale, slug: TopicSlug): TopicBody {
   return locale === "ja" ? JA[slug] : EN[slug];
+}
+
+/* ------------------------------------------------------------------ */
+/* 使い方ステップ（全トピック共通のプロダクトフロー）                    */
+/* ------------------------------------------------------------------ */
+
+export type HowStep = { title: string; body: string };
+
+const HOW_IT_WORKS: Record<Locale, { title: string; steps: HowStep[] }> = {
+  en: {
+    title: "How it works",
+    steps: [
+      {
+        title: "Pick your region",
+        body: "Choose the country or state you want to observe from—so the capture matches what real users in that market see.",
+      },
+      {
+        title: "Run an observation",
+        body: "Enter the URL and Viewtrace captures how the page rendered from that vantage point.",
+      },
+      {
+        title: "Save with metadata",
+        body: "Every capture is stored with its URL, timestamp, and region, so it still makes sense weeks later.",
+      },
+      {
+        title: "Compare or schedule",
+        body: "Diff runs over time, or schedule reruns with email digests to catch visual drift (Starter / Pro).",
+      },
+    ],
+  },
+  ja: {
+    title: "使い方",
+    steps: [
+      {
+        title: "地域を選ぶ",
+        body: "観測したい国・州を選択します。その市場の実ユーザーに近い見え方で取得できます。",
+      },
+      {
+        title: "観測を実行",
+        body: "URL を入力すると、その地点からページがどう描画されたかを取得します。",
+      },
+      {
+        title: "メタ情報付きで保存",
+        body: "URL・時刻・地域とセットで保存されるため、時間が経っても意味が失われません。",
+      },
+      {
+        title: "比較・定期実行",
+        body: "期間での差分比較や、視覚変化を検知するメール通知付きの定期実行が使えます（Starter / Pro）。",
+      },
+    ],
+  },
+};
+
+export function getHowItWorks(locale: Locale): { title: string; steps: HowStep[] } {
+  return HOW_IT_WORKS[locale];
+}
+
+/* ------------------------------------------------------------------ */
+/* テーマ別 FAQ（FAQPage 構造化データにも利用）                          */
+/* ------------------------------------------------------------------ */
+
+export type TopicFaq = { q: string; a: string };
+
+const FAQ_EN: Record<TopicSlug, TopicFaq[]> = {
+  "geo-screenshot-tool": [
+    {
+      q: "How is this different from taking a screenshot behind a VPN?",
+      a: "A VPN changes your exit IP but rarely stores the URL, timestamp, and region together. Viewtrace routes from the region you pick and saves a replayable record you can reopen and compare later.",
+    },
+    {
+      q: "Can I capture from a specific US state or country?",
+      a: "Yes. You choose the vantage point when you start an observation, and the capture is tied to that region.",
+    },
+    {
+      q: "Do captures stay available after a campaign ends?",
+      a: "Yes. Captures are stored in your workspace with history, so you can revisit or diff them later.",
+    },
+  ],
+  "website-screenshot-from-another-country": [
+    {
+      q: "Why not just use a proxy for a one-off image?",
+      a: "A proxy gives you a picture, not a defensible trail. Viewtrace pairs the image with URL, region, and timestamp so it still makes sense months later.",
+    },
+    {
+      q: "Can I re-check the same page later?",
+      a: "Yes. Re-run the same URL from the same country and keep a timeline of how it changed.",
+    },
+    {
+      q: "How do I choose which country to view from?",
+      a: "You pick the vantage point per observation from your dashboard; available regions are shown when you set up the run.",
+    },
+  ],
+  "ad-verification-tool": [
+    {
+      q: "Does Viewtrace check whether my ad tag fired?",
+      a: "It focuses on what actually rendered—hero, price, or legal line—from a given region. It is visual proof, not tag-firing analytics.",
+    },
+    {
+      q: "Can I be alerted when a landing page changes?",
+      a: "Yes. Scheduled reruns with email digests flag meaningful visual drift so you notice before a client does.",
+    },
+    {
+      q: "Can I share the proof with clients?",
+      a: "Yes. Reopen and export captures to attach to reviews and approvals.",
+    },
+  ],
+  "localized-qa": [
+    {
+      q: "How does this help across many markets?",
+      a: "Every market saves the same record shape—URL, region, and time—so teams compare like-for-like instead of scattered screenshots.",
+    },
+    {
+      q: "Can product and marketing see the same records?",
+      a: "Yes. Observations live in a shared workspace so everyone opens the same source of truth.",
+    },
+    {
+      q: "Can I schedule checks per region?",
+      a: "Yes, on Starter and Pro, with email digests summarizing each run.",
+    },
+  ],
+  "geo-testing-tool": [
+    {
+      q: "Can I repeat the exact same test?",
+      a: "Yes. Re-run the same URL from the same region and keep a timeline you can scroll through.",
+    },
+    {
+      q: "Is there scheduling?",
+      a: "Daily, weekly, and monthly scheduled runs are available on Starter and Pro.",
+    },
+    {
+      q: "How do I validate that a fix rolled out correctly?",
+      a: "Compare before-and-after observations from the affected region to confirm the change is live.",
+    },
+  ],
+  "how-to-check-website-from-another-country": [
+    {
+      q: "What is the quickest way to check?",
+      a: "Pick the country or state, run an observation on the URL, and save the timestamped capture from your dashboard.",
+    },
+    {
+      q: "Isn't a VPN enough?",
+      a: "A VPN can change the view but rarely leaves a durable, shareable trail. Viewtrace stores the URL, time, and region with each capture.",
+    },
+    {
+      q: "Do I need to install anything?",
+      a: "No. You run checks from your dashboard in the browser—no extension or local proxy required.",
+    },
+  ],
+  "landing-page-qa": [
+    {
+      q: "What does landing page QA cover here?",
+      a: "Beyond copy review, it captures what the hero and pricing block actually rendered per region.",
+    },
+    {
+      q: "Can I catch regressions after launch?",
+      a: "Yes. Diffs and scheduled reruns surface changes so you can act before they escalate.",
+    },
+    {
+      q: "Can I export results for stakeholders?",
+      a: "Yes. Print-ready reports and exports are available (Pro) for reviews and approvals.",
+    },
+  ],
+  "proof-for-ad-agencies": [
+    {
+      q: "What kind of proof does it produce?",
+      a: "Timestamped, geo-routed captures tied to the exact URL, repeatable for each market you report on.",
+    },
+    {
+      q: "Can I attach evidence to client reviews?",
+      a: "Yes. Exports and longer retention on Pro help with approvals, QBRs, and follow-up threads.",
+    },
+    {
+      q: "Is this better than screenshots in Slack?",
+      a: "Yes. You get one consistent trail per market instead of ad-hoc images scattered across channels.",
+    },
+  ],
+};
+
+const FAQ_JA: Record<TopicSlug, TopicFaq[]> = {
+  "geo-screenshot-tool": [
+    {
+      q: "VPN 経由でスクショを撮るのと何が違いますか？",
+      a: "VPN は出口 IP を変えるだけで、URL・時刻・地域をまとめて残すことは通常できません。Viewtrace は選んだ地域から取得し、あとで再表示・比較できる記録として保存します。",
+    },
+    {
+      q: "特定の米国州や国を指定して取得できますか？",
+      a: "はい。観測の開始時に地点を選ぶと、その地域に紐づいた形で取得されます。",
+    },
+    {
+      q: "キャンペーン終了後も記録は残りますか？",
+      a: "はい。記録は履歴付きでワークスペースに保存され、後から見返したり差分を取ったりできます。",
+    },
+  ],
+  "website-screenshot-from-another-country": [
+    {
+      q: "単発の画像ならプロキシで十分では？",
+      a: "プロキシで得られるのは画像だけで、根拠となる証跡は残りません。Viewtrace は画像を URL・地域・時刻とセットで保持するため、数か月後でも意味が通ります。",
+    },
+    {
+      q: "同じページを後から再確認できますか？",
+      a: "はい。同じ URL を同じ国から再取得し、どう変化したかをタイムラインで追えます。",
+    },
+    {
+      q: "どの国から見るかはどう選びますか？",
+      a: "観測ごとにダッシュボードで地点を選びます。設定時に利用可能な地域が表示されます。",
+    },
+  ],
+  "ad-verification-tool": [
+    {
+      q: "広告タグが発火したか確認できますか？",
+      a: "Viewtrace は「その地域で実際に何が描画されたか」（ヒーロー・価格・注記など）に注目します。タグ発火の計測ではなく、視覚的な証跡です。",
+    },
+    {
+      q: "ランディングページの変化を通知できますか？",
+      a: "はい。メール通知付きの定期実行で、意味のある視覚変化を検知し、クライアントより先に気づけます。",
+    },
+    {
+      q: "証跡をクライアントに共有できますか？",
+      a: "はい。取得結果を再表示・エクスポートして、レビューや承認に添付できます。",
+    },
+  ],
+  "localized-qa": [
+    {
+      q: "多数の市場をまたぐときに役立ちますか？",
+      a: "各市場で URL・地域・時刻という同じ型で保存するため、バラバラのスクショではなく同条件で比較できます。",
+    },
+    {
+      q: "プロダクトとマーケが同じ記録を見られますか？",
+      a: "はい。観測は共有ワークスペースに保存され、全員が同じ一次情報を開けます。",
+    },
+    {
+      q: "地域ごとに定期チェックを組めますか？",
+      a: "はい。Starter / Pro で、各実行を要約するメール通知付きの定期実行が使えます。",
+    },
+  ],
+  "geo-testing-tool": [
+    {
+      q: "まったく同じテストを繰り返せますか？",
+      a: "はい。同じ URL を同じ地域から再実行し、遡れるタイムラインとして残せます。",
+    },
+    {
+      q: "スケジュール実行はありますか？",
+      a: "Starter / Pro で日次・週次・月次の定期実行が使えます。",
+    },
+    {
+      q: "修正が正しく反映されたかを検証するには？",
+      a: "対象地域の実行前後の観測を比較し、変更が本番に反映されているか確認します。",
+    },
+  ],
+  "how-to-check-website-from-another-country": [
+    {
+      q: "いちばん手早い確認方法は？",
+      a: "国・州を選び、URL に対して観測を実行し、タイムスタンプ付きの記録をダッシュボードから保存します。",
+    },
+    {
+      q: "VPN では不十分ですか？",
+      a: "VPN は見え方を変えられますが、共有できる持続的な証跡は残りにくいです。Viewtrace は各記録に URL・時刻・地域を保存します。",
+    },
+    {
+      q: "何かインストールが必要ですか？",
+      a: "いいえ。ブラウザ上のダッシュボードから実行でき、拡張機能やローカルプロキシは不要です。",
+    },
+  ],
+  "landing-page-qa": [
+    {
+      q: "ここでの LP QA は何を対象にしますか？",
+      a: "文言校正だけでなく、ヒーローや価格ブロックが地域ごとに実際どう描画されたかまで取得します。",
+    },
+    {
+      q: "ローンチ後の回帰も検知できますか？",
+      a: "はい。差分と定期実行で変化を可視化し、大きくなる前に対処できます。",
+    },
+    {
+      q: "関係者向けに出力できますか？",
+      a: "はい。レビューや承認向けに、印刷用レポートやエクスポートが利用できます（Pro）。",
+    },
+  ],
+  "proof-for-ad-agencies": [
+    {
+      q: "どんな証跡が得られますか？",
+      a: "URL に紐づいた、タイムスタンプ・地理ルート付きの取得結果です。報告する各市場で繰り返し取得できます。",
+    },
+    {
+      q: "クライアントレビューに証跡を添付できますか？",
+      a: "はい。Pro のエクスポートや長い保持期間が、承認・QBR・フォローに役立ちます。",
+    },
+    {
+      q: "Slack のスクショ共有より良いですか？",
+      a: "はい。チャンネルに散らばる場当たり的な画像ではなく、市場ごとに一貫した1本の証跡になります。",
+    },
+  ],
+};
+
+export function getTopicFaqs(locale: Locale, slug: TopicSlug): TopicFaq[] {
+  return (locale === "ja" ? FAQ_JA : FAQ_EN)[slug];
 }

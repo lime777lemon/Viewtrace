@@ -319,11 +319,12 @@ export const copy = {
     },
     seoTopics: {
       kicker: "検索・導入のヒント",
-      title: "地理・越境・広告まわりのトピック（このセクションに集約）",
+      title: "地理・越境・広告まわりのトピック",
       intro:
-        "次の検索意図に沿った説明を、このページ内にまとめています。別URLのトピックページは置かず、重複とメンテ負荷を抑えています。",
+        "検索意図ごとに個別ページを用意しています。気になるテーマを選ぶと、その用途に特化した解説ページへ移動できます。",
       backLabel: "ページ上部へ",
       ctaLogin: "無料で始める",
+      readMore: "解説を読む",
     },
     trustBand: {
       title: "実際の表示を、改ざん検知可能な証跡として残す",
@@ -1335,11 +1336,12 @@ export const copy = {
     },
     seoTopics: {
       kicker: "Search intent guides",
-      title: "Geo, cross-border, and ad topics—in one section on this page",
+      title: "Geo, cross-border, and ad topics",
       intro:
-        "Below is the same guidance we used to split across separate URLs—now inlined here so you maintain one source of truth. We skip extra /topics/* routes to avoid duplicate crawls.",
+        "Each search intent has its own dedicated page. Pick a topic to open a focused guide for that specific use case.",
       backLabel: "Back to top",
       ctaLogin: "Start for free",
+      readMore: "Read the guide",
     },
     trustBand: {
       title: "Keep tamper-evident records of what sites actually showed",

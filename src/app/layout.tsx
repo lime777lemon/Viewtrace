@@ -49,7 +49,7 @@ export const metadata: Metadata = {
       "Keep tamper-evident records of what a website actually showed—geo-routed captures with timestamps and integrity checks for teams that need shared truth.",
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Viewtrace — Tamper-evident records of what sites showed",
     description:
       "Keep tamper-evident records of what a website actually showed—geo-routed captures with timestamps and integrity checks for teams that need shared truth.",

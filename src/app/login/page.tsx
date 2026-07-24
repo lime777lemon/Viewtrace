@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { LoginView } from "@/components/auth/LoginView";
 import { getSession } from "@/lib/auth/session";
+import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { sanitizeDashboardObservationHrefPath } from "@/lib/observation-route-id";
 
@@ -40,11 +41,14 @@ export default async function LoginPage({
     redirect("/dashboard");
   }
 
+  const locale = await getRequestLocale();
+
   return (
     <LoginView
       nextPath={nextPath}
       initialMode={initialMode}
       verified={verified}
+      initialLocale={locale}
     />
   );
 }
