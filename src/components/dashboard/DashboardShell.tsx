@@ -146,7 +146,7 @@ export function DashboardShell({
                 <span className="rounded-full bg-surface-elevated px-2.5 py-1 text-xs font-semibold text-ink ring-1 ring-border">
                   {planName}
                 </span>
-                <span className="hidden max-w-[200px] truncate text-sm text-ink-muted sm:inline" title={email}>
+                <span className="hidden max-w-50 truncate text-sm text-ink-muted sm:inline" title={email}>
                   {email}
                 </span>
                 <LogoutButton label={t.logout} pendingLabel={locale === "ja" ? "処理中…" : "Processing…"} />
