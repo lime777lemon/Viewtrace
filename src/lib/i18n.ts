@@ -19,15 +19,15 @@ export const copy = {
       menu: "メニュー",
     },
     hero: {
-      title: "Webサイトが実際に何を表示していたか、改ざん検知可能な記録を残す",
-      catchKicker: "Geo-routed visual records",
+      title: "広告が“その地域で本当に表示されたか”を、改ざん検知つきの証拠として残す",
+      catchKicker: "代理店・広告運用のためのジオ表示検証",
       catchLine:
-        "指定地域から取得した表示を、タイムスタンプとチェック値付きで保存。後から内容の食い違いに気づきやすい証跡として、チームで共有・照合できます。",
-      catchLexicon: "tamper-evident · 証跡 · 整合性 · shared truth · geo routing · audit trail",
+        "クライアントの広告・LP が指定地域で実際にどう表示されたかを、タイムスタンプとチェック値つきで記録。報告書にそのまま使える共有 URL / PDF で「見せた」を証明できます。",
+      catchLexicon: "地域別表示検証 · 改ざん検知 · クライアント報告 · 共有URL/PDF · 証跡 · audit trail",
       subtitle:
-        "URL と地域を指定すると、実際にレンダリングされた画面を記録として残します。実行ごとに概要と記録へのリンクを送り、視覚差分が大きいときだけ通知する設定も選べます。広告 LP の地域別 QA、海外からの見え方の確認、代理店向けの根拠出しなど、説明負荷の高いワークを想定しています。",
+        "URL と地域を指定すると、その地域で実際にレンダリングされた画面を記録として保存します。地域別の広告表示チェック、クライアント報告用の証跡づくり、海外・多地域キャンペーンの QA など、代理店・広告運用の「説明責任」ワークを 1 クリックに。実行ごとに概要と記録リンクを送り、視覚差分が大きいときだけ通知する設定も選べます。",
       punch:
-        "使い捨てのスクショではなく、URL・時刻・地域が揃った改ざん検知可能な記録として、説明・照合・監査のたたき台を共有する。",
+        "使い捨てのスクショではなく、URL・時刻・地域が揃った改ざん検知可能な証拠。クライアント報告・照合・監査のたたき台にそのまま共有できます。",
       retention: {
         kicker: "記録を残す",
         title: "昨日・先週の表示も、ダッシュボードに蓄積",
@@ -46,23 +46,23 @@ export const copy = {
     },
     heroTrust: {
       items: [
-        "改ざん検知可能：チェック値で記録内容の食い違いに気づきやすい",
-        "証跡：いつ・どの地域設定で・何が見えていたかを履歴に残す",
-        "shared truth：同じ記録を関係者が開き、説明の前提を揃える",
+        "地域指定：クライアントの広告・LP が“その地域で”どう表示されたかを記録",
+        "報告に使える：検証 URL / PDF をそのままクライアントに共有",
+        "改ざん検知：タイムスタンプ＋チェック値で「後出し」を防ぐ",
       ],
     },
     valuePillars: [
       {
-        title: "説明責任を支える根拠",
-        subtitle: "「見せた／見た」を言葉ではなく、条件付きのビジュアル証跡で提示",
+        title: "クライアントへの説明責任",
+        subtitle: "「この地域でこう表示された」を、言葉ではなく条件付きの証拠で提示",
       },
       {
-        title: "監査性のあるジオ証跡",
-        subtitle: "国・地域ごとの視点を、揃った形式で積み上げ、照合しやすくする",
+        title: "地域別の広告・LP 検証",
+        subtitle: "国・地域ごとの実表示を、揃った形式で記録・照合できる",
       },
       {
-        title: "チームの shared truth",
-        subtitle: "定期実行とメールで、認識のズレと欠落を起こしにくくする",
+        title: "報告がそのまま資産に",
+        subtitle: "定期実行と共有 URL / PDF で、報告と証跡づくりを一度の作業に",
       },
     ],
     regionSearch: {
@@ -1043,15 +1043,15 @@ export const copy = {
       menu: "Menu",
     },
     hero: {
-      title: "Keep tamper-evident records of what a website actually showed.",
-      catchKicker: "Geo-routed visual records",
+      title: "Prove your ads and landing pages actually showed in that region.",
+      catchKicker: "Geo ad verification for agencies",
       catchLine:
-        "Capture from the region you specify, store with timestamps and integrity checks, and share a trail teams can reconcile—not disposable screenshots.",
-      catchLexicon: "tamper-evident · evidence · integrity · shared truth · geo routing · audit trail",
+        "Capture how a client’s ad or landing page actually rendered from a chosen region—with timestamps and integrity checks—then share a verify URL / PDF you can drop straight into a report.",
+      catchLexicon: "geo verification · tamper-evident · client reporting · verify URL/PDF · evidence · audit trail",
       subtitle:
-        "Set a URL and region and we persist what actually rendered as a structured record. After each run you get a short summary and a link to the saved trail—or alerts only when the visual change is large. Built for landing-page QA by region, cross-border checks, and proof workflows for agencies.",
+        "Set a URL and region and we persist what actually rendered as a structured record. Built for region-by-region ad checks, client-ready proof, and QA of cross-border and multi-region campaigns—the accountability work agencies own, in one click. After each run you get a short summary and a link to the saved trail, or alerts only when the visual change is large.",
       punch:
-        "Not throwaway captures—a tamper-evident record with URL, time, and vantage point attached for reviews and audits.",
+        "Not throwaway captures—a tamper-evident record with URL, time, and region attached that you can share as client-ready proof for reviews and audits.",
       retention: {
         kicker: "Persist the record",
         title: "Yesterday and last week—saved in your dashboard",
@@ -1070,23 +1070,23 @@ export const copy = {
     },
     heroTrust: {
       items: [
-        "Tamper-evident: integrity checks help spot when stored details no longer line up",
-        "Evidence trail: when, which region, and what rendered—kept on a timeline",
-        "Shared truth: stakeholders open the same record instead of swapping screenshots",
+        "Geo-routed: record how a client’s ad or LP rendered from that region",
+        "Report-ready: share the verify URL / PDF straight with the client",
+        "Tamper-evident: timestamps + integrity checks stop “after-the-fact” disputes",
       ],
     },
     valuePillars: [
       {
-        title: "Accountability you can show",
-        subtitle: "Replace “trust me” with conditioned visual evidence stakeholders can open",
+        title: "Accountability to clients",
+        subtitle: "Show “here’s how it rendered in that region” as evidence, not “trust me”",
       },
       {
-        title: "Auditable geo evidence",
-        subtitle: "Stack the same record shape from every country or state—easy to reconcile",
+        title: "Region-by-region ad & LP checks",
+        subtitle: "Record and reconcile the real render from every country or state",
       },
       {
-        title: "Shared truth for the team",
-        subtitle: "Scheduled runs and email so everyone references the same trail",
+        title: "Reporting that becomes an asset",
+        subtitle: "Scheduled runs and shareable verify URL / PDF—report and proof in one pass",
       },
     ],
     regionSearch: {

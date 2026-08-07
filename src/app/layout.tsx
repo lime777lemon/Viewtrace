@@ -24,11 +24,11 @@ const sora = Sora({
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin),
   title: {
-    default: "Viewtrace — Tamper-evident records of what sites showed",
+    default: "Viewtrace — Geo ad verification with tamper-evident proof",
     template: "%s | Viewtrace",
   },
   description:
-    "Keep tamper-evident records of what a website actually showed—geo-routed captures with timestamps and integrity checks for teams that need shared truth.",
+    "Prove how your ads and landing pages actually rendered from any region. Geo-routed captures with timestamps and integrity checks—client-ready verify URLs and PDF reports for agencies.",
   keywords: [...siteSeoKeywordPhrases, "Viewtrace"],
   applicationName: "Viewtrace",
   alternates: {
@@ -44,15 +44,15 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "/",
     siteName: "Viewtrace",
-    title: "Viewtrace — Tamper-evident records of what sites showed",
+    title: "Viewtrace — Geo ad verification with tamper-evident proof",
     description:
-      "Keep tamper-evident records of what a website actually showed—geo-routed captures with timestamps and integrity checks for teams that need shared truth.",
+      "Prove how your ads and landing pages actually rendered from any region. Geo-routed captures with timestamps and integrity checks—client-ready verify URLs and PDF reports for agencies.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Viewtrace — Tamper-evident records of what sites showed",
+    title: "Viewtrace — Geo ad verification with tamper-evident proof",
     description:
-      "Keep tamper-evident records of what a website actually showed—geo-routed captures with timestamps and integrity checks for teams that need shared truth.",
+      "Prove how your ads and landing pages actually rendered from any region. Geo-routed captures with timestamps and integrity checks—client-ready verify URLs and PDF reports for agencies.",
   },
   verification: {
     google: "hWP7-fbRH5By6ftqXkQOAO73beDcZx4B2XAZ8Jtbx5s",
