@@ -1,15 +1,20 @@
 import { SupabaseHomeAuthCapture } from "@/components/auth/SupabaseHomeAuthCapture";
 import { ViewtraceLanding } from "@/components/ViewtraceLanding";
-import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { getOveragePerObservationUsd } from "@/lib/plans";
 
-export default async function Home() {
-  const locale = await getRequestLocale();
+/**
+ * ランディングは CDN キャッシュ可能な静的ページとして配信し TTFB を最小化する。
+ * ロケールは cookie（vt_locale）をクライアントで読み取り、ViewtraceLanding が切り替える。
+ * （既定は英語。日本語リピーターはマウント直後に自動で切り替わる）
+ */
+export const dynamic = "force-static";
+
+export default function Home() {
   const overagePerObservationUsd = getOveragePerObservationUsd();
   return (
     <>
       <SupabaseHomeAuthCapture />
-      <ViewtraceLanding initialLocale={locale} overagePerObservationUsd={overagePerObservationUsd} />
+      <ViewtraceLanding initialLocale="en" overagePerObservationUsd={overagePerObservationUsd} />
     </>
   );
 }

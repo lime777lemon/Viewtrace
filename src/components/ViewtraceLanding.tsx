@@ -75,6 +75,16 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
     document.documentElement.lang = locale === "ja" ? "ja" : "en";
   }, [locale]);
 
+  // 静的配信のため初期ロケールは常に en。マウント直後に cookie を読み、
+  // 日本語を選んだリピーターだけクライアント側で切り替える。
+  useEffect(() => {
+    const match = document.cookie.match(new RegExp(`(?:^|; )${LOCALE_COOKIE}=([^;]+)`));
+    const value = match ? decodeURIComponent(match[1]) : null;
+    if (value === "ja" || value === "en") {
+      setLocale((prev) => (prev === value ? prev : value));
+    }
+  }, []);
+
   useEffect(() => {
     if (!mobileNavOpen) return;
     function handlePointerDown(event: PointerEvent) {
