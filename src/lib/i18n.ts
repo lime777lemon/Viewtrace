@@ -814,6 +814,9 @@ export const copy = {
       diffRatioLabel: "ピクセル差分",
       viewPrevious: "前回の記録を開く",
       backToObservations: "オブザベーション一覧へ →",
+      viewFullscreen: "タップして全画面表示",
+      closeFullscreen: "閉じる",
+      fullscreenHint: "全体を上下にスクロールして確認できます。",
     },
     snapshotBinary: {
       titleBinary: "保存した画面の詳しい確認",
@@ -1859,6 +1862,9 @@ export const copy = {
       diffRatioLabel: "Pixel diff",
       viewPrevious: "Open previous record",
       backToObservations: "Back to observations →",
+      viewFullscreen: "Tap to view full screen",
+      closeFullscreen: "Close",
+      fullscreenHint: "Scroll up and down to see the whole page.",
     },
     snapshotBinary: {
       titleBinary: "Deep check on your saved page image",

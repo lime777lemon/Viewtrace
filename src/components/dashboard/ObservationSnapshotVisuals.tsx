@@ -141,6 +141,22 @@ export function ObservationSnapshotVisuals({
   const showLoading = !showImg && phase === "loading";
   const showError = !showImg && phase === "error";
 
+  const [fullscreenOpen, setFullscreenOpen] = useState(false);
+
+  useEffect(() => {
+    if (!fullscreenOpen) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setFullscreenOpen(false);
+    }
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [fullscreenOpen]);
+
   return (
     <>
       <section>
@@ -150,13 +166,23 @@ export function ObservationSnapshotVisuals({
         ) : null}
         <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-surface-elevated">
           {showImg ? (
-            // eslint-disable-next-line @next/next/no-img-element -- 外部 OG / Microlink CDN
-            <img
-              src={imageUrl!}
-              alt=""
-              className="max-h-[min(70vh,720px)] w-full object-cover object-top"
-              loading="eager"
-            />
+            <button
+              type="button"
+              onClick={() => setFullscreenOpen(true)}
+              className="group relative block w-full cursor-zoom-in"
+              aria-label={t.viewFullscreen}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element -- 外部 OG / Microlink CDN */}
+              <img
+                src={imageUrl!}
+                alt=""
+                className="max-h-[min(70vh,720px)] w-full object-cover object-top"
+                loading="eager"
+              />
+              <span className="pointer-events-none absolute bottom-3 right-3 rounded-full bg-ink/75 px-3 py-1.5 text-xs font-semibold text-white shadow-sm">
+                {t.viewFullscreen}
+              </span>
+            </button>
           ) : showLoading ? (
             <div className="flex aspect-16/10 flex-col justify-center gap-2 bg-linear-to-br from-[#dfe9e6] to-[#c8d9d3] px-6 py-10 text-center">
               <p className="text-sm font-medium text-ink">{t.loadingTitle}</p>
@@ -260,6 +286,34 @@ export function ObservationSnapshotVisuals({
           </div>
         </div>
       </section>
+
+      {fullscreenOpen && showImg ? (
+        <div
+          className="fixed inset-0 z-50 flex flex-col bg-black/95"
+          role="dialog"
+          aria-modal="true"
+          aria-label={t.snapshotTitle}
+        >
+          <div className="flex items-center justify-between gap-3 px-4 py-3">
+            <p className="truncate text-xs text-white/70">{t.fullscreenHint}</p>
+            <button
+              type="button"
+              onClick={() => setFullscreenOpen(false)}
+              className="shrink-0 rounded-full bg-white/15 px-4 py-2 text-sm font-semibold text-white hover:bg-white/25"
+            >
+              {t.closeFullscreen}
+            </button>
+          </div>
+          <div className="flex-1 overflow-auto overscroll-contain px-2 pb-[env(safe-area-inset-bottom)]">
+            {/* eslint-disable-next-line @next/next/no-img-element -- 外部 OG / Microlink CDN */}
+            <img
+              src={imageUrl!}
+              alt=""
+              className="mx-auto h-auto w-full max-w-4xl"
+            />
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }
