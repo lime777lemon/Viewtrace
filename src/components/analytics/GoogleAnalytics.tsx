@@ -1,14 +1,17 @@
 import Script from "next/script";
-import { GA_CONSENT_COOKIE, getGaMeasurementId } from "@/lib/analytics/ga";
+import { GA_CONSENT_COOKIE, getGaMeasurementId, getGoogleAdsId } from "@/lib/analytics/ga";
 import { GaConsentBanner } from "@/components/analytics/GaConsentBanner";
 
 /**
- * GA4 via gtag.js (Google's manual tag), with Consent Mode v2 defaults for EEA.
- * Loads only when NEXT_PUBLIC_GA_MEASUREMENT_ID is set. Vercel Analytics is unchanged.
+ * GA4 (and optional Google Ads) via gtag.js, with Consent Mode v2 defaults for
+ * EEA. Loads only when NEXT_PUBLIC_GA_MEASUREMENT_ID is set. When
+ * NEXT_PUBLIC_GOOGLE_ADS_ID is also set we configure the Ads tag so consented
+ * visitors are eligible for conversion tracking. Vercel Analytics is unchanged.
  */
 export function GoogleAnalytics() {
   const gaId = getGaMeasurementId();
   if (!gaId) return null;
+  const adsId = getGoogleAdsId();
 
   return (
     <>
@@ -27,9 +30,9 @@ export function GoogleAnalytics() {
           if (_gaConsent && decodeURIComponent(_gaConsent[1]) === 'granted') {
             gtag('consent', 'update', {
               analytics_storage: 'granted',
-              ad_storage: 'denied',
-              ad_user_data: 'denied',
-              ad_personalization: 'denied'
+              ad_storage: 'granted',
+              ad_user_data: 'granted',
+              ad_personalization: 'granted'
             });
           }
         `}
@@ -42,6 +45,7 @@ export function GoogleAnalytics() {
         {`
           gtag('js', new Date());
           gtag('config', '${gaId}');
+          ${adsId ? `gtag('config', '${adsId}');` : ""}
         `}
       </Script>
       <GaConsentBanner />

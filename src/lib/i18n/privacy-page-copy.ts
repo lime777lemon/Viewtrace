@@ -55,7 +55,7 @@ export const privacyPageCopyJa: PrivacyPageCopy = {
         "決済・契約情報（Stripe 経由のサブスクリプション状態等。クレジットカード番号は当社では保持しません）",
         "お問い合わせ内容（氏名、メールアドレス、件名、本文）",
         "技術情報（IP アドレス、ブラウザ種別、アクセスログ、認証・障害調査ログ、Cookie、言語設定等）",
-        "分析情報（同意いただいた場合の Google Analytics によるサイト利用状況）",
+        "分析・広告効果測定情報（同意いただいた場合の Google Analytics・Google 広告によるサイト利用状況および広告の効果測定）",
       ],
     },
     {
@@ -72,10 +72,11 @@ export const privacyPageCopyJa: PrivacyPageCopy = {
       ],
     },
     {
-      title: "4. Cookie・分析",
+      title: "4. Cookie・分析・広告",
       paragraphs: [
-        "当社は、ログイン（Supabase Auth）、言語設定（vt_locale）、分析 Cookie の同意状態（viewtrace_ga_consent）等に Cookie を使用します。",
-        "同意いただいた場合、Google Analytics（GA4）でサイトの利用状況を把握し、サービス改善に利用します。初回訪問時のバナーで分析 Cookie の許可・拒否を選べます。",
+        "当社は、ログイン（Supabase Auth）、言語設定（vt_locale）、分析・広告 Cookie の同意状態（viewtrace_ga_consent）等に Cookie を使用します。",
+        "同意いただいた場合、Google Analytics（GA4）でサイトの利用状況を把握し、サービス改善に利用します。初回訪問時のバナーで分析・広告 Cookie の許可・拒否を選べます。",
+        "同意いただいた場合、Google 広告のコンバージョン測定 Cookie を使用し、広告経由での登録等の効果測定を行います。氏名・メールアドレス等の個人情報を広告事業者に送信することはありません。同意を拒否した場合、これらの Cookie は使用しません（Google Consent Mode により制御します）。",
         "ホスティングの一環として Vercel Analytics / Speed Insights 等により、集計された利用状況やパフォーマンス指標が取得される場合があります。",
       ],
     },
@@ -88,7 +89,7 @@ export const privacyPageCopyJa: PrivacyPageCopy = {
         "Vercel — ホスティング、ストレージ（Blob）、分析",
         "Stripe — 決済・サブスクリプション管理",
         "Browserless 等 — スクリーンショット取得（地域指定時は内蔵 residential プロキシを利用）",
-        "Google — Google Analytics（同意がある場合）",
+        "Google — Google Analytics・Google 広告（コンバージョン測定、同意がある場合）",
         "Resend 等 — トランザクションメール・問い合わせ通知",
       ],
       paragraphs: [
@@ -105,7 +106,7 @@ export const privacyPageCopyJa: PrivacyPageCopy = {
         "サービス提供に必要な委託（前条）の範囲",
       ],
       paragraphs: [
-        "決済処理（Stripe）および分析（Google Analytics、同意がある場合）への情報送信は、サービス提供のために必要な委託・連携として行います。",
+        "決済処理（Stripe）、分析（Google Analytics）および広告効果測定（Google 広告のコンバージョン測定、いずれも同意がある場合）への情報送信は、サービス提供のために必要な委託・連携として行います。",
       ],
     },
     {
@@ -208,7 +209,7 @@ export const privacyPageCopyEn: PrivacyPageCopy = {
         "Billing data via Stripe (subscription status, etc.; we do not store full card numbers)",
         "Contact form submissions (name, email, topic, message)",
         "Technical data (IP address, browser type, access logs, auth/diagnostic logs, cookies, locale)",
-        "Analytics data via Google Analytics when you consent",
+        "Analytics and ad-measurement data via Google Analytics and Google Ads when you consent",
       ],
     },
     {
@@ -225,10 +226,11 @@ export const privacyPageCopyEn: PrivacyPageCopy = {
       ],
     },
     {
-      title: "4. Cookies & analytics",
+      title: "4. Cookies, analytics & advertising",
       paragraphs: [
-        "We use cookies for sign-in (Supabase Auth), locale (vt_locale), and analytics consent (viewtrace_ga_consent).",
-        "With your consent, we use Google Analytics (GA4) to understand site usage. You can accept or decline analytics cookies via the banner on first visit.",
+        "We use cookies for sign-in (Supabase Auth), locale (vt_locale), and analytics/advertising consent (viewtrace_ga_consent).",
+        "With your consent, we use Google Analytics (GA4) to understand site usage. You can accept or decline analytics/advertising cookies via the banner on first visit.",
+        "With your consent, we use Google Ads conversion-measurement cookies to measure ad-driven sign-ups and similar events. We do not send personal data such as your name or email to advertising vendors. If you decline, these cookies are not used (controlled via Google Consent Mode).",
         "Vercel Analytics / Speed Insights may collect aggregated usage and performance metrics as part of hosting.",
       ],
     },
@@ -240,7 +242,7 @@ export const privacyPageCopyEn: PrivacyPageCopy = {
         "Vercel — hosting, blob storage, analytics",
         "Stripe — payments and subscriptions",
         "Browserless and similar — screenshot capture (built-in residential proxy when a region is selected)",
-        "Google — Google Analytics when you consent",
+        "Google — Google Analytics and Google Ads (conversion measurement) when you consent",
         "Resend and similar — transactional and contact email",
       ],
       paragraphs: [
@@ -257,7 +259,7 @@ export const privacyPageCopyEn: PrivacyPageCopy = {
         "to service providers listed above as needed to operate the Service",
       ],
       paragraphs: [
-        "Payment processing (Stripe) and analytics (Google Analytics, with consent) are handled as necessary integrations or processing.",
+        "Payment processing (Stripe), analytics (Google Analytics), and ad measurement (Google Ads conversion tracking, both with consent) are handled as necessary integrations or processing.",
       ],
     },
     {

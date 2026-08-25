@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState, useEffect, useId, useState } from "react";
+import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { authFormAction, signupFormAction } from "@/app/actions/auth";
+import { trackSignupConversion } from "@/lib/analytics/track";
 import { loginPageCopy } from "@/lib/auth/login-copy";
 import type { LoginLocale } from "@/lib/auth/login-copy";
 
@@ -25,6 +26,15 @@ export function LoginForm({
   useEffect(() => {
     setMode(initialMode);
   }, [initialMode]);
+
+  const signupTrackedRef = useRef(false);
+  useEffect(() => {
+    if (signupState?.message && !signupTrackedRef.current) {
+      signupTrackedRef.current = true;
+      trackSignupConversion();
+    }
+  }, [signupState?.message]);
+
   const passwordId = useId();
   const passwordConfirmId = useId();
   const fullNameId = useId();

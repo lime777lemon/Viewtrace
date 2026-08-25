@@ -25,9 +25,9 @@ function writeConsentCookie(value: "granted" | "denied") {
 function updateGaConsent(value: "granted" | "denied") {
   window.gtag?.("consent", "update", {
     analytics_storage: value,
-    ad_storage: "denied",
-    ad_user_data: "denied",
-    ad_personalization: "denied",
+    ad_storage: value,
+    ad_user_data: value,
+    ad_personalization: value,
   });
 }
 
@@ -62,16 +62,16 @@ export function GaConsentBanner() {
       <div className="mx-auto flex max-w-4xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1 text-sm text-ink">
           <p id="ga-consent-title" className="font-semibold">
-            Analytics cookies / 分析 Cookie
+            Analytics &amp; advertising cookies / 分析・広告 Cookie
           </p>
           <p id="ga-consent-desc" className="text-ink-muted">
-            We use Google Analytics to improve the site. You can accept or decline optional analytics
-            cookies.{" "}
+            We use Google Analytics and Google Ads to improve the site and measure ad performance. You
+            can accept or decline these optional cookies.{" "}
             <Link href="/privacy" className="font-medium text-accent hover:text-accent-hover">
               Privacy Policy
             </Link>
             {" · "}
-            Google Analytics で利用状況を把握します。任意の分析 Cookie は拒否できます。
+            Google Analytics と Google 広告で利用状況の把握と広告効果測定を行います。任意の分析・広告 Cookie は拒否できます。
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
