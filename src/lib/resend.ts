@@ -64,22 +64,30 @@ export async function sendResendEmail(input: SendResendEmailInput): Promise<Send
     ...(input.tags ? { tags: input.tags } : {}),
   } as const;
 
-  const { data, error } = html
-    ? await resend.emails.send({
-        ...base,
-        html,
-        ...(text ? { text } : {}),
-      })
-    : await resend.emails.send({
-        ...base,
-        text: text!,
-      });
+  try {
+    const { data, error } = html
+      ? await resend.emails.send({
+          ...base,
+          html,
+          ...(text ? { text } : {}),
+        })
+      : await resend.emails.send({
+          ...base,
+          text: text!,
+        });
 
-  if (error) {
-    return { ok: false, error: error.message };
+    if (error) {
+      return { ok: false, error: error.message };
+    }
+    if (!data?.id) {
+      return { ok: false, error: "Resend did not return an email id" };
+    }
+    return { ok: true, id: data.id };
+  } catch (err) {
+    // The SDK can reject (e.g. undici network/body errors) even after the API
+    // accepted the request. Never let this crash the calling route handler.
+    const message = err instanceof Error ? err.message : "Unknown Resend error";
+    console.error("[resend] send threw", err);
+    return { ok: false, error: message };
   }
-  if (!data?.id) {
-    return { ok: false, error: "Resend did not return an email id" };
-  }
-  return { ok: true, id: data.id };
 }

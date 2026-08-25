@@ -73,19 +73,26 @@ export async function contactFormAction(
     `<p style="white-space:pre-wrap;word-break:break-word;">${escapeHtml(message)}</p>`,
   ].join("");
 
-  const res = await sendResendEmail({
-    to: contactEmail,
-    replyTo: email,
-    subject,
-    text,
-    html,
-    tags: [{ name: "source", value: "contact_form" }],
-  });
+  try {
+    const res = await sendResendEmail({
+      to: contactEmail,
+      replyTo: email,
+      subject,
+      text,
+      html,
+      tags: [{ name: "source", value: "contact_form" }],
+    });
 
-  if (!res.ok) {
-    console.warn("[contact] send failed", res.error);
+    if (!res.ok) {
+      console.warn("[contact] send failed", res.error);
+      return { error: t.errSend };
+    }
+
+    return { message: t.success };
+  } catch (err) {
+    // Defensive: a thrown error here surfaces to the user as a 500
+    // (FUNCTION_INVOCATION_FAILED). Always return a friendly state instead.
+    console.error("[contact] unexpected error", err);
     return { error: t.errSend };
   }
-
-  return { message: t.success };
 }
