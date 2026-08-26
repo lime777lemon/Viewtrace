@@ -32,6 +32,9 @@ export type RegionSearchLabels = {
   previewLiveNote: string;
   previewLiveNoteMarketing: string;
   previewDirectAccess: string;
+  previewSampleNote: string;
+  previewRegionCtaTitle: string;
+  previewRegionCtaButton: string;
   regionMarketingHint: string;
   previewLoading: string;
   previewError: string;
@@ -230,7 +233,9 @@ export function RegionSearchPanel({
               ))}
             </select>
             {mode === "marketing" ? (
-              <p className="mt-2 text-xs leading-relaxed text-ink-muted">{labels.regionMarketingHint}</p>
+              <p className="mt-2 rounded-lg bg-accent-soft/40 px-3 py-2 text-xs leading-relaxed text-ink-muted">
+                {labels.regionMarketingHint}
+              </p>
             ) : null}
           </div>
           <div>
@@ -283,7 +288,8 @@ export function RegionSearchPanel({
             <div className="flex items-center gap-2 text-xs font-medium text-ink-muted">
               <span className="h-2 w-2 rounded-full bg-emerald-600" aria-hidden />
               <span>
-                {labels.mockSnapshot} · {previewRegionLabel} · {exampleTime}
+                {labels.mockSnapshot} · {previewRegionLabel} ·{" "}
+                {mode === "marketing" ? labels.previewSampleNote : exampleTime}
               </span>
             </div>
             <p className="mt-3 break-all text-sm font-medium text-ink">
@@ -342,6 +348,19 @@ export function RegionSearchPanel({
                     >
                       {labels.previewOpenLive}
                     </a>
+                    {mode === "marketing" ? (
+                      <div className="mt-4 rounded-xl border border-accent/30 bg-accent-soft/40 p-4">
+                        <p className="text-sm font-medium leading-relaxed text-ink">
+                          {labels.previewRegionCtaTitle.replace("{region}", selectedLabel)}
+                        </p>
+                        <Link
+                          href="/login?mode=signup"
+                          className="mt-3 inline-flex rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-accent-hover hover:shadow-md"
+                        >
+                          {labels.previewRegionCtaButton}
+                        </Link>
+                      </div>
+                    ) : null}
                     {mode === "dashboard" ? (
                       <form action={recordWebVerifiedObservationAction} className="mt-4 space-y-2">
                         <input type="hidden" name="url" value={livePreview.canonicalUrl} />

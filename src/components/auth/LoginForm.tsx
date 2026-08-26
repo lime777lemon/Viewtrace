@@ -214,6 +214,9 @@ export function LoginForm({
           {t.signupSuccessMessage}
         </p>
       ) : null}
+      {mode === "signup" && !signupState?.message ? (
+        <p className="text-center text-xs font-medium text-ink-muted">{t.signupReassure}</p>
+      ) : null}
       <button
         type="submit"
         disabled={mode === "signin" ? signInPending : signupPending}
@@ -227,6 +230,9 @@ export function LoginForm({
             ? t.creatingAccount
             : t.getStartedSubmit}
       </button>
+      {mode === "signup" && !signupState?.message ? (
+        <p className="text-center text-xs leading-relaxed text-ink-muted">{t.signupEmailStepNote}</p>
+      ) : null}
     </form>
   );
 }

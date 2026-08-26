@@ -93,8 +93,12 @@ export const copy = {
       previewLiveNoteMarketing:
         "※ VPN や地域プロキシは使わず、通常アクセスに近い形で取得したプレビューです。地域別の取得は登録後のオブザベーションで行えます。",
       previewDirectAccess: "通常アクセス（VPN なし）",
+      previewSampleNote: "見本（地域取得なし）",
+      previewRegionCtaTitle:
+        "この簡易プレビューは通常アクセスです。{region} から実際にどう表示されたかを、タイムスタンプと改ざん検知付きで確認できます（登録後、無料）。",
+      previewRegionCtaButton: "無料で始める — この地域から取得する →",
       regionMarketingHint:
-        "ここで選んだ地域はプレビューには使いません。登録後、オブザベーション記録の取得地域として使えます。",
+        "この簡易プレビューは通常アクセスで、上で選んだ地域は使いません。選択した地域からの取得（タイムスタンプ・整合性証明付き）は、登録後に無料で使えます。",
       previewLoading: "ページのスクリーンショットを取得しています…（数十秒かかることがあります）",
       previewError: "ページ情報を取得できませんでした。URLを確認するか、下のリンクから直接開いてください。",
       previewOpenLive: "新しいタブで開いて確認",
@@ -1120,8 +1124,12 @@ export const copy = {
       previewLiveNoteMarketing:
         "Preview fetched without VPN or geo proxy—close to normal browsing. Geo-routed capture is available after sign-up.",
       previewDirectAccess: "Direct access (no VPN)",
+      previewSampleNote: "Sample — not geo-routed",
+      previewRegionCtaTitle:
+        "This quick preview used normal access. See how this page actually rendered from {region}—with timestamp and tamper-evident proof—free after sign-up.",
+      previewRegionCtaButton: "Start free — capture from this region →",
       regionMarketingHint:
-        "The region you pick here is not used for this preview—it applies to observations after sign-up.",
+        "This quick preview uses direct access and does not use the region above. Geo-routed capture from your selected region—with timestamp and integrity proof—unlocks free after sign-up.",
       previewLoading: "Fetching a page screenshot… (may take up to a minute)",
       previewError: "Could not fetch page info. Check the URL or open it directly below.",
       previewOpenLive: "Open in new tab to verify",
