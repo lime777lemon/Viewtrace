@@ -8,6 +8,7 @@ import { RegionSearchSignupSection } from "@/components/RegionSearchSignupSectio
 import { ViewtraceLogo } from "@/components/brand/ViewtraceLogo";
 import { copy, type Locale } from "@/lib/i18n";
 import { LOCALE_COOKIE } from "@/lib/i18n/locale-cookie";
+import { audiencePagePath } from "@/lib/seo/audience-pages";
 import { getTopicSectionsForLanding, topicPagePath, type TopicSlug } from "@/lib/seo/topic-pages";
 
 /** 検索意図カードの背景に薄く敷くアイコン。slug 単位で追加していく */
@@ -1213,6 +1214,22 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                   <li>
                     <a href="#faq" className="text-surface/80 hover:text-white">
                       {t.footer.links.faq}
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href={audiencePagePath("agency")}
+                      className="text-surface/80 hover:text-white"
+                    >
+                      {locale === "ja" ? "広告・マーケ代理店向け" : "For ad agencies"}
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href={audiencePagePath("performance-agency")}
+                      className="text-surface/80 hover:text-white"
+                    >
+                      {locale === "ja" ? "運用型代理店向け" : "For performance agencies"}
                     </a>
                   </li>
                 </ul>

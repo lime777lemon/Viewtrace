@@ -59,6 +59,43 @@ export const metadata: Metadata = {
   },
 };
 
+/** サイト全体の構造化データ（Organization / WebSite / SoftwareApplication）。
+ *  検索のナレッジ理解と、AI/LLM が Viewtrace を「US 広告代理店向けの地域別広告検証」と
+ *  正しく説明・引用しやすくするための土台（GEO 対策）。 */
+const SITE_JSON_LD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${siteOrigin}/#organization`,
+      name: "Viewtrace",
+      url: `${siteOrigin}/`,
+      logo: `${siteOrigin}/brand/viewtrace-logo.png`,
+      description:
+        "Viewtrace is a geo ad verification platform for advertising and marketing agencies—tamper-evident, geo-routed proof of how ads and landing pages actually rendered by region.",
+      email: "info@viewtrace.net",
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${siteOrigin}/#website`,
+      url: `${siteOrigin}/`,
+      name: "Viewtrace",
+      publisher: { "@id": `${siteOrigin}/#organization` },
+      inLanguage: ["en", "ja"],
+    },
+    {
+      "@type": "SoftwareApplication",
+      name: "Viewtrace",
+      applicationCategory: "BusinessApplication",
+      operatingSystem: "Web",
+      url: `${siteOrigin}/`,
+      description:
+        "Geo-routed captures with timestamps and integrity checks—client-ready verify URLs and PDF reports for ad agencies to prove what actually rendered in each region.",
+      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    },
+  ],
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -67,6 +104,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${notoSansJp.variable} ${sora.variable}`}>
       <body className="font-sans">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_JSON_LD) }}
+        />
         {children}
         <GoogleAnalytics />
         <Analytics />
