@@ -7,10 +7,11 @@ import { getRequestLocale } from "@/lib/i18n/locale-server";
 
 /**
  * Agency Portfolio Monitor — 営業/検証用のモック画面（コンシェルジュMVP）。
- * 実データ連携なし・完全静的。現Viewtrace の実機能ではないため noindex とし、
+ * 実データ連携なし。現Viewtrace の実機能ではないため noindex とし、
  * sitemap・ナビには載せない（共有URLとしてのみ使う）。
+ * 言語トグル（vt_locale クッキー）を効かせるため、リクエスト時にクッキーを読む
+ * 動的レンダリングにする（force-static にすると常に英語になる）。
  */
-export const dynamic = "force-static";
 
 export const metadata: Metadata = {
   title: { absolute: "Agency Portfolio Monitor (concept preview) | Viewtrace" },
