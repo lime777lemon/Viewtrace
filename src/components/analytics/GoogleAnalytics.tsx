@@ -19,21 +19,34 @@ export function GoogleAnalytics() {
         {`
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
+          // EEA / UK / Switzerland require prior opt-in: default everything denied.
           gtag('consent', 'default', {
             analytics_storage: 'denied',
             ad_storage: 'denied',
             ad_user_data: 'denied',
             ad_personalization: 'denied',
-            wait_for_update: 500
+            wait_for_update: 500,
+            region: ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','IS','LI','NO','GB','CH']
           });
+          // Rest of the world (incl. US): opt-out model, measured by default.
+          gtag('consent', 'default', {
+            analytics_storage: 'granted',
+            ad_storage: 'granted',
+            ad_user_data: 'granted',
+            ad_personalization: 'granted'
+          });
+          // A saved banner choice always wins for that visitor, on every load.
           var _gaConsent = document.cookie.match(/(?:^|; )${GA_CONSENT_COOKIE}=([^;]+)/);
-          if (_gaConsent && decodeURIComponent(_gaConsent[1]) === 'granted') {
-            gtag('consent', 'update', {
-              analytics_storage: 'granted',
-              ad_storage: 'granted',
-              ad_user_data: 'granted',
-              ad_personalization: 'granted'
-            });
+          if (_gaConsent) {
+            var _gaVal = decodeURIComponent(_gaConsent[1]);
+            if (_gaVal === 'granted' || _gaVal === 'denied') {
+              gtag('consent', 'update', {
+                analytics_storage: _gaVal,
+                ad_storage: _gaVal,
+                ad_user_data: _gaVal,
+                ad_personalization: _gaVal
+              });
+            }
           }
         `}
       </Script>
