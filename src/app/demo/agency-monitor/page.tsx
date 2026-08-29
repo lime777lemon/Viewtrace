@@ -52,6 +52,8 @@ const UI: Record<
     cta: string;
     ctaNote: string;
     poweredBy: string;
+    sampleBar: string;
+    sampleTag: string;
   }
 > = {
   en: {
@@ -74,6 +76,9 @@ const UI: Record<
     cta: "Request beta access",
     ctaNote: "Free during beta · read-only · your data is never modified",
     poweredBy: "Powered by Viewtrace",
+    sampleBar:
+      "Sample data — this is an illustrative concept. None of these numbers are measured from a real account.",
+    sampleTag: "Sample",
   },
   ja: {
     badge: "コンセプト・プレビュー",
@@ -95,6 +100,9 @@ const UI: Record<
     cta: "ベータ利用を申し込む",
     ctaNote: "ベータ中は無料・read-only・データは変更しません",
     poweredBy: "Powered by Viewtrace",
+    sampleBar:
+      "サンプルデータ — これは説明用のコンセプトです。ここにある数値は実際のアカウントから計測したものではありません。",
+    sampleTag: "サンプル",
   },
 };
 
@@ -267,6 +275,9 @@ function ClientRow({ c, ui }: { c: ClientCard; ui: (typeof UI)[Locale] }) {
         <div className="flex items-center gap-2.5">
           <span className={`h-2.5 w-2.5 rounded-full ${s.dot}`} />
           <span className="font-display text-base font-semibold text-ink">{c.name}</span>
+          <span className="rounded-full border border-dashed border-ink-muted/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ink-muted">
+            {ui.sampleTag}
+          </span>
           <span className="flex flex-wrap gap-1.5">
             {c.channels.map((ch) => (
               <span
@@ -348,6 +359,16 @@ export default async function AgencyMonitorDemoPage() {
           </div>
         </div>
       </header>
+
+      {/* サンプルデータであることを常時明示（実測値との誤認防止） */}
+      <div className="sticky top-0 z-20 border-b border-amber-600/30 bg-amber-50">
+        <div className="mx-auto flex max-w-5xl items-center gap-2.5 px-4 py-2.5 sm:px-6">
+          <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+            {ui.sampleTag}
+          </span>
+          <p className="text-xs font-medium leading-snug text-amber-900">{ui.sampleBar}</p>
+        </div>
+      </div>
 
       <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
         {/* Title */}
