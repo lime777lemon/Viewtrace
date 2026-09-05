@@ -13,7 +13,8 @@
     "db:migrations:list": "supabase migration list --linked",
     "db:push": "supabase db push",
     "db:migration:new": "supabase migration new",
-    "test:scheduled-obs-email": "node scripts/send-test-scheduled-observation-email.mjs"
+    "test:scheduled-obs-email": "node scripts/send-test-scheduled-observation-email.mjs",
+    "email:survey": "node scripts/send-survey-email.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.2",
