@@ -36,6 +36,7 @@
 
 ・費用：無料（2週間）
 ・権限：閲覧のみ（設定・入札・予算には一切触れません）。CSVを毎週送っていただく形でもOK
+・位置づけ：あくまで"目安"としての情報提供です（実際の広告操作は行いません／最終判断は御社）
 ・お渡し：見つかった異常と推奨はそのままお使いいただけます
 
 「やってみる」とだけご返信いただければ、対象口座の選定からご案内します。
@@ -59,6 +60,7 @@ running fine but results drop.
 
 • Cost: free (2 weeks)
 • Access: read-only. I never touch bids, budgets, or settings. Weekly CSV exports work too.
+• Scope: this is advisory — estimates for your reference (I make no changes; final calls are yours)
 • Yours to keep: every anomaly and recommendation I find
 
 Just reply "in" and I'll help you pick the accounts.

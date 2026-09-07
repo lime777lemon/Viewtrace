@@ -41,6 +41,11 @@
 
 ご不明点や「この口座を詳しく」があれば返信ください。来週も同じ形でお送りします。
 
+──────────
+※ 本レポートは観測データに基づく「目安」であり、成果を保証するものではありません。
+　 推奨はあくまで参考情報です。広告設定の変更は御社のご判断・操作でお願いします
+　（当方は実際の操作は行いません）。データは閲覧目的のみに使用します。
+
 — {あなたの名前} / Viewtrace
 ```
 
@@ -79,6 +84,11 @@ The remaining {N} accounts were within target — nothing notable this week.
 
 Happy to go deeper on any account — just reply. Same format next week.
 
+──────────
+Note: This report is a data-based estimate, not a guarantee of results. Recommendations are
+for reference only; any campaign changes are made at your discretion (we make no changes
+ourselves). We access your data for review only.
+
 — {Your name} / Viewtrace
 ```
 
@@ -90,3 +100,5 @@ Happy to go deeper on any account — just reply. Same format next week.
 - 原因は**証拠**とセット。Viewtrace の記録リンクが最も強い（"実際にこう表示されていた"）。
 - 推奨は**1手**に絞る。「あれもこれも」は判断を止める。
 - 正常口座も1行で触れる＝「毎日見なくて済む」安心を提供＝これが購入理由。
+- **必ず「お客様には目安として」提示する**。提供範囲は①監視〜④推奨まで（アドバイザリー）。
+  実際の広告操作（⑤）は行わない＝末尾の免責文を毎回入れる。
