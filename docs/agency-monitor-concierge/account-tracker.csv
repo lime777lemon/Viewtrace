@@ -1,0 +1,5 @@
+week,agency,client_name,account_id,channel,target_cpa,spend_prev,spend_now,spend_delta_pct,conv_prev,conv_now,conv_delta_pct,cpa_prev,cpa_now,cpa_delta_pct,ctr_prev,ctr_now,impr_share,lost_is_budget,lost_is_rank,ad_status,lp_status_viewtrace,viewtrace_record_url,anomaly_flag,severity,hypothesis,recommended_action,status,notes
+2026-W37,Example Agency,Client A,123-456-7890,Google Search,3000,80000,112000,40,26,25,,3076,4480,46,4.1,4.0,72,18,10,active,OK,https://viewtrace.net/api/open/observation?id=,YES,High,"費用+40%だが成果横ばい。無駄クエリ増の疑い","除外KW追加・入札上限見直し(代理店承認)",action,検索語句レポート要確認
+2026-W37,Example Agency,Client B,234-567-8901,Google Search,5000,50000,51000,2,10,3,-70,5000,17000,240,3.8,3.7,80,5,8,active,"404検知","https://viewtrace.net/api/open/observation?id=",YES,High,"LPが404。クリックは正常だがCV激減","LP復旧最優先・復旧まで一時停止を推奨",action,Viewtrace記録あり
+2026-W37,Example Agency,Client C,345-678-9012,Google Search,4000,40000,39000,-3,10,10,0,4000,3900,-3,5.0,3.4,78,6,9,active,OK,,WATCH,Watch,"CTRのみ−32%。クリエイティブ疲弊の可能性","広告文2案追加してA/B・来週再評価",watch,
+2026-W37,Example Agency,Client D,456-789-0123,Google Search,2500,30000,30500,2,12,12,0,2500,2542,2,4.5,4.6,85,3,5,active,OK,,NO,OK,,,ok,目標圏内
