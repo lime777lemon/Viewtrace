@@ -3,6 +3,9 @@ import Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { syncPublicUserPlanMirror } from "@/lib/supabase/sync-public-user-plan";
+import { sendResendEmail, isResendConfigured } from "@/lib/resend";
+import { getAppOriginForEmailLinks } from "@/lib/site";
+import { buildPaymentFailedEmail, type PaymentEmailKind } from "@/lib/emails/payment-failed";
 
 export const runtime = "nodejs";
 
@@ -199,6 +202,81 @@ export async function POST(req: Request) {
         console.warn("[stripe webhook] missing subscription id; skip subscriptions upsert", {
           sessionId: session.id,
         });
+      }
+      break;
+    }
+    case "invoice.payment_failed":
+    case "invoice.payment_action_required": {
+      // 支払い失敗 / 追加認証要求 → ブランドメールで「支払い方法を更新」を案内（自動・その都度）。
+      const invoice = event.data.object as Stripe.Invoice;
+      const kind: PaymentEmailKind =
+        event.type === "invoice.payment_action_required" ? "action_required" : "failed";
+
+      if (!isResendConfigured()) {
+        console.warn("[stripe webhook] resend not configured; skip payment email", { type: event.type });
+        break;
+      }
+
+      const customerId =
+        typeof invoice.customer === "string" ? invoice.customer : invoice.customer?.id ?? null;
+
+      // 宛先メール・氏名: invoice に無ければ customer から補完
+      let toEmail = invoice.customer_email?.trim() || null;
+      let customerName = invoice.customer_name?.trim() || null;
+      if ((!toEmail || !customerName) && customerId) {
+        try {
+          const cust = await stripe.customers.retrieve(customerId);
+          if (cust && !("deleted" in cust && cust.deleted)) {
+            const c = cust as Stripe.Customer;
+            toEmail = toEmail || c.email?.trim() || null;
+            customerName = customerName || c.name?.trim() || null;
+          }
+        } catch (e) {
+          console.warn("[stripe webhook] failed to retrieve customer for payment email", customerId, e);
+        }
+      }
+      if (!toEmail) {
+        console.warn("[stripe webhook] no email for payment event; skip", { type: event.type, customerId });
+        break;
+      }
+
+      // 「支払い方法を更新」リンク = Stripe Billing Portal（顧客ごとに発行）
+      const origin = getAppOriginForEmailLinks();
+      let updateUrl = `${origin}/dashboard/settings`;
+      if (customerId) {
+        try {
+          const portal = await stripe.billingPortal.sessions.create({
+            customer: customerId,
+            return_url: `${origin}/dashboard/settings`,
+          });
+          updateUrl = portal.url;
+        } catch (e) {
+          console.warn("[stripe webhook] failed to create billing portal session", customerId, e);
+        }
+      }
+
+      const { subject, html, text } = buildPaymentFailedEmail({
+        kind,
+        name: customerName,
+        updateUrl,
+        invoiceUrl: invoice.hosted_invoice_url ?? null,
+        amountDue: invoice.amount_due ?? null,
+        currency: invoice.currency ?? null,
+      });
+
+      const res = await sendResendEmail({
+        to: toEmail,
+        subject,
+        html,
+        text,
+        tags: [
+          { name: "type", value: kind === "action_required" ? "payment_action_required" : "payment_failed" },
+        ],
+      });
+      if (res.ok) {
+        console.info("[stripe webhook] payment email sent", { type: event.type, to: toEmail, id: res.id });
+      } else {
+        console.warn("[stripe webhook] payment email failed", { type: event.type, to: toEmail, error: res.error });
       }
       break;
     }
