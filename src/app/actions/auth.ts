@@ -146,10 +146,24 @@ export async function signupFormAction(
   });
 
   if (error) {
+    const emailFp = createHash("sha256").update(email.toLowerCase()).digest("hex").slice(0, 16);
+    void insertOpsSignal("auth_failure", {
+      method: "signup",
+      email_fp: emailFp,
+      locale,
+      code: typeof error.code === "string" ? error.code : "",
+    });
     return { error: mapAuthErrorForLocale(error.message, locale) };
   }
 
   if (!data.user) {
+    const emailFp = createHash("sha256").update(email.toLowerCase()).digest("hex").slice(0, 16);
+    void insertOpsSignal("auth_failure", {
+      method: "signup",
+      email_fp: emailFp,
+      locale,
+      code: "signup_incomplete",
+    });
     return { error: t.errSignupIncomplete };
   }
 
