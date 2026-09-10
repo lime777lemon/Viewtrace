@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ViewtraceLogo } from "@/components/brand/ViewtraceLogo";
+import { PublicVerifySnapshot } from "@/components/verify/PublicVerifySnapshot";
 import { fetchObservationForPublicVerify } from "@/lib/observation-public-verify";
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
 import { copy } from "@/lib/i18n";
@@ -32,6 +33,7 @@ export default async function PublicVerifyPage({ params }: Props) {
   const locale = await getRequestLocale();
   const t = copy[locale].publicVerify;
   const td = copy[locale].observationDetail;
+  const sv = copy[locale].snapshotVisuals;
 
   const obs = await fetchObservationForPublicVerify(token);
   if (!obs) notFound();
@@ -61,11 +63,13 @@ export default async function PublicVerifyPage({ params }: Props) {
 
         <div className="mt-8 overflow-hidden rounded-2xl border border-border bg-surface-elevated">
           {obs.snapshotImageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={obs.snapshotImageUrl}
-              alt=""
-              className="max-h-[min(60vh,520px)] w-full object-contain object-top bg-surface"
+            <PublicVerifySnapshot
+              imageUrl={obs.snapshotImageUrl}
+              labels={{
+                viewFullscreen: sv.viewFullscreen,
+                closeFullscreen: sv.closeFullscreen,
+                fullscreenHint: sv.fullscreenHint,
+              }}
             />
           ) : (
             <p className="px-4 py-12 text-center text-sm text-ink-muted">{t.noScreenshot}</p>
