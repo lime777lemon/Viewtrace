@@ -14,6 +14,7 @@ export type ObservationWatchPanelCopy = WatchScheduleFieldsCopy & {
   webhookLabel: string;
   webhookHint: string;
   webhookPlaceholder: string;
+  webhookSample?: string;
   shareButton: string;
   shareCopied: string;
   shareFailed: string;
@@ -105,6 +106,7 @@ export function ObservationWatchPanel({
             hint={copy.webhookHint}
             placeholder={copy.webhookPlaceholder}
             initialValue={initialWebhookUrl}
+            sampleLabel={copy.webhookSample}
           />
 
           <button

@@ -53,6 +53,7 @@ export default async function AutoObservationsPage({
     webhookLabel: tDetail.watchWebhookLabel,
     webhookHint: tDetail.watchWebhookHint,
     webhookPlaceholder: tDetail.watchWebhookPlaceholder,
+    webhookSample: tDetail.watchWebhookSample,
     shareButton: tDetail.watchShareButton,
     shareCopied: tDetail.watchShareCopied,
     shareFailed: tDetail.watchShareFailed,
@@ -67,6 +68,7 @@ export default async function AutoObservationsPage({
     label: tDetail.watchWebhookLabel,
     hint: tDetail.watchWebhookHint,
     placeholder: tDetail.watchWebhookPlaceholder,
+    sampleLabel: tDetail.watchWebhookSample,
   };
 
   const scheduleCopy = {

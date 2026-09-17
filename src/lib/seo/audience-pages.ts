@@ -118,8 +118,8 @@ const EN: Record<AudienceSlug, AudienceBody> = {
         body: "Each observation carries a timestamp and integrity check, so “this is what showed, when” holds up under scrutiny.",
       },
       {
-        title: "Client-ready verify URLs & PDF reports",
-        body: "Share a link or export a report clients can open themselves—no more re-explaining what a Slack screenshot means.",
+        title: "Landing-page proof after the click",
+        body: "Ad-screenshot tools prove the creative ran. Viewtrace proves what the landing page actually rendered in that geo—timestamped, with a verify URL and JSON metadata clients can keep.",
       },
       {
         title: "One trail per market, shared across the team",
@@ -272,8 +272,8 @@ const JA: Record<AudienceSlug, AudienceBody> = {
         body: "各観測にタイムスタンプと整合性チェックが付くため、「いつ・何が出ていたか」が精査に耐えます。",
       },
       {
-        title: "クライアントに出せる検証URL・PDF",
-        body: "リンク共有やレポート出力で、クライアント自身が開けます。スクショの意味を毎回説明する必要がありません。",
+        title: "クリック後のLPを証明する",
+        body: "広告スクショはクリエイティブの掲載を示します。Viewtrace は、その地域でLPが実際どう描画されたかを、検証URLとJSONメタデータ付きで残します。",
       },
       {
         title: "市場ごとに1本の証跡をチーム共有",

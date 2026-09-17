@@ -70,6 +70,7 @@ type WebhookCopy = {
   label: string;
   hint: string;
   placeholder: string;
+  sampleLabel?: string;
 };
 
 type RegionOption = { value: string; label: string };
@@ -264,6 +265,7 @@ export function AutoObservationsClient({
             label={webhookCopy.label}
             hint={webhookCopy.hint}
             placeholder={webhookCopy.placeholder}
+            sampleLabel={webhookCopy.sampleLabel}
           />
           <div
             className="rounded-lg border border-dashed border-border bg-surface px-3 py-2.5"
@@ -387,6 +389,7 @@ export function AutoObservationsClient({
                       hint={webhookCopy.hint}
                       placeholder={webhookCopy.placeholder}
                       initialValue={w.webhook_url}
+                      sampleLabel={webhookCopy.sampleLabel}
                     />
                     <div className="flex flex-wrap items-center gap-3">
                       <PendingSubmitButton

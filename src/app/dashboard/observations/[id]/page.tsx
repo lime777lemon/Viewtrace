@@ -7,6 +7,8 @@ import { ObservationCaptureConditionsPanel } from "@/components/dashboard/Observ
 import { ObservationCaptureTierBanner } from "@/components/dashboard/ObservationCaptureTierBanner";
 import { ObservationDetailSnapshotSection } from "@/components/dashboard/ObservationDetailSnapshotSection";
 import { ObservationDigitalSeal } from "@/components/dashboard/ObservationDigitalSeal";
+import { ObservationEvidenceJsonDownload } from "@/components/dashboard/ObservationEvidenceJsonDownload";
+import { ObservationLpVerdictCard } from "@/components/dashboard/ObservationLpVerdictCard";
 import { ObservationNotVisible } from "@/components/dashboard/ObservationNotVisible";
 import { ObservationLivePageComparePanel } from "@/components/dashboard/ObservationLivePageComparePanel";
 import { ObservationSnapshotBinaryPanel } from "@/components/dashboard/ObservationSnapshotBinaryPanel";
@@ -34,6 +36,7 @@ import {
   ensureObservationVerifyTokenForUser,
 } from "@/lib/observation-verify-token";
 import { findPreviousObservationWithSnapshot } from "@/lib/observation-previous";
+import { buildObservationEvidencePack } from "@/lib/observation-evidence-json";
 
 type PageProps = { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string }> };
 
@@ -230,6 +233,51 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
 
       <ObservationCaptureTierBanner obs={obs} locale={locale} />
 
+      {(() => {
+        const pack = buildObservationEvidencePack({ obs, verifyUrl });
+        return (
+          <>
+            <ObservationLpVerdictCard
+              copy={{
+                title: t.lpVerdictTitle,
+                hint: t.lpVerdictHint,
+                codeLpRendered: t.lpVerdictRendered,
+                codeLpNoSnapshot: t.lpVerdictNoSnapshot,
+                codeLpCaptureFailed: t.lpVerdictFailed,
+                codeLpPending: t.lpVerdictPending,
+                snapshotLabel: t.lpVerdictSnapshot,
+                snapshotYes: t.lpVerdictSnapshotYes,
+                snapshotNo: t.lpVerdictSnapshotNo,
+                httpStatus: t.lpVerdictHttp,
+                captureScope: t.lpVerdictScope,
+                scopeFullPage: t.captureScopeFullPage,
+                scopeViewport: t.captureScopeViewport,
+                scopeUnknown: "—",
+              }}
+              code={pack.verdict.code}
+              snapshotPresent={pack.verdict.snapshotPresent}
+              httpStatus={pack.verdict.httpStatus}
+              captureScope={pack.verdict.captureScope}
+            />
+            <div className="rounded-xl border border-border bg-surface-elevated p-4">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
+                {t.evidenceJsonTitle}
+              </h2>
+              <p className="mt-1 text-xs leading-relaxed text-ink-muted">{t.evidenceJsonHint}</p>
+              <div className="mt-3">
+                <ObservationEvidenceJsonDownload
+                  fileName={`viewtrace-${obs.id}.json`}
+                  json={pack}
+                  downloadLabel={t.evidenceJsonDownload}
+                  copyLabel={t.evidenceJsonCopy}
+                  copiedLabel={t.evidenceJsonCopied}
+                />
+              </div>
+            </div>
+          </>
+        );
+      })()}
+
       <div className="space-y-1">
         <h2 className="font-display text-lg font-semibold text-ink">{t.evidenceTitle}</h2>
         <p className="text-sm text-ink-muted">{t.evidenceHint}</p>
@@ -380,6 +428,7 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
               webhookLabel: t.watchWebhookLabel,
               webhookHint: t.watchWebhookHint,
               webhookPlaceholder: t.watchWebhookPlaceholder,
+              webhookSample: t.watchWebhookSample,
               shareButton: t.watchShareButton,
               shareCopied: t.watchShareCopied,
               shareFailed: t.watchShareFailed,

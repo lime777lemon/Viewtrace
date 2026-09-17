@@ -117,6 +117,14 @@ export default async function PublicVerifyPage({ params }: Props) {
         </dl>
 
         <p className="mt-6 text-xs leading-relaxed text-ink-muted">{t.disclaimer}</p>
+        <p className="mt-3">
+          <Link
+            href={`/verify/${token}/evidence.json`}
+            className="text-sm font-semibold text-accent hover:text-accent-hover"
+          >
+            {t.evidenceJsonDownload}
+          </Link>
+        </p>
 
         <aside className="mt-10 overflow-hidden rounded-2xl border border-accent/25 bg-accent-soft/40">
           <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">

@@ -664,6 +664,7 @@ export const copy = {
       ctaBody:
         "地域を指定して取得した画面を、URL・時刻・地域とセットで改ざん検知可能な記録として保存できます。無料で試せます（14日・カード不要）。",
       ctaButton: "無料で始める",
+      evidenceJsonDownload: "証跡JSONをダウンロード",
     },
     observationDetail: {
       backToList: "← 一覧へ",
@@ -702,6 +703,7 @@ export const copy = {
       watchWebhookHint:
         "https の Incoming Webhook を指定すると、自動観測の成功時に JSON を POST します（Slack / Zapier / Make 等）。空欄で無効。",
       watchWebhookPlaceholder: "https://hooks.slack.com/services/…",
+      watchWebhookSample: "送信JSONの例（Zapier / Make / Slack）",
       watchShareButton: "共有",
       watchShareCopied: "リンクをコピーしました",
       watchShareFailed: "コピーできませんでした",
@@ -743,6 +745,23 @@ export const copy = {
       captureProxyResidential: "Browserless residential",
       captureProxyExternal: "外部プロキシ",
       captureProxyRetryWithout: "プロキシなし再試行",
+      lpVerdictTitle: "ランディングページ検証（この地域・この時点）",
+      lpVerdictHint:
+        "広告枠ではなく、クリック後のLPが撮れたかを既存の記録から判定します。追加の撮影はありません。",
+      lpVerdictRendered: "LP_RENDERED — 指定地域でページが表示された記録あり",
+      lpVerdictNoSnapshot: "LP_NO_SNAPSHOT — 取得は成功扱いだが画像が残っていない",
+      lpVerdictFailed: "LP_CAPTURE_FAILED — この地域では取得に失敗",
+      lpVerdictPending: "LP_PENDING — 処理中",
+      lpVerdictHttp: "HTTP",
+      lpVerdictScope: "範囲",
+      lpVerdictSnapshot: "スクリーンショット",
+      lpVerdictSnapshotYes: "あり",
+      lpVerdictSnapshotNo: "なし",
+      evidenceJsonTitle: "証跡JSON（AdsChecks 風のメタデータ）",
+      evidenceJsonHint: "URL・地域・時刻・判定・SHA-256。クライアントやZapierに渡せます。追加コストなし。",
+      evidenceJsonDownload: "JSONをダウンロード",
+      evidenceJsonCopy: "JSONをコピー",
+      evidenceJsonCopied: "コピーしました",
       notVisibleTitle: "この記録は現在のアカウントからは見えません",
       notVisibleBody:
         "この記録は今ログイン中のアカウントには紐づいていません。複数のアカウントを使い分けている場合、自動観測メールが届いた宛先のアカウントでログインしているかをご確認ください。",
@@ -1701,6 +1720,7 @@ export const copy = {
       ctaBody:
         "Capture how a page rendered from a chosen region and save it with URL, time, and region as a tamper-evident record. Free to try (14 days, no card).",
       ctaButton: "Start for free",
+      evidenceJsonDownload: "Download evidence JSON",
     },
     observationDetail: {
       backToList: "← Back to list",
@@ -1739,6 +1759,7 @@ export const copy = {
       watchWebhookHint:
         "HTTPS incoming webhook URL. We POST JSON after each successful scheduled run (Slack, Zapier, Make, etc.). Leave blank to disable.",
       watchWebhookPlaceholder: "https://hooks.slack.com/services/…",
+      watchWebhookSample: "Example JSON we POST (Zapier / Make / Slack)",
       watchShareButton: "Share",
       watchShareCopied: "Link copied",
       watchShareFailed: "Could not copy",
@@ -1780,6 +1801,23 @@ export const copy = {
       captureProxyResidential: "Browserless residential",
       captureProxyExternal: "External proxy",
       captureProxyRetryWithout: "Retried without proxy",
+      lpVerdictTitle: "Landing-page verification (this region, this moment)",
+      lpVerdictHint:
+        "We judge whether the landing page rendered after the click—from this record only. No extra capture.",
+      lpVerdictRendered: "LP_RENDERED — page capture exists for this geo",
+      lpVerdictNoSnapshot: "LP_NO_SNAPSHOT — capture marked success but no image stored",
+      lpVerdictFailed: "LP_CAPTURE_FAILED — capture failed in this geo",
+      lpVerdictPending: "LP_PENDING — still processing",
+      lpVerdictHttp: "HTTP",
+      lpVerdictScope: "Scope",
+      lpVerdictSnapshot: "Screenshot",
+      lpVerdictSnapshotYes: "yes",
+      lpVerdictSnapshotNo: "no",
+      evidenceJsonTitle: "Evidence JSON (AdsChecks-style metadata)",
+      evidenceJsonHint: "URL, region, time, verdict, SHA-256. Share with clients or Zapier. No extra cost.",
+      evidenceJsonDownload: "Download JSON",
+      evidenceJsonCopy: "Copy JSON",
+      evidenceJsonCopied: "Copied",
       notVisibleTitle: "This record isn’t visible from your current account",
       notVisibleBody:
         "This record isn’t linked to the account you’re currently signed in to. If you use more than one Viewtrace account, make sure you’re signed in with the address that received the automated observation email.",
