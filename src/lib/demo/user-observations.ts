@@ -14,6 +14,7 @@ import { parseCaptureConditionsFromDb } from "@/lib/capture-conditions";
 import { computeObservationContentHash } from "@/lib/observation-content-hash";
 import { generateObservationVerifyToken } from "@/lib/observation-verify-token";
 import { sanitizeObservationRouteId } from "@/lib/observation-route-id";
+import { markVerifyLoopFirstObservation } from "@/lib/verify-loop/track";
 
 export const USER_OBSERVATIONS_COOKIE = "viewtrace_user_obs";
 
@@ -321,8 +322,9 @@ export async function appendUserObservation(
   const { error: insErr } = await supabase.from("observations").insert(payload);
   if (insErr) {
     const pgErr = insErr as PostgrestError;
-    // If UUID mismatch or other schema issues, surface as monthly_limit only for UI routing simplicity.
     console.error("[observations] failed to insert", pgErr);
+  } else {
+    await markVerifyLoopFirstObservation({ userId: user.id, observationId: obs.id });
   }
 
   // Clear legacy cookie if present

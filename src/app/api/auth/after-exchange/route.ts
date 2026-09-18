@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { appendAuditEvent, AUDIT_ACTION } from "@/lib/audit-log";
 import { insertTrialSignupRow } from "@/lib/auth/trial-signup-server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { completeVerifyLoopSignup } from "@/lib/verify-loop/track";
 
 export const runtime = "nodejs";
 
@@ -33,6 +34,7 @@ export async function POST(req: Request) {
     action: AUDIT_ACTION.AUTH_SIGN_IN,
     meta: { method: "pkce_browser_exchange" },
   });
+  await completeVerifyLoopSignup(user.id);
 
   return NextResponse.json({ ok: true });
 }

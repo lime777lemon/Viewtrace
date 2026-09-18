@@ -508,6 +508,7 @@ export const copy = {
         regionSearch: "地域で試す",
         observations: "オブザベーション",
         autoObservations: "自動観測",
+        verifyFunnel: "Verify獲得",
         auditLog: "監査ログ",
         purchases: "購入履歴",
         settings: "設定",
@@ -664,6 +665,12 @@ export const copy = {
       ctaBody:
         "地域を指定して取得した画面を、URL・時刻・地域とセットで改ざん検知可能な記録として保存できます。無料で試せます（14日・カード不要）。",
       ctaButton: "無料で始める",
+      loopCta: "Check your own website with ViewTrace",
+      loopHint: "自分のURLを入力すると、最初の観測まで最短で進めます。",
+      loopUrlLabel: "あなたのウェブサイト URL",
+      loopUrlPlaceholder: "https://example.com",
+      loopSubmitting: "準備中…",
+      loopInvalidUrl: "有効な http(s) の URL を入力してください。",
       evidenceJsonDownload: "証跡JSONをダウンロード",
     },
     observationDetail: {
@@ -1561,6 +1568,7 @@ export const copy = {
         regionSearch: "Try by region",
         observations: "Observations",
         autoObservations: "Auto observations",
+        verifyFunnel: "Verify funnel",
         auditLog: "Audit log",
         purchases: "Purchase history",
         settings: "Settings",
@@ -1720,6 +1728,12 @@ export const copy = {
       ctaBody:
         "Capture how a page rendered from a chosen region and save it with URL, time, and region as a tamper-evident record. Free to try (14 days, no card).",
       ctaButton: "Start for free",
+      loopCta: "Check your own website with ViewTrace",
+      loopHint: "Enter your URL to start your first observation.",
+      loopUrlLabel: "Your website URL",
+      loopUrlPlaceholder: "https://example.com",
+      loopSubmitting: "Working…",
+      loopInvalidUrl: "Enter a valid http(s) URL.",
       evidenceJsonDownload: "Download evidence JSON",
     },
     observationDetail: {

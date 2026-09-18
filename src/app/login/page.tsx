@@ -5,6 +5,7 @@ import { getSession } from "@/lib/auth/session";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { sanitizeDashboardObservationHrefPath } from "@/lib/observation-route-id";
+import { readVerifyLoopAttribution } from "@/lib/verify-loop/cookies";
 
 export const metadata: Metadata = {
   title: "Sign in | Viewtrace",
@@ -20,9 +21,12 @@ export default async function LoginPage({
   const nextParam = sp.next?.trim() ?? "";
   const nextPathRaw =
     nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : undefined;
+  const loopNext = nextPathRaw ? undefined : (await readVerifyLoopAttribution()).nextPath;
   const nextPath = nextPathRaw
     ? sanitizeDashboardObservationHrefPath(nextPathRaw)
-    : undefined;
+    : loopNext
+      ? sanitizeDashboardObservationHrefPath(loopNext)
+      : undefined;
   const modeParam = sp.mode?.trim().toLowerCase();
   const verified = sp.verified === "1";
   const initialMode: "signin" | "signup" =

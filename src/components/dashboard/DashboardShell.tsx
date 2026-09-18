@@ -20,6 +20,7 @@ type DashboardShellProps = {
   planName: string;
   planPriceLabel: string;
   locale?: Locale;
+  isAdmin?: boolean;
   /** トライアル期間（14日など）が終了している */
   trialExpired?: boolean;
   /** トライアル終了予定（ISO文字列） */
@@ -36,6 +37,7 @@ export function DashboardShell({
   planId,
   planName,
   locale = "ja",
+  isAdmin = false,
   trialExpired = false,
   trialEndsAt = null,
   trialLimitReached = false,
@@ -57,6 +59,9 @@ export function DashboardShell({
     { href: "/dashboard/audit", label: t.nav.auditLog },
     { href: "/dashboard/purchases", label: t.nav.purchases },
     { href: "/dashboard/settings", label: t.nav.settings },
+    ...(isAdmin
+      ? [{ href: "/dashboard/admin/verify-funnel" as const, label: t.nav.verifyFunnel }]
+      : []),
   ] as const;
 
   function setLocale(next: Locale) {

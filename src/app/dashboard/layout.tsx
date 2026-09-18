@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { getSession } from "@/lib/auth/session";
+import { isAdminSession } from "@/lib/admin";
 import { countObservationsSinceTrialStart, readUserObservations } from "@/lib/demo/user-observations";
 import { getPlan, TRIAL_CONFIG } from "@/lib/plans";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
@@ -39,6 +40,7 @@ export default async function DashboardLayout({
       planName={uiPlanName}
       planPriceLabel={uiPlanPriceLabel}
       locale={locale}
+      isAdmin={isAdminSession(session)}
       trialExpired={trialExpired}
       trialEndsAt={session.trialEndsAt}
       trialLimitReached={trialLimitReached}

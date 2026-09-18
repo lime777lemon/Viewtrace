@@ -3,15 +3,20 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ViewtraceLogo } from "@/components/brand/ViewtraceLogo";
 import { PublicVerifySnapshot } from "@/components/verify/PublicVerifySnapshot";
+import { VerifyOwnSiteForm } from "@/components/verify/VerifyOwnSiteForm";
+import { VerifyViewBeacon } from "@/components/verify/VerifyViewBeacon";
 import { fetchObservationForPublicVerify } from "@/lib/observation-public-verify";
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
 import { copy } from "@/lib/i18n";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { sanitizeVerifyTokenParam } from "@/lib/observation-verify-token";
 
-type Props = { params: Promise<{ token: string }> };
+export const dynamic = "force-dynamic";
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+type TokenParams = { params: Promise<{ token: string }> };
+type Props = TokenParams & { searchParams: Promise<{ loop?: string }> };
+
+export async function generateMetadata({ params }: TokenParams): Promise<Metadata> {
   const { token: tokenRaw } = await params;
   const locale = await getRequestLocale();
   const t = copy[locale].publicVerify;
@@ -25,7 +30,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function PublicVerifyPage({ params }: Props) {
+export default async function PublicVerifyPage({ params, searchParams }: Props) {
   const { token: tokenRaw } = await params;
   const token = sanitizeVerifyTokenParam(tokenRaw);
   if (!token) notFound();
@@ -34,6 +39,8 @@ export default async function PublicVerifyPage({ params }: Props) {
   const t = copy[locale].publicVerify;
   const td = copy[locale].observationDetail;
   const sv = copy[locale].snapshotVisuals;
+  const sp = await searchParams;
+  const loopInvalid = sp.loop === "invalid";
 
   const obs = await fetchObservationForPublicVerify(token);
   if (!obs) notFound();
@@ -58,6 +65,7 @@ export default async function PublicVerifyPage({ params }: Props) {
       </header>
 
       <main className="mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-10">
+        <VerifyViewBeacon token={token} />
         <h1 className="font-display text-2xl font-semibold tracking-tight text-ink">{t.title}</h1>
         <p className="mt-2 text-sm leading-relaxed text-ink-muted">{t.subtitle}</p>
 
@@ -127,17 +135,24 @@ export default async function PublicVerifyPage({ params }: Props) {
         </p>
 
         <aside className="mt-10 overflow-hidden rounded-2xl border border-accent/25 bg-accent-soft/40">
-          <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-            <div className="min-w-0">
-              <p className="font-display text-base font-semibold text-ink">{t.ctaTitle}</p>
-              <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">{t.ctaBody}</p>
-            </div>
-            <Link
-              href="/?utm_source=verify_page&utm_medium=referral&utm_campaign=powered_by"
-              className="inline-flex shrink-0 items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-accent-hover"
-            >
-              {t.ctaButton}
-            </Link>
+          <div className="p-5 sm:p-6">
+            <p className="font-display text-base font-semibold text-ink">{t.ctaTitle}</p>
+            <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">{t.ctaBody}</p>
+            <p className="mt-5 font-display text-lg font-semibold tracking-tight text-ink">
+              {t.loopCta}
+            </p>
+            <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">{t.loopHint}</p>
+            <VerifyOwnSiteForm
+              token={token}
+              error={loopInvalid}
+              labels={{
+                urlLabel: t.loopUrlLabel,
+                urlPlaceholder: t.loopUrlPlaceholder,
+                submit: t.loopCta,
+                submitting: t.loopSubmitting,
+                invalidUrl: t.loopInvalidUrl,
+              }}
+            />
           </div>
         </aside>
       </main>

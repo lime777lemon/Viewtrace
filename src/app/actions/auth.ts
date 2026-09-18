@@ -16,6 +16,8 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { syncPublicUserPlanMirror } from "@/lib/supabase/sync-public-user-plan";
 import { insertOpsSignal } from "@/lib/ops/insert-signal";
 import { sanitizeDashboardObservationHrefPath } from "@/lib/observation-route-id";
+import { completeVerifyLoopSignup, markVerifyLoopSignupStarted } from "@/lib/verify-loop/track";
+import { readVerifyLoopAttribution } from "@/lib/verify-loop/cookies";
 import { pwnedPasswordCount, pwnedPasswordErrorMessage } from "@/lib/auth/pwned-passwords";
 
 export type AuthFormState = { error?: string; message?: string } | null;
@@ -78,6 +80,8 @@ export async function authFormAction(
   if (nextRaw.startsWith("/") && !nextRaw.startsWith("//")) {
     redirect(sanitizeDashboardObservationHrefPath(nextRaw));
   }
+  const loopNext = (await readVerifyLoopAttribution()).nextPath;
+  if (loopNext) redirect(loopNext);
   redirect("/dashboard");
 }
 
@@ -123,6 +127,8 @@ export async function signupFormAction(
     return { error: pwnedPasswordErrorMessage(locale, pwnedCount) };
   }
 
+  await markVerifyLoopSignupStarted();
+
   const supabase = await createSupabaseServerClient();
   const emailRedirectTo = await getAuthEmailRedirectTo();
   const trialStartedAt = new Date().toISOString();
@@ -166,6 +172,8 @@ export async function signupFormAction(
     });
     return { error: t.errSignupIncomplete };
   }
+
+  await completeVerifyLoopSignup(data.user.id);
 
   if (data.session) {
     await insertTrialSignupRow(
