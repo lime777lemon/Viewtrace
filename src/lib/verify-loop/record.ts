@@ -85,7 +85,7 @@ export async function recordVerifyLoopEvent(
   });
 
   if (insErr) {
-    console.error("[verify-loop] insert failed", insErr.message);
+    console.error("[verify-loop] insert failed", insErr.message, insErr.code, insErr.details, insErr.hint);
     return { ok: false, error: "insert_failed" };
   }
   return { ok: true, recorded: true };

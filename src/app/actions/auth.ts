@@ -173,7 +173,11 @@ export async function signupFormAction(
     return { error: t.errSignupIncomplete };
   }
 
-  await completeVerifyLoopSignup(data.user.id);
+  const identities = data.user.identities;
+  const isLikelyExistingUser = Array.isArray(identities) && identities.length === 0;
+  if (!isLikelyExistingUser) {
+    await completeVerifyLoopSignup(data.user.id);
+  }
 
   if (data.session) {
     await insertTrialSignupRow(

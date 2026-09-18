@@ -1,4 +1,3 @@
-import { getSession } from "@/lib/auth/session";
 import {
   VERIFY_VIEW_DEDUP_MS,
   type VerifyLoopEventType,
@@ -81,7 +80,7 @@ export async function completeVerifyLoopSignup(userId: string): Promise<void> {
 export async function markVerifyLoopSignupStarted(): Promise<void> {
   await recordVerifyLoopIfAttributed({
     eventType: "signup_started",
-    userId: (await getSession())?.userId ?? null,
+    userId: null,
     metadata: { via: "signup_form" },
     dedupeWindowMs: VERIFY_VIEW_DEDUP_MS,
   });
