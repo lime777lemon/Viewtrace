@@ -423,8 +423,8 @@ export const copy = {
         a: "20回までオブザベーションを無料でお試しいただけます。クレジットカードは不要です。トライアル期間は14日間で、終了後は Starter または Pro を選択して継続いただけます。無料枠の20回を使い切ると、ログイン後のダッシュボード上部にお申し込み・プラン選択の案内が表示されます。",
       },
       {
-        q: "広告が正常に動いている保証になりますか？",
-        a: "いいえ。特定の時点・条件で取得した観測記録のみを提供します。",
+        q: "広告が正しく表示されていることを証明できますか？",
+        a: "指定した地域と時刻で、ページが実際にどう見えていたかを記録として残せます。クライアントへの説明や、表示の食い違いを後から見返す材料になります。ただし「すべてのユーザーに広告が届いた」ことの保証ではありません。",
       },
       {
         q: "何が得られますか？",
@@ -1480,8 +1480,8 @@ export const copy = {
         a: "You can take up to 20 observations at no charge, with no credit card required. The trial lasts 14 days; afterward, choose Starter or Pro to continue. After you use all 20 trial observations, a banner at the top of the dashboard guides you to subscribe.",
       },
       {
-        q: "Is this a guarantee that ads are healthy?",
-        a: "No. We only provide observations captured under specific times and conditions.",
+        q: "Can I prove how my ads actually appeared?",
+        a: "You get a record of how the page looked from a chosen location and time—useful for client reviews and spotting display mismatches. It is not a guarantee that ads were delivered to every user.",
       },
       {
         q: "What do I actually get?",
