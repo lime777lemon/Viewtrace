@@ -19,7 +19,6 @@ export default async function ContactPage() {
     <LegalDocShell
       locale={locale}
       title={locale === "en" ? "Contact" : "お問い合わせ"}
-      updated="2026-05-28"
     >
       <div className="max-w-xl space-y-8">
         <p className="text-base leading-relaxed text-ink-muted">{t.intro}</p>
