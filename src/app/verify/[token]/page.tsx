@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ViewtraceLogo } from "@/components/brand/ViewtraceLogo";
 import { PublicVerifySnapshot } from "@/components/verify/PublicVerifySnapshot";
-import { VerifyOwnSiteForm } from "@/components/verify/VerifyOwnSiteForm";
 import { VerifyViewBeacon } from "@/components/verify/VerifyViewBeacon";
 import { fetchObservationForPublicVerify } from "@/lib/observation-public-verify";
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
@@ -14,7 +13,7 @@ import { sanitizeVerifyTokenParam } from "@/lib/observation-verify-token";
 export const dynamic = "force-dynamic";
 
 type TokenParams = { params: Promise<{ token: string }> };
-type Props = TokenParams & { searchParams: Promise<{ loop?: string }> };
+type Props = TokenParams;
 
 export async function generateMetadata({ params }: TokenParams): Promise<Metadata> {
   const { token: tokenRaw } = await params;
@@ -30,7 +29,7 @@ export async function generateMetadata({ params }: TokenParams): Promise<Metadat
   };
 }
 
-export default async function PublicVerifyPage({ params, searchParams }: Props) {
+export default async function PublicVerifyPage({ params }: Props) {
   const { token: tokenRaw } = await params;
   const token = sanitizeVerifyTokenParam(tokenRaw);
   if (!token) notFound();
@@ -39,8 +38,6 @@ export default async function PublicVerifyPage({ params, searchParams }: Props) 
   const t = copy[locale].publicVerify;
   const td = copy[locale].observationDetail;
   const sv = copy[locale].snapshotVisuals;
-  const sp = await searchParams;
-  const loopInvalid = sp.loop === "invalid";
 
   const obs = await fetchObservationForPublicVerify(token);
   if (!obs) notFound();
@@ -134,27 +131,11 @@ export default async function PublicVerifyPage({ params, searchParams }: Props) 
           </Link>
         </p>
 
-        <aside className="mt-10 overflow-hidden rounded-2xl border border-accent/25 bg-accent-soft/40">
-          <div className="p-5 sm:p-6">
-            <p className="font-display text-base font-semibold text-ink">{t.ctaTitle}</p>
-            <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">{t.ctaBody}</p>
-            <p className="mt-5 font-display text-lg font-semibold tracking-tight text-ink">
-              {t.loopCta}
-            </p>
-            <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">{t.loopHint}</p>
-            <VerifyOwnSiteForm
-              token={token}
-              error={loopInvalid}
-              labels={{
-                urlLabel: t.loopUrlLabel,
-                urlPlaceholder: t.loopUrlPlaceholder,
-                submit: t.loopCta,
-                submitting: t.loopSubmitting,
-                invalidUrl: t.loopInvalidUrl,
-              }}
-            />
-          </div>
-        </aside>
+        <p className="mt-10 text-center text-xs text-ink-muted">
+          <Link href="/" className="font-medium text-ink-muted hover:text-accent">
+            Powered by Viewtrace
+          </Link>
+        </p>
       </main>
     </div>
   );
