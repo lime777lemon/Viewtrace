@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { contactFormAction } from "@/app/actions/contact";
+import { ContactTurnstile } from "@/components/contact/ContactTurnstile";
 import type { Locale } from "@/lib/i18n";
 import { getContactPageCopy } from "@/lib/i18n/contact-page-copy";
 import { contactEmail } from "@/lib/site";
@@ -9,9 +10,16 @@ import { contactEmail } from "@/lib/site";
 const inputClassName =
   "mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm outline-none ring-accent/25 transition placeholder:text-ink-muted/60 focus:border-accent/40 focus:ring-2";
 
-export function ContactForm({ locale }: { locale: Locale }) {
+export function ContactForm({
+  locale,
+  turnstileSiteKey,
+}: {
+  locale: Locale;
+  turnstileSiteKey?: string;
+}) {
   const t = getContactPageCopy(locale);
   const [state, action, pending] = useActionState(contactFormAction, null);
+  const turnstileReset = `${state?.error ?? ""}:${state?.message ?? ""}`;
 
   return (
     <div className="rounded-2xl border border-border bg-surface-elevated p-6 shadow-sm sm:p-8">
@@ -83,6 +91,10 @@ export function ContactForm({ locale }: { locale: Locale }) {
             className={`${inputClassName} resize-y`}
           />
         </div>
+
+        {turnstileSiteKey ? (
+          <ContactTurnstile siteKey={turnstileSiteKey} resetSignal={turnstileReset} />
+        ) : null}
 
         {state?.error ? (
           <p

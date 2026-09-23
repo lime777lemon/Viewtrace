@@ -4,6 +4,11 @@ import { isValidEmail } from "@/lib/auth/form-helpers";
 import { takeContactRateLimit } from "@/lib/contact/rate-limit";
 import { getContactClientIp } from "@/lib/contact/request-ip";
 import { contactSubmissionLooksLikeSpam } from "@/lib/contact/spam";
+import {
+  getTurnstileSecret,
+  getTurnstileSiteKey,
+  verifyTurnstileToken,
+} from "@/lib/contact/turnstile";
 import type { Locale } from "@/lib/i18n";
 import {
   contactTopicLabel,
@@ -64,6 +69,18 @@ export async function contactFormAction(
   );
   if (!ipOk || !emailOk) {
     return { error: t.errRateLimited };
+  }
+
+  const turnstileSiteKey = getTurnstileSiteKey();
+  const turnstileSecret = getTurnstileSecret();
+  if (turnstileSiteKey && !turnstileSecret) {
+    console.warn("[contact] turnstile site key set without secret");
+    return { error: t.errNotConfigured };
+  }
+  if (turnstileSecret) {
+    const turnstileToken = String(formData.get("cf-turnstile-response") ?? "").trim();
+    const turnstileOk = await verifyTurnstileToken(turnstileToken, ip);
+    if (!turnstileOk) return { error: t.errTurnstile };
   }
 
   if (contactSubmissionLooksLikeSpam({ name, email, message })) {

@@ -3,6 +3,7 @@ import { ContactForm } from "@/components/contact/ContactForm";
 import { LegalDocShell } from "@/components/legal/LegalDocShell";
 import { getContactPageCopy } from "@/lib/i18n/contact-page-copy";
 import { legalPageMetadata } from "@/lib/i18n/legal-page-metadata";
+import { getTurnstileSiteKey } from "@/lib/contact/turnstile";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -22,7 +23,7 @@ export default async function ContactPage() {
     >
       <div className="max-w-xl space-y-8">
         <p className="text-base leading-relaxed text-ink-muted">{t.intro}</p>
-        <ContactForm locale={locale} />
+        <ContactForm locale={locale} turnstileSiteKey={getTurnstileSiteKey()} />
       </div>
     </LegalDocShell>
   );
