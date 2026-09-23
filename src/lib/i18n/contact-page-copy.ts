@@ -25,6 +25,7 @@ export type ContactPageCopy = {
   errMessage: string;
   errSend: string;
   errNotConfigured: string;
+  errRateLimited: string;
 };
 
 const ja: ContactPageCopy = {
@@ -52,6 +53,7 @@ const ja: ContactPageCopy = {
   errSend: "送信に失敗しました。しばらくしてから再度お試しください。",
   errNotConfigured:
     "現在フォームからの送信を受け付けられません。下記メールアドレスまで直接ご連絡ください。",
+  errRateLimited: "送信が集中しています。しばらくしてから再度お試しください。",
 };
 
 const en: ContactPageCopy = {
@@ -79,6 +81,7 @@ const en: ContactPageCopy = {
   errSend: "Could not send your message. Please try again in a moment.",
   errNotConfigured:
     "The contact form is not available right now. Please email us directly at the address below.",
+  errRateLimited: "Too many messages from this connection. Please try again in a little while.",
 };
 
 export function getContactPageCopy(locale: Locale): ContactPageCopy {

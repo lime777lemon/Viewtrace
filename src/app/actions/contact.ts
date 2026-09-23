@@ -1,6 +1,9 @@
 "use server";
 
 import { isValidEmail } from "@/lib/auth/form-helpers";
+import { takeContactRateLimit } from "@/lib/contact/rate-limit";
+import { getContactClientIp } from "@/lib/contact/request-ip";
+import { contactSubmissionLooksLikeSpam } from "@/lib/contact/spam";
 import type { Locale } from "@/lib/i18n";
 import {
   contactTopicLabel,
@@ -9,6 +12,11 @@ import {
 } from "@/lib/i18n/contact-page-copy";
 import { sendResendEmail, isResendConfigured } from "@/lib/resend";
 import { contactEmail } from "@/lib/site";
+
+const CONTACT_IP_MAX = 4;
+const CONTACT_IP_WINDOW_MS = 15 * 60 * 1000;
+const CONTACT_EMAIL_MAX = 3;
+const CONTACT_EMAIL_WINDOW_MS = 60 * 60 * 1000;
 
 export type ContactFormState = { error?: string; message?: string } | null;
 
@@ -46,6 +54,22 @@ export async function contactFormAction(
   if (!name) return { error: t.errName };
   if (!email || !isValidEmail(email)) return { error: t.errEmail };
   if (message.length < 10) return { error: t.errMessage };
+
+  const ip = await getContactClientIp();
+  const ipOk = takeContactRateLimit(`ip:${ip}`, CONTACT_IP_MAX, CONTACT_IP_WINDOW_MS);
+  const emailOk = takeContactRateLimit(
+    `em:${email.toLowerCase()}`,
+    CONTACT_EMAIL_MAX,
+    CONTACT_EMAIL_WINDOW_MS,
+  );
+  if (!ipOk || !emailOk) {
+    return { error: t.errRateLimited };
+  }
+
+  if (contactSubmissionLooksLikeSpam({ name, email, message })) {
+    console.warn("[contact] dropped suspected spam");
+    return { message: t.success };
+  }
 
   if (!isResendConfigured()) {
     return { error: t.errNotConfigured };
