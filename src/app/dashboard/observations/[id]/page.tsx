@@ -382,7 +382,7 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
               </p>
             ) : (
               <>
-                <p className="font-medium text-amber-800 dark:text-amber-200">
+                <p className="font-medium text-emerald-950 dark:text-emerald-400">
                   {t.integrityMismatch}
                 </p>
                 {obs.contentHash ? (
