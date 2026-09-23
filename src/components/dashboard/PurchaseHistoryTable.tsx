@@ -60,17 +60,17 @@ export function PurchaseHistoryTable({
 
   if (rows.length === 0) {
     return (
-      <p className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-4 py-8 text-center text-sm text-[var(--color-ink-muted)]">
+      <p className="rounded-xl border border-dashed border-border bg-surface-elevated px-4 py-8 text-center text-sm text-ink-muted">
         {emptyMessage ?? (locale === "ja" ? "購入履歴がありません。" : "No purchase history yet.")}
       </p>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)]">
+    <div className="overflow-hidden rounded-xl border border-border bg-surface-elevated">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[880px] text-left text-sm">
-          <thead className="border-b border-[var(--color-border)] bg-[var(--color-surface)] text-xs font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">
+        <table className="w-full min-w-220 text-left text-sm">
+          <thead className="border-b border-border bg-surface text-xs font-semibold uppercase tracking-wide text-ink-muted">
             <tr>
               <th className="px-4 py-3">{th.purchaseTablePurchaseDate}</th>
               <th className="px-4 py-3">{th.purchaseTableLastUpdated}</th>
@@ -80,7 +80,7 @@ export function PurchaseHistoryTable({
               <th className="px-4 py-3">{locale === "ja" ? "サブスクID" : "Subscription ID"}</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[var(--color-border)]">
+          <tbody className="divide-y divide-border">
             {rows.map((row, i) => {
               const purchaseTs = row.created_at ?? row.updated_at;
               const purchaseIsFallback = !row.created_at && Boolean(row.updated_at);
@@ -88,17 +88,17 @@ export function PurchaseHistoryTable({
               return (
                 <tr
                   key={`${row.stripe_subscription_id ?? "no-sub"}-${i}`}
-                  className="hover:bg-[var(--color-surface)]/80"
+                  className="hover:bg-surface/80"
                 >
-                  <td className="px-4 py-3 align-top text-[var(--color-ink-muted)]">
+                  <td className="px-4 py-3 align-top text-ink-muted">
                     {purchaseTs ? (
                       <>
-                        <span className="text-[var(--color-ink)]">{formatJaDateTime(purchaseTs)}</span>
-                        <span className="mt-0.5 block text-[11px] text-[var(--color-ink-muted)]">
+                        <span className="text-ink">{formatJaDateTime(purchaseTs, locale)}</span>
+                        <span className="mt-0.5 block text-[11px] text-ink-muted">
                           {formatUtcLabel(purchaseTs)}
                         </span>
                         {purchaseIsFallback ? (
-                          <span className="mt-1 block text-[10px] italic text-[var(--color-ink-muted)]">
+                          <span className="mt-1 block text-[10px] italic text-ink-muted">
                             {th.purchaseTablePurchaseDateFallbackHint}
                           </span>
                         ) : null}
@@ -107,11 +107,11 @@ export function PurchaseHistoryTable({
                       "-"
                     )}
                   </td>
-                  <td className="px-4 py-3 align-top text-[var(--color-ink-muted)]">
+                  <td className="px-4 py-3 align-top text-ink-muted">
                     {updatedTs ? (
                       <>
-                        <span className="text-[var(--color-ink)]">{formatJaDateTime(updatedTs)}</span>
-                        <span className="mt-0.5 block text-[11px] text-[var(--color-ink-muted)]">
+                        <span className="text-ink">{formatJaDateTime(updatedTs, locale)}</span>
+                        <span className="mt-0.5 block text-[11px] text-ink-muted">
                           {formatUtcLabel(updatedTs)}
                         </span>
                       </>
@@ -119,14 +119,14 @@ export function PurchaseHistoryTable({
                       "-"
                     )}
                   </td>
-                  <td className="px-4 py-3 align-top text-[var(--color-ink)]">
+                  <td className="px-4 py-3 align-top text-ink">
                     {planLabel(row.plan_id, locale)}
                   </td>
                   <td className="px-4 py-3 align-top">
                     <StatusBadge status={row.status} />
                   </td>
-                  <td className="px-4 py-3 align-top text-[var(--color-ink)]">{row.mode ?? "-"}</td>
-                  <td className="px-4 py-3 align-top font-mono text-xs text-[var(--color-ink)]">
+                  <td className="px-4 py-3 align-top text-ink">{row.mode ?? "-"}</td>
+                  <td className="px-4 py-3 align-top font-mono text-xs text-ink">
                     {maskId(row.stripe_subscription_id)}
                   </td>
                 </tr>

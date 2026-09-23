@@ -167,7 +167,7 @@ export default async function ObservationReportPage({ params }: Props) {
             <div>
               <dt className="text-ink-muted">{t.reportCaptured}</dt>
               <dd className="text-ink">
-                {formatJaDateTime(obs.capturedAt)} · {formatUtcLabel(obs.capturedAt)}
+                {formatJaDateTime(obs.capturedAt, locale)} · {formatUtcLabel(obs.capturedAt)}
               </dd>
             </div>
           </dl>

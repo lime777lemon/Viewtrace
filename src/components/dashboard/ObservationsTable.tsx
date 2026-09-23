@@ -60,7 +60,7 @@ export function ObservationsTable({
             {rows.map((row) => (
               <tr key={row.id} className="hover:bg-[var(--color-surface)]/80">
                 <td className="px-4 py-3 align-top text-[var(--color-ink-muted)]">
-                  <span className="text-[var(--color-ink)]">{formatJaDateTime(row.capturedAt)}</span>
+                  <span className="text-[var(--color-ink)]">{formatJaDateTime(row.capturedAt, locale)}</span>
                   <span className="mt-0.5 block text-[11px] text-[var(--color-ink-muted)]">
                     {formatUtcLabel(row.capturedAt)}
                   </span>

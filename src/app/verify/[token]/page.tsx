@@ -45,7 +45,7 @@ export default async function PublicVerifyPage({ params, searchParams }: Props) 
   const obs = await fetchObservationForPublicVerify(token);
   if (!obs) notFound();
 
-  const capturedLabel = `${formatJaDateTime(obs.capturedAt)} · ${formatUtcLabel(obs.capturedAt)}`;
+  const capturedLabel = `${formatJaDateTime(obs.capturedAt, locale)} · ${formatUtcLabel(obs.capturedAt)}`;
   const statusLabel =
     obs.status === "success"
       ? td.statusSuccess

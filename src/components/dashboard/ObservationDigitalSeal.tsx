@@ -29,7 +29,7 @@ export function ObservationDigitalSeal({ obs, locale }: Props) {
         <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-muted">
           {t.timestamp}
         </p>
-        <p className="mt-1 font-medium">{formatJaDateTime(obs.capturedAt)}</p>
+        <p className="mt-1 font-medium">{formatJaDateTime(obs.capturedAt, locale)}</p>
         <p className="mt-0.5 text-xs text-ink-muted">{formatUtcLabel(obs.capturedAt)}</p>
       </div>
       <dl className="mt-4 grid gap-2 text-xs text-ink-muted">

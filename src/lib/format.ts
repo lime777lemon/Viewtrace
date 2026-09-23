@@ -1,6 +1,6 @@
-export function formatJaDateTime(iso: string): string {
+export function formatJaDateTime(iso: string, locale: "ja" | "en" = "ja"): string {
   const d = new Date(iso);
-  return new Intl.DateTimeFormat("ja-JP", {
+  return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "ja-JP", {
     dateStyle: "medium",
     timeStyle: "short",
     timeZone: "Asia/Tokyo",

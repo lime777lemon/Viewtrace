@@ -79,7 +79,7 @@ export default async function DashboardAuditPage() {
               {rows.map((r) => (
                 <tr key={r.id} className="bg-surface">
                   <td className="whitespace-nowrap px-4 py-3 align-top text-ink">
-                    <span className="block">{formatJaDateTime(r.created_at)}</span>
+                    <span className="block">{formatJaDateTime(r.created_at, locale)}</span>
                     <span className="text-xs text-ink-muted">{formatUtcLabel(r.created_at)}</span>
                   </td>
                   <td className="px-4 py-3 align-top font-mono text-xs text-ink">{r.action}</td>

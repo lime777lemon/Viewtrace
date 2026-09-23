@@ -95,7 +95,7 @@ export function ObservationDetailSnapshotSection({
         <ol className="mt-4 space-y-0 border-l-2 border-accent/35 pl-4">
           {[...history].reverse().map((ev, i) => (
             <li key={`${ev.at}-${i}`} className="relative pb-6 last:pb-0">
-              <span className="absolute left-[-21px] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-surface bg-accent" />
+              <span className="absolute -left-5.25 top-1.5 h-2.5 w-2.5 rounded-full border-2 border-surface bg-accent" />
               <div className="flex flex-wrap items-baseline gap-2">
                 <span className="text-xs font-semibold uppercase tracking-wider text-accent">
                   {kindLabel(ev.kind, locale)}
@@ -110,7 +110,7 @@ export function ObservationDetailSnapshotSection({
                 </p>
               ) : null}
               <p className="mt-1 text-xs text-ink-muted">
-                {formatJaDateTime(ev.at)} · {formatUtcLabel(ev.at)}
+                {formatJaDateTime(ev.at, locale)} · {formatUtcLabel(ev.at)}
               </p>
             </li>
           ))}

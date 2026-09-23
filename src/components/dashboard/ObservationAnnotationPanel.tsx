@@ -5,6 +5,7 @@ import { updateObservationAnnotationsAction } from "@/app/actions/update-observa
 import type { ObservationReviewStatus } from "@/lib/demo/observations";
 import type { Locale } from "@/lib/i18n";
 import { copy } from "@/lib/i18n";
+import { localizeObservationNote } from "@/lib/i18n/observation-persisted-copy";
 
 type Props = {
   observationId: string;
@@ -26,7 +27,8 @@ export function ObservationAnnotationPanel({
   initialReviewStatus,
 }: Props) {
   const t = copy[locale].observationAnnotation;
-  const [note, setNote] = useState(initialNote);
+  const displayNote = localizeObservationNote(initialNote, locale) ?? initialNote;
+  const [note, setNote] = useState(displayNote);
   const [tagsText, setTagsText] = useState(initialTags.join(", "));
   const [folder, setFolder] = useState(initialFolder);
   const [reviewStatus, setReviewStatus] = useState<ObservationReviewStatus | "">(
@@ -42,8 +44,10 @@ export function ObservationAnnotationPanel({
       .split(/[,、]/)
       .map((s) => s.trim())
       .filter(Boolean);
+    const noteToSave =
+      note === displayNote && displayNote !== initialNote ? initialNote : note;
     const r = await updateObservationAnnotationsAction(observationId, {
-      note,
+      note: noteToSave,
       tags,
       folder,
       reviewStatus,

@@ -62,7 +62,7 @@ export default async function ObservationVerificationReportPage({ params }: Prop
   const verifyToken = await ensureObservationVerifyTokenForUser(supabase, obs.id);
   const verifyUrl = verifyToken ? buildPublicVerifyUrlForObservation(verifyToken) : "—";
 
-  const capturedLabel = `${formatJaDateTime(obs.capturedAt)} · ${formatUtcLabel(obs.capturedAt)}`;
+  const capturedLabel = `${formatJaDateTime(obs.capturedAt, locale)} · ${formatUtcLabel(obs.capturedAt)}`;
   const country = formatVerificationReportCountry(obs);
 
   const reportCopy = {

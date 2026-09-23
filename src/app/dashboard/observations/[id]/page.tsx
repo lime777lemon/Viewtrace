@@ -188,7 +188,7 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
     ? {
         id: previousRaw.id,
         snapshotImageUrl: previousRaw.snapshotImageUrl,
-        capturedAtLabel: `${formatJaDateTime(previousRaw.capturedAt)} · ${formatUtcLabel(previousRaw.capturedAt)}`,
+        capturedAtLabel: `${formatJaDateTime(previousRaw.capturedAt, locale)} · ${formatUtcLabel(previousRaw.capturedAt)}`,
       }
     : null;
 
@@ -313,7 +313,7 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
           <dt className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
             {t.capturedAt}
           </dt>
-          <dd className="mt-1 text-sm text-ink">{formatJaDateTime(obs.capturedAt)}</dd>
+          <dd className="mt-1 text-sm text-ink">{formatJaDateTime(obs.capturedAt, locale)}</dd>
           <dd className="mt-0.5 text-xs text-ink-muted">
             {formatUtcLabel(obs.capturedAt)}
           </dd>
