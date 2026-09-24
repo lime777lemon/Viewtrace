@@ -24,11 +24,11 @@ const sora = Sora({
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin),
   title: {
-    default: "Viewtrace — Geo ad verification with tamper-evident proof",
+    default: "Viewtrace — Post-click verification for landing pages",
     template: "%s | Viewtrace",
   },
   description:
-    "Prove how your ads and landing pages actually rendered from any region. Geo-routed captures with timestamps and integrity checks—client-ready verify URLs and PDF reports for agencies.",
+    "Ad platforms tell you where the click went. Viewtrace shows you what was actually waiting there. Catch geo-specific landing issues before they waste spend.",
   keywords: [...siteSeoKeywordPhrases, "Viewtrace"],
   applicationName: "Viewtrace",
   alternates: {
@@ -44,15 +44,15 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "/",
     siteName: "Viewtrace",
-    title: "Viewtrace — Geo ad verification with tamper-evident proof",
+    title: "Viewtrace — Post-click verification for landing pages",
     description:
-      "Prove how your ads and landing pages actually rendered from any region. Geo-routed captures with timestamps and integrity checks—client-ready verify URLs and PDF reports for agencies.",
+      "Ad platforms tell you where the click went. Viewtrace shows you what was actually waiting there. Catch geo-specific landing issues before they waste spend.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Viewtrace — Geo ad verification with tamper-evident proof",
+    title: "Viewtrace — Post-click verification for landing pages",
     description:
-      "Prove how your ads and landing pages actually rendered from any region. Geo-routed captures with timestamps and integrity checks—client-ready verify URLs and PDF reports for agencies.",
+      "Ad platforms tell you where the click went. Viewtrace shows you what was actually waiting there. Catch geo-specific landing issues before they waste spend.",
   },
   verification: {
     google: "hWP7-fbRH5By6ftqXkQOAO73beDcZx4B2XAZ8Jtbx5s",
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
 };
 
 /** サイト全体の構造化データ（Organization / WebSite / SoftwareApplication）。
- *  検索のナレッジ理解と、AI/LLM が Viewtrace を「US 広告代理店向けの地域別広告検証」と
+ *  検索のナレッジ理解と、AI/LLM が Viewtrace を「クリック後のランディング体験の確認」と
  *  正しく説明・引用しやすくするための土台（GEO 対策）。 */
 const SITE_JSON_LD = {
   "@context": "https://schema.org",
@@ -72,7 +72,7 @@ const SITE_JSON_LD = {
       url: `${siteOrigin}/`,
       logo: `${siteOrigin}/brand/viewtrace-logo.png`,
       description:
-        "Viewtrace is a geo ad verification platform for advertising and marketing agencies—tamper-evident, geo-routed proof of how ads and landing pages actually rendered by region.",
+        "Viewtrace is post-click verification for agencies: it shows what the landing page actually rendered after the click, from the region you buy in.",
       email: "info@viewtrace.net",
     },
     {
@@ -90,7 +90,7 @@ const SITE_JSON_LD = {
       operatingSystem: "Web",
       url: `${siteOrigin}/`,
       description:
-        "Geo-routed captures with timestamps and integrity checks—client-ready verify URLs and PDF reports for ad agencies to prove what actually rendered in each region.",
+        "Ad platforms tell you where the click went. Viewtrace shows what was waiting on the landing page. Not ad-delivery or tag/pixel verification.",
       offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
     },
   ],

@@ -22,6 +22,7 @@ const PUBLIC_PATHS: MetadataRoute.Sitemap = [
   { url: "/privacy", changeFrequency: "monthly", priority: 0.6 },
   { url: "/acceptable-use", changeFrequency: "monthly", priority: 0.5 },
   { url: "/tokushoho", changeFrequency: "monthly", priority: 0.5 },
+  { url: "/features", changeFrequency: "monthly", priority: 0.6 },
   { url: "/about", changeFrequency: "yearly", priority: 0.4 },
   { url: "/contact", changeFrequency: "yearly", priority: 0.4 },
 ];

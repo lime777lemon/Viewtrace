@@ -10,6 +10,7 @@ export const copy = {
   ja: {
     nav: {
       pricing: "料金",
+      features: "機能・比較",
       regionSearch: "地域で試す",
       faq: "よくある質問",
       roi: "ROI",
@@ -19,15 +20,14 @@ export const copy = {
       menu: "メニュー",
     },
     hero: {
-      title: "広告が“その地域で本当に表示されたか”を、改ざん検知つきの証拠として残す",
-      catchKicker: "代理店・広告運用のためのジオ表示検証",
+      title: "お客が見ているランディングページを、そのまま確認する",
+      catchKicker: "クリック後の確認（post-click verification）",
       catchLine:
-        "クライアントの広告・LP が指定地域で実際にどう表示されたかを、タイムスタンプとチェック値つきで記録。報告書にそのまま使える共有 URL / PDF で「見せた」を証明できます。",
-      catchLexicon: "地域別表示検証 · 改ざん検知 · クライアント報告 · 共有URL/PDF · 証跡 · audit trail",
+        "広告プラットフォームは、クリックがどこへ行ったかを教える。Viewtrace は、その先に何が待っていたかを見せる。",
+      catchLexicon: "",
       subtitle:
-        "URL と地域を指定すると、その地域で実際にレンダリングされた画面を記録として保存します。地域別の広告表示チェック、クライアント報告用の証跡づくり、海外・多地域キャンペーンの QA など、代理店・広告運用の「説明責任」ワークを 1 クリックに。実行ごとに概要と記録リンクを送り、視覚差分が大きいときだけ通知する設定も選べます。",
-      punch:
-        "使い捨てのスクショではなく、URL・時刻・地域が揃った改ざん検知可能な証拠。クライアント報告・照合・監査のたたき台にそのまま共有できます。",
+        "配信先の地域からランディング体験を確認し、地域だけの不具合を広告費が流れる前に見つける。時刻つきの記録も残ります。",
+      punch: "",
       retention: {
         kicker: "記録を残す",
         title: "昨日・先週の表示も、ダッシュボードに蓄積",
@@ -40,16 +40,12 @@ export const copy = {
         planNote: "Starter は7日間、Pro は60日間まで保持（詳細は料金表）。",
       },
       disclaimer:
-        "取得したビジュアル記録は説明・照合・共有用の証跡です（サービス利用上の保証は別途規約に従います）。",
+        "広告配信やタグ／ピクセルの確認ではありません。取得時点のランディングページの記録です。",
       trial: "無料で始める",
-      sample: "サンプルを見る",
+      sample: "地域で試す",
     },
     heroTrust: {
-      items: [
-        "地域指定：クライアントの広告・LP が“その地域で”どう表示されたかを記録",
-        "報告に使える：検証 URL / PDF をそのままクライアントに共有",
-        "改ざん検知：タイムスタンプ＋チェック値で「後出し」を防ぐ",
-      ],
+      items: ["時刻つきの記録も残ります。"],
     },
     valuePillars: [
       {
@@ -66,9 +62,9 @@ export const copy = {
       },
     ],
     regionSearch: {
-      title: "地域を選んで、確認したいページを探す",
+      title: "クリックを送っている地域から、ランディングページを見てみる",
       subtitle:
-        "URL を入力すると、VPN なしの通常アクセスに近い形でページのプレビューを表示します。地域指定の取得・記録は登録後のオブザベーションで利用できます。",
+        "URL を入れると、いまのページをプレビューします。選んだ地域からの取得は、登録後に使えます。",
       planLabel: "カバレッジ",
       planStarter: "Starter",
       planPro: "Pro",
@@ -95,10 +91,10 @@ export const copy = {
       previewDirectAccess: "通常アクセス（VPN なし）",
       previewSampleNote: "見本（地域取得なし）",
       previewRegionCtaTitle:
-        "この簡易プレビューは通常アクセスです。{region} から実際にどう表示されたかを、タイムスタンプと改ざん検知付きで確認できます（登録後、無料）。",
+        "この簡易プレビューは通常アクセスです。{region} から、実際の LP がどう見えているかを確認できます（登録後、無料）。",
       previewRegionCtaButton: "無料で始める — この地域から取得する →",
       regionMarketingHint:
-        "この簡易プレビューは通常アクセスで、上で選んだ地域は使いません。選択した地域からの取得（タイムスタンプ・整合性証明付き）は、登録後に無料で使えます。",
+        "この簡易プレビューは通常アクセスで、上で選んだ地域は使いません。選択した地域からの取得は、登録後に無料で使えます。",
       previewLoading: "ページのスクリーンショットを取得しています…（数十秒かかることがあります）",
       previewError: "ページ情報を取得できませんでした。URLを確認するか、下のリンクから直接開いてください。",
       previewOpenLive: "新しいタブで開いて確認",
@@ -111,47 +107,34 @@ export const copy = {
       recordAsObservationLoginSuffix: "（ダッシュボードの一覧に保存）",
     },
     regionSearchSignup: {
-      title: "地域指定で記録するには登録が必要です",
-      body: "プレビューは見本です。選択した地域からのスクリーンショット取得・証跡の保存は、無料トライアル（最大20回・14日間・クレジットカード不要）から始められます。",
+      title: "現地の LP を確認するには、登録が必要です",
+      body: "プレビューは見本です。クリックを送っている地域からの取得は、無料トライアル（最大20回・14日間・カード不要）から始められます。",
       ctaPrimary: "無料で始める",
       ctaSecondary: "ログイン",
     },
     pitch: {
-      problemTitle: "「ちゃんと説明した」は、あとから説明責任を果たせますか？",
+      problemTitle: "広告費は流れているのに、現地の LP だけ壊れている",
       problemPoints: [
         {
-          title: "海外表示が違っていた",
-          body: "現地では別の見え方・挙動になっていて、気づくのが遅れる。",
+          title: "自席では問題ない",
+          body: "自分の画面では正常でも、配信先の国や州ではヒーローやオファーが違う。",
         },
         {
-          title: "クライアントに説明責任を果たせない",
-          body: "口頭やチャットだけでは、いつ・どこで・何を根拠にしたかが共有されず、監査にも使いづらい。",
+          title: "価格や訴求が地域で食い違う",
+          body: "広告の約束と現地 LP が一致しない。気づくのはクライアントからの連絡あと。",
         },
         {
-          title: "証跡がバラバラで shared truth がない",
-          body: "フォルダやスレッドに散在し、誰がどの条件で見たかが揃わず、監査や説明に使いづらい。",
+          title: "CVR が落ちても原因が分からない",
+          body: "クリエイティブのせいにして、ページ側の変化を見ないまま予算が続く。",
         },
       ],
-      solutionTitle: "Viewtrace は、実際の表示を改ざん検知可能な記録として残すレイヤです。",
+      solutionTitle: "クリック後のランディング体験を、配信先の地域から見る",
       solutionBullets: [
-        "ワンクリックでビジュアル記録",
-        "自動で履歴化（欠落しにくい）",
-        "URL・時刻・地域をセットで保存",
+        "クリックを送っている国・州から LP を取得する",
+        "見た目が大きく変わったときだけ知らせる",
+        "あとから説明できるよう、時刻つきの記録を残す",
       ],
-      benefits: [
-        {
-          title: "証跡",
-          body: "表示状態を条件付きで保存し、あとから同じ前提で開ける",
-        },
-        {
-          title: "説明責任",
-          body: "いつ・どこで・何を根拠にしたかを履歴として示せる",
-        },
-        {
-          title: "監査性",
-          body: "保存した内容のずれを、照合しやすい形で追える",
-        },
-      ],
+      benefits: [] as { title: string; body: string }[],
     },
     competitorCompare: {
       kicker: "比較",
@@ -285,21 +268,44 @@ export const copy = {
     },
     howTitle: "仕組み",
     steps: [
-      { title: "URLを入力", body: "観測したいランディングページや広告のURLを指定します。" },
+      { title: "着地URLを入れる", body: "クリック先のランディングページを指定します。" },
       {
-        title: "地域を選択（米国／州）",
-        body: "観測する地理的な位置を選びます。",
+        title: "配信先の地域を選ぶ",
+        body: "クリックを送っている国や州を選びます。",
       },
       {
-        title: "ビジュアル証跡を取得",
-        body: "指定条件で、タイムスタンプ付きのレンダリング記録を固定します。",
+        title: "現地の表示を取る",
+        body: "その地域から、ページが実際にどう見えているかを取得します。",
       },
       {
-        title: "差分照合（監査・説明向け）",
-        body: "取得した証跡同士を比較し、変化を説明・照合できる材料にします。",
+        title: "変わったら知らせる",
+        body: "見た目が大きく変わったときだけ通知し、時刻つきの記録を残します。",
       },
     ],
-    stepNote: "記録は取得時点の状態を表します。",
+    stepNote: "記録は取得時点のランディングページです。広告配信の確認ではありません。",
+    whyNotVpn: {
+      title: "VPN やスクショフォルダでは足りない理由",
+      points: [
+        {
+          title: "VPNは自分の画面",
+          body: "自分のノートPCから見た表示であり、買い手がいる地域のランディング体験ではありません。",
+        },
+        {
+          title: "スクショには地域が付かない",
+          body: "フォルダの PNG は、どの国から・いつの着地ページかを後から説明しにくいです。",
+        },
+        {
+          title: "広告管理画面はクリックで終わる",
+          body: "プラットフォームは行き先を教えます。Viewtrace は、その先に何が待っていたかを見せます。",
+        },
+      ],
+    },
+    agencyCase: {
+      kicker: "運用型代理店向け",
+      title: "壊れた geo を、広告費が流れる前に見つける",
+      body: "クリックがどこへ行ったかは、もう分かっています。その地域からランディングページを確認し、説明する必要があるときだけ時刻つきの記録を残します。",
+      cta: "運用型代理店ページを見る",
+    },
     useCasesTitle: "ユースケース",
     useCases: [
       {
@@ -326,9 +332,21 @@ export const copy = {
       title: "地理・越境・広告まわりのトピック",
       intro:
         "検索意図ごとに個別ページを用意しています。気になるテーマを選ぶと、その用途に特化した解説ページへ移動できます。",
+      compactTitle: "解説ページ",
+      featuresLink: "比較・用途の詳細",
       backLabel: "ページ上部へ",
       ctaLogin: "無料で始める",
       readMore: "解説を読む",
+    },
+    featuresPage: {
+      metaTitle: "機能・比較・用途 | Viewtrace",
+      metaDescription:
+        "比較表、監視と記録の違い、導入先、ユースケース、検索ガイド。トップを短くした分の詳細はここにあります。",
+      eyebrow: "Features",
+      h1: "比較、用途、検索ガイド",
+      intro:
+        "購入判断の主導線はトップに残しています。比較表や導入イメージなど、長くなりがちな説明はこちらです。",
+      pricingCta: "トップの料金を見る",
     },
     trustBand: {
       title: "実際の表示を、改ざん検知可能な証跡として残す",
@@ -361,6 +379,7 @@ export const copy = {
         period: "/ 月",
         description: "試す・軽い検証用途向け",
         subdescription: "マーケ担当・個人検証・小規模DTCなど、現実的な検証用途をカバー。",
+        usageExample: "目安：クライアントLP 20本を、地域1つで毎週確認（4週で80回）",
         features: [
           "月80回のオブザベーション",
           "米国＋主要国",
@@ -379,6 +398,7 @@ export const copy = {
         period: "/ 月",
         description: "本番運用・代理店・報告・記録整理向け",
         subdescription: "記録数が多く、保持期間とレポートが重要なチーム向け。",
+        usageExample: "目安：クライアントLP 20本 × 地域3つを毎週確認（4週で240回）",
         features: [
           "月250回のオブザベーション",
           "米国全州＋主要国",
@@ -395,9 +415,9 @@ export const copy = {
       },
     ],
     observationNote:
-      "オブザベーションとは、特定の時刻・特定の場所から見た、サイトの表示を検証したビジュアル記録です。",
+      "オブザベーションとは、特定の時刻・特定の場所から見た、サイトの表示を検証したビジュアル記録です。URL 1本 × 地域1つ × 取得1回が1回です。",
     observationSub:
-      "変更の検知だけでなく、地域ごとにユーザーが実際に見ていたものを記録します。",
+      "同じ LP を3地域で見ると3回です。上の目安は4週の月で換算しています。無料20回は、Starter の「毎週20本」を約1週分試せる量です。",
     accountSignup: {
       title: "アカウントを作成",
       intro:
@@ -423,8 +443,8 @@ export const copy = {
         a: "20回までオブザベーションを無料でお試しいただけます。クレジットカードは不要です。トライアル期間は14日間で、終了後は Starter または Pro を選択して継続いただけます。無料枠の20回を使い切ると、ログイン後のダッシュボード上部にお申し込み・プラン選択の案内が表示されます。",
       },
       {
-        q: "広告が正しく表示されていることを証明できますか？",
-        a: "指定した地域と時刻で、ページが実際にどう見えていたかを記録として残せます。クライアントへの説明や、表示の食い違いを後から見返す材料になります。ただし「すべてのユーザーに広告が届いた」ことの保証ではありません。",
+        q: "クリック後のランディングページを確認できますか？",
+        a: "指定した地域と時刻で、着地した LP が実際にどう見えていたかを記録できます。広告が届いたことの証明ではなく、クリック後のランディング体験の確認です。",
       },
       {
         q: "何が得られますか？",
@@ -436,15 +456,15 @@ export const copy = {
       },
       {
         q: "他国から自社サイトの見え方を確認するには？（how to check website from another country）",
-        a: "地域（国・州など）を選び、対象 URL でオブザベーションを実行すると、その経路・時刻で取得した表示をビジュアル証跡として保存できます。VPN だけより、あとから同じ条件を示しやすいです。手順の整理はこのページ下部の「検索・導入のヒント」セクション内の該当ブロックを参照してください。",
+        a: "地域を選び、着地 URL でオブザベーションを実行すると、その地域から見たランディングページを保存できます。詳しい手順は「他国からサイトを確認する方法」の解説ページを見てください。",
       },
       {
         q: "geo screenshot tool や geo testing tool のように使えますか？",
         a: "はい。地理ルートでレンダリングを取得し、同じ URL・地域のまま再実行して履歴を積み上げられます。単発のキャプチャではなく、説明・照合に使える観測として設計しています。",
       },
       {
-        q: "広告の表示確認（ad verification tool）に使えますか？",
-        a: "キャンペーン LP やジオ向けページを、指定地域から取得して記録できます。差分が大きいときだけ通知する設定（プランによる）も選べます。第三者の配信保証の代替ではありません。",
+        q: "広告の配信確認（ad verification）ですか？",
+        a: "いいえ。広告プラットフォームが教えるのは「クリックがどこへ行ったか」です。Viewtrace はクリック後の確認です。その地域でランディングページが実際にどう見えていたかを残します。タグやピクセルの発火確認でも、Meta / Google の配信レポートでもありません。",
       },
     ],
     checkout: {
@@ -1051,6 +1071,7 @@ export const copy = {
       support: "サポート",
       links: {
         pricing: "料金",
+        features: "機能・比較",
         faq: "よくある質問",
         terms: "利用規約",
         privacy: "プライバシーポリシー",
@@ -1067,6 +1088,7 @@ export const copy = {
   en: {
     nav: {
       pricing: "Pricing",
+      features: "Features",
       regionSearch: "Try by region",
       faq: "FAQ",
       roi: "ROI",
@@ -1076,15 +1098,14 @@ export const copy = {
       menu: "Menu",
     },
     hero: {
-      title: "Prove your ads and landing pages actually showed in that region.",
-      catchKicker: "Geo ad verification for agencies",
+      title: "See the landing page your customers actually see.",
+      catchKicker: "Post-click verification for performance agencies",
       catchLine:
-        "Capture how a client’s ad or landing page actually rendered from a chosen region—with timestamps and integrity checks—then share a verify URL / PDF you can drop straight into a report.",
-      catchLexicon: "geo verification · tamper-evident · client reporting · verify URL/PDF · evidence · audit trail",
+        "Ad platforms tell you where the click went. Viewtrace shows you what was actually waiting there.",
+      catchLexicon: "",
       subtitle:
-        "Set a URL and region and we persist what actually rendered as a structured record. Built for region-by-region ad checks, client-ready proof, and QA of cross-border and multi-region campaigns—the accountability work agencies own, in one click. After each run you get a short summary and a link to the saved trail, or alerts only when the visual change is large.",
-      punch:
-        "Not throwaway captures—a tamper-evident record with URL, time, and region attached that you can share as client-ready proof for reviews and audits.",
+        "Catch geo-specific landing issues before they waste spend. Timestamped evidence included.",
+      punch: "",
       retention: {
         kicker: "Persist the record",
         title: "Yesterday and last week—saved in your dashboard",
@@ -1097,16 +1118,12 @@ export const copy = {
         planNote: "Starter: 7-day retention · Pro: 60-day retention (see pricing).",
       },
       disclaimer:
-        "Captured visuals are evidence trails for explanation, reconciliation, and sharing—not a substitute for formal warranties; see terms of use.",
+        "Not ad-delivery or tag/pixel verification. Records show the landing page at capture time.",
       trial: "Start for free",
-      sample: "View sample",
+      sample: "Try by region",
     },
     heroTrust: {
-      items: [
-        "Geo-routed: record how a client’s ad or LP rendered from that region",
-        "Report-ready: share the verify URL / PDF straight with the client",
-        "Tamper-evident: timestamps + integrity checks stop “after-the-fact” disputes",
-      ],
+      items: ["Timestamped evidence included."],
     },
     valuePillars: [
       {
@@ -1123,9 +1140,9 @@ export const copy = {
       },
     ],
     regionSearch: {
-      title: "Pick a region, then search what to verify",
+      title: "See the landing page from a region you send clicks to",
       subtitle:
-        "Enter a URL to preview the page via normal access (no VPN). Geo-routed capture and records are available after sign-up.",
+        "Enter a URL to preview the live page. Capture from the selected region starts after sign-up.",
       planLabel: "Coverage",
       planStarter: "Starter",
       planPro: "Pro",
@@ -1152,10 +1169,10 @@ export const copy = {
       previewDirectAccess: "Direct access (no VPN)",
       previewSampleNote: "Sample — not geo-routed",
       previewRegionCtaTitle:
-        "This quick preview used normal access. See how this page actually rendered from {region}—with timestamp and tamper-evident proof—free after sign-up.",
+        "This quick preview used normal access. See how the landing page actually looks from {region}—free after sign-up.",
       previewRegionCtaButton: "Start free — capture from this region →",
       regionMarketingHint:
-        "This quick preview uses direct access and does not use the region above. Geo-routed capture from your selected region—with timestamp and integrity proof—unlocks free after sign-up.",
+        "This quick preview uses direct access and does not use the region above. Capture from your selected region unlocks free after sign-up.",
       previewLoading: "Fetching a page screenshot… (may take up to a minute)",
       previewError: "Could not fetch page info. Check the URL or open it directly below.",
       previewOpenLive: "Open in new tab to verify",
@@ -1167,47 +1184,34 @@ export const copy = {
       recordAsObservationLoginSuffix: " (saved to your dashboard list)",
     },
     regionSearchSignup: {
-      title: "Sign up to capture from a region",
-      body: "The preview is illustrative only. Geo-routed screenshots and saved evidence start with a free trial—up to 20 observations, 14 days, no credit card.",
+      title: "Sign up to check the landing page from that region",
+      body: "The preview is a sample. Capture from the region you buy in starts with a free trial—up to 20 observations, 14 days, no credit card.",
       ctaPrimary: "Start for free",
       ctaSecondary: "Log in",
     },
     pitch: {
-      problemTitle: "Stakeholders ask what was live—can you meet that accountability next week?",
+      problemTitle: "Spend keeps flowing while the in-market LP is broken.",
       problemPoints: [
         {
-          title: "Overseas, it didn’t match what you expected",
-          body: "The real region renders differently. By the time it surfaces in a meeting, you’re reconstructing from memory.",
+          title: "It looks fine from your desk",
+          body: "A geo-gated script, currency, or consent wall changes what people in the buying region actually see.",
         },
         {
-          title: "Clients hear a story, not a shared truth",
-          body: "Slack threads and ad-hoc files don’t carry URL, timestamp, and vantage point in one auditable object.",
+          title: "Offer or price mismatch by geo",
+          body: "The ad promises one thing; the localized page shows another. You hear it from the client first.",
         },
         {
-          title: "Evidence scattered across drives and DMs",
-          body: "No single timeline or shared truth when compliance, finance, or the client asks what the team actually saw.",
+          title: "CVR drops and the page is the last place you look",
+          body: "Creative takes the blame while the landing page in-market has already changed.",
         },
       ],
-      solutionTitle: "Viewtrace is the layer that keeps tamper-evident records of what actually showed.",
+      solutionTitle: "See the post-click landing experience from the region you buy.",
       solutionBullets: [
-        "Capture in one click—same URL, region, and moment, every time",
-        "History builds as you work—harder to lose than manual filing",
-        "URL, timestamp, and region stored together—always",
+        "Capture the landing page from the country or US state you send clicks to",
+        "Get notified when the visual change is large",
+        "Keep a timestamped record when you need to explain it",
       ],
-      benefits: [
-        {
-          title: "Evidence",
-          body: "Persist renders with their conditions so the trail can be reopened",
-        },
-        {
-          title: "Accountability",
-          body: "Show when, where, and what the team relied on—not a vague recap",
-        },
-        {
-          title: "Auditability",
-          body: "Spot drift between what you stored and what you fetch later",
-        },
-      ],
+      benefits: [] as { title: string; body: string }[],
     },
     competitorCompare: {
       kicker: "Compare",
@@ -1340,21 +1344,44 @@ export const copy = {
     },
     howTitle: "How it works",
     steps: [
-      { title: "Enter a URL", body: "Point to the landing page or ad destination you want to observe." },
+      { title: "Enter the landing URL", body: "Point to the page the click actually lands on." },
       {
-        title: "Pick a region (US / state)",
-        body: "Choose the geographic vantage point for the observation.",
+        title: "Pick the buying region",
+        body: "Choose the country or US state you send traffic to.",
       },
       {
-        title: "Persist visual evidence",
-        body: "Under your chosen conditions, we fix a timestamped rendering trail—not a disposable grab.",
+        title: "See what rendered there",
+        body: "Capture the live landing experience from that region.",
       },
       {
-        title: "Diff for accountability & audits",
-        body: "Compare trails to turn change into material you can explain and reconcile.",
+        title: "Get notified if it drifts",
+        body: "Alert only when the visual change is large, and keep a timestamped record.",
       },
     ],
-    stepNote: "Each record reflects the state at capture time.",
+    stepNote: "Each record is the landing page at capture time—not ad-delivery verification.",
+    whyNotVpn: {
+      title: "Why not a VPN or a screenshot folder?",
+      points: [
+        {
+          title: "A VPN is your laptop",
+          body: "It shows your machine’s view, not the landing experience in the region you buy.",
+        },
+        {
+          title: "A PNG has no region",
+          body: "A folder of screenshots rarely says which country, which URL, or which moment after the click.",
+        },
+        {
+          title: "Ad platforms stop at the click",
+          body: "They tell you where the click went. Viewtrace shows what was actually waiting there.",
+        },
+      ],
+    },
+    agencyCase: {
+      kicker: "For performance agencies",
+      title: "Catch broken geos before they burn spend",
+      body: "You already know where the click went. Check the landing page from that region, and keep a timestamped record when you need to explain it.",
+      cta: "See the performance agency page",
+    },
     useCasesTitle: "Use cases",
     useCases: [
       {
@@ -1382,9 +1409,21 @@ export const copy = {
       title: "Geo, cross-border, and ad topics",
       intro:
         "Each search intent has its own dedicated page. Pick a topic to open a focused guide for that specific use case.",
+      compactTitle: "Guides",
+      featuresLink: "Comparisons and use cases",
       backLabel: "Back to top",
       ctaLogin: "Start for free",
       readMore: "Read the guide",
+    },
+    featuresPage: {
+      metaTitle: "Features, comparisons, and use cases | Viewtrace",
+      metaDescription:
+        "Comparison table, monitoring vs records, who uses Viewtrace, use cases, and search guides. Details moved off the homepage.",
+      eyebrow: "Features",
+      h1: "Comparisons, use cases, and guides",
+      intro:
+        "The homepage stays short for buying. Longer comparisons and audience detail live here.",
+      pricingCta: "See homepage pricing",
     },
     trustBand: {
       title: "Keep tamper-evident records of what sites actually showed",
@@ -1417,6 +1456,7 @@ export const copy = {
         description: "Try-it-out & light validation",
         subdescription:
           "Marketers, solo checks, and small DTC brands—enough volume for real validation work.",
+        usageExample: "≈ 20 client pages, 1 geo, checked weekly",
         features: [
           "80 observations / month",
           "US + major countries",
@@ -1436,6 +1476,7 @@ export const copy = {
         description: "Production, agencies & reporting workflows",
         subdescription:
           "Higher volume, longer retention, and exports for teams that run this in workflows and reporting.",
+        usageExample: "≈ 20 client pages × 3 geos, checked weekly",
         features: [
           "250 observations / month",
           "All US states + major countries",
@@ -1452,9 +1493,9 @@ export const copy = {
       },
     ],
     observationNote:
-      "An observation is a visual verification of how a site appeared from a specific time and place.",
+      "An observation is a visual verification of how a site appeared from a specific time and place. One URL × one region × one capture = one observation.",
     observationSub:
-      "We record what users in each region likely saw—not just that something changed.",
+      "The same landing page in 3 geos counts as 3. The examples above assume a 4-week month. The free 20 is about one week of Starter’s weekly rhythm.",
     accountSignup: {
       title: "Create your account",
       intro:
@@ -1480,8 +1521,8 @@ export const copy = {
         a: "You can take up to 20 observations at no charge, with no credit card required. The trial lasts 14 days; afterward, choose Starter or Pro to continue. After you use all 20 trial observations, a banner at the top of the dashboard guides you to subscribe.",
       },
       {
-        q: "Can I prove how my ads actually appeared?",
-        a: "You get a record of how the page looked from a chosen location and time—useful for client reviews and spotting display mismatches. It is not a guarantee that ads were delivered to every user.",
+        q: "Can I see what was waiting after the click?",
+        a: "Yes. You get a record of how the landing page looked from a chosen region and time. That is post-click verification—not proof that ads were delivered.",
       },
       {
         q: "What do I actually get?",
@@ -1493,15 +1534,15 @@ export const copy = {
       },
       {
         q: "How do I check a website from another country?",
-        a: "Pick an observation region, run an observation on your URL, and Viewtrace saves what rendered at that time from that vantage point—URL, timestamp, and region stay attached. It is closer to an evidence trail than a VPN-only peek. For a longer walkthrough, see the matching block in the “Search intent guides” section near the bottom of this page.",
+        a: "Pick a region, run an observation on the landing URL, and Viewtrace saves what the page rendered there. For a longer walkthrough, see How to check a website from another country.",
       },
       {
         q: "Is Viewtrace a geo screenshot tool or geo testing tool?",
         a: "You can use it that way: geo-routed captures with history and optional scheduled reruns. The difference is we standardize what you store so teams can reconcile later—not a one-off grab in a downloads folder.",
       },
       {
-        q: "Can we use Viewtrace as an ad verification tool?",
-        a: "Yes for rendered-state proof: capture how landing pages and promos looked in-market, diff material changes, and alert the team when visuals drift (plan-dependent). It does not replace third-party ad-delivery guarantees.",
+        q: "Is this ad verification?",
+        a: "No. Ad platforms tell you where the click went. Viewtrace is post-click verification: it shows what the landing page actually rendered in that region. It does not check whether a tag or pixel fired, and it is not a Meta or Google delivery report.",
       },
     ],
     checkout: {
@@ -2131,6 +2172,7 @@ export const copy = {
       support: "Support",
       links: {
         pricing: "Pricing",
+        features: "Features",
         faq: "FAQ",
         terms: "Terms of service",
         privacy: "Privacy policy",

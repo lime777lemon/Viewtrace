@@ -65,6 +65,7 @@ ${topicLines}
 ## Key links
 
 - Home: ${abs("/")}
+- Features: ${abs("/features")}
 - Pricing: ${abs("/#pricing")}
 - How it works: ${abs("/#how-it-works")}
 - Sign up (free): ${abs("/login?mode=signup")}
