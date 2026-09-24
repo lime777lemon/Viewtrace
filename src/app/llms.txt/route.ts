@@ -28,10 +28,9 @@ export function GET(): Response {
 
   const body = `# Viewtrace
 
-> Monitor every market. Catch what breaks. Keep the proof.
-> Daily use is performance protection: a broken hero, geo-blocked offer, or stale
-> price can tank conversion while spend keeps flowing. Proof is step three—not a
-> separate product. Geo-routed captures keep URL, timestamp, and an integrity check.
+> Catch landing-page problems before they waste ad spend.
+> ViewTrace checks client landing pages from the regions where ads actually run,
+> then keeps timestamped proof of what rendered. Every check becomes client-ready proof.
 
 ## Who it is for
 

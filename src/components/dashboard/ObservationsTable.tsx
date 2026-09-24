@@ -37,17 +37,17 @@ export function ObservationsTable({
   const tb = copy[locale].observationsTable;
   if (rows.length === 0) {
     return (
-      <p className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-4 py-8 text-center text-sm text-[var(--color-ink-muted)]">
+      <p className="rounded-xl border border-dashed border-border bg-surface-elevated px-4 py-8 text-center text-sm text-ink-muted">
         {emptyMessage ?? tb.emptyDefault}
       </p>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)]">
+    <div className="overflow-hidden rounded-xl border border-border bg-surface-elevated">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px] text-left text-sm">
-          <thead className="border-b border-[var(--color-border)] bg-[var(--color-surface)] text-xs font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">
+        <table className="w-full min-w-160 text-left text-sm">
+          <thead className="border-b border-border bg-surface text-xs font-semibold uppercase tracking-wide text-ink-muted">
             <tr>
               <th className="px-4 py-3">{tb.colCaptured}</th>
               <th className="px-4 py-3">{tb.colUrl}</th>
@@ -56,25 +56,25 @@ export function ObservationsTable({
               <th className="px-4 py-3 text-right">{tb.colActions}</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[var(--color-border)]">
+          <tbody className="divide-y divide-border">
             {rows.map((row) => (
-              <tr key={row.id} className="hover:bg-[var(--color-surface)]/80">
-                <td className="px-4 py-3 align-top text-[var(--color-ink-muted)]">
-                  <span className="text-[var(--color-ink)]">{formatJaDateTime(row.capturedAt, locale)}</span>
-                  <span className="mt-0.5 block text-[11px] text-[var(--color-ink-muted)]">
+              <tr key={row.id} className="hover:bg-surface/80">
+                <td className="px-4 py-3 align-top text-ink-muted">
+                  <span className="text-ink">{formatJaDateTime(row.capturedAt, locale)}</span>
+                  <span className="mt-0.5 block text-[11px] text-ink-muted">
                     {formatUtcLabel(row.capturedAt)}
                   </span>
                 </td>
-                <td className="max-w-[220px] truncate px-4 py-3 align-top font-mono text-xs text-[var(--color-ink)]">
+                <td className="max-w-55 truncate px-4 py-3 align-top font-mono text-xs text-ink">
                   {row.url}
                 </td>
-                <td className="whitespace-nowrap px-4 py-3 align-top text-[var(--color-ink)]">
+                <td className="whitespace-nowrap px-4 py-3 align-top text-ink">
                   {row.regionLabel}
                 </td>
                 <td className="px-4 py-3 align-top">
                   <StatusBadge status={row.status} locale={locale} />
                   {row.note ? (
-                    <span className="mt-1 block text-[11px] text-[var(--color-ink-muted)]">
+                    <span className="mt-1 block text-[11px] text-ink-muted">
                       {localizeObservationNote(row.note, locale)}
                     </span>
                   ) : null}
@@ -82,7 +82,7 @@ export function ObservationsTable({
                 <td className="px-4 py-3 text-right align-top">
                   <Link
                     href={`/dashboard/observations/${row.id}`}
-                    className="font-medium text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+                    className="font-medium text-accent hover:text-accent-hover"
                   >
                     {tb.actionDetail}
                   </Link>

@@ -20,13 +20,12 @@ export const copy = {
       menu: "メニュー",
     },
     hero: {
-      title: "現地の LP が壊れていても、広告費は流れ続ける",
-      catchKicker: "市場を監視する。壊れを見つける。証拠を残す。",
-      catchLine:
-        "ヒーロー崩れ、地域ブロックされたオファー、古い価格。CVR は静かに落ちて、配信は止まらない。",
+      title: "広告費が溶ける前に、ランディングページの問題を見つける",
+      catchKicker: "",
+      catchLine: "",
       catchLexicon: "",
       subtitle:
-        "日常は次の損失を防ぐこと。証拠は、見つけたあとに残る。",
+        "Viewtrace は、広告が実際に配信されている地域からクライアントの着地ページを確認し、そのとき何が表示されていたかを時刻つきで残します。",
       punch: "",
       retention: {
         kicker: "記録を残す",
@@ -41,7 +40,7 @@ export const copy = {
       },
       disclaimer:
         "広告配信やタグ／ピクセルの確認ではありません。取得時点のランディングページの記録です。",
-      trial: "無料で始める",
+      trial: "着地ページを無料で確認する",
       sample: "地域で試す",
     },
     heroTrust: {
@@ -113,27 +112,19 @@ export const copy = {
       ctaSecondary: "ログイン",
     },
     pitch: {
-      problemTitle: "広告費が溶けるとき、ページ側で起きていること",
+      problemTitle: "自席からは、配信先のランディングページが見えない",
       problemPoints: [
         {
-          title: "ヒーローが壊れている",
-          body: "自席では問題なくても、現地のファーストビューが崩れている。",
+          title: "自席では問題ない",
+          body: "自分の画面では正常でも、広告を出している国や州の着地ページは見ていない。",
         },
         {
-          title: "オファーが地域ブロックされている",
-          body: "広告で売った特典が、その国では表示されない。",
-        },
-        {
-          title: "価格が古い",
-          body: "独や日で、先週の数字がまだ出ている。",
-        },
-        {
-          title: "CVR が落ちる",
-          body: "クリエイティブのせいにして、着地ページを最後に見る。",
+          title: "市場ごとに表示が違うことがある",
+          body: "同じ URL でも、地域を変えて取得すると見え方が違うことがある。",
         },
         {
           title: "広告費は流れ続ける",
-          body: "入札は止まらない。現地のランディング体験を見ている人がいない。",
+          body: "現地のページを見ていなくても、入札は止まらない。",
         },
       ],
       solutionTitle: "監視して、壊れたら見つけ、証拠を残す",
@@ -143,6 +134,17 @@ export const copy = {
         "証拠を残す — 見つけたあとに、時刻つきの記録を開き直す",
       ],
       benefits: [] as { title: string; body: string }[],
+    },
+    compare: {
+      title: "同じ着地ページを、配信先の地域から見る",
+      body: "地域ごとにオブザベーションを実行します。ダッシュボードには URL・地域・時刻・ステータス（成功 / 失敗）が残ります。",
+      caption: "例：同じ URL を3地域から取得した一覧。ステータスは本体と同じ「成功」「失敗」です。",
+      url: "https://example.com/campaign",
+      rows: [
+        { captured: "2026/03/12 14:02", utc: "2026-03-12 14:02 UTC", region: "US · California" },
+        { captured: "2026/03/12 14:05", utc: "2026-03-12 14:05 UTC", region: "Germany" },
+        { captured: "2026/03/12 14:08", utc: "2026-03-12 14:08 UTC", region: "Japan" },
+      ],
     },
     competitorCompare: {
       kicker: "比較",
@@ -274,22 +276,14 @@ export const copy = {
       breakevenHint: "月にこれだけの「確認」があるなら、時間の節約だけでもプランに届きやすい目安です。",
       note: "※ あくまで目安です。実際の削減はチームの進め方や案件によって変わります。",
     },
-    howTitle: "監視 → 検知 → 証明",
+    howTitle: "使い方",
     steps: [
-      {
-        title: "市場を監視する",
-        body: "クリックを送っている国や州から、着地ページを見る。",
-      },
-      {
-        title: "壊れを見つける",
-        body: "ヒーロー、オファー、価格が崩れたら知らせる。次の損失を止める。",
-      },
-      {
-        title: "証拠を残す",
-        body: "見つけた表示を、あとから開き直せる記録にしておく。",
-      },
+      { title: "URLを選ぶ", body: "" },
+      { title: "市場を選ぶ", body: "" },
+      { title: "実際の表示を見る", body: "" },
+      { title: "変化を監視する", body: "" },
     ],
-    stepNote: "購入の理由は事故の早期発見です。証拠はそのあとです。広告配信の確認ではありません。",
+    stepNote: "確認のたびに、クライアントに渡せる記録が残ります。",
     whyNotVpn: {
       title: "VPN やスクショフォルダでは足りない理由",
       points: [
@@ -1072,7 +1066,7 @@ export const copy = {
     acceptableUsePage: acceptableUsePageCopyJa,
     aboutPage: aboutPageCopyJa,
     footer: {
-      tagline: "市場を監視する。壊れを見つける。証拠を残す。",
+      tagline: "広告費が溶ける前に、ランディングページの問題を見つける。",
       product: "プロダクト",
       legal: "法的情報",
       support: "サポート",
@@ -1105,13 +1099,12 @@ export const copy = {
       menu: "Menu",
     },
     hero: {
-      title: "Spend keeps flowing while the landing page is broken.",
-      catchKicker: "Monitor every market. Catch what breaks. Keep the proof.",
-      catchLine:
-        "A broken hero, a geo-blocked offer, or a stale price in DE or JP quietly tanks conversion. The ads keep running.",
+      title: "Catch landing-page problems before they waste ad spend.",
+      catchKicker: "",
+      catchLine: "",
       catchLexicon: "",
       subtitle:
-        "You buy it to stop the next loss. Proof is what you keep after you catch it.",
+        "ViewTrace checks client landing pages from the regions where your ads actually run—then keeps timestamped proof of exactly what rendered.",
       punch: "",
       retention: {
         kicker: "Persist the record",
@@ -1126,7 +1119,7 @@ export const copy = {
       },
       disclaimer:
         "Not ad-delivery or tag/pixel verification. Records show the landing page at capture time.",
-      trial: "Start for free",
+      trial: "Check a landing page free",
       sample: "Try by region",
     },
     heroTrust: {
@@ -1197,27 +1190,19 @@ export const copy = {
       ctaSecondary: "Log in",
     },
     pitch: {
-      problemTitle: "What is actually breaking when spend keeps flowing",
+      problemTitle: "You cannot see the landing page from the market you buy.",
       problemPoints: [
         {
-          title: "Broken hero",
-          body: "It looks fine from your desk. In-market, the first screen is already wrong.",
+          title: "It looks fine from your desk",
+          body: "Your screen is fine. You are not looking at the landing page in the country or state you buy.",
         },
         {
-          title: "Geo-blocked offer",
-          body: "The promo the ad sold is locked out in that country.",
-        },
-        {
-          title: "Stale price",
-          body: "DE or JP still shows last week’s number.",
-        },
-        {
-          title: "CVR drops",
-          body: "Creative takes the blame. The landing page is the last place you look.",
+          title: "The page can differ by market",
+          body: "The same URL can render differently when you capture it from another region.",
         },
         {
           title: "Spend keeps flowing",
-          body: "Bids stay on. Nobody is watching the landing experience.",
+          body: "Bids stay on even when nobody is looking at the in-market page.",
         },
       ],
       solutionTitle: "Monitor. Detect. Prove.",
@@ -1227,6 +1212,17 @@ export const copy = {
         "Keep the proof — reopen the timestamped record after you catch it",
       ],
       benefits: [] as { title: string; body: string }[],
+    },
+    compare: {
+      title: "See the same landing page from the markets you buy",
+      body: "Run an observation from each region. The dashboard keeps URL, region, time, and status—Success or Failure.",
+      caption: "Example: the same URL observed from three regions. Status labels match the product.",
+      url: "https://example.com/campaign",
+      rows: [
+        { captured: "Mar 12, 2026, 14:02", utc: "2026-03-12 14:02 UTC", region: "US · California" },
+        { captured: "Mar 12, 2026, 14:05", utc: "2026-03-12 14:05 UTC", region: "Germany" },
+        { captured: "Mar 12, 2026, 14:08", utc: "2026-03-12 14:08 UTC", region: "Japan" },
+      ],
     },
     competitorCompare: {
       kicker: "Compare",
@@ -1357,23 +1353,14 @@ export const copy = {
       breakevenHint: "Roughly how many checks per month make time savings alone cover the plan.",
       note: "This is a rough estimate; your workflow and clients will change the outcome.",
     },
-    howTitle: "Monitor → Detect → Prove",
+    howTitle: "How it works",
     steps: [
-      {
-        title: "Monitor every market",
-        body: "See the landing page from the country or US state you send clicks to.",
-      },
-      {
-        title: "Catch what breaks",
-        body: "Get notified when the hero, offer, or price goes wrong. Stop the next loss.",
-      },
-      {
-        title: "Keep the proof",
-        body: "Reopen the timestamped capture after you catch it.",
-      },
+      { title: "Choose URL", body: "" },
+      { title: "Choose market", body: "" },
+      { title: "View what actually renders", body: "" },
+      { title: "Monitor for changes", body: "" },
     ],
-    stepNote:
-      "You buy it to catch the next break. Proof is the last step. Not ad-delivery verification.",
+    stepNote: "Every check becomes client-ready proof.",
     whyNotVpn: {
       title: "Why not a VPN or a screenshot folder?",
       points: [
@@ -2180,7 +2167,7 @@ export const copy = {
     acceptableUsePage: acceptableUsePageCopyEn,
     aboutPage: aboutPageCopyEn,
     footer: {
-      tagline: "Monitor every market. Catch what breaks. Keep the proof.",
+      tagline: "Catch landing-page problems before they waste ad spend.",
       product: "Product",
       legal: "Legal",
       support: "Support",

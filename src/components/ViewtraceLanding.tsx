@@ -2,13 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { RegionSearchSection } from "@/components/RegionSearchSection";
-import { RegionSearchSignupSection } from "@/components/RegionSearchSignupSection";
 import { ViewtraceLogo } from "@/components/brand/ViewtraceLogo";
 import { copy, type Locale } from "@/lib/i18n";
 import { LOCALE_COOKIE } from "@/lib/i18n/locale-cookie";
 import { audiencePagePath } from "@/lib/seo/audience-pages";
-import { getTopicLinkLabels, topicPagePath } from "@/lib/seo/topic-pages";
 
 function formatOverageUsdLabel(usd: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -26,20 +23,6 @@ type Props = {
 export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Props) {
   const [locale, setLocale] = useState<Locale>(initialLocale);
   const t = useMemo(() => copy[locale], [locale]);
-  const topicLinks = useMemo(() => getTopicLinkLabels(locale), [locale]);
-  const landingFaqs = useMemo(() => {
-    const injected = {
-      q: t.faqMonthlyOverage.q,
-      a:
-        overagePerObservationUsd != null
-          ? t.faqMonthlyOverage.aWithOverage.replace(
-              "{price}",
-              formatOverageUsdLabel(overagePerObservationUsd),
-            )
-          : t.faqMonthlyOverage.aWithoutOverage,
-    };
-    return [...t.faqs.slice(0, 2), injected, ...t.faqs.slice(2)];
-  }, [t, overagePerObservationUsd]);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const mobileNavRef = useRef<HTMLDivElement>(null);
 
@@ -97,12 +80,6 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
               <Link href="/features" className="transition hover:text-ink">
                 {t.nav.features}
               </Link>
-              <a href="#region-search" className="transition hover:text-ink">
-                {t.nav.regionSearch}
-              </a>
-              <a href="#faq" className="transition hover:text-ink">
-                {t.nav.faq}
-              </a>
               <Link href="/contact" className="transition hover:text-ink">
                 {t.nav.contact}
               </Link>
@@ -158,22 +135,6 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                     >
                       {t.nav.features}
                     </Link>
-                    <a
-                      href="#region-search"
-                      role="menuitem"
-                      className="block px-4 py-2.5 text-sm font-medium text-ink-muted transition hover:bg-border/30 hover:text-ink"
-                      onClick={() => setMobileNavOpen(false)}
-                    >
-                      {t.nav.regionSearch}
-                    </a>
-                    <a
-                      href="#faq"
-                      role="menuitem"
-                      className="block px-4 py-2.5 text-sm font-medium text-ink-muted transition hover:bg-border/30 hover:text-ink"
-                      onClick={() => setMobileNavOpen(false)}
-                    >
-                      {t.nav.faq}
-                    </a>
                     <Link
                       href="/contact"
                       role="menuitem"
@@ -251,31 +212,31 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
             aria-hidden
           />
           <div className="relative z-10 mx-auto max-w-6xl px-4 pb-14 pt-14 sm:px-6 sm:pb-16 sm:pt-20">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#276248] sm:text-xs">
-              {t.hero.catchKicker}
-            </p>
-            <h1 className="mt-4 font-display max-w-3xl text-3xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl lg:text-[2.75rem] lg:leading-[1.15]">
+            {t.hero.catchKicker ? (
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#276248] sm:text-xs">
+                {t.hero.catchKicker}
+              </p>
+            ) : null}
+            <h1 className="font-display max-w-3xl text-3xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl lg:text-[2.75rem] lg:leading-[1.15]">
               {t.hero.title}
             </h1>
-            <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ink sm:text-xl">
-              {t.hero.catchLine}
-            </p>
-            {t.hero.subtitle ? (
-              <p className="mt-4 max-w-2xl text-base text-ink-muted">{t.hero.subtitle}</p>
+            {t.hero.catchLine ? (
+              <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ink sm:text-xl">
+                {t.hero.catchLine}
+              </p>
             ) : null}
-            <div className="mt-8 flex flex-wrap gap-3">
+            {t.hero.subtitle ? (
+              <p className="mt-5 max-w-2xl text-base leading-relaxed text-ink-muted sm:text-lg">
+                {t.hero.subtitle}
+              </p>
+            ) : null}
+            <div className="mt-8">
               <Link
                 href="/login?mode=signup"
                 className="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-accent-hover"
               >
                 {t.hero.trial}
               </Link>
-              <a
-                href="#region-search"
-                className="inline-flex items-center justify-center rounded-full border border-border bg-surface-elevated px-6 py-3 text-sm font-semibold text-ink transition hover:border-ink-muted/40"
-              >
-                {t.hero.sample}
-              </a>
             </div>
             <p className="mt-5 max-w-2xl text-sm text-ink-muted">
               {t.hero.disclaimer}
@@ -288,7 +249,7 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
             <h2 className="font-display max-w-3xl text-2xl font-semibold leading-snug text-ink sm:text-3xl">
               {t.pitch.problemTitle}
             </h2>
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {t.pitch.problemPoints.map((item) => (
                 <article
                   key={item.title}
@@ -306,79 +267,79 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
           </div>
         </section>
 
-        <RegionSearchSection locale={locale} labels={t.regionSearch} />
-
-        <RegionSearchSignupSection labels={t.regionSearchSignup} />
-
-        <section
-          id="how-it-works"
-          className="border-b border-border"
-        >
-          <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-14">
-            <h2 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
-              {t.howTitle}
-            </h2>
-            <ol className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {t.steps.map((step, i) => (
-                <li key={step.title} className="relative flex gap-4">
-                  <span className="font-display flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-white">
-                    {i + 1}
-                  </span>
-                  <div>
-                    <h3 className="font-display font-semibold text-ink">
-                      {step.title}
-                    </h3>
-                    <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-                      {step.body}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-            <p className="mt-8 text-sm text-ink-muted">{t.stepNote}</p>
-          </div>
-        </section>
-
-        <section id="why-not-vpn" className="border-b border-border bg-surface-elevated">
+        <section id="compare" className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-14">
             <h2 className="font-display max-w-3xl text-2xl font-semibold text-ink sm:text-3xl">
-              {t.whyNotVpn.title}
+              {t.compare.title}
             </h2>
-            <div className="mt-8 grid gap-4 sm:grid-cols-3">
-              {t.whyNotVpn.points.map((item) => (
-                <article
-                  key={item.title}
-                  className="rounded-2xl border border-border bg-surface p-5 shadow-sm"
-                >
-                  <h3 className="font-display text-base font-semibold text-ink">
-                    {item.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-                    {item.body}
-                  </p>
-                </article>
-              ))}
+            <p className="mt-4 max-w-3xl text-sm leading-relaxed text-ink-muted sm:text-base">
+              {t.compare.body}
+            </p>
+            <div className="mt-8 overflow-hidden rounded-xl border border-border bg-surface-elevated">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-160 text-left text-sm">
+                  <thead className="border-b border-border bg-surface text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                    <tr>
+                      <th className="px-4 py-3">{t.observationsTable.colCaptured}</th>
+                      <th className="px-4 py-3">{t.observationsTable.colUrl}</th>
+                      <th className="px-4 py-3">{t.observationsTable.colRegion}</th>
+                      <th className="px-4 py-3">{t.observationsTable.colStatus}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {t.compare.rows.map((row) => (
+                      <tr key={row.region}>
+                        <td className="px-4 py-3 align-top text-ink-muted">
+                          <span className="text-ink">{row.captured}</span>
+                          <span className="mt-0.5 block text-[11px] text-ink-muted">
+                            {row.utc}
+                          </span>
+                        </td>
+                        <td className="max-w-55 truncate px-4 py-3 align-top font-mono text-xs text-ink">
+                          {t.compare.url}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 align-top text-ink">
+                          {row.region}
+                        </td>
+                        <td className="px-4 py-3 align-top">
+                          <span className="inline-flex rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-900">
+                            {t.observationDetail.statusSuccess}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
+            <p className="mt-3 text-xs text-ink-muted">{t.compare.caption}</p>
           </div>
         </section>
 
-        <section id="agency" className="border-b border-border">
-          <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-14">
-            <p className="text-xs font-bold uppercase tracking-wider text-accent">
-              {t.agencyCase.kicker}
-            </p>
-            <h2 className="mt-3 font-display max-w-3xl text-2xl font-semibold text-ink sm:text-3xl">
-              {t.agencyCase.title}
-            </h2>
-            <p className="mt-4 max-w-3xl text-sm leading-relaxed text-ink-muted sm:text-base">
-              {t.agencyCase.body}
-            </p>
-            <Link
-              href={audiencePagePath("performance-agency")}
-              className="mt-6 inline-flex items-center justify-center rounded-full border border-border bg-surface-elevated px-6 py-3 text-sm font-semibold text-ink transition hover:border-ink-muted/40"
-            >
-              {t.agencyCase.cta}
-            </Link>
+        <section id="signup" className="border-b border-border bg-accent-soft/50">
+          <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
+            <div className="mx-auto max-w-xl rounded-2xl border border-border bg-surface-elevated p-8 shadow-sm">
+              <h2 className="font-display text-xl font-semibold text-ink">
+                {t.accountSignup.title}
+              </h2>
+              <p className="mt-4 text-sm leading-relaxed text-ink-muted">
+                {t.accountSignup.intro}
+              </p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                <Link
+                  href="/login?mode=signup"
+                  className="inline-flex flex-1 items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-accent-hover sm:min-w-48"
+                >
+                  {t.hero.trial}
+                </Link>
+                <Link
+                  href="/login?mode=signin"
+                  className="inline-flex flex-1 items-center justify-center rounded-full border border-border bg-surface px-6 py-3 text-sm font-semibold text-ink transition hover:border-ink-muted/40 sm:min-w-48"
+                >
+                  {t.accountSignup.ctaSecondary}
+                </Link>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -490,90 +451,6 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
             </div>
           </div>
         </section>
-
-        <section id="faq" className="border-b border-border bg-surface-elevated">
-          <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-20">
-            <h2 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
-              {t.faqTitle}
-            </h2>
-            <div className="mt-8 space-y-3">
-              {landingFaqs.map((item, i) => (
-                <details
-                  key={item.q}
-                  id={`faq-${i}`}
-                  className="group scroll-mt-28 rounded-2xl border border-border bg-surface px-5 py-4 open:shadow-sm"
-                >
-                  <summary className="cursor-pointer list-none font-medium text-ink marker:content-none [&::-webkit-details-marker]:hidden">
-                    <span className="flex items-start justify-between gap-3">
-                      {item.q}
-                      <span className="mt-0.5 text-ink-muted transition group-open:rotate-45">
-                        +
-                      </span>
-                    </span>
-                  </summary>
-                  <p className="mt-3 text-sm leading-relaxed text-ink-muted">
-                    {item.a}
-                  </p>
-                </details>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="guides" className="border-b border-border">
-          <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-            <div className="flex flex-wrap items-baseline justify-between gap-3">
-              <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
-                {t.seoTopics.compactTitle}
-              </p>
-              <Link
-                href="/features"
-                className="text-sm font-semibold text-accent underline-offset-4 hover:underline"
-              >
-                {t.seoTopics.featuresLink}
-              </Link>
-            </div>
-            <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm">
-              {topicLinks.map((item) => (
-                <li key={item.slug}>
-                  <Link
-                    href={topicPagePath(item.slug)}
-                    className="text-ink-muted underline-offset-4 transition hover:text-ink hover:underline"
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-
-        <section id="signup" className="bg-accent-soft/50">
-          <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
-            <div className="mx-auto max-w-xl rounded-2xl border border-border bg-surface-elevated p-8 shadow-sm">
-              <h2 className="font-display text-xl font-semibold text-ink">
-                {t.accountSignup.title}
-              </h2>
-              <p className="mt-4 text-sm leading-relaxed text-ink-muted">
-                {t.accountSignup.intro}
-              </p>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                <Link
-                  href="/login?mode=signup"
-                  className="inline-flex flex-1 items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-accent-hover sm:min-w-48"
-                >
-                  {t.accountSignup.ctaPrimary}
-                </Link>
-                <Link
-                  href="/login?mode=signin"
-                  className="inline-flex flex-1 items-center justify-center rounded-full border border-border bg-surface px-6 py-3 text-sm font-semibold text-ink transition hover:border-ink-muted/40 sm:min-w-48"
-                >
-                  {t.accountSignup.ctaSecondary}
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
       </main>
 
       <footer className="border-t border-border bg-ink text-surface">
@@ -599,11 +476,6 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                   <li>
                     <a href="/features" className="text-surface/80 hover:text-white">
                       {t.footer.links.features}
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#faq" className="text-surface/80 hover:text-white">
-                      {t.footer.links.faq}
                     </a>
                   </li>
                   <li>

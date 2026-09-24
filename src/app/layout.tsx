@@ -24,11 +24,11 @@ const sora = Sora({
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin),
   title: {
-    default: "Viewtrace — Monitor every market. Catch what breaks. Keep the proof.",
+    default: "Viewtrace — Catch landing-page problems before they waste ad spend",
     template: "%s | Viewtrace",
   },
   description:
-    "Catch a broken hero, geo-blocked offer, or stale price before spend keeps flowing. Then keep the proof.",
+    "ViewTrace checks client landing pages from the regions where your ads actually run—then keeps timestamped proof of exactly what rendered.",
   keywords: [...siteSeoKeywordPhrases, "Viewtrace"],
   applicationName: "Viewtrace",
   alternates: {
@@ -44,15 +44,15 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "/",
     siteName: "Viewtrace",
-    title: "Viewtrace — Monitor every market. Catch what breaks. Keep the proof.",
+    title: "Viewtrace — Catch landing-page problems before they waste ad spend",
     description:
-      "Catch a broken hero, geo-blocked offer, or stale price before spend keeps flowing. Then keep the proof.",
+      "ViewTrace checks client landing pages from the regions where your ads actually run—then keeps timestamped proof of exactly what rendered.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Viewtrace — Monitor every market. Catch what breaks. Keep the proof.",
+    title: "Viewtrace — Catch landing-page problems before they waste ad spend",
     description:
-      "Catch a broken hero, geo-blocked offer, or stale price before spend keeps flowing. Then keep the proof.",
+      "ViewTrace checks client landing pages from the regions where your ads actually run—then keeps timestamped proof of exactly what rendered.",
   },
   verification: {
     google: "hWP7-fbRH5By6ftqXkQOAO73beDcZx4B2XAZ8Jtbx5s",
