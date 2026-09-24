@@ -20,13 +20,13 @@ export const copy = {
       menu: "メニュー",
     },
     hero: {
-      title: "お客が見ているランディングページを、そのまま確認する",
-      catchKicker: "クリック後の確認（post-click verification）",
+      title: "現地の LP が壊れていても、広告費は流れ続ける",
+      catchKicker: "市場を監視する。壊れを見つける。証拠を残す。",
       catchLine:
-        "広告プラットフォームは、クリックがどこへ行ったかを教える。Viewtrace は、その先に何が待っていたかを見せる。",
+        "ヒーロー崩れ、地域ブロックされたオファー、古い価格。CVR は静かに落ちて、配信は止まらない。",
       catchLexicon: "",
       subtitle:
-        "配信先の地域からランディング体験を確認し、地域だけの不具合を広告費が流れる前に見つける。時刻つきの記録も残ります。",
+        "日常は次の損失を防ぐこと。証拠は、見つけたあとに残る。",
       punch: "",
       retention: {
         kicker: "記録を残す",
@@ -45,20 +45,20 @@ export const copy = {
       sample: "地域で試す",
     },
     heroTrust: {
-      items: ["時刻つきの記録も残ります。"],
+      items: ["市場を監視する。壊れを見つける。証拠を残す。"],
     },
     valuePillars: [
       {
-        title: "クライアントへの説明責任",
-        subtitle: "「この地域でこう表示された」を、言葉ではなく条件付きの証拠で提示",
+        title: "市場を監視する",
+        subtitle: "クリックを送っている国・州から、着地ページを定期的に見る",
       },
       {
-        title: "地域別の広告・LP 検証",
-        subtitle: "国・地域ごとの実表示を、揃った形式で記録・照合できる",
+        title: "壊れを見つける",
+        subtitle: "ヒーロー崩れ、地域ブロック、古い価格を、次の配信サイクルの前に検知する",
       },
       {
-        title: "報告がそのまま資産に",
-        subtitle: "定期実行と共有 URL / PDF で、報告と証跡づくりを一度の作業に",
+        title: "証拠を残す",
+        subtitle: "見つけたあとに、時刻つきの記録を開き直せる",
       },
     ],
     regionSearch: {
@@ -113,26 +113,34 @@ export const copy = {
       ctaSecondary: "ログイン",
     },
     pitch: {
-      problemTitle: "広告費は流れているのに、現地の LP だけ壊れている",
+      problemTitle: "広告費が溶けるとき、ページ側で起きていること",
       problemPoints: [
         {
-          title: "自席では問題ない",
-          body: "自分の画面では正常でも、配信先の国や州ではヒーローやオファーが違う。",
+          title: "ヒーローが壊れている",
+          body: "自席では問題なくても、現地のファーストビューが崩れている。",
         },
         {
-          title: "価格や訴求が地域で食い違う",
-          body: "広告の約束と現地 LP が一致しない。気づくのはクライアントからの連絡あと。",
+          title: "オファーが地域ブロックされている",
+          body: "広告で売った特典が、その国では表示されない。",
         },
         {
-          title: "CVR が落ちても原因が分からない",
-          body: "クリエイティブのせいにして、ページ側の変化を見ないまま予算が続く。",
+          title: "価格が古い",
+          body: "独や日で、先週の数字がまだ出ている。",
+        },
+        {
+          title: "CVR が落ちる",
+          body: "クリエイティブのせいにして、着地ページを最後に見る。",
+        },
+        {
+          title: "広告費は流れ続ける",
+          body: "入札は止まらない。現地のランディング体験を見ている人がいない。",
         },
       ],
-      solutionTitle: "クリック後のランディング体験を、配信先の地域から見る",
+      solutionTitle: "監視して、壊れたら見つけ、証拠を残す",
       solutionBullets: [
-        "クリックを送っている国・州から LP を取得する",
-        "見た目が大きく変わったときだけ知らせる",
-        "あとから説明できるよう、時刻つきの記録を残す",
+        "市場を監視する — 配信先の地域から着地ページを取る",
+        "壊れを見つける — 見た目が大きく変わったら知らせる",
+        "証拠を残す — 見つけたあとに、時刻つきの記録を開き直す",
       ],
       benefits: [] as { title: string; body: string }[],
     },
@@ -266,23 +274,22 @@ export const copy = {
       breakevenHint: "月にこれだけの「確認」があるなら、時間の節約だけでもプランに届きやすい目安です。",
       note: "※ あくまで目安です。実際の削減はチームの進め方や案件によって変わります。",
     },
-    howTitle: "仕組み",
+    howTitle: "監視 → 検知 → 証明",
     steps: [
-      { title: "着地URLを入れる", body: "クリック先のランディングページを指定します。" },
       {
-        title: "配信先の地域を選ぶ",
-        body: "クリックを送っている国や州を選びます。",
+        title: "市場を監視する",
+        body: "クリックを送っている国や州から、着地ページを見る。",
       },
       {
-        title: "現地の表示を取る",
-        body: "その地域から、ページが実際にどう見えているかを取得します。",
+        title: "壊れを見つける",
+        body: "ヒーロー、オファー、価格が崩れたら知らせる。次の損失を止める。",
       },
       {
-        title: "変わったら知らせる",
-        body: "見た目が大きく変わったときだけ通知し、時刻つきの記録を残します。",
+        title: "証拠を残す",
+        body: "見つけた表示を、あとから開き直せる記録にしておく。",
       },
     ],
-    stepNote: "記録は取得時点のランディングページです。広告配信の確認ではありません。",
+    stepNote: "購入の理由は事故の早期発見です。証拠はそのあとです。広告配信の確認ではありません。",
     whyNotVpn: {
       title: "VPN やスクショフォルダでは足りない理由",
       points: [
@@ -302,8 +309,8 @@ export const copy = {
     },
     agencyCase: {
       kicker: "運用型代理店向け",
-      title: "壊れた geo を、広告費が流れる前に見つける",
-      body: "クリックがどこへ行ったかは、もう分かっています。その地域からランディングページを確認し、説明する必要があるときだけ時刻つきの記録を残します。",
+      title: "日常は検知。証拠は3番目。",
+      body: "市場を監視し、壊れた geo を見つけ、必要なら証明する。証拠保管庫ではなく、事故検知の続きです。",
       cta: "運用型代理店ページを見る",
     },
     useCasesTitle: "ユースケース",
@@ -322,10 +329,10 @@ export const copy = {
       },
     ],
     midCta: {
-      title: "地域ごとの表示を、説明責任と監査性のための証跡にする。",
-      subtitle: "単発のキャプチャツールではなく、関係者が同じ前提を持てる shared truth の基盤。",
+      title: "壊れを見つける。証拠を残す。",
+      subtitle: "日常はパフォーマンス保護。証拠は、検知したあとに残る。",
       body:
-        "各オブザベーションは、特定の時刻・特定の場所から見た表示を、再提示可能なビジュアル証跡として保存します。",
+        "各観測は、見つけた着地ページをあとから開き直せるように保存します。保管が目的ではなく、検知の続きです。",
     },
     seoTopics: {
       kicker: "検索・導入のヒント",
@@ -341,11 +348,11 @@ export const copy = {
     featuresPage: {
       metaTitle: "機能・比較・用途 | Viewtrace",
       metaDescription:
-        "比較表、監視と記録の違い、導入先、ユースケース、検索ガイド。トップを短くした分の詳細はここにあります。",
+        "市場を監視する、壊れを見つける、証拠を残す。比較表、導入先、ユースケース、検索ガイド。",
       eyebrow: "Features",
       h1: "比較、用途、検索ガイド",
       intro:
-        "購入判断の主導線はトップに残しています。比較表や導入イメージなど、長くなりがちな説明はこちらです。",
+        "一本の話です。市場を監視する、壊れを見つける、証拠を残す。比較と証明の詳細はこちらです。",
       pricingCta: "トップの料金を見る",
     },
     trustBand: {
@@ -448,7 +455,7 @@ export const copy = {
       },
       {
         q: "何が得られますか？",
-        a: "単なる画面チェックではなく、特定の時刻・場所における表示をビジュアル証跡として残せます。あとから同じ条件で再提示しやすい形です。",
+        a: "配信先の市場を監視し、着地ページの壊れを見つけ、必要ならその記録を残します。日常は検知です。証拠は3番目です。",
       },
       {
         q: "いつでも解約できますか？",
@@ -460,7 +467,7 @@ export const copy = {
       },
       {
         q: "geo screenshot tool や geo testing tool のように使えますか？",
-        a: "はい。地理ルートでレンダリングを取得し、同じ URL・地域のまま再実行して履歴を積み上げられます。単発のキャプチャではなく、説明・照合に使える観測として設計しています。",
+        a: "はい。選んだ地域から取得し、同じ URL を再実行して履歴を残せます。それが確認です。記録の共有や照合の説明は、機能ページと代理店ページにあります。",
       },
       {
         q: "広告の配信確認（ad verification）ですか？",
@@ -1065,7 +1072,7 @@ export const copy = {
     acceptableUsePage: acceptableUsePageCopyJa,
     aboutPage: aboutPageCopyJa,
     footer: {
-      tagline: "説明責任・証跡・監査性のためのジオ証跡インフラ。",
+      tagline: "市場を監視する。壊れを見つける。証拠を残す。",
       product: "プロダクト",
       legal: "法的情報",
       support: "サポート",
@@ -1098,13 +1105,13 @@ export const copy = {
       menu: "Menu",
     },
     hero: {
-      title: "See the landing page your customers actually see.",
-      catchKicker: "Post-click verification for performance agencies",
+      title: "Spend keeps flowing while the landing page is broken.",
+      catchKicker: "Monitor every market. Catch what breaks. Keep the proof.",
       catchLine:
-        "Ad platforms tell you where the click went. Viewtrace shows you what was actually waiting there.",
+        "A broken hero, a geo-blocked offer, or a stale price in DE or JP quietly tanks conversion. The ads keep running.",
       catchLexicon: "",
       subtitle:
-        "Catch geo-specific landing issues before they waste spend. Timestamped evidence included.",
+        "You buy it to stop the next loss. Proof is what you keep after you catch it.",
       punch: "",
       retention: {
         kicker: "Persist the record",
@@ -1123,20 +1130,20 @@ export const copy = {
       sample: "Try by region",
     },
     heroTrust: {
-      items: ["Timestamped evidence included."],
+      items: ["Monitor every market. Catch what breaks. Keep the proof."],
     },
     valuePillars: [
       {
-        title: "Accountability to clients",
-        subtitle: "Show “here’s how it rendered in that region” as evidence, not “trust me”",
+        title: "Monitor every market",
+        subtitle: "See the landing page from each country or state you send clicks to",
       },
       {
-        title: "Region-by-region ad & LP checks",
-        subtitle: "Record and reconcile the real render from every country or state",
+        title: "Catch what breaks",
+        subtitle: "Detect a broken hero, geo-blocked offer, or stale price before the next spend cycle",
       },
       {
-        title: "Reporting that becomes an asset",
-        subtitle: "Scheduled runs and shareable verify URL / PDF—report and proof in one pass",
+        title: "Keep the proof",
+        subtitle: "Reopen the timestamped capture after you catch it",
       },
     ],
     regionSearch: {
@@ -1190,26 +1197,34 @@ export const copy = {
       ctaSecondary: "Log in",
     },
     pitch: {
-      problemTitle: "Spend keeps flowing while the in-market LP is broken.",
+      problemTitle: "What is actually breaking when spend keeps flowing",
       problemPoints: [
         {
-          title: "It looks fine from your desk",
-          body: "A geo-gated script, currency, or consent wall changes what people in the buying region actually see.",
+          title: "Broken hero",
+          body: "It looks fine from your desk. In-market, the first screen is already wrong.",
         },
         {
-          title: "Offer or price mismatch by geo",
-          body: "The ad promises one thing; the localized page shows another. You hear it from the client first.",
+          title: "Geo-blocked offer",
+          body: "The promo the ad sold is locked out in that country.",
         },
         {
-          title: "CVR drops and the page is the last place you look",
-          body: "Creative takes the blame while the landing page in-market has already changed.",
+          title: "Stale price",
+          body: "DE or JP still shows last week’s number.",
+        },
+        {
+          title: "CVR drops",
+          body: "Creative takes the blame. The landing page is the last place you look.",
+        },
+        {
+          title: "Spend keeps flowing",
+          body: "Bids stay on. Nobody is watching the landing experience.",
         },
       ],
-      solutionTitle: "See the post-click landing experience from the region you buy.",
+      solutionTitle: "Monitor. Detect. Prove.",
       solutionBullets: [
-        "Capture the landing page from the country or US state you send clicks to",
-        "Get notified when the visual change is large",
-        "Keep a timestamped record when you need to explain it",
+        "Monitor every market — capture the landing page from the region you buy",
+        "Catch what breaks — get notified when the visual change is large",
+        "Keep the proof — reopen the timestamped record after you catch it",
       ],
       benefits: [] as { title: string; body: string }[],
     },
@@ -1342,23 +1357,23 @@ export const copy = {
       breakevenHint: "Roughly how many checks per month make time savings alone cover the plan.",
       note: "This is a rough estimate; your workflow and clients will change the outcome.",
     },
-    howTitle: "How it works",
+    howTitle: "Monitor → Detect → Prove",
     steps: [
-      { title: "Enter the landing URL", body: "Point to the page the click actually lands on." },
       {
-        title: "Pick the buying region",
-        body: "Choose the country or US state you send traffic to.",
+        title: "Monitor every market",
+        body: "See the landing page from the country or US state you send clicks to.",
       },
       {
-        title: "See what rendered there",
-        body: "Capture the live landing experience from that region.",
+        title: "Catch what breaks",
+        body: "Get notified when the hero, offer, or price goes wrong. Stop the next loss.",
       },
       {
-        title: "Get notified if it drifts",
-        body: "Alert only when the visual change is large, and keep a timestamped record.",
+        title: "Keep the proof",
+        body: "Reopen the timestamped capture after you catch it.",
       },
     ],
-    stepNote: "Each record is the landing page at capture time—not ad-delivery verification.",
+    stepNote:
+      "You buy it to catch the next break. Proof is the last step. Not ad-delivery verification.",
     whyNotVpn: {
       title: "Why not a VPN or a screenshot folder?",
       points: [
@@ -1378,8 +1393,8 @@ export const copy = {
     },
     agencyCase: {
       kicker: "For performance agencies",
-      title: "Catch broken geos before they burn spend",
-      body: "You already know where the click went. Check the landing page from that region, and keep a timestamped record when you need to explain it.",
+      title: "Daily use is detection. Proof is step three.",
+      body: "Monitor every market, catch the broken geo, then prove it if you need to. Not an evidence vault—the rest of the accident detector.",
       cta: "See the performance agency page",
     },
     useCasesTitle: "Use cases",
@@ -1398,11 +1413,10 @@ export const copy = {
       },
     ],
     midCta: {
-      title: "Accountability infrastructure—not a disposable capture tool.",
-      subtitle:
-        "Pick the region, persist what rendered, and keep a trail exports can attach to when stakeholders demand shared truth.",
+      title: "Catch what breaks. Keep the proof.",
+      subtitle: "Daily use is performance protection. Proof is what remains after you detect.",
       body:
-        "Each observation stores what the page looked like from a specific moment and vantage point—replayable evidence, not anecdote.",
+        "Each observation stores the landing page you caught, so you can reopen it later. Storage is not the job. Detection is. Proof is the last step.",
     },
     seoTopics: {
       kicker: "Search intent guides",
@@ -1418,11 +1432,11 @@ export const copy = {
     featuresPage: {
       metaTitle: "Features, comparisons, and use cases | Viewtrace",
       metaDescription:
-        "Comparison table, monitoring vs records, who uses Viewtrace, use cases, and search guides. Details moved off the homepage.",
+        "Monitor every market, catch what breaks, keep the proof. Comparisons, personas, use cases, and guides.",
       eyebrow: "Features",
       h1: "Comparisons, use cases, and guides",
       intro:
-        "The homepage stays short for buying. Longer comparisons and audience detail live here.",
+        "One story: monitor every market, catch what breaks, keep the proof. Comparisons and the prove step live here.",
       pricingCta: "See homepage pricing",
     },
     trustBand: {
@@ -1526,7 +1540,7 @@ export const copy = {
       },
       {
         q: "What do I actually get?",
-        a: "Unlike a simple check, you see what users likely experienced—a verifiable record of appearance at a time and place.",
+        a: "You monitor the markets you buy, catch landing-page breaks, and keep that capture if you need to show it. Daily use is detection. Proof is step three.",
       },
       {
         q: "Can I cancel anytime?",
@@ -1538,7 +1552,7 @@ export const copy = {
       },
       {
         q: "Is Viewtrace a geo screenshot tool or geo testing tool?",
-        a: "You can use it that way: geo-routed captures with history and optional scheduled reruns. The difference is we standardize what you store so teams can reconcile later—not a one-off grab in a downloads folder.",
+        a: "You can use it that way: capture from a chosen region, rerun the same URL, and keep a history. That is the check. How teams store and share the trail is on Features and the agency pages.",
       },
       {
         q: "Is this ad verification?",
@@ -2166,7 +2180,7 @@ export const copy = {
     acceptableUsePage: acceptableUsePageCopyEn,
     aboutPage: aboutPageCopyEn,
     footer: {
-      tagline: "Accountability, evidence trails, and auditability for geo-targeted experiences.",
+      tagline: "Monitor every market. Catch what breaks. Keep the proof.",
       product: "Product",
       legal: "Legal",
       support: "Support",

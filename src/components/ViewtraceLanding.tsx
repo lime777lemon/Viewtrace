@@ -288,7 +288,7 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
             <h2 className="font-display max-w-3xl text-2xl font-semibold leading-snug text-ink sm:text-3xl">
               {t.pitch.problemTitle}
             </h2>
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
               {t.pitch.problemPoints.map((item) => (
                 <article
                   key={item.title}
@@ -318,7 +318,7 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
             <h2 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
               {t.howTitle}
             </h2>
-            <ol className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <ol className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {t.steps.map((step, i) => (
                 <li key={step.title} className="relative flex gap-4">
                   <span className="font-display flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-white">

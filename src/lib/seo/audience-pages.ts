@@ -80,17 +80,17 @@ const EN: Record<AudienceSlug, AudienceBody> = {
   agency: {
     eyebrow: "For advertising & marketing agencies",
     metaTitle:
-      "Geo ad verification for agencies — client-ready proof of what rendered | Viewtrace",
+      "Monitor, detect, prove — geo landing-page checks for agencies | Viewtrace",
     metaDescription:
-      "Viewtrace helps US advertising and marketing agencies prove how ads and landing pages actually rendered in each region—timestamped, geo-routed captures with verify URLs and PDF reports clients trust.",
-    h1: "Prove to clients what actually rendered—in every market you buy",
+      "Monitor client markets, catch what breaks, keep the proof. Daily use is catching geo LP failures; verify URLs and PDFs are step three.",
+    h1: "Monitor client markets. Catch what breaks. Keep the proof.",
     subhead:
-      "Viewtrace is the verification layer for agencies: geo-routed captures with timestamps and tamper-evident proof, packaged as client-ready verify URLs and PDF reports.",
+      "Catch the broken render before the next spend cycle. The verify URL is what you keep after you detect it.",
     summary:
-      "Viewtrace gives advertising and marketing agencies tamper-evident, geo-routed proof of how ads and landing pages rendered in each region—delivered as verify URLs and PDF reports for client reporting.",
+      "Viewtrace helps agencies monitor landing pages in each buying market, catch what breaks, then keep a timestamped capture, verify URL, or PDF.",
     intro: [
-      "Clients don't just ask “did it run?”—they ask “did the right creative, price, and legal line actually show for people in that market?” Screenshots in Slack and a VPN aren't an answer you can defend three months later.",
-      "Viewtrace routes like a real user in the region you choose, captures how the page rendered, and stores it with the URL, timestamp, and an integrity check. You reopen, diff, and share it—so account teams answer with evidence instead of anecdotes.",
+      "Daily use is performance protection: the right hero, price, and offer actually showing in each market. Slack screenshots and a VPN do not catch the next break.",
+      "After you catch it, keep the proof. Viewtrace stores URL, timestamp, and an integrity check so account teams can reopen, diff, and share—Monitor → Detect → Prove.",
     ],
     painTitle: "Where agencies lose hours (and trust)",
     pains: [
@@ -156,17 +156,17 @@ const EN: Record<AudienceSlug, AudienceBody> = {
   "performance-agency": {
     eyebrow: "For performance & paid media agencies",
     metaTitle:
-      "Landing page & ad proof for performance agencies — geo verification | Viewtrace",
+      "Monitor, detect, prove — landing-page protection for performance agencies | Viewtrace",
     metaDescription:
-      "Performance and paid media agencies use Viewtrace to verify that landing pages and offers rendered correctly by region—timestamped, geo-routed captures with alerts, verify URLs, and PDF proof.",
-    h1: "Verify the landing page your budget is actually sending clicks to",
+      "Monitor every market, catch geo LP failures, keep the proof. Performance protection first; verify URLs and reports are step three.",
+    h1: "Monitor every market. Catch what breaks. Keep the proof.",
     subhead:
-      "Viewtrace captures how your LPs and offers rendered from each region—so you catch broken geos and price mismatches before they burn spend, with proof you can hand to the client.",
+      "Daily use is catching the next geo LP failure. Proof is the last step—not a separate product.",
     summary:
-      "Viewtrace helps performance and paid media agencies verify that landing pages and offers rendered correctly per region, with timestamped geo-routed captures, drift alerts, verify URLs, and PDF reports.",
+      "Viewtrace is performance protection for paid-media teams: monitor landing pages in each buying market, catch what breaks, then keep a timestamped capture, verify URL, or PDF.",
     intro: [
-      "You optimize bids to the decimal, but the page the click lands on is a black box outside your own market. A broken hero, a geo-blocked offer, or a stale price in DE or JP quietly tanks conversion while spend keeps flowing.",
-      "Viewtrace observes the live landing page from the region you're buying in, stores how it rendered with a timestamp and integrity check, and can alert you when the visual drifts—so you protect ROAS with evidence, not guesswork.",
+      "You buy it to stop future loss: a broken hero, geo-blocked offer, or stale price while spend keeps flowing. That is detection.",
+      "After you catch it, keep the proof. Each observation stores URL, region, timestamp, and an integrity check. Verify URLs and PDFs are step three in one story: Monitor → Detect → Prove.",
     ],
     painTitle: "Where paid budgets leak silently",
     pains: [
@@ -183,23 +183,23 @@ const EN: Record<AudienceSlug, AudienceBody> = {
         body: "CVR drops and everyone blames the creative. Without dated captures of the page per region, you can't isolate what actually changed.",
       },
     ],
-    valueTitle: "How Viewtrace protects performance",
+    valueTitle: "Monitor → Detect → Prove",
     values: [
       {
-        title: "Observe the LP from the buying region",
+        title: "Monitor every market",
         body: "Capture how the exact landing URL rendered from the country or US state you're driving traffic to.",
       },
       {
-        title: "Drift alerts on meaningful change",
+        title: "Catch what breaks",
         body: "Scheduled reruns with email digests flag visual changes—so you catch a broken geo before the next spend cycle (Starter / Pro).",
       },
       {
-        title: "Repeatable geo tests with a timeline",
-        body: "Re-run the same URL from the same region and keep a dated history to validate fixes and rollouts.",
+        title: "Keep the proof",
+        body: "Verify URLs and PDF reports turn the capture you already caught into something you can attach to the account.",
       },
       {
-        title: "Proof clients accept",
-        body: "Verify URLs and PDF reports turn “trust me, the page was live” into something you can attach to the account.",
+        title: "Repeat the same check",
+        body: "Re-run the same URL from the same region and keep a dated history to validate fixes and rollouts.",
       },
     ],
     faqTitle: "Performance agency FAQ",
@@ -225,26 +225,26 @@ const EN: Record<AudienceSlug, AudienceBody> = {
         a: "Free trial with up to 20 observations and no credit card. Paid plans scale with observation volume, retention, and scheduling—see pricing.",
       },
     ],
-    ctaTitle: "Stop sending budget to a page you can't see",
+    ctaTitle: "Catch the next break. Keep the proof.",
     ctaBody:
-      "Start free and verify your first geo-routed landing page in minutes. No credit card, up to 20 observations.",
+      "Start free and monitor your first buying-region landing page in minutes. No credit card, up to 20 observations.",
   },
 };
 
 const JA: Record<AudienceSlug, AudienceBody> = {
   agency: {
     eyebrow: "広告・マーケティング代理店向け",
-    metaTitle: "代理店向けの地域別・広告表示検証 — クライアントに出せる証跡 | Viewtrace",
+    metaTitle: "監視して、壊れたら見つけ、証拠を残す — 代理店向け | Viewtrace",
     metaDescription:
-      "Viewtrace は、広告・LP が各地域で実際にどう描画されたかを、タイムスタンプ・地理ルート・改ざん検知付きで保存。検証URLとPDFレポートで、代理店のクライアント報告を支えます。",
-    h1: "「実際にどう見えていたか」をクライアントに証明する",
+      "クライアント市場を監視し、壊れを見つけ、証拠を残す。日常は地域LPの事故検知。検証URLとPDFは3番目です。",
+    h1: "クライアント市場を監視する。壊れを見つける。証拠を残す。",
     subhead:
-      "Viewtrace は代理店のための検証レイヤー。地理ルートで取得した表示を、タイムスタンプ・改ざん検知付きで保存し、クライアントに渡せる検証URLとPDFレポートにします。",
+      "次の配信サイクルの前に、崩れた表示を見つける。検証URLは、検知したあとに残すものです。",
     summary:
-      "Viewtrace は広告・マーケ代理店向けに、広告やLPが各地域でどう描画されたかを、地理ルート・タイムスタンプ・改ざん検知付きで証跡化し、検証URLとPDFレポートとして提供します。",
+      "Viewtrace は代理店が配信先市場の着地ページを監視し、壊れを見つけ、そのあとで時刻つきの記録・検証URL・PDFを残すためのものです。",
     intro: [
-      "クライアントが知りたいのは「配信したか」だけではありません。「その市場のユーザーに、正しいクリエイティブ・価格・注記が本当に表示されたか」です。Slack のスクショや VPN では、3か月後に説明しきれません。",
-      "Viewtrace は選んだ地域の実ユーザーのように経路を通し、描画結果を URL・時刻・改ざん検知とセットで保存します。再表示・差分・共有ができるので、担当者は感覚ではなく証跡で答えられます。",
+      "日常はパフォーマンス保護です。各市場で正しいヒーロー・価格・オファーが出ているかを見つけること。Slack のスクショや VPN では、次の事故は止められません。",
+      "見つけたあとに証拠を残す。URL・時刻・改ざん検知をセットで保存し、再表示・差分・共有できます。監視 → 検知 → 証明です。",
     ],
     painTitle: "代理店が時間と信頼を失う場面",
     pains: [
@@ -309,17 +309,17 @@ const JA: Record<AudienceSlug, AudienceBody> = {
   },
   "performance-agency": {
     eyebrow: "運用型・パフォーマンスマーケ代理店向け",
-    metaTitle: "運用型代理店向けのLP・広告検証 — 地域別の表示チェック | Viewtrace",
+    metaTitle: "監視して、壊れたら見つけ、証拠を残す — 運用型代理店向け | Viewtrace",
     metaDescription:
-      "運用型・パフォーマンスマーケ代理店が、LPやオファーが地域ごとに正しく描画されたかを検証。地理ルート取得・タイムスタンプ・差分通知・検証URL・PDFで、無駄な配信を防ぎます。",
-    h1: "予算がクリックを送っている“その LP”を、実際に確認する",
+      "市場を監視し、地域固有のLP異常を見つけ、証拠を残す。日常はパフォーマンス保護。検証URLとレポートは3番目です。",
+    h1: "市場を監視する。壊れを見つける。証拠を残す。",
     subhead:
-      "Viewtrace は LP やオファーが各地域でどう描画されたかを取得。地域別の表示崩れや価格不一致を、配信で溶かす前に検知し、クライアントに渡せる証跡にします。",
+      "日常は次の geo LP 事故を止めること。証拠は最後のステップであり、別商品ではありません。",
     summary:
-      "Viewtrace は運用型・パフォーマンス代理店向けに、LPやオファーが地域ごとに正しく描画されたかを、地理ルート取得・タイムスタンプ・差分通知・検証URL・PDFで検証します。",
+      "Viewtrace は運用型代理店向けのパフォーマンス保護です。配信先市場の着地ページを監視し、壊れを見つけ、そのあとで時刻つきの記録・検証URL・PDFを残します。",
     intro: [
-      "入札は小数点まで最適化しても、クリックの着地先は自分の市場外ではブラックボックス。独や日でヒーローの崩れ・地域ブロックのオファー・古い価格が、コンバージョンを静かに落とし続けます。",
-      "Viewtrace は配信している地域から実際のLPを観測し、描画結果をタイムスタンプ・整合性チェック付きで保存。視覚変化を通知できるので、勘ではなく証跡で ROAS を守れます。",
+      "買う理由は未来の損失を止めること。ヒーロー崩れ、地域ブロックされたオファー、古い価格。それが検知です。",
+      "見つけたあとに証拠を残す。各観測は URL・地域・時刻・改ざん検知をセットで保存します。検証URLとPDFは、監視 → 検知 → 証明の3番目です。",
     ],
     painTitle: "有料予算が静かに漏れる場所",
     pains: [
@@ -336,23 +336,23 @@ const JA: Record<AudienceSlug, AudienceBody> = {
         body: "CVRが下がると全員がクリエイティブのせいに。地域別・日付付きのページ取得がないと、実際に何が変わったか切り分けられません。",
       },
     ],
-    valueTitle: "Viewtrace がパフォーマンスを守る方法",
+    valueTitle: "監視 → 検知 → 証明",
     values: [
       {
-        title: "配信地域からLPを観測",
+        title: "市場を監視する",
         body: "トラフィックを流している国・米国州から、その LP の URL が実際どう描画されたかを取得します。",
       },
       {
-        title: "意味のある変化を差分通知",
+        title: "壊れを見つける",
         body: "メール通知付きの定期実行で視覚変化を検知。次の配信サイクル前に、崩れた地域に気づけます（Starter / Pro）。",
       },
       {
-        title: "再現可能な地理テストとタイムライン",
-        body: "同じ URL を同じ地域から再実行し、日付付き履歴で修正やロールアウトを検証します。",
+        title: "証拠を残す",
+        body: "検証URLとPDFで、すでに見つけた表示をアカウントに添付できる形にします。",
       },
       {
-        title: "クライアントが受け入れる証跡",
-        body: "検証URLとPDFで、「ページは出ていました」を、アカウントに添付できる形にします。",
+        title: "同じ確認を繰り返す",
+        body: "同じ URL を同じ地域から再実行し、日付付き履歴で修正やロールアウトを検証します。",
       },
     ],
     faqTitle: "運用型代理店向けFAQ",
@@ -378,9 +378,9 @@ const JA: Record<AudienceSlug, AudienceBody> = {
         a: "最大20観測まで無料・カード不要。有料は観測ボリューム・保持期間・スケジュールでスケールします（料金参照）。",
       },
     ],
-    ctaTitle: "見えないページに、予算を送り続けない",
+    ctaTitle: "次の壊れを見つける。証拠はあとから。",
     ctaBody:
-      "無料で始めて、最初の地理ルートLP検証を数分で。カード不要・最大20観測。",
+      "無料で始めて、最初の配信先市場の着地ページを数分で監視。カード不要・最大20観測。",
   },
 };
 

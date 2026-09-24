@@ -28,26 +28,24 @@ export function GET(): Response {
 
   const body = `# Viewtrace
 
-> Viewtrace is a geo ad verification platform for advertising and marketing agencies.
-> It produces tamper-evident, geo-routed proof of how ads and landing pages actually
-> rendered in a specific country or US state—captures tied to the exact URL, a
-> timestamp, and an integrity check, delivered as client-ready verify URLs and PDF reports.
+> Monitor every market. Catch what breaks. Keep the proof.
+> Daily use is performance protection: a broken hero, geo-blocked offer, or stale
+> price can tank conversion while spend keeps flowing. Proof is step three—not a
+> separate product. Geo-routed captures keep URL, timestamp, and an integrity check.
 
 ## Who it is for
 
 Viewtrace is built for US advertising, marketing, performance/paid-media, and SEO
-agencies that must prove to clients what actually showed in each market—not just that
-a campaign "ran". Typical jobs to be done: geo screenshot / geo verification, landing
-page QA per region, ad-creative rendering checks, localized QA, and defensible proof for
-client reviews and QBRs.
+agencies that need to catch landing-page failures in each buying market—then keep
+proof if they must explain it. Typical jobs: monitor LPs by region, detect geo-only
+breaks, landing page QA, and a trail for client reviews after something is caught.
 
 ## What makes it different
 
-- Geo-routed captures from the region you choose (country or US state), not a desktop grab behind a VPN.
-- Every observation stores URL + region + timestamp + integrity check, so it holds up weeks later.
-- Client-ready verify URLs and PDF reports clients can open without a login.
-- Scheduled reruns with email digests flag meaningful visual drift (Starter / Pro).
-- A shared workspace so media, account, and creative teams open one source of truth.
+- Monitor: geo-routed captures from the region you buy (country or US state), not a desktop grab behind a VPN.
+- Detect: scheduled reruns with email digests flag meaningful visual drift (Starter / Pro).
+- Prove: URL + region + timestamp + integrity check, plus verify URLs and PDF reports.
+- One story, not two products: performance protection first; evidence is step three.
 
 ## Pricing
 

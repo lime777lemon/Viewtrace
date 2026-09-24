@@ -24,11 +24,11 @@ const sora = Sora({
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin),
   title: {
-    default: "Viewtrace — Post-click verification for landing pages",
+    default: "Viewtrace — Monitor every market. Catch what breaks. Keep the proof.",
     template: "%s | Viewtrace",
   },
   description:
-    "Ad platforms tell you where the click went. Viewtrace shows you what was actually waiting there. Catch geo-specific landing issues before they waste spend.",
+    "Catch a broken hero, geo-blocked offer, or stale price before spend keeps flowing. Then keep the proof.",
   keywords: [...siteSeoKeywordPhrases, "Viewtrace"],
   applicationName: "Viewtrace",
   alternates: {
@@ -44,15 +44,15 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "/",
     siteName: "Viewtrace",
-    title: "Viewtrace — Post-click verification for landing pages",
+    title: "Viewtrace — Monitor every market. Catch what breaks. Keep the proof.",
     description:
-      "Ad platforms tell you where the click went. Viewtrace shows you what was actually waiting there. Catch geo-specific landing issues before they waste spend.",
+      "Catch a broken hero, geo-blocked offer, or stale price before spend keeps flowing. Then keep the proof.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Viewtrace — Post-click verification for landing pages",
+    title: "Viewtrace — Monitor every market. Catch what breaks. Keep the proof.",
     description:
-      "Ad platforms tell you where the click went. Viewtrace shows you what was actually waiting there. Catch geo-specific landing issues before they waste spend.",
+      "Catch a broken hero, geo-blocked offer, or stale price before spend keeps flowing. Then keep the proof.",
   },
   verification: {
     google: "hWP7-fbRH5By6ftqXkQOAO73beDcZx4B2XAZ8Jtbx5s",
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
 };
 
 /** サイト全体の構造化データ（Organization / WebSite / SoftwareApplication）。
- *  検索のナレッジ理解と、AI/LLM が Viewtrace を「クリック後のランディング体験の確認」と
+ *  検索のナレッジ理解と、AI/LLM が Viewtrace を「監視→検知→証明」と
  *  正しく説明・引用しやすくするための土台（GEO 対策）。 */
 const SITE_JSON_LD = {
   "@context": "https://schema.org",
@@ -72,7 +72,7 @@ const SITE_JSON_LD = {
       url: `${siteOrigin}/`,
       logo: `${siteOrigin}/brand/viewtrace-logo.png`,
       description:
-        "Viewtrace is post-click verification for agencies: it shows what the landing page actually rendered after the click, from the region you buy in.",
+        "Viewtrace monitors landing pages in each buying market, catches what breaks, and keeps the proof. Daily use is performance protection.",
       email: "info@viewtrace.net",
     },
     {
@@ -90,7 +90,7 @@ const SITE_JSON_LD = {
       operatingSystem: "Web",
       url: `${siteOrigin}/`,
       description:
-        "Ad platforms tell you where the click went. Viewtrace shows what was waiting on the landing page. Not ad-delivery or tag/pixel verification.",
+        "Monitor every market. Catch what breaks. Keep the proof. Not ad-delivery or tag/pixel verification.",
       offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
     },
   ],
