@@ -284,6 +284,7 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                       <th className="px-4 py-3">{t.observationsTable.colUrl}</th>
                       <th className="px-4 py-3">{t.observationsTable.colRegion}</th>
                       <th className="px-4 py-3">{t.observationsTable.colStatus}</th>
+                      <th className="px-4 py-3">{t.observationsTable.colTags}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -306,13 +307,17 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                             {t.observationDetail.statusSuccess}
                           </span>
                         </td>
+                        <td className="px-4 py-3 align-top">
+                          <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-ink">
+                            {t.compare.exampleTag}
+                          </span>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             </div>
-            <p className="mt-3 text-xs text-ink-muted">{t.compare.caption}</p>
           </div>
         </section>
 
@@ -348,9 +353,6 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
             <h2 className="font-display text-2xl font-semibold text-ink sm:text-3xl">
               {t.pricingTitle}
             </h2>
-            <p className="mt-4 max-w-3xl text-sm leading-relaxed text-ink-muted">
-              {t.pricingSubtitle}
-            </p>
             <div className="mt-10 grid gap-6 lg:grid-cols-2">
               {t.plans.map((plan) => (
                 <article

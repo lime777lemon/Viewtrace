@@ -137,9 +137,9 @@ export const copy = {
     },
     compare: {
       title: "同じ着地ページを、配信先の地域から見る",
-      body: "地域ごとにオブザベーションを実行します。ダッシュボードには URL・地域・時刻・ステータス（成功 / 失敗）が残ります。",
-      caption: "例：同じ URL を3地域から取得した一覧。ステータスは本体と同じ「成功」「失敗」です。",
+      body: "地域ごとにオブザベーションを実行します。ダッシュボードには URL・地域・時刻・ステータス（成功 / 失敗）が残ります。一覧は URL やタグで検索でき、タグはその URL の記録すべてに保存されます。",
       url: "https://example.com/campaign",
+      exampleTag: "campaign",
       rows: [
         { captured: "2026/03/12 14:02", utc: "2026-03-12 14:02 UTC", region: "US · California" },
         { captured: "2026/03/12 14:05", utc: "2026-03-12 14:05 UTC", region: "Germany" },
@@ -363,8 +363,6 @@ export const copy = {
     },
     planFeatureOverage: "追加オブザベーション：{price} / 回",
     pricingTitle: "料金",
-    pricingSubtitle:
-      "機能の有無ではなく、用途（試す／本番で回す）の違いで選べる2プランです。選択肢を絞り、迷いを減らす設計にしています。",
     pricingOverageTitle: "追加オブザベーション（従量）",
     pricingOverageBody:
       "月間上限を超えた場合、追加オブザベーションは {price} / 回で請求されます。枠超過後も取得は継続し、料金は次回インボイスに加算されます。",
@@ -1228,9 +1226,9 @@ export const copy = {
     },
     compare: {
       title: "See the same landing page from the markets you buy",
-      body: "Run an observation from each region. The dashboard keeps URL, region, time, and status—Success or Failure.",
-      caption: "Example: the same URL observed from three regions. Status labels match the product.",
+      body: "Run an observation from each region. The dashboard keeps URL, region, time, and status—Success or Failure. Search the list by URL or tag. A tag is saved on every record of that URL.",
       url: "https://example.com/campaign",
+      exampleTag: "campaign",
       rows: [
         { captured: "Mar 12, 2026, 14:02", utc: "2026-03-12 14:02 UTC", region: "US · California" },
         { captured: "Mar 12, 2026, 14:05", utc: "2026-03-12 14:05 UTC", region: "Germany" },
@@ -1453,8 +1451,6 @@ export const copy = {
     },
     planFeatureOverage: "Additional observations: {price} each",
     pricingTitle: "Pricing",
-    pricingSubtitle:
-      "Two plans differentiated by how you use Viewtrace—not by locking core features. Fewer choices, clearer fit, better conversion.",
     pricingOverageTitle: "Additional observations (metered)",
     pricingOverageBody:
       "If you exceed your monthly allowance, additional observations are billed at {price} each and added to your next invoice. Observations continue after you’ve used your included quota.",
