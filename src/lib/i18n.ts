@@ -42,6 +42,7 @@ export const copy = {
         "広告配信やタグ／ピクセルの確認ではありません。取得時点のランディングページの記録です。",
       trial: "着地ページを無料で確認する",
       sample: "地域で試す",
+      imageAlt: "同じ着地ページを米国と日本から見たイメージ",
     },
     heroTrust: {
       items: ["市場を監視する。壊れを見つける。証拠を残す。"],
@@ -1132,6 +1133,7 @@ export const copy = {
         "Not ad-delivery or tag/pixel verification. Records show the landing page at capture time.",
       trial: "Check a landing page free",
       sample: "Try by region",
+      imageAlt: "The same landing page as seen from the United States and Japan",
     },
     heroTrust: {
       items: ["Monitor every market. Catch what breaks. Keep the proof."],

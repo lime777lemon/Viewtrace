@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ViewtraceLogo } from "@/components/brand/ViewtraceLogo";
@@ -203,44 +204,49 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
 
       <main id="top">
         <section className="relative overflow-hidden border-b border-border">
-          <div
-            className="pointer-events-none absolute inset-0 z-0 bg-[url('/marketing/auto-email-no-bg.png')] bg-size-[min(400px,58vw)] bg-position-[right_-4%_center] bg-no-repeat opacity-60 sm:bg-size-[min(440px,46vw)]"
-            aria-hidden
-          />
-          <div
-            className="pointer-events-none absolute -right-24 top-0 z-0 h-96 w-96 rounded-full bg-accent-soft opacity-60 blur-3xl"
-            aria-hidden
-          />
-          <div className="relative z-10 mx-auto max-w-6xl px-4 pb-14 pt-14 sm:px-6 sm:pb-16 sm:pt-20">
-            {t.hero.catchKicker ? (
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#276248] sm:text-xs">
-                {t.hero.catchKicker}
+          <div className="relative z-10 mx-auto grid max-w-6xl items-center gap-10 px-4 pb-14 pt-14 sm:px-6 sm:pb-16 sm:pt-20 lg:grid-cols-2 lg:gap-12">
+            <div>
+              {t.hero.catchKicker ? (
+                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#276248] sm:text-xs">
+                  {t.hero.catchKicker}
+                </p>
+              ) : null}
+              <h1 className="font-display max-w-3xl text-3xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl lg:text-[2.75rem] lg:leading-[1.15]">
+                {t.hero.title}
+              </h1>
+              {t.hero.catchLine ? (
+                <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ink sm:text-xl">
+                  {t.hero.catchLine}
+                </p>
+              ) : null}
+              {t.hero.subtitle ? (
+                <p className="mt-5 max-w-2xl text-base leading-relaxed text-ink-muted sm:text-lg">
+                  {t.hero.subtitle}
+                </p>
+              ) : null}
+              <div className="mt-8">
+                <Link
+                  href="/login?mode=signup"
+                  className="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-accent-hover"
+                >
+                  {t.hero.trial}
+                </Link>
+              </div>
+              <p className="mt-5 max-w-2xl text-sm text-ink-muted">
+                {t.hero.disclaimer}
               </p>
-            ) : null}
-            <h1 className="font-display max-w-3xl text-3xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl lg:text-[2.75rem] lg:leading-[1.15]">
-              {t.hero.title}
-            </h1>
-            {t.hero.catchLine ? (
-              <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ink sm:text-xl">
-                {t.hero.catchLine}
-              </p>
-            ) : null}
-            {t.hero.subtitle ? (
-              <p className="mt-5 max-w-2xl text-base leading-relaxed text-ink-muted sm:text-lg">
-                {t.hero.subtitle}
-              </p>
-            ) : null}
-            <div className="mt-8">
-              <Link
-                href="/login?mode=signup"
-                className="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-accent-hover"
-              >
-                {t.hero.trial}
-              </Link>
             </div>
-            <p className="mt-5 max-w-2xl text-sm text-ink-muted">
-              {t.hero.disclaimer}
-            </p>
+            <div className="relative">
+              <Image
+                src="/marketing/hero-geo-compare.jpg"
+                alt={t.hero.imageAlt}
+                width={1024}
+                height={512}
+                priority
+                sizes="(min-width: 1024px) 40vw, 90vw"
+                className="h-auto w-full"
+              />
+            </div>
           </div>
         </section>
 
