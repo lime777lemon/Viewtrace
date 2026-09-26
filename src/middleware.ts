@@ -2,6 +2,7 @@ import { type NextFetchEvent, type NextRequest, NextResponse } from "next/server
 import { SESSION_COOKIE } from "@/lib/auth/constants";
 import { getOpsSignalRouteSecret, isOpsMonitoringDisabled } from "@/lib/ops/alert-config";
 import { isSuspiciousRequestUrl } from "@/lib/ops/suspicious-request";
+import { hasSupabaseAuthSessionCookie } from "@/lib/supabase/auth-session-cookie";
 import { updateSupabaseSession } from "@/lib/supabase/update-session";
 
 export async function middleware(request: NextRequest, event: NextFetchEvent) {
@@ -9,7 +10,7 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   let res: NextResponse;
-  if (rawUrl && anonKey) {
+  if (rawUrl && anonKey && hasSupabaseAuthSessionCookie(request.cookies.getAll())) {
     res = await updateSupabaseSession(request);
   } else {
     res = NextResponse.next({ request });

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ObservationsCsvExport } from "@/components/dashboard/ObservationsCsvExport";
-import { ObservationsTable } from "@/components/dashboard/ObservationsTable";
+import { ObservationsLibrary } from "@/components/dashboard/ObservationsLibrary";
 import { getSession } from "@/lib/auth/session";
 import { getMergedObservationsForPlan, readUserObservations } from "@/lib/demo/user-observations";
 import { copy } from "@/lib/i18n";
@@ -75,7 +75,7 @@ export default async function ObservationsListPage() {
         </div>
       </div>
 
-      <ObservationsTable rows={rows} locale={locale} />
+      <ObservationsLibrary rows={rows} locale={locale} />
     </div>
   );
 }

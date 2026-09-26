@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { LoginView } from "@/components/auth/LoginView";
 import { getSession } from "@/lib/auth/session";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
+import { hasSupabaseAuthSessionCookie } from "@/lib/supabase/auth-session-cookie";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { sanitizeDashboardObservationHrefPath } from "@/lib/observation-route-id";
 import { readVerifyLoopAttribution } from "@/lib/verify-loop/cookies";
@@ -34,7 +36,9 @@ export default async function LoginPage({
 
   const wantsSignup = modeParam !== "signin";
 
-  let session = await getSession();
+  let session = hasSupabaseAuthSessionCookie((await cookies()).getAll())
+    ? await getSession()
+    : null;
   // 登録画面へ来たときはダッシュボードへ飛ばさず、既存セッションがあればいったんログアウトして登録フォームを表示
   if (session && wantsSignup && !verified) {
     const supabase = await createSupabaseServerClient();

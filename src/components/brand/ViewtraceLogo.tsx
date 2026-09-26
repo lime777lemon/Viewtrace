@@ -35,6 +35,7 @@ export function ViewtraceLogo({
       alt={alt}
       width={LOGO_WIDTH}
       height={LOGO_HEIGHT}
+      sizes="180px"
       priority={priority}
       className={className}
     />

@@ -49,6 +49,7 @@ export function ObservationAnnotationPanel({
     const r = await updateObservationAnnotationsAction(observationId, {
       note: noteToSave,
       tags,
+      tagsMode: "replace",
       folder,
       reviewStatus,
     });

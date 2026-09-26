@@ -14,6 +14,8 @@ import { parseCaptureConditionsFromDb } from "@/lib/capture-conditions";
 import { computeObservationContentHash } from "@/lib/observation-content-hash";
 import { generateObservationVerifyToken } from "@/lib/observation-verify-token";
 import { sanitizeObservationRouteId } from "@/lib/observation-route-id";
+import { inheritedTagsForUrl } from "@/lib/observation-url-tags";
+import { normalizeObservationTags } from "@/lib/observation-tags";
 import { markVerifyLoopFirstObservation } from "@/lib/verify-loop/track";
 
 export const USER_OBSERVATIONS_COOKIE = "viewtrace_user_obs";
@@ -293,6 +295,7 @@ export async function appendUserObservation(
 
   const contentHash = computeObservationContentHash(obs);
   const verifyToken = generateObservationVerifyToken();
+  const inheritedTags = await inheritedTagsForUrl(supabase, user.id, obs.url);
 
   const payload = {
     id: obs.id,
@@ -302,7 +305,7 @@ export async function appendUserObservation(
     region_label: obs.regionLabel,
     status: obs.status,
     note: obs.note ?? null,
-    tags: obs.tags ?? [],
+    tags: normalizeObservationTags([...(obs.tags ?? []), ...inheritedTags]),
     folder: obs.folder ?? null,
     review_status: obs.reviewStatus ?? null,
     page_title: obs.pageTitle ?? null,

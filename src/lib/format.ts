@@ -9,14 +9,12 @@ export function formatJaDateTime(iso: string, locale: "ja" | "en" = "ja"): strin
 
 export function formatUtcLabel(iso: string): string {
   const d = new Date(iso);
-  return new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-    timeZone: "UTC",
-    timeZoneName: "short",
-  }).format(d);
+  if (Number.isNaN(d.getTime())) return iso;
+  const month = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  const year = String(d.getUTCFullYear());
+  const hour = String(d.getUTCHours()).padStart(2, "0");
+  const minute = String(d.getUTCMinutes()).padStart(2, "0");
+  // Intl の hour12:false は環境によって 24:00 / 00:00 が分かれ、ハイドレーションが壊れる
+  return `${month}/${day}/${year}, ${hour}:${minute} UTC`;
 }

@@ -56,6 +56,7 @@ export const demoObservations: Observation[] = [
     regionLabel: "US · California",
     capturedAt: "2026-05-04T14:32:00.000Z",
     status: "success",
+    tags: ["campaign", "US"],
     pageTitle: "Summer Sale — Example (demo)",
     snapshotImageUrl: "https://picsum.photos/seed/viewtrace-obs7k2m/1200/756",
     events: [
@@ -85,6 +86,7 @@ export const demoObservations: Observation[] = [
     regionLabel: "US · New York",
     capturedAt: "2026-05-03T09:15:00.000Z",
     status: "success",
+    tags: ["campaign"],
     pageTitle: "Geo promo LP",
     snapshotImageUrl: "https://picsum.photos/seed/viewtrace-obs9p1q/1200/756",
     events: [
@@ -108,6 +110,7 @@ export const demoObservations: Observation[] = [
     regionLabel: "US · Texas",
     capturedAt: "2026-05-02T18:00:00.000Z",
     status: "failure",
+    tags: ["ads"],
     note: "タイムアウト（取得時点）",
     pageTitle: "Ad redirect",
     events: [

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth/session";
 import type { ObservationReviewStatus } from "@/lib/demo/observations";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { applyTagsToSameUrlObservations } from "@/lib/observation-url-tags";
 import { sanitizeObservationRouteId } from "@/lib/observation-route-id";
 
 const REVIEW_STATUSES = new Set<ObservationReviewStatus>([
@@ -16,23 +17,11 @@ const REVIEW_STATUSES = new Set<ObservationReviewStatus>([
 export type UpdateObservationAnnotationsInput = {
   note?: string;
   tags?: string[];
+  /** union: 追加分を同じ URL の全記録へ。replace: その URL のタグ一覧を上書き */
+  tagsMode?: "union" | "replace";
   folder?: string;
   reviewStatus?: ObservationReviewStatus | "";
 };
-
-function normalizeTags(raw: string[] | undefined): string[] {
-  if (!raw?.length) return [];
-  const seen = new Set<string>();
-  const out: string[] = [];
-  for (const t of raw) {
-    const v = t.trim().slice(0, 32);
-    if (!v || seen.has(v.toLowerCase())) continue;
-    seen.add(v.toLowerCase());
-    out.push(v);
-    if (out.length >= 12) break;
-  }
-  return out;
-}
 
 export async function updateObservationAnnotationsAction(
   observationIdRaw: string,
@@ -51,9 +40,6 @@ export async function updateObservationAnnotationsAction(
   if (input.note !== undefined) {
     patch.note = input.note.trim().slice(0, 500) || null;
   }
-  if (input.tags !== undefined) {
-    patch.tags = normalizeTags(input.tags);
-  }
   if (input.folder !== undefined) {
     const folder = input.folder.trim().slice(0, 120);
     patch.folder = folder || null;
@@ -67,6 +53,29 @@ export async function updateObservationAnnotationsAction(
   }
 
   const supabase = await createSupabaseServerClient();
+  const { data: source, error: sourceErr } = await supabase
+    .from("observations")
+    .select("id, url")
+    .eq("id", observationId)
+    .eq("user_id", session.userId)
+    .maybeSingle();
+
+  if (sourceErr) {
+    console.warn("[observation-annotations] load failed", sourceErr.code, sourceErr.message);
+    return { ok: false, error: "save_failed" };
+  }
+  if (!source) return { ok: false, error: "not_found" };
+
+  if (input.tags !== undefined) {
+    const applied = await applyTagsToSameUrlObservations(supabase, {
+      userId: session.userId,
+      sourceUrl: typeof source.url === "string" ? source.url : "",
+      tags: input.tags,
+      mode: input.tagsMode ?? "union",
+    });
+    if (!applied.ok) return { ok: false, error: "save_failed" };
+  }
+
   const { data, error } = await supabase
     .from("observations")
     .update(patch)
@@ -81,6 +90,8 @@ export async function updateObservationAnnotationsAction(
   }
   if (!data) return { ok: false, error: "not_found" };
 
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/observations");
   revalidatePath(`/dashboard/observations/${observationId}`);
   revalidatePath(`/dashboard/observations/${observationId}/report`);
   return { ok: true };

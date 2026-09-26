@@ -130,7 +130,15 @@ export default async function DashboardHomePage() {
 
       <section className="space-y-4">
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <h2 className="font-display text-lg font-semibold">{t.recentTitle}</h2>
+          <div>
+            <h2 className="font-display text-lg font-semibold">{t.recentTitle}</h2>
+            <Link
+              href="/dashboard/observations"
+              className="mt-1 inline-block text-xs font-semibold text-accent hover:text-accent-hover"
+            >
+              {t.searchAndTag}
+            </Link>
+          </div>
           {hideNewObservationButton ? null : (
             <Link
               href="/dashboard/observations/new"
