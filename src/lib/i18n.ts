@@ -177,11 +177,33 @@ export const copy = {
       note: "自動観測は Starter / Pro です。無料トライアルでは手動のオブザベーションから始められます。実行は月間のオブザベーション枠を消費します。",
       cta: "料金を見る",
     },
+    resultsDelivery: {
+      kicker: "結果の受け取り方",
+      title: "撮った記録を、普段の場所へ届ける",
+      body: "ダッシュボードに残すだけでなく、メール、表計算、使っているツールへ渡せます。",
+      items: [
+        {
+          title: "メール",
+          plan: "Starter / Pro",
+          body: "撮ったあと、登録アドレスに結果が届きます。毎回送るか、見た目が大きく変わったときだけ送るかを選べます。",
+        },
+        {
+          title: "CSV",
+          plan: "Pro",
+          body: "一覧を表計算に出せます。報告や社内共有に使えます。",
+        },
+        {
+          title: "Webhook",
+          plan: "任意",
+          body: "自動観測が成功したとき、Slack など普段使う場所へ結果を流せます。設定しなくても、メールだけで使えます。",
+        },
+      ],
+    },
     competitorCompare: {
       kicker: "比較",
       title: "一般的な変更監視ツールとの違い",
       intro:
-        "Viewtrace は「Geo ＋ 改ざん検知可能な記録 ＋ 報告」に集中します。Slack 連携やテキスト差分が主役のツールとは、向いている仕事が違います。",
+        "指定地域からWebページの表示を定期監視し、その結果を後から確認・共有できる記録として残します。監視だけでは、表示が正しかったことの証明にはなりません。",
       colFeature: "機能",
       colViewtrace: "Viewtrace",
       colGeneric: "一般的な変更監視",
@@ -192,14 +214,15 @@ export const copy = {
       rows: [
         { feature: "地域ルーティングで取得（州・国）", viewtrace: true, generic: false },
         { feature: "改ざん検知可能な記録（チェック値付き）", viewtrace: true, generic: false },
-        { feature: "印刷 / PDF レポート・CSV エクスポート", viewtrace: true, generic: false },
-        { feature: "Slack / Sheets / Teams への通知", viewtrace: true, generic: true },
+        { feature: "公開 Verify リンク", viewtrace: true, generic: false },
+        { feature: "印刷 / PDF・CSV（Pro）", viewtrace: true, generic: false },
+        { feature: "ネイティブの Slack / Sheets / Teams", viewtrace: false, generic: true },
         { feature: "テキスト・HTML 要素単位の差分", viewtrace: false, generic: true },
       ],
       monitorVsEvidence: {
-        title: "監視ツール vs 証跡ツール",
+        title: "監視の仕方の違い",
         intro:
-          "どちらも「Web の変化」に触れますが、解く問題が違います。大量 URL を高頻度で追う監視と、条件付きの表示記録を残す証跡は、併用されることも多いです。",
+          "監視は定期的に確認すること、記録はその確認結果を残すことです。オブザベーションは、指定した地域の取得環境でWebページを撮影し、時刻やURLとともに保存した1回分の表示記録です。定期的に取得することで、表示の変化を監視できます。URL 1本 × 地域1つ × 取得1回を、1オブザベーションとして数えます。",
         monitorTitle: "変更監視ツール",
         monitorExamples: "Visualping · PageCrawl.io 等",
         monitorBullets: [
@@ -208,77 +231,33 @@ export const copy = {
           "Slack / Sheets / AI 要約が主役",
           "「変わったか？」に答える",
         ],
-        evidenceTitle: "Viewtrace（証跡）",
-        evidenceExamples: "Geo-routed visual records",
+        evidenceTitle: "Viewtrace（定期監視と記録）",
+        evidenceExamples: "指定地域からの表示監視",
         evidenceBullets: [
-          "指定地域から見えた表示を記録",
-          "URL・時刻・地域・チェック値をセットで保存",
-          "印刷 / PDF・CSV・Webhook で報告",
-          "「その地域で何が見えていたか？」に答える",
+          "定期的に撮影し、表示の変化を確認・通知する",
+          "URL・時刻・取得地域と画像を残す",
+          "Verifyリンクで取得記録を相手に見せる",
+          "間隔は日／週／月（数分間隔ではない）",
         ],
-        together:
-          "監視で変化に気づき、Viewtrace でクライアント説明・社内照合の根拠を残す——という使い分けが自然です。",
+        scope: [
+          {
+            label: "監視",
+            body: "同じURLを定期的に取得し、表示の変化を確認・通知する。",
+          },
+          {
+            label: "観測記録",
+            body: "それぞれの取得時に、画像・時刻・指定地域などを残す。",
+          },
+          {
+            label: "言えること",
+            body: "「この取得環境では、この時刻にこう表示された」。",
+          },
+          {
+            label: "断定できないこと",
+            body: "「その地域の全ユーザーに同じ表示が出た」「取得と取得の間も正常だった」。",
+          },
+        ],
       },
-      integrationsTitle: "すぐ使える連携",
-      integrationsIntro:
-        "運用を重くしない範囲で、よく使うツールにつなげられます。",
-      integrationsItems: [
-        {
-          title: "Outgoing Webhook",
-          body: "自動観測が成功したら JSON を POST。Slack Incoming Webhook、Zapier、Make 経由で Teams や Google Sheets に流せます。",
-        },
-        {
-          title: "メール通知",
-          body: "実行のたび、または見た目の差が大きいときだけ、登録アドレスへ結果を送ります。",
-        },
-        {
-          title: "CSV（Pro）",
-          body: "一覧を CSV で書き出し、Google Sheets や BI に取り込めます。",
-        },
-      ],
-    },
-    audienceBenefits: {
-      kicker: "導入先のイメージ",
-      title: "説明と照合のために、根拠をインフラとして用意する",
-      subtitle:
-        "海外向けキャンペーンや地域別表示は、口頭や散在したファイルだけだと説明責任と監査性が担保しづらくなりがちです。Viewtrace は「いつ・どの地域から・どのURLがどう見えたか」を一つの証跡にまとめ、関係者が同じ shared truth を見られる形にします。",
-      personas: [
-        {
-          badge: "代表的なお客様",
-          title: "広告代理店・マーケター",
-          lead:
-            "配信やLPが各地でどう見えていたかを、後からでも同じ条件で示せます。クライアントへの報告・問い合わせ対応が速くなり、信頼につながりやすいです。",
-          bullets: [
-            "キャンペーンの「見え方」を言葉だけにしない",
-            "地域ごとの差異を、履歴として残せる",
-            "チーム内で共有する材料がそろう",
-          ],
-        },
-        {
-          badge: null as string | null,
-          title: "Web制作会社",
-          lead:
-            "納品後の表示確認や、クライアントとの認識合わせに使えます。公開後の見え方を時系列で残せるので、トラブル時の説明もしやすくなります。",
-          bullets: [
-            "納品・保守の記録が散らばりにくい",
-            "クライアントと「同じ画面」を指し示せる",
-            "複数案件でもダッシュボードで整理しやすい",
-          ],
-        },
-        {
-          badge: null as string | null,
-          title: "海外展開企業（EC / SaaS / D2C）",
-          lead:
-            "自社サイトやキャンペーンが、海外からどう見えていたかを社内で共有可能に。越境販売・ローカライズの確認に、そのまま使える記録が残ります。",
-          bullets: [
-            "市場ごとの表示を定点で確認しやすい",
-            "マーケ・プロダクト・CS が同じ記録を見られる",
-            "関係者向けの説明・社内稟議の資料にも使える",
-          ],
-        },
-      ],
-      marketNote:
-        "日本国内だけでも、中小の広告・マーケ関連事業者は数千〜1万社規模、フリーランスを含めるとさらに広い層があります。Web制作の中小事業者も数千社規模が目安で、海外展開を進めるEC・SaaS・D2C企業も同様のニーズを抱えています。海外クライアントや越境キャンペーンほど、「再現可能な証跡」が信頼の前提になります。",
     },
     roiSection: {
       kicker: "ROI（目安）",
@@ -381,15 +360,29 @@ export const copy = {
       pricingCta: "トップの料金を見る",
     },
     trustBand: {
-      title: "実際の表示を、改ざん検知可能な証跡として残す",
+      title: "表示の記録に、確かめられる信頼性を。",
       subtitle:
-        "いつ・どの地域設定で・何が見えていたかを記録し、チームとクライアントが同じ事実を見られるようにします。参考情報であり、特別な証明手続の代替ではありません。",
+        "いつ・どの地域設定で・何が表示されていたか。取得時の画像と情報を保存し、チームやクライアントとの確認・報告に活用できます。",
       items: [
-        "記録の履歴はログイン中のアカウントだけがダッシュボードで確認できる",
-        "保存した内容にチェック用の印を付け、あとからずれがないか見られる",
-        "画像をしっかり保存できた記録は、ボタンから「いまと同じか」を照合できる",
-        "印刷用レポートでまとめて提出できる",
+        {
+          title: "アカウント内で履歴を管理",
+          body: "観測履歴は、ログインしたアカウントのダッシュボードで確認。過去の表示記録をまとめて管理できます。",
+        },
+        {
+          title: "保存データの変更を検知",
+          body: "記録にチェックコードを付与。保存した内容が、記録時の状態と一致しているかを確認できます。",
+        },
+        {
+          title: "保存画像の整合性を確認",
+          body: "画像の保存が完了した対象記録は、ボタンから整合性を照合。保存後の画像に変更がないかを確認できます。",
+        },
+        {
+          title: "レポートで共有・提出",
+          body: "観測結果を印刷用レポートに整理。社内報告やクライアントへの提出資料として活用できます。",
+        },
       ],
+      disclaimer:
+        "記録は取得時点の表示を示す参考情報であり、特別な証明手続の代替ではありません。",
       overageItem: "月の枠を超えても従量（{price}/回の目安）で続けやすい",
     },
     planFeatureOverage: "追加オブザベーション：{price} / 回",
@@ -450,10 +443,6 @@ export const copy = {
         cta: "このコースに申し込む",
       },
     ],
-    observationNote:
-      "オブザベーションとは、特定の時刻・特定の場所から見た、サイトの表示を検証したビジュアル記録です。URL 1本 × 地域1つ × 取得1回が1回です。GEOルーティングは Starter / Pro の両方に含まれます。着地ページの取得であり、広告枠やタグ／ピクセルの検証ではありません。",
-    observationSub:
-      "同じ LP を3地域で見ると3回です。上の目安は4週の月で換算しています。無料20回は、Starter の「毎週20本」を約1週分試せる量です。",
     accountSignup: {
       title: "アカウントを作成",
       intro:
@@ -1304,11 +1293,33 @@ export const copy = {
       note: "Scheduled observations are on Starter and Pro. The free trial is for manual observations. Each run uses one observation from your monthly allowance.",
       cta: "See pricing",
     },
+    resultsDelivery: {
+      kicker: "How results arrive",
+      title: "Get the record where you already work",
+      body: "Every run stays on the dashboard. You can also receive it by email, export a spreadsheet, or send it to a tool you already use.",
+      items: [
+        {
+          title: "Email",
+          plan: "Starter / Pro",
+          body: "After a scheduled capture, results go to your account email. Send every run, or only when the visual change is large.",
+        },
+        {
+          title: "CSV",
+          plan: "Pro",
+          body: "Export the observation list to a spreadsheet for reports and internal sharing.",
+        },
+        {
+          title: "Webhook",
+          plan: "Optional",
+          body: "After a successful scheduled run, send the result to Slack or another tool you already open. You can skip this and use email only.",
+        },
+      ],
+    },
     competitorCompare: {
       kicker: "Compare",
       title: "How Viewtrace differs from generic change monitors",
       intro:
-        "Viewtrace focuses on geo-routed, tamper-evident records and reporting—not on being a full collaboration suite. Tools built around Slack alerts and text diffs solve a different job.",
+        "Viewtrace periodically monitors how a page looks from a chosen region, and keeps each check as a record you can reopen and share. Monitoring alone does not prove the display was correct.",
       colFeature: "Capability",
       colViewtrace: "Viewtrace",
       colGeneric: "Typical change monitor",
@@ -1319,14 +1330,15 @@ export const copy = {
       rows: [
         { feature: "Geo-routed capture (states & countries)", viewtrace: true, generic: false },
         { feature: "Tamper-evident records (integrity checks)", viewtrace: true, generic: false },
-        { feature: "Print / PDF reports & CSV export", viewtrace: true, generic: false },
-        { feature: "Slack / Sheets / Teams notifications", viewtrace: true, generic: true },
+        { feature: "Public verify links", viewtrace: true, generic: false },
+        { feature: "Print / PDF and CSV (Pro)", viewtrace: true, generic: false },
+        { feature: "Native Slack / Sheets / Teams", viewtrace: false, generic: true },
         { feature: "Text / HTML element-level diffs", viewtrace: false, generic: true },
       ],
       monitorVsEvidence: {
-        title: "Monitoring tools vs evidence trails",
+        title: "Two ways to monitor a page",
         intro:
-          "Both touch “what changed on the web,” but they solve different jobs. High-volume change alerts and geo-conditioned visual records are often used together—not as substitutes.",
+          "Monitoring means checking on a schedule. The record is what that check saved. An observation is one display record: a page captured from the chosen region’s fetch environment and stored with the time and URL. Run captures on a schedule to monitor visual change. One URL × one region × one capture counts as one observation.",
         monitorTitle: "Change monitors",
         monitorExamples: "Visualping · PageCrawl.io, etc.",
         monitorBullets: [
@@ -1335,76 +1347,33 @@ export const copy = {
           "Slack, Sheets, and AI summaries at the center",
           "Answer: “Did it change?”",
         ],
-        evidenceTitle: "Viewtrace (evidence layer)",
-        evidenceExamples: "Geo-routed visual records",
+        evidenceTitle: "Viewtrace (scheduled monitoring and records)",
+        evidenceExamples: "Display monitoring from a chosen region",
         evidenceBullets: [
-          "Capture what actually rendered from a chosen region",
-          "Store URL, time, region, and integrity checks together",
-          "Report via print / PDF, CSV, and webhooks",
-          "Answer: “What did it look like from there?”",
+          "Capture on a schedule and notify when the display changes",
+          "Keep the URL, time, region, and image",
+          "Share the capture with a verify link",
+          "Daily, weekly, or monthly—not minute-level alerts",
         ],
-        together:
-          "Use monitoring to catch drift early; use Viewtrace when you need proof stakeholders can open later.",
+        scope: [
+          {
+            label: "Monitor",
+            body: "Capture the same URL on a schedule, then review and notify on visual change.",
+          },
+          {
+            label: "Observation record",
+            body: "Keep the image, time, and chosen region from each capture.",
+          },
+          {
+            label: "What you can say",
+            body: "“In this capture environment, at this time, the page looked like this.”",
+          },
+          {
+            label: "What you cannot claim",
+            body: "“Every user in that region saw the same thing,” or “it was fine between captures.”",
+          },
+        ],
       },
-      integrationsTitle: "Lightweight integrations",
-      integrationsIntro: "Connect to tools you already open—without turning Viewtrace into an ops platform.",
-      integrationsItems: [
-        {
-          title: "Outgoing webhook",
-          body: "POST JSON after each successful scheduled run. Point at a Slack Incoming Webhook, or Zapier / Make to reach Teams or Google Sheets.",
-        },
-        {
-          title: "Email alerts",
-          body: "Every run, or only when the visual change exceeds your threshold—sent to the account email.",
-        },
-        {
-          title: "CSV (Pro)",
-          body: "Export the observation list for Sheets, spreadsheets, or BI.",
-        },
-      ],
-    },
-    audienceBenefits: {
-      kicker: "Where teams deploy it",
-      title: "Put proof on rails—not in chat attachments",
-      subtitle:
-        "Geo-targeted campaigns and localized pages are hard to defend on memory alone. Viewtrace bundles URL, time, and region into one evidence object—so sales, creative, marketing, and legal-adjacent reviewers share the same auditable truth.",
-      personas: [
-        {
-          badge: "Most common",
-          title: "Ad agencies & marketers",
-          lead:
-            "Replay how campaigns and landing pages looked from each region. Faster client updates, cleaner answers to “what did users see?”, and a paper trail that supports trust.",
-          bullets: [
-            "Show the rendered experience—not a verbal recap",
-            "Keep regional differences in a searchable timeline",
-            "Give account and media teams one source of truth",
-          ],
-        },
-        {
-          badge: null as string | null,
-          title: "Web studios & dev shops",
-          lead:
-            "Document post-launch checks and align with clients on what was visible when. A time-stamped trail makes handoffs and follow-ups easier when questions come back weeks later.",
-          bullets: [
-            "Less hunting through folders and chat threads",
-            "Point clients to the same capture, same URL, same vantage point",
-            "Scale across retainers without losing context",
-          ],
-        },
-        {
-          badge: null as string | null,
-          title: "Global brands (e‑commerce, SaaS, D2C)",
-          lead:
-            "Let product, marketing, and support reference the same overseas view. Built for cross-border promos, localization evidence, and internal approvals with a paper trail.",
-          bullets: [
-            "Spot display issues market by market",
-            "One record everyone can open—not a one-off export",
-            "Export-friendly for stakeholders who need a paper trail",
-          ],
-        },
-      ],
-      marketNote:
-        "In Japan alone, thousands of small agencies and production shops—and tens of thousands of marketers and freelancers—ship the same proof-and-verification work. Global and cross-border clients make replayable visual evidence a baseline for trust.",
     },
     roiSection: {
       kicker: "ROI (estimate)",
@@ -1507,15 +1476,29 @@ export const copy = {
       pricingCta: "See homepage pricing",
     },
     trustBand: {
-      title: "Keep tamper-evident records of what sites actually showed",
+      title: "A display record you can check.",
       subtitle:
-        "Capture when, which region, and what rendered—so teams and clients can align on the same facts. Reference records only; not a substitute for formal legal proof.",
+        "When, which region setting, and what rendered. Save the capture image and details, then use them for team and client review.",
       items: [
-        "Timestamped history you review in your own dashboard",
-        "Fingerprints on saved page data so you can spot drift later",
-        "One-click compare when we store the full capture for you",
-        "Print-ready reports for stakeholders",
+        {
+          title: "Manage history in your account",
+          body: "Observation history lives in the signed-in dashboard. Review past display records in one place.",
+        },
+        {
+          title: "Detect changes to saved data",
+          body: "Each record gets a check code. You can confirm the stored fields still match what was saved.",
+        },
+        {
+          title: "Confirm saved-image integrity",
+          body: "When the image saved successfully, a button lets you check that the stored image has not changed.",
+        },
+        {
+          title: "Share and submit with a report",
+          body: "Organize results into a printable report for internal reviews or client handoff.",
+        },
       ],
+      disclaimer:
+        "Records show the display at capture time. They are reference information, not a substitute for a formal proof process.",
       overageItem: "Keep going past monthly limits with simple per-check add-ons ({price} each)",
     },
     planFeatureOverage: "Additional observations: {price} each",
@@ -1577,10 +1560,6 @@ export const copy = {
         cta: "Subscribe to this plan",
       },
     ],
-    observationNote:
-      "An observation is a visual verification of how a site appeared from a specific time and place. One URL × one region × one capture = one observation. GEO routing is included on Starter and Pro. It captures the landing page from the selected region; it does not verify ad slots, tags, or pixels.",
-    observationSub:
-      "The same landing page in 3 geos counts as 3. The examples above assume a 4-week month. The free 20 is about one week of Starter’s weekly rhythm.",
     accountSignup: {
       title: "Create your account",
       intro:

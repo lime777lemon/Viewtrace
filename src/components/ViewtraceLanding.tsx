@@ -401,6 +401,38 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
           </div>
         </section>
 
+        <section id="results-delivery" className="border-b border-border">
+          <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-14">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#276248] sm:text-xs">
+              {t.resultsDelivery.kicker}
+            </p>
+            <h2 className="font-display mt-3 max-w-3xl text-2xl font-semibold leading-snug text-ink sm:text-3xl">
+              {t.resultsDelivery.title}
+            </h2>
+            <p className="mt-4 max-w-3xl text-sm leading-relaxed text-ink-muted sm:text-base">
+              {t.resultsDelivery.body}
+            </p>
+            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {t.resultsDelivery.items.map((item) => (
+                <article
+                  key={item.title}
+                  className="flex flex-col rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm sm:p-6"
+                >
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-muted">
+                    {item.plan}
+                  </p>
+                  <h3 className="font-display mt-2 text-lg font-semibold text-ink">
+                    {item.title}
+                  </h3>
+                  <p className="mt-3 text-sm leading-relaxed text-ink-muted">
+                    {item.body}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section id="signup" className="border-b border-border bg-accent-soft/50">
           <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
             <div className="mx-auto max-w-xl rounded-2xl border border-border bg-surface-elevated p-8 shadow-sm">
@@ -524,12 +556,6 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                   {t.pricingTrialBody}
                 </p>
               </div>
-            </div>
-            <div className="mt-12 rounded-2xl border border-border bg-surface-elevated p-6 sm:p-8">
-              <p className="text-sm font-medium text-ink">{t.observationNote}</p>
-              <p className="mt-3 text-sm text-ink-muted leading-relaxed">
-                {t.observationSub}
-              </p>
             </div>
           </div>
         </section>

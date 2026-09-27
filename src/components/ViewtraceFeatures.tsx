@@ -5,6 +5,19 @@ import { LegalLocaleToggle } from "@/components/legal/LegalLocaleToggle";
 import { copy, type Locale } from "@/lib/i18n";
 import { getTopicSectionsForLanding, topicPagePath, type TopicSlug } from "@/lib/seo/topic-pages";
 
+const USE_CASE_ICONS = [
+  "/marketing/icons/digital-ad-agency.svg",
+  "/marketing/icons/shopify-dtc.svg",
+  "/marketing/icons/saas-marketing.svg",
+] as const;
+
+const TRUST_ITEM_ICONS = [
+  "/marketing/icons/account-history.svg",
+  "/marketing/icons/record-integrity.svg",
+  "/marketing/icons/image-integrity.svg",
+  "/marketing/icons/printable-report.svg",
+] as const;
+
 const TOPIC_BACKDROP_ICON: Partial<Record<TopicSlug, string>> = {
   "geo-screenshot-tool": "/marketing/icons/geo-screenshot.png",
   "website-screenshot-from-another-country": "/marketing/icons/website-screenshot.png",
@@ -33,14 +46,10 @@ export function ViewtraceFeatures({ locale, overagePerObservationUsd }: Props) {
   const t = copy[locale];
   const page = t.featuresPage;
   const topicSections = getTopicSectionsForLanding(locale);
-  const trustItems: string[] = [...t.trustBand.items];
-  if (overagePerObservationUsd != null) {
-    trustItems.splice(
-      trustItems.length - 1,
-      0,
-      t.trustBand.overageItem.replace("{price}", formatOverageUsdLabel(overagePerObservationUsd)),
-    );
-  }
+  const overageNote =
+    overagePerObservationUsd != null
+      ? t.trustBand.overageItem.replace("{price}", formatOverageUsdLabel(overagePerObservationUsd))
+      : null;
 
   return (
     <div className="min-h-screen bg-surface text-ink">
@@ -179,77 +188,17 @@ export function ViewtraceFeatures({ locale, overagePerObservationUsd }: Props) {
                   </ul>
                 </article>
               </div>
-              <p className="mt-6 max-w-3xl text-sm leading-relaxed text-ink-muted">
-                {t.competitorCompare.monitorVsEvidence.together}
-              </p>
-            </div>
-
-            <div className="mt-12 border-t border-border pt-10">
-              <h3 className="font-display text-xl font-semibold text-ink sm:text-2xl">
-                {t.competitorCompare.integrationsTitle}
-              </h3>
-              <p className="mt-3 max-w-3xl text-sm leading-relaxed text-ink-muted">
-                {t.competitorCompare.integrationsIntro}
-              </p>
-              <div className="mt-8 grid gap-4 sm:grid-cols-3">
-                {t.competitorCompare.integrationsItems.map((item) => (
-                  <article
-                    key={item.title}
-                    className="rounded-2xl border border-border bg-surface p-5 shadow-sm"
-                  >
-                    <h4 className="font-display text-base font-semibold text-ink">{item.title}</h4>
-                    <p className="mt-2 text-sm leading-relaxed text-ink-muted">{item.body}</p>
-                  </article>
+              <dl className="mt-8 grid gap-4 sm:grid-cols-2">
+                {t.competitorCompare.monitorVsEvidence.scope.map((item) => (
+                  <div key={item.label} className="rounded-xl border border-border bg-surface-elevated p-4">
+                    <dt className="text-xs font-bold uppercase tracking-wider text-accent">
+                      {item.label}
+                    </dt>
+                    <dd className="mt-2 text-sm leading-relaxed text-ink">{item.body}</dd>
+                  </div>
                 ))}
-              </div>
+              </dl>
             </div>
-          </div>
-        </section>
-
-        <section id="audience-benefits" className="border-b border-border">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-            <p className="text-xs font-bold uppercase tracking-wider text-accent">
-              {t.audienceBenefits.kicker}
-            </p>
-            <h2 className="mt-3 font-display max-w-3xl text-2xl font-semibold leading-snug text-ink sm:text-3xl">
-              {t.audienceBenefits.title}
-            </h2>
-            <p className="mt-4 max-w-3xl text-sm leading-relaxed text-ink-muted">
-              {t.audienceBenefits.subtitle}
-            </p>
-            <div className="mt-10 grid gap-6 lg:grid-cols-3">
-              {t.audienceBenefits.personas.map((persona) => (
-                <article
-                  key={persona.title}
-                  className="relative flex flex-col rounded-2xl border border-border bg-surface p-6 shadow-sm"
-                >
-                  {persona.badge ? (
-                    <p className="mb-3 inline-flex w-fit rounded-full border border-accent/35 bg-accent-soft/40 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-accent">
-                      {persona.badge}
-                    </p>
-                  ) : null}
-                  <h3 className="font-display text-lg font-semibold text-ink">
-                    {persona.title}
-                  </h3>
-                  <p className="mt-3 flex-1 text-sm leading-relaxed text-ink-muted">
-                    {persona.lead}
-                  </p>
-                  <ul className="mt-5 space-y-2.5 border-t border-border pt-5">
-                    {persona.bullets.map((line) => (
-                      <li key={line} className="flex gap-2 text-sm text-ink">
-                        <span className="mt-0.5 shrink-0 text-accent" aria-hidden>
-                          ✓
-                        </span>
-                        <span>{line}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </article>
-              ))}
-            </div>
-            <p className="mt-10 max-w-4xl text-xs leading-relaxed text-ink-muted">
-              {t.audienceBenefits.marketNote}
-            </p>
           </div>
         </section>
 
@@ -259,11 +208,20 @@ export function ViewtraceFeatures({ locale, overagePerObservationUsd }: Props) {
               {t.useCasesTitle}
             </h2>
             <div className="mt-10 grid gap-6 lg:grid-cols-3">
-              {t.useCases.map((u) => (
+              {t.useCases.map((u, index) => (
                 <article
                   key={u.title}
                   className="rounded-2xl border border-border bg-surface p-6"
                 >
+                  {USE_CASE_ICONS[index] ? (
+                    <img
+                      src={USE_CASE_ICONS[index]}
+                      alt=""
+                      width={48}
+                      height={48}
+                      className="mb-4 h-12 w-12"
+                    />
+                  ) : null}
                   <h3 className="font-display text-lg font-semibold text-ink">{u.title}</h3>
                   <p className="mt-3 text-sm leading-relaxed text-ink-muted">{u.body}</p>
                 </article>
@@ -346,14 +304,30 @@ export function ViewtraceFeatures({ locale, overagePerObservationUsd }: Props) {
             <p className="mt-3 max-w-3xl text-sm leading-relaxed text-ink-muted">
               {t.trustBand.subtitle}
             </p>
-            <ul className="mt-6 grid gap-3 sm:grid-cols-2">
-              {trustItems.map((item) => (
-                <li key={item} className="flex gap-2 text-sm text-ink-muted">
-                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
-                  <span>{item}</span>
-                </li>
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              {t.trustBand.items.map((item, index) => (
+                <article
+                  key={item.title}
+                  className="rounded-2xl border border-border bg-surface p-6"
+                >
+                  {TRUST_ITEM_ICONS[index] ? (
+                    <img
+                      src={TRUST_ITEM_ICONS[index]}
+                      alt=""
+                      width={48}
+                      height={48}
+                      className="mb-4 h-12 w-12"
+                    />
+                  ) : null}
+                  <h3 className="font-display text-base font-semibold text-ink">{item.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-ink-muted">{item.body}</p>
+                </article>
               ))}
-            </ul>
+            </div>
+            <p className="mt-6 text-xs leading-relaxed text-ink-muted">{t.trustBand.disclaimer}</p>
+            {overageNote ? (
+              <p className="mt-3 text-sm leading-relaxed text-ink-muted">{overageNote}</p>
+            ) : null}
           </div>
         </section>
 
