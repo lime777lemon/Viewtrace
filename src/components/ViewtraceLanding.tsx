@@ -78,6 +78,9 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
               <a href="#pricing" className="transition hover:text-ink">
                 {t.nav.pricing}
               </a>
+              <a href="#auto-observations" className="transition hover:text-ink">
+                {t.nav.autoWatch}
+              </a>
               <Link href="/features" className="transition hover:text-ink">
                 {t.nav.features}
               </Link>
@@ -127,6 +130,14 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                       onClick={() => setMobileNavOpen(false)}
                     >
                       {t.nav.pricing}
+                    </a>
+                    <a
+                      href="#auto-observations"
+                      role="menuitem"
+                      className="block px-4 py-2.5 text-sm font-medium text-ink-muted transition hover:bg-border/30 hover:text-ink"
+                      onClick={() => setMobileNavOpen(false)}
+                    >
+                      {t.nav.autoWatch}
                     </a>
                     <Link
                       href="/features"
@@ -327,6 +338,69 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
           </div>
         </section>
 
+        <section id="auto-observations" className="border-b border-border bg-surface-elevated">
+          <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-14">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#276248] sm:text-xs">
+              {t.autoWatch.kicker}
+            </p>
+            <h2 className="font-display mt-3 max-w-3xl text-2xl font-semibold leading-snug text-ink sm:text-3xl">
+              {t.autoWatch.title}
+            </h2>
+            <p className="mt-4 max-w-3xl text-sm leading-relaxed text-ink-muted sm:text-base">
+              {t.autoWatch.body}
+            </p>
+            <div className="mt-10 grid items-start gap-8 lg:grid-cols-2 lg:gap-12">
+              <div className="grid gap-4">
+                {t.autoWatch.points.map((item) => (
+                  <article
+                    key={item.title}
+                    className="rounded-2xl border border-border bg-surface p-5 shadow-sm"
+                  >
+                    <h3 className="font-display text-base font-semibold text-ink">
+                      {item.title}
+                    </h3>
+                    <p className="mt-2 text-sm leading-relaxed text-ink-muted">
+                      {item.body}
+                    </p>
+                  </article>
+                ))}
+              </div>
+              <aside className="rounded-2xl border border-border bg-surface p-6 shadow-sm sm:p-8">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-muted">
+                  {t.autoWatch.panelKicker}
+                </p>
+                <dl className="mt-6 space-y-5">
+                  <div>
+                    <dt className="text-xs font-medium text-ink-muted">{t.autoWatch.panelUrl}</dt>
+                    <dd className="mt-1 truncate font-mono text-sm text-ink">{t.compare.url}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-medium text-ink-muted">{t.autoWatch.panelRegion}</dt>
+                    <dd className="mt-1 text-sm font-medium text-ink">{t.autoWatch.panelRegionValue}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-medium text-ink-muted">{t.autoWatch.panelRhythm}</dt>
+                    <dd className="mt-1 text-sm font-medium text-ink">{t.autoWatch.panelRhythmValue}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-medium text-ink-muted">{t.autoWatch.panelNotify}</dt>
+                    <dd className="mt-1 text-sm font-medium text-ink">{t.autoWatch.panelNotifyValue}</dd>
+                  </div>
+                </dl>
+              </aside>
+            </div>
+            <p className="mt-8 max-w-3xl text-sm leading-relaxed text-ink-muted">
+              {t.autoWatch.note}
+            </p>
+            <a
+              href="#pricing"
+              className="mt-6 inline-flex items-center text-sm font-semibold text-accent transition hover:text-accent-hover"
+            >
+              {t.autoWatch.cta}
+            </a>
+          </div>
+        </section>
+
         <section id="signup" className="border-b border-border bg-accent-soft/50">
           <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
             <div className="mx-auto max-w-xl rounded-2xl border border-border bg-surface-elevated p-8 shadow-sm">
@@ -479,6 +553,11 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                   <li>
                     <a href="#pricing" className="text-surface/80 hover:text-white">
                       {t.footer.links.pricing}
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#auto-observations" className="text-surface/80 hover:text-white">
+                      {t.footer.links.autoWatch}
                     </a>
                   </li>
                   <li>

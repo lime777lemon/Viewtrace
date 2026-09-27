@@ -18,6 +18,7 @@ export const copy = {
       login: "ログイン",
       trial: "無料で始める",
       menu: "メニュー",
+      autoWatch: "自動観測",
     },
     hero: {
       title: "広告費が溶ける前に、ランディングページの問題を見つける",
@@ -146,6 +147,35 @@ export const copy = {
         { captured: "2026/03/12 14:05", utc: "2026-03-12 14:05 UTC", region: "Germany" },
         { captured: "2026/03/12 14:08", utc: "2026-03-12 14:08 UTC", region: "Japan" },
       ],
+    },
+    autoWatch: {
+      kicker: "自動観測",
+      title: "同じ着地ページを、決めた間隔で撮り続ける",
+      body: "URL と地域を一度指定し、日・週・月と、その単位あたりの回数を設定します。実行のたびに、指定した地域から着地ページを取得します。登録メールへ毎回送るか、見た目の差が大きいときだけ送るかを選べます。",
+      points: [
+        {
+          title: "間隔を決める",
+          body: "毎日・毎週・毎月。その単位あたり何回撮るかを指定できます。",
+        },
+        {
+          title: "結果を受け取る",
+          body: "実行のたびに送る、または前回との見た目の差が大きいときだけ送る。任意で Webhook にも渡せます。",
+        },
+        {
+          title: "記録の形は同じ",
+          body: "1回の実行はオブザベーション1回です。URL・地域・時刻がダッシュボードに残ります。",
+        },
+      ],
+      panelKicker: "設定の例",
+      panelUrl: "URL",
+      panelRegion: "地域",
+      panelRegionValue: "日本",
+      panelRhythm: "間隔",
+      panelRhythmValue: "毎週 · 1回",
+      panelNotify: "通知",
+      panelNotifyValue: "実行のたびにメール",
+      note: "自動観測は Starter / Pro です。無料トライアルでは手動のオブザベーションから始められます。実行は月間のオブザベーション枠を消費します。",
+      cta: "料金を見る",
     },
     competitorCompare: {
       kicker: "比較",
@@ -382,9 +412,12 @@ export const copy = {
         usageExample: "目安：クライアントLP 20本を、地域1つで毎週確認（4週で80回）",
         features: [
           "月80回のオブザベーション",
-          "米国＋主要国",
+          "GEOルーティング込み（指定した国・州からレジデンシャルプロキシ経由で着地ページを取得）",
+          "対象地域：主要国（GB / DE / FR / JP / AU / CA）＋米国代表州",
           "7日間の保持",
           "クイックな画面確認（ビューポート相当のスナップショット）",
+          "公開Verifyリンク（クライアント共有）",
+          "URL・タグで検索・整理",
           "ステータス履歴",
           "サーバー記録・記録内容のチェック用コード（ずれ検知の補助）",
           "自動観測（日／週／月の回数を設定）とメール通知",
@@ -401,9 +434,12 @@ export const copy = {
         usageExample: "目安：クライアントLP 20本 × 地域3つを毎週確認（4週で240回）",
         features: [
           "月250回のオブザベーション",
-          "米国全州＋主要国",
+          "GEOルーティング込み（指定した国・州からレジデンシャルプロキシ経由で着地ページを取得）",
+          "対象地域：主要国＋米国全州",
           "60日間の保持",
           "存証向けフルページのビジュアル記録",
+          "公開Verifyリンク（クライアント共有）",
+          "URL・タグで検索・整理",
           "継続監視（日／週／月・回数設定）",
           "メール通知（毎回または差分が大きいとき）",
           "差分検知（画像）",
@@ -415,7 +451,7 @@ export const copy = {
       },
     ],
     observationNote:
-      "オブザベーションとは、特定の時刻・特定の場所から見た、サイトの表示を検証したビジュアル記録です。URL 1本 × 地域1つ × 取得1回が1回です。",
+      "オブザベーションとは、特定の時刻・特定の場所から見た、サイトの表示を検証したビジュアル記録です。URL 1本 × 地域1つ × 取得1回が1回です。GEOルーティングは Starter / Pro の両方に含まれます。着地ページの取得であり、広告枠やタグ／ピクセルの検証ではありません。",
     observationSub:
       "同じ LP を3地域で見ると3回です。上の目安は4週の月で換算しています。無料20回は、Starter の「毎週20本」を約1週分試せる量です。",
     accountSignup: {
@@ -1084,6 +1120,7 @@ export const copy = {
       support: "サポート",
       links: {
         pricing: "料金",
+        autoWatch: "自動観測",
         features: "機能・比較",
         faq: "よくある質問",
         terms: "利用規約",
@@ -1109,6 +1146,7 @@ export const copy = {
       login: "Log in",
       trial: "Start for free",
       menu: "Menu",
+      autoWatch: "Schedule",
     },
     hero: {
       title: "Catch landing-page problems before they waste ad spend.",
@@ -1236,6 +1274,35 @@ export const copy = {
         { captured: "Mar 12, 2026, 14:05", utc: "2026-03-12 14:05 UTC", region: "Germany" },
         { captured: "Mar 12, 2026, 14:08", utc: "2026-03-12 14:08 UTC", region: "Japan" },
       ],
+    },
+    autoWatch: {
+      kicker: "Scheduled observations",
+      title: "Run the same capture on a schedule",
+      body: "Set a URL and region once, then choose daily, weekly, or monthly—and how many runs in each period. Each run captures the landing page from that region. Email after every run, or only when the visual change versus the previous capture is large.",
+      points: [
+        {
+          title: "Set the cadence",
+          body: "Daily, weekly, or monthly. Choose how many times to run in each period.",
+        },
+        {
+          title: "Get the result",
+          body: "Email after every run, or only when the visual change is large. Optionally POST to a webhook.",
+        },
+        {
+          title: "The record is the same",
+          body: "Each run is one observation. URL, region, and time stay on the dashboard.",
+        },
+      ],
+      panelKicker: "Example setup",
+      panelUrl: "URL",
+      panelRegion: "Region",
+      panelRegionValue: "Japan",
+      panelRhythm: "Cadence",
+      panelRhythmValue: "Weekly · 1 run",
+      panelNotify: "Notify",
+      panelNotifyValue: "Email after every run",
+      note: "Scheduled observations are on Starter and Pro. The free trial is for manual observations. Each run uses one observation from your monthly allowance.",
+      cta: "See pricing",
     },
     competitorCompare: {
       kicker: "Compare",
@@ -1471,9 +1538,12 @@ export const copy = {
         usageExample: "≈ 20 client pages, 1 geo, checked weekly",
         features: [
           "80 observations / month",
-          "US + major countries",
+          "GEO routing included (residential proxy from the selected country or US state)",
+          "Regions: major countries (GB / DE / FR / JP / AU / CA) + representative US states",
           "7-day retention",
           "Quick visual checks (viewport-sized snapshots)",
+          "Public verify links for client sharing",
+          "Search and organize by URL and tags",
           "Status history",
           "Server timestamps & record check codes (drift detection aid)",
           "Auto-observation (set daily / weekly / monthly run counts) with email notifications",
@@ -1491,9 +1561,12 @@ export const copy = {
         usageExample: "≈ 20 client pages × 3 geos, checked weekly",
         features: [
           "250 observations / month",
-          "All US states + major countries",
+          "GEO routing included (residential proxy from the selected country or US state)",
+          "Regions: major countries + all US states",
           "60-day retention",
           "Complete archival captures (full-page screenshots)",
+          "Public verify links for client sharing",
+          "Search and organize by URL and tags",
           "Scheduled monitoring (day / week / month with run count)",
           "Email: every run or only on large visual change (threshold)",
           "Pixel-based diff detection",
@@ -1505,7 +1578,7 @@ export const copy = {
       },
     ],
     observationNote:
-      "An observation is a visual verification of how a site appeared from a specific time and place. One URL × one region × one capture = one observation.",
+      "An observation is a visual verification of how a site appeared from a specific time and place. One URL × one region × one capture = one observation. GEO routing is included on Starter and Pro. It captures the landing page from the selected region; it does not verify ad slots, tags, or pixels.",
     observationSub:
       "The same landing page in 3 geos counts as 3. The examples above assume a 4-week month. The free 20 is about one week of Starter’s weekly rhythm.",
     accountSignup: {
@@ -2197,6 +2270,7 @@ export const copy = {
       support: "Support",
       links: {
         pricing: "Pricing",
+        autoWatch: "Schedule",
         features: "Features",
         faq: "FAQ",
         terms: "Terms of service",
