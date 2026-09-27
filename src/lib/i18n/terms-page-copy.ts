@@ -102,7 +102,7 @@ export const termsPageCopyJa: TermsPageCopy = {
       paragraphs: [
         "記録は、説明・照合・社内共有等のための参考情報として提供されます。法的証拠、監査証跡、コンプライアンス上の完全な記録としての効力を保証するものではありません。",
         "地域表示は、プロキシ、CDN、A/B テスト、端末差、ネットワーク状況等により、実際のエンドユーザー体験と異なる場合があります。",
-        "スクリーンショット等の保存期間はプランに応じて定められ（例：Starter 7 日、Pro 60 日）、期間経過後は当社所定の方法により削除されます。",
+        "スクリーンショット画像の保存期間はプランに応じて定められ（例：Starter 7 日、Pro 60 日）、期間経過後に画像ファイルは削除されます。URL・地域・取得時刻・ステータス・ハッシュ等のメタデータは、アカウント存続中保持されます。",
         "自動観測およびメール通知は、技術的制約、対象サイトの応答、第三者サービスの障害等により、遅延・未達・欠落が生じ得ます。当社は best-effort で提供しますが、個別の配信・実行を保証しません。",
       ],
     },
@@ -280,7 +280,7 @@ export const termsPageCopyEn: TermsPageCopy = {
       paragraphs: [
         "Records are provided as reference information for explanation, reconciliation, and internal sharing. We do not warrant them as complete legal evidence or audit trails.",
         "Regional rendering may differ from end-user experience due to proxies, CDNs, A/B tests, devices, or network conditions.",
-        "Retention depends on your plan (e.g., Starter 7 days, Pro 60 days) and records are deleted after the retention period.",
+        "Screenshot files are kept for the plan window (e.g., Starter 7 days, Pro 60 days) and then deleted. Metadata such as URL, region, capture time, status, and hashes is retained while the account exists.",
         "Scheduled observations and email notifications are provided on a best-effort basis and may be delayed, missed, or incomplete.",
       ],
     },

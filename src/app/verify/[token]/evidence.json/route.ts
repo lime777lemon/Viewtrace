@@ -34,6 +34,7 @@ export async function GET(_req: Request, { params }: Props) {
       contentHash: obs.contentHash,
     },
     verifyUrl: buildPublicVerifyUrlForObservation(token),
+    hideSnapshotImage: obs.screenshotExpired,
   });
 
   return NextResponse.json(pack, {

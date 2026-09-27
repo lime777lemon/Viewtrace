@@ -42,6 +42,7 @@ type Props = {
   resolvedCanonical: string | null;
   locale: Locale;
   comparePrevious?: ComparePreviousSnapshot | null;
+  screenshotExpired?: boolean;
 };
 
 export function ObservationDetailSnapshotSection({
@@ -51,6 +52,7 @@ export function ObservationDetailSnapshotSection({
   resolvedCanonical,
   locale,
   comparePrevious = null,
+  screenshotExpired = false,
 }: Props) {
   const history = obs.events?.length ? obs.events : defaultHistory(obs, locale);
   const openUrl = resolvedCanonical ?? obs.url;
@@ -60,7 +62,8 @@ export function ObservationDetailSnapshotSection({
   const captureEventDetail = captureEventDetailRaw
     ? localizeObservationEventDetail(captureEventDetailRaw, locale)
     : undefined;
-  const showPersistedSnapshotWarning = !obs.snapshotImageUrl && Boolean(captureEventDetailRaw?.trim());
+  const showPersistedSnapshotWarning =
+    !screenshotExpired && !obs.snapshotImageUrl && Boolean(captureEventDetailRaw?.trim());
 
   return (
     <div className="space-y-10">

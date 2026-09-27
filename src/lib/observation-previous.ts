@@ -25,6 +25,7 @@ export async function findPreviousObservationWithSnapshot(
     .eq("region", params.region)
     .neq("id", params.excludeId)
     .not("snapshot_image_url", "is", null)
+    .is("snapshot_purged_at", null)
     .lt("captured_at", params.beforeCapturedAt)
     .order("captured_at", { ascending: false })
     .limit(1)

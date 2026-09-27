@@ -31,13 +31,14 @@ export const copy = {
       retention: {
         kicker: "記録を残す",
         title: "昨日・先週の表示も、ダッシュボードに蓄積",
-        body: "取得時点のスクリーンショットとチェック値を記録として保存します。あとから同じ証跡を開き直し、クライアント説明や社内照合に使えます。",
+        body: "取得時点のスクリーンショットとチェック値を記録として保存します。画像の保存期間が過ぎても、URL・地域・時刻などのメタデータは残ります。",
         timeline: [
           { label: "昨日", hint: "直近のキャンペーン表示" },
           { label: "先週", hint: "先週時点の LP・広告 LP" },
-          { label: "先月まで", hint: "Pro で最大60日分の履歴" },
+          { label: "期限後", hint: "画像は消えても、URL・地域・時刻は残る" },
         ],
-        planNote: "Starter は7日間、Pro は60日間まで保持（詳細は料金表）。",
+        planNote:
+          "スクリーンショットは Starter 7日・Pro 60日。期限後も URL・地域・時刻・ハッシュは残ります（詳細は料金表）。",
       },
       disclaimer:
         "広告配信やタグ／ピクセルの確認ではありません。取得時点のランディングページの記録です。",
@@ -402,12 +403,12 @@ export const copy = {
         period: "/ 月",
         description: "試す・軽い検証用途向け",
         subdescription: "マーケ担当・個人検証・小規模DTCなど、現実的な検証用途をカバー。",
-        usageExample: "目安：クライアントLP 20本を、地域1つで毎週確認（4週で80回）",
+        usageExample: "目安：クライアントLP 20本 × 地域5つを毎週確認（4週で400回）",
         features: [
-          "月80回のオブザベーション",
+          "月500回のオブザベーション",
           "GEOルーティング込み（指定した国・州からレジデンシャルプロキシ経由で着地ページを取得）",
           "対象地域：主要国（GB / DE / FR / JP / AU / CA）＋米国代表州",
-          "7日間の保持",
+          "スクリーンショット保存：7日間（期限後も URL・地域・時刻・ハッシュは残る）",
           "クイックな画面確認（ビューポート相当のスナップショット）",
           "公開Verifyリンク（クライアント共有）",
           "URL・タグで検索・整理",
@@ -423,13 +424,13 @@ export const copy = {
         price: "$99",
         period: "/ 月",
         description: "本番運用・代理店・報告・記録整理向け",
-        subdescription: "記録数が多く、保持期間とレポートが重要なチーム向け。",
-        usageExample: "目安：クライアントLP 20本 × 地域3つを毎週確認（4週で240回）",
+        subdescription: "記録数が多く、スクリーンショット保存とレポートが重要なチーム向け。",
+        usageExample: "目安：クライアントLP 25本 × 地域5つを週3回確認（4週で1,500回）",
         features: [
-          "月250回のオブザベーション",
+          "月1,500回のオブザベーション",
           "GEOルーティング込み（指定した国・州からレジデンシャルプロキシ経由で着地ページを取得）",
           "対象地域：主要国＋米国全州",
-          "60日間の保持",
+          "スクリーンショット保存：60日間（期限後も URL・地域・時刻・ハッシュは残る）",
           "存証向けフルページのビジュアル記録",
           "公開Verifyリンク（クライアント共有）",
           "URL・タグで検索・整理",
@@ -461,7 +462,7 @@ export const copy = {
     faqs: [
       {
         q: "Starter と Pro はどう使い分けますか？",
-        a: "試す・軽い検証用途なら Starter。本番運用・代理店・報告・記録整理で、より多くのオブザベーション・長い保持・CSVが必要なら Pro を想定しています。",
+        a: "試す・軽い検証用途なら Starter。本番運用・代理店・報告・記録整理で、より多くのオブザベーション・長いスクリーンショット保存・CSVが必要なら Pro を想定しています。",
       },
       {
         q: "無料トライアルはどのくらい使えますか？",
@@ -704,6 +705,8 @@ export const copy = {
         "保存したスクリーンショット画像そのものの指紋です。取得当時のファイルと照合できます。",
       fieldObservationId: "Observation ID",
       noScreenshot: "スクリーンショットがありません。",
+      screenshotExpired:
+        "スクリーンショットの保存期間が過ぎたため、画像は削除されています。URL・地域・時刻・ハッシュは残っています。",
       disclaimer:
         "参照用の確認ページです。法的証明の代替にはなりません。リンクを知っている方のみが開けます。",
       ctaTitle: "この記録は Viewtrace で作成されました",
@@ -835,6 +838,9 @@ export const copy = {
         "観測フォームで確認した画像を記録しました。サーバー側の地域取得とは別経路です。",
       hintNoImage:
         "記録は保存されていますが、スクリーンショット画像はありません。",
+      badgeScreenshotExpired: "スクリーンショット保存期間終了",
+      hintScreenshotExpired:
+        "画像はプランの保存期間後に削除しました。URL・地域・取得時刻・ハッシュなどのメタデータは残っています。",
       retryLink: "同じ URL・地域でもう一度観測する",
       reportLabel: "取得の種類",
     },
@@ -847,12 +853,13 @@ export const copy = {
       colActions: "操作",
       actionDetail: "詳細",
       emptyDefault: "オブザベーションがありません。",
+      screenshotExpired: "画像期限切れ",
     },
     observationsListPage: {
       metaTitle: "オブザベーション | Viewtrace",
       title: "オブザベーション",
       subtitle:
-        "URL・地域・タグで一覧を探せます。タグはその URL の記録すべてに保存されます。証跡（画像・ハッシュ）には影響しません。",
+        "URL・地域・タグで一覧を探せます。タグはその URL の記録すべてに保存されます。スクリーンショットはプランの保存期間後に削除され、メタデータは残ります。",
       planSuffix: " 現在のプラン：{plan}。",
       csvProHint: "Pro プランでは一覧を CSV でエクスポートできます。",
       csvUpgradeHint: "CSV エクスポートは Pro プランの機能です。",
@@ -998,9 +1005,9 @@ export const copy = {
     },
     dashboardHome: {
       title: "概要",
-      subtitle: "現在のプラン: {plan}（{price}） · 保持 {days} 日 · 月 {limit} オブザベーションまで",
+      subtitle: "現在のプラン: {plan}（{price}） · スクリーンショット保存 {days} 日 · 月 {limit} オブザベーションまで",
       cardPlanLabel: "プラン",
-      cardPlanMeta: "保持 {days} 日 · 月 {limit} オブザベーションまで",
+      cardPlanMeta: "スクリーンショット保存 {days} 日 · 月 {limit} オブザベーションまで",
       cardPlanChange: "プランを変更 →",
       auditLogLink: "監査ログ →",
       cardMonthlyLabel: "今月のオブザベーション",
@@ -1064,7 +1071,7 @@ export const copy = {
       csvNotAvailable: "CSVエクスポート：利用不可",
       snapshotsAvailable: "ビジュアルスナップショット：利用可",
       planMonthlyLimit: "月 {limit} オブザベーションまで",
-      planRetentionDays: "保存 {days} 日間",
+      planRetentionDays: "スクリーンショット保存 {days} 日間",
       csvAvailable: "CSVエクスポート：利用可",
       csvProOnly: "CSVエクスポート：Pro で利用可",
       snapshotMarketingStarter: "クイックな画面確認",
@@ -1148,13 +1155,14 @@ export const copy = {
       retention: {
         kicker: "Persist the record",
         title: "Yesterday and last week—saved in your dashboard",
-        body: "We store each capture’s screenshot and integrity fingerprints as a record you can reopen later—for client updates and internal reconciliation.",
+        body: "We store each capture’s screenshot and integrity fingerprints. After the screenshot window, URL, region, time, and hashes remain.",
         timeline: [
           { label: "Yesterday", hint: "Latest campaign view" },
           { label: "Last week", hint: "LP or ad lander from a week ago" },
-          { label: "Up to ~2 months", hint: "Pro keeps up to 60 days of history" },
+          { label: "After expiry", hint: "Image goes; URL, region, and time stay" },
         ],
-        planNote: "Starter: 7-day retention · Pro: 60-day retention (see pricing).",
+        planNote:
+          "Screenshots: Starter 7 days · Pro 60 days. After that, URL, region, time, and hashes remain (see pricing).",
       },
       disclaimer:
         "Not ad-delivery or tag/pixel verification. Records show the landing page at capture time.",
@@ -1518,12 +1526,12 @@ export const copy = {
         description: "Try-it-out & light validation",
         subdescription:
           "Marketers, solo checks, and small DTC brands—enough volume for real validation work.",
-        usageExample: "≈ 20 client pages, 1 geo, checked weekly",
+        usageExample: "≈ 20 client pages × 5 geos, checked weekly",
         features: [
-          "80 observations / month",
+          "500 observations / month",
           "GEO routing included (residential proxy from the selected country or US state)",
           "Regions: major countries (GB / DE / FR / JP / AU / CA) + representative US states",
-          "7-day retention",
+          "7-day screenshot retention (URL, region, time, and hashes remain after)",
           "Quick visual checks (viewport-sized snapshots)",
           "Public verify links for client sharing",
           "Search and organize by URL and tags",
@@ -1540,13 +1548,13 @@ export const copy = {
         period: "/ month",
         description: "Production, agencies & reporting workflows",
         subdescription:
-          "Higher volume, longer retention, and exports for teams that run this in workflows and reporting.",
-        usageExample: "≈ 20 client pages × 3 geos, checked weekly",
+          "Higher volume, longer screenshot retention, and exports for teams that run this in workflows and reporting.",
+        usageExample: "≈ 25 client pages × 5 geos, 3 times a week",
         features: [
-          "250 observations / month",
+          "1,500 observations / month",
           "GEO routing included (residential proxy from the selected country or US state)",
           "Regions: major countries + all US states",
-          "60-day retention",
+          "60-day screenshot retention (URL, region, time, and hashes remain after)",
           "Complete archival captures (full-page screenshots)",
           "Public verify links for client sharing",
           "Search and organize by URL and tags",
@@ -1578,7 +1586,7 @@ export const copy = {
     faqs: [
       {
         q: "How do I choose between Starter and Pro?",
-        a: "Starter fits try-it-out and light validation. Pro fits production use, agencies, and reporting workflows—more observations, longer retention, and CSV when you need it.",
+        a: "Starter fits try-it-out and light validation. Pro fits production use, agencies, and reporting workflows—more observations, longer screenshot retention, and CSV when you need it.",
       },
       {
         q: "How does the free trial work?",
@@ -1827,6 +1835,8 @@ export const copy = {
         "Fingerprint of the saved screenshot file—verify it matches the file from capture time.",
       fieldObservationId: "Observation ID",
       noScreenshot: "No screenshot available.",
+      screenshotExpired:
+        "The screenshot was removed after the plan retention window. URL, region, time, and hashes remain.",
       disclaimer:
         "Reference-only page—not a substitute for legal proof. Anyone with the link can view.",
       ctaTitle: "This record was created with Viewtrace",
@@ -1957,6 +1967,9 @@ export const copy = {
       hintFormImage:
         "Saved from the image you confirmed in the form—not from a server-side regional capture.",
       hintNoImage: "The record was saved but no screenshot image is attached.",
+      badgeScreenshotExpired: "Screenshot retention ended",
+      hintScreenshotExpired:
+        "The image was deleted after the plan window. URL, region, capture time, and hashes remain.",
       retryLink: "Observe again with the same URL and region",
       reportLabel: "Capture type",
     },
@@ -1969,12 +1982,13 @@ export const copy = {
       colActions: "Actions",
       actionDetail: "Details",
       emptyDefault: "No observations yet.",
+      screenshotExpired: "Image expired",
     },
     observationsListPage: {
       metaTitle: "Observations | Viewtrace",
       title: "Observations",
       subtitle:
-        "Search by URL, region, or tag. A tag is saved on every record of that URL. It does not change the evidence (image, hash).",
+        "Search by URL, region, or tag. Screenshots are removed after the plan window; URL, region, time, and hashes remain.",
       planSuffix: " Current plan: {plan}.",
       csvProHint: "On the Pro plan you can export this list as CSV.",
       csvUpgradeHint: "CSV export is a Pro plan feature.",
@@ -2137,9 +2151,9 @@ export const copy = {
     dashboardHome: {
       title: "Overview",
       subtitle:
-        "Current plan: {plan} ({price}) · {days}-day retention · Up to {limit} observations / month",
+        "Current plan: {plan} ({price}) · {days}-day screenshot retention · Up to {limit} observations / month",
       cardPlanLabel: "Plan",
-      cardPlanMeta: "{days}-day retention · Up to {limit} observations / month",
+      cardPlanMeta: "{days}-day screenshot retention · Up to {limit} observations / month",
       cardPlanChange: "Change plan →",
       auditLogLink: "Audit log →",
       cardMonthlyLabel: "Observations this month",
@@ -2203,7 +2217,7 @@ export const copy = {
       csvNotAvailable: "CSV export: not available",
       snapshotsAvailable: "Visual snapshots: available",
       planMonthlyLimit: "Up to {limit} observations / month",
-      planRetentionDays: "{days}-day retention",
+      planRetentionDays: "{days}-day screenshot retention",
       csvAvailable: "CSV export: available",
       csvProOnly: "CSV export: available on Pro",
       snapshotMarketingStarter: "Quick visual checks",

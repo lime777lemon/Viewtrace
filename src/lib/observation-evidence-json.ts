@@ -83,8 +83,9 @@ export function buildObservationEvidencePack(input: {
     | "captureConditions"
   >;
   verifyUrl: string | null;
+  hideSnapshotImage?: boolean;
 }): ObservationEvidencePack {
-  const { obs, verifyUrl } = input;
+  const { obs, verifyUrl, hideSnapshotImage } = input;
   const conditions = obs.captureConditions ?? null;
   const verdict = resolveLpVerdict({
     status: obs.status,
@@ -104,7 +105,7 @@ export function buildObservationEvidencePack(input: {
     verdict,
     pageTitle: obs.pageTitle ?? null,
     snapshot: {
-      imageUrl: obs.snapshotImageUrl?.trim() || null,
+      imageUrl: hideSnapshotImage ? null : obs.snapshotImageUrl?.trim() || null,
       sha256: obs.snapshotSha256?.trim() || null,
       contentType: obs.snapshotContentType ?? null,
       bytes: obs.snapshotBytes ?? null,

@@ -242,8 +242,8 @@ export function CheckoutClient({
                     {locale === "ja" ? "オブザベーション" : "observations"}
                   </li>
                   <li>
-                    {locale === "ja" ? "保存" : "Retention"}: {plan.retentionDays}{" "}
-                    {locale === "ja" ? "日" : "days"}
+                    {locale === "ja" ? "スクリーンショット保存" : "Screenshot retention"}:{" "}
+                    {plan.retentionDays} {locale === "ja" ? "日" : "days"}
                   </li>
                   <li>{planLabels.coverageLabel}</li>
                 </ul>

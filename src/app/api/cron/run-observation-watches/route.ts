@@ -453,6 +453,7 @@ export async function POST(req: Request) {
           .eq("region", region)
           .neq("id", obsId)
           .not("snapshot_image_url", "is", null)
+          .is("snapshot_purged_at", null)
           .order("captured_at", { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -531,6 +532,7 @@ export async function POST(req: Request) {
         .eq("url", url)
         .eq("region", region)
         .not("snapshot_image_url", "is", null)
+        .is("snapshot_purged_at", null)
         .order("captured_at", { ascending: false })
         .limit(2);
       if (!recent || recent.length < 2) continue;

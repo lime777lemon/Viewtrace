@@ -16,6 +16,11 @@ import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { sanitizeObservationRouteId } from "@/lib/observation-route-id";
 import { contentHashVersionForObservation } from "@/lib/observation-content-hash";
 import { resolveObservationCaptureTier } from "@/lib/observation-capture-tier";
+import { getPlan } from "@/lib/plans";
+import {
+  isObservationScreenshotExpired,
+  visibleSnapshotImageUrl,
+} from "@/lib/observation-screenshot-retention";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -62,6 +67,11 @@ export default async function ObservationReportPage({ params }: Props) {
   const reconciled = await reconcileObservationContentHashIfNeeded(supabase, obs);
   obs = reconciled.obs;
   const integrity = reconciled.integrity;
+  const screenshotExpired = isObservationScreenshotExpired(
+    obs,
+    getPlan(session.plan).retentionDays,
+  );
+  const reportSnapshotUrl = visibleSnapshotImageUrl(obs, getPlan(session.plan).retentionDays);
   const captureTier = resolveObservationCaptureTier(obs);
   const ct = copy[locale].observationCaptureTier;
   const captureTierBadge =
@@ -226,10 +236,17 @@ export default async function ObservationReportPage({ params }: Props) {
           </p>
         </section>
 
-        {obs.snapshotImageUrl ? (
+        {reportSnapshotUrl ? (
           <section>
             <h2 className="text-sm font-semibold text-ink">{t.reportSnapshotUrl}</h2>
-            <p className="mt-2 break-all font-mono text-xs text-ink">{obs.snapshotImageUrl}</p>
+            <p className="mt-2 break-all font-mono text-xs text-ink">{reportSnapshotUrl}</p>
+          </section>
+        ) : screenshotExpired ? (
+          <section>
+            <h2 className="text-sm font-semibold text-ink">{t.reportSnapshotUrl}</h2>
+            <p className="mt-2 text-sm text-ink-muted">
+              {copy[locale].observationCaptureTier.hintScreenshotExpired}
+            </p>
           </section>
         ) : null}
 

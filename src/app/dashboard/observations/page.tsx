@@ -75,7 +75,7 @@ export default async function ObservationsListPage() {
         </div>
       </div>
 
-      <ObservationsLibrary rows={rows} locale={locale} />
+      <ObservationsLibrary rows={rows} locale={locale} retentionDays={plan?.retentionDays} />
     </div>
   );
 }

@@ -47,6 +47,8 @@ export type Observation = {
   snapshotContentType?: string;
   /** 取得時点の固定パラメータ（v2 以降の新規行） */
   captureConditions?: CaptureConditionsV1 | null;
+  /** Blob 削除済み（証跡メタデータは残す）。表示用。content_hash には含めない */
+  snapshotPurgedAt?: string;
 };
 
 export const demoObservations: Observation[] = [

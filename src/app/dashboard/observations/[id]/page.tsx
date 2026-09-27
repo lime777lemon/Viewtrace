@@ -37,6 +37,10 @@ import {
 } from "@/lib/observation-verify-token";
 import { findPreviousObservationWithSnapshot } from "@/lib/observation-previous";
 import { buildObservationEvidencePack } from "@/lib/observation-evidence-json";
+import {
+  isObservationScreenshotExpired,
+  visibleSnapshotImageUrl,
+} from "@/lib/observation-screenshot-retention";
 
 type PageProps = { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string }> };
 
@@ -134,13 +138,17 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
   const watchNotify: WatchNotifyMode =
     parseWatchNotifyMode(String(watchRow?.notify_mode ?? "")) ?? "always";
 
+  const screenshotExpired = isObservationScreenshotExpired(obs, plan.retentionDays);
+  const storedVisibleImage = visibleSnapshotImageUrl(obs, plan.retentionDays);
   const live =
-    obs.status === "success" && (!obs.snapshotImageUrl || !obs.pageTitle)
+    !screenshotExpired &&
+    obs.status === "success" &&
+    (!storedVisibleImage || !obs.pageTitle)
       ? await getCachedUrlPreviewForObservation(obs.url, obs.regionValue)
       : null;
 
   const displayTitle = obs.pageTitle ?? live?.title ?? null;
-  const displayImageUrl = obs.snapshotImageUrl ?? live?.image ?? null;
+  const displayImageUrl = storedVisibleImage ?? (screenshotExpired ? null : live?.image ?? null);
   const resolvedCanonical = live?.canonicalUrl ?? null;
 
   const previousRaw =
@@ -231,10 +239,18 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
         </div>
       </div>
 
-      <ObservationCaptureTierBanner obs={obs} locale={locale} />
+      <ObservationCaptureTierBanner
+        obs={obs}
+        locale={locale}
+        screenshotExpired={screenshotExpired}
+      />
 
       {(() => {
-        const pack = buildObservationEvidencePack({ obs, verifyUrl });
+        const pack = buildObservationEvidencePack({
+          obs,
+          verifyUrl,
+          hideSnapshotImage: screenshotExpired,
+        });
         return (
           <>
             <ObservationLpVerdictCard
@@ -290,7 +306,7 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
         snapshotPhash={obs.snapshotPhash}
         snapshotBytes={obs.snapshotBytes}
         snapshotContentType={obs.snapshotContentType}
-        snapshotImageUrl={obs.snapshotImageUrl}
+        snapshotImageUrl={storedVisibleImage}
         verifyUrl={verifyUrl}
       />
 
@@ -300,7 +316,7 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
         regionLabel={obs.regionLabel}
         canCompare={
           obs.status === "success" &&
-          Boolean(obs.snapshotImageUrl?.trim()) &&
+          Boolean(storedVisibleImage) &&
           Boolean(obs.regionValue?.trim()) &&
           Boolean(obs.url?.trim())
         }
@@ -461,6 +477,7 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
         resolvedCanonical={resolvedCanonical}
         locale={locale}
         comparePrevious={comparePrevious}
+        screenshotExpired={screenshotExpired}
       />
     </div>
   );

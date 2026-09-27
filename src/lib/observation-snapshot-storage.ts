@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { put } from "@vercel/blob";
+import { del, put } from "@vercel/blob";
 import sharp from "sharp";
 import { computeSnapshotPerceptualHash } from "@/lib/snapshot-perceptual-hash";
 
@@ -128,5 +128,31 @@ export async function uploadObservationSnapshotPng(
     const message = e instanceof Error ? e.message : String(e);
     console.warn("[blob] observation snapshot upload failed", { observationId, message });
     return { ok: false, code: "upload_failed", message };
+  }
+}
+
+/** Best-effort Blob delete. Missing objects count as success so purge can be marked. */
+export async function deleteObservationSnapshotByUrl(
+  url: string,
+): Promise<{ ok: true } | { ok: false; code: "token_missing" | "delete_failed"; message?: string }> {
+  const token = process.env.BLOB_READ_WRITE_TOKEN?.trim();
+  if (!token) {
+    console.warn("[blob] observation snapshot delete skipped", { code: "token_missing" });
+    return { ok: false, code: "token_missing" };
+  }
+  const trimmed = url.trim();
+  if (!trimmed || !/^https?:\/\//i.test(trimmed)) {
+    return { ok: true };
+  }
+  try {
+    await del(trimmed, { token });
+    return { ok: true };
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    if (/not found|404|does not exist/i.test(message)) {
+      return { ok: true };
+    }
+    console.warn("[blob] observation snapshot delete failed", { message });
+    return { ok: false, code: "delete_failed", message };
   }
 }

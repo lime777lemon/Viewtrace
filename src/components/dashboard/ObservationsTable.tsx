@@ -9,6 +9,7 @@ import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
 import { copy, type Locale } from "@/lib/i18n";
 import { localizeObservationNote } from "@/lib/i18n/observation-persisted-copy";
 import { normalizeObservationTags } from "@/lib/observation-tags";
+import { isObservationScreenshotExpired } from "@/lib/observation-screenshot-retention";
 
 function StatusBadge({
   status,
@@ -99,12 +100,14 @@ export function ObservationsTable({
   locale,
   tagging = false,
   onTagClick,
+  retentionDays,
 }: {
   rows: Observation[];
   emptyMessage?: string;
   locale: Locale;
   tagging?: boolean;
   onTagClick?: (tag: string) => void;
+  retentionDays?: number;
 }) {
   const tb = copy[locale].observationsTable;
   if (rows.length === 0) {
@@ -146,6 +149,9 @@ export function ObservationsTable({
                 </td>
                 <td className="px-4 py-3 align-top">
                   <StatusBadge status={row.status} locale={locale} />
+                  {retentionDays != null && isObservationScreenshotExpired(row, retentionDays) ? (
+                    <span className="mt-1 block text-[11px] text-ink-muted">{tb.screenshotExpired}</span>
+                  ) : null}
                   {row.note ? (
                     <span className="mt-1 block text-[11px] text-ink-muted">
                       {localizeObservationNote(row.note, locale)}

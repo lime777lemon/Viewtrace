@@ -120,7 +120,7 @@ export const privacyPageCopyJa: PrivacyPageCopy = {
     {
       title: "8. 保存期間",
       listItems: [
-        "スクリーンショット等の記録：プランに応じた期間（例：Starter 7 日、Pro 60 日）経過後に削除",
+        "スクリーンショット画像：プランに応じた期間（例：Starter 7 日、Pro 60 日）経過後に削除。URL・地域・取得時刻・ハッシュ等のメタデータはアカウント存続中保持",
         "アカウント情報：アカウント存続期間中。退会・削除請求後、合理的期間内に削除または匿名化",
         "決済・契約関連：法令および会計上必要な期間",
         "お問い合わせ：対応完了後、合理的期間内",
@@ -274,7 +274,7 @@ export const privacyPageCopyEn: PrivacyPageCopy = {
     {
       title: "8. Retention",
       listItems: [
-        "Screenshot records: per plan limits (e.g., Starter 7 days, Pro 60 days), then deleted",
+        "Screenshot images: per plan limits (e.g., Starter 7 days, Pro 60 days), then deleted. Metadata (URL, region, time, hashes) is kept while the account exists",
         "Account data: while your account is active; deleted or anonymized within a reasonable time after closure or deletion request",
         "Billing records: as required by law and accounting needs",
         "Contact inquiries: for a reasonable period after resolution",

@@ -148,7 +148,7 @@ export default async function DashboardHomePage() {
             </Link>
           )}
         </div>
-        <ObservationsTable rows={recent} locale={locale} />
+        <ObservationsTable rows={recent} locale={locale} retentionDays={plan.retentionDays} />
       </section>
 
       <div className="rounded-xl border border-warn/30 bg-warn/10 p-4 text-sm text-ink">

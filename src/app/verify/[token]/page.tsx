@@ -77,7 +77,9 @@ export default async function PublicVerifyPage({ params }: Props) {
               }}
             />
           ) : (
-            <p className="px-4 py-12 text-center text-sm text-ink-muted">{t.noScreenshot}</p>
+            <p className="px-4 py-12 text-center text-sm text-ink-muted">
+              {obs.screenshotExpired ? t.screenshotExpired : t.noScreenshot}
+            </p>
           )}
         </div>
 

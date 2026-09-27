@@ -69,7 +69,7 @@ export default async function NewObservationPage({
           {plan.allUsStates ? "（米国は全州から選択可能）" : "（米国は代表州のみ）"}
         </p>
         <p className="mt-2 text-xs text-ink-muted">
-          保持期間の目安: {plan.retentionDays} 日（{plan.name}）。
+          スクリーンショット保存の目安: {plan.retentionDays} 日（{plan.name}）。
         </p>
       </div>
 

@@ -11,6 +11,7 @@ import {
 type Props = {
   obs: Observation;
   locale: Locale;
+  screenshotExpired?: boolean;
 };
 
 function tierStyles(tier: ObservationCaptureTier): string {
@@ -28,9 +29,25 @@ function tierStyles(tier: ObservationCaptureTier): string {
   }
 }
 
-export function ObservationCaptureTierBanner({ obs, locale }: Props) {
+export function ObservationCaptureTierBanner({
+  obs,
+  locale,
+  screenshotExpired = false,
+}: Props) {
   const tier = resolveObservationCaptureTier(obs);
   const c = copy[locale].observationCaptureTier;
+
+  if (screenshotExpired) {
+    return (
+      <div
+        role="status"
+        className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3"
+      >
+        <p className="text-sm font-semibold text-ink">{c.badgeScreenshotExpired}</p>
+        <p className="mt-1 text-sm leading-relaxed text-ink-muted">{c.hintScreenshotExpired}</p>
+      </div>
+    );
+  }
 
   if (tier === "failed") return null;
 

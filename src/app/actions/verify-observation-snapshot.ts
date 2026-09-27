@@ -3,6 +3,8 @@
 import { createHash } from "node:crypto";
 import { getSession } from "@/lib/auth/session";
 import { getObservationMergedForPlan } from "@/lib/demo/user-observations";
+import { visibleSnapshotImageUrl } from "@/lib/observation-screenshot-retention";
+import { getPlan } from "@/lib/plans";
 import { computeSnapshotPerceptualHash, perceptualHashDistance } from "@/lib/snapshot-perceptual-hash";
 
 const MAX_SNAPSHOT_BYTES = 30 * 1024 * 1024;
@@ -42,8 +44,8 @@ export async function verifyObservationSnapshotBinaryAction(
   const obs = await getObservationMergedForPlan(observationId, session.plan);
   if (!obs) return { ok: false, error: "not_found" };
   if (!obs.snapshotSha256?.trim()) return { ok: false, error: "no_hash" };
-  const url = obs.snapshotImageUrl?.trim();
-  if (!url || !/^https?:\/\//i.test(url)) return { ok: false, error: "no_url" };
+  const url = visibleSnapshotImageUrl(obs, getPlan(session.plan).retentionDays);
+  if (!url) return { ok: false, error: "no_url" };
 
   let res: Response;
   try {

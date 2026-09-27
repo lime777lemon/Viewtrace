@@ -13,9 +13,11 @@ import { ObservationsTable } from "@/components/dashboard/ObservationsTable";
 export function ObservationsLibrary({
   rows,
   locale,
+  retentionDays,
 }: {
   rows: Observation[];
   locale: Locale;
+  retentionDays?: number;
 }) {
   const t = copy[locale].observationsListPage;
   const tb = copy[locale].observationsTable;
@@ -31,7 +33,7 @@ export function ObservationsLibrary({
   const hasActiveFilter = query.trim().length > 0 || tagFilter !== null;
 
   if (rows.length === 0) {
-    return <ObservationsTable rows={rows} locale={locale} />;
+    return <ObservationsTable rows={rows} locale={locale} retentionDays={retentionDays} />;
   }
 
   return (
@@ -103,6 +105,7 @@ export function ObservationsLibrary({
         emptyMessage={hasActiveFilter ? t.noSearchMatch : tb.emptyDefault}
         tagging
         onTagClick={setTagFilter}
+        retentionDays={retentionDays}
       />
     </div>
   );

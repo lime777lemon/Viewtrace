@@ -16,6 +16,8 @@ import {
   ensureObservationVerifyTokenForUser,
 } from "@/lib/observation-verify-token";
 import { formatVerificationReportCountry } from "@/lib/verification-report-country";
+import { getPlan } from "@/lib/plans";
+import { visibleSnapshotImageUrl } from "@/lib/observation-screenshot-retention";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -130,7 +132,7 @@ export default async function ObservationVerificationReportPage({ params }: Prop
         capturedLabel={capturedLabel}
         country={country}
         status={obs.status}
-        snapshotImageUrl={obs.snapshotImageUrl}
+        snapshotImageUrl={visibleSnapshotImageUrl(obs, getPlan(session.plan).retentionDays)}
         snapshotSha256={obs.snapshotSha256}
         contentHash={obs.contentHash}
         verifyUrl={verifyUrl}

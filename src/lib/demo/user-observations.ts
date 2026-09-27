@@ -7,7 +7,6 @@ import type {
   ObservationReviewStatus,
 } from "@/lib/demo/observations";
 import type { PlanId } from "@/lib/plans";
-import { getPlan } from "@/lib/plans";
 import { getRegionOptions } from "@/lib/regions";
 import type { PostgrestError } from "@supabase/supabase-js";
 import { parseCaptureConditionsFromDb } from "@/lib/capture-conditions";
@@ -17,6 +16,7 @@ import { sanitizeObservationRouteId } from "@/lib/observation-route-id";
 import { inheritedTagsForUrl } from "@/lib/observation-url-tags";
 import { normalizeObservationTags } from "@/lib/observation-tags";
 import { markVerifyLoopFirstObservation } from "@/lib/verify-loop/track";
+import { expireDueObservationScreenshots } from "@/lib/expire-observation-screenshots";
 
 export const USER_OBSERVATIONS_COOKIE = "viewtrace_user_obs";
 
@@ -24,7 +24,7 @@ const MAX_ITEMS = 35;
 const MAX_COOKIE_BYTES = 4200;
 
 const OBSERVATION_ROW_SELECT =
-  "id,url,region,region_label,status,note,tags,folder,review_status,page_title,snapshot_image_url,captured_at,events,content_hash,snapshot_sha256,snapshot_phash,snapshot_bytes,snapshot_content_type,capture_conditions" as const;
+  "id,url,region,region_label,status,note,tags,folder,review_status,page_title,snapshot_image_url,captured_at,events,content_hash,snapshot_sha256,snapshot_phash,snapshot_bytes,snapshot_content_type,capture_conditions,snapshot_purged_at" as const;
 
 const REVIEW_STATUSES = new Set<ObservationReviewStatus>([
   "open",
@@ -114,6 +114,10 @@ function mapDbRowToObservation(
         ? row.snapshot_content_type.trim()
         : undefined,
     captureConditions: parseCaptureConditionsFromDb(row.capture_conditions),
+    snapshotPurgedAt:
+      typeof row.snapshot_purged_at === "string" && row.snapshot_purged_at.trim()
+        ? row.snapshot_purged_at.trim()
+        : undefined,
   };
   return isObservation(obs) ? obs : null;
 }
@@ -174,7 +178,9 @@ function isObservation(x: unknown): x is Observation {
     (o.snapshotBytes === undefined ||
       (typeof o.snapshotBytes === "number" && Number.isFinite(o.snapshotBytes) && o.snapshotBytes >= 0)) &&
     (o.snapshotContentType === undefined ||
-      (typeof o.snapshotContentType === "string" && o.snapshotContentType.length <= 80))
+      (typeof o.snapshotContentType === "string" && o.snapshotContentType.length <= 80)) &&
+    (o.snapshotPurgedAt === undefined ||
+      (typeof o.snapshotPurgedAt === "string" && o.snapshotPurgedAt.length < 40))
   );
 }
 
@@ -285,13 +291,12 @@ export async function appendUserObservation(
     return { ok: false, code: "monthly_limit" };
   }
 
-  // Retention cleanup (best-effort)
-  const retentionCutoff = new Date(Date.now() - opts.retentionDays * 24 * 60 * 60 * 1000).toISOString();
-  void supabase
-    .from("observations")
-    .delete()
-    .eq("user_id", user.id)
-    .lt("captured_at", retentionCutoff);
+  // Screenshot-only expiry (best-effort). Observation rows stay.
+  void expireDueObservationScreenshots(supabase, {
+    userId: user.id,
+    retentionDays: opts.retentionDays,
+    limit: 40,
+  });
 
   const contentHash = computeObservationContentHash(obs);
   const verifyToken = generateObservationVerifyToken();
@@ -335,25 +340,14 @@ export async function appendUserObservation(
   return { ok: true };
 }
 
-/** プランの保持日数より古い記録を除外（一覧・CSV・参照用） */
-export function filterObservationsByRetention(
-  rows: Observation[],
-  retentionDays: number,
-): Observation[] {
-  const cutoff = Date.now() - retentionDays * 24 * 60 * 60 * 1000;
-  return rows.filter((o) => new Date(o.capturedAt).getTime() >= cutoff);
-}
-
 export async function getMergedObservationsSorted(): Promise<Observation[]> {
   const user = await readUserObservations();
   return sortByCapturedAtDesc(user);
 }
 
-/** ログイン中プランの保持期間でフィルタした一覧 */
-export async function getMergedObservationsForPlan(planId: PlanId): Promise<Observation[]> {
-  const retentionDays = getPlan(planId).retentionDays;
-  const merged = await getMergedObservationsSorted();
-  return filterObservationsByRetention(merged, retentionDays);
+/** 一覧・CSV用。スクリーンショット期限後もメタデータ行は残す */
+export async function getMergedObservationsForPlan(_planId: PlanId): Promise<Observation[]> {
+  return getMergedObservationsSorted();
 }
 
 export async function getObservationMerged(id: string): Promise<Observation | undefined> {
@@ -364,7 +358,7 @@ export async function getObservationMerged(id: string): Promise<Observation | un
 
 /**
  * 記録詳細・レポート・メール直リンク用。
- * 保持期間外でも DB に行があれば返す（一覧・CSV は `getMergedObservationsForPlan` で保持期間フィルタ）。
+ * スクリーンショット期限後も DB に行があれば返す。画像表示は呼び出し側で `visibleSnapshotImageUrl`。
  */
 export async function getObservationMergedForPlan(
   id: string,
