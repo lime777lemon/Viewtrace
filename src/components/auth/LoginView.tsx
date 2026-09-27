@@ -84,32 +84,12 @@ export function LoginView({
         </div>
       </header>
 
-      <main className="relative z-10 mx-auto grid min-h-[calc(100vh-4.25rem)] max-w-6xl gap-10 px-4 py-10 sm:px-6 lg:grid-cols-2 lg:items-center lg:gap-16 lg:py-16">
-        <section className="order-2 lg:order-1">
-          <p className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-elevated px-3 py-1 text-xs font-medium text-ink-muted">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-            {t.productPill}
-          </p>
-          <h1 className="font-display mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
-            {t.heroTitle}
-          </h1>
-          <ul className="mt-8 space-y-3 text-sm text-ink-muted">
-            <li className="flex gap-2">
-              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
-              {t.bullet1}
-            </li>
-            <li className="flex gap-2">
-              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
-              {t.bullet2}
-            </li>
-          </ul>
-        </section>
-
-        <section className="order-1 lg:order-2">
-          <div className="mx-auto w-full max-w-md rounded-2xl border border-border bg-surface-elevated p-6 shadow-lg shadow-ink/5 sm:p-8">
+      <main className="relative z-10 mx-auto flex min-h-[calc(100vh-4.25rem)] max-w-md items-start justify-center px-4 py-8 sm:items-center sm:px-6 sm:py-10 lg:py-16">
+        <section className="w-full">
+          <div className="w-full rounded-2xl border border-border bg-surface-elevated p-6 shadow-lg shadow-ink/5 sm:p-8">
             <div className="flex flex-col items-center text-center">
               <ViewtraceLogo className="h-12 w-auto" priority={false} />
-              <p className="mt-2 text-sm text-ink-muted">{t.cardSubtitle}</p>
+              <h1 className="mt-2 text-sm font-normal text-ink-muted">{t.cardSubtitle}</h1>
             </div>
 
             <>

@@ -38,10 +38,6 @@ export type LoginPageStrings = {
   langAria: string;
   english: string;
   japanese: string;
-  productPill: string;
-  heroTitle: string;
-  bullet1: string;
-  bullet2: string;
   cardSubtitle: string;
   emailSignInTitle: string;
   signInHelpPart1: string;
@@ -135,10 +131,6 @@ export const loginPageCopy: Record<LoginLocale, LoginPageStrings> = {
     langAria: "Language",
     english: "English",
     japanese: "日本語",
-    productPill: "Product",
-    heroTitle: "Sign in to the dashboard",
-    bullet1: "Manage timestamped visual records",
-    bullet2: "Review observation history with regional targeting",
     cardSubtitle: "Sign up or sign in with email and password",
     emailSignInTitle: "Email sign-in",
     signInHelpPart1: "Use ",
@@ -164,10 +156,6 @@ export const loginPageCopy: Record<LoginLocale, LoginPageStrings> = {
     langAria: "表示言語",
     english: "English",
     japanese: "日本語",
-    productPill: "プロダクト",
-    heroTitle: "ダッシュボードにログイン",
-    bullet1: "タイムスタンプ付きのビジュアル記録を管理",
-    bullet2: "地域条件に基づく観測の履歴を確認",
     cardSubtitle: "メールとパスワードで登録またはログイン",
     emailSignInTitle: "メールアドレスでサインイン",
     signInHelpPart1: "「",
