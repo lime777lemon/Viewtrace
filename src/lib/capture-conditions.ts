@@ -4,6 +4,7 @@ import {
 } from "@/lib/browser-fingerprint";
 import { resolveGeoProxyUrl } from "@/lib/geo/proxy";
 import { resolveBrowserlessResidentialTarget } from "@/lib/regions";
+import type { HtmlHeadSignalsV1 } from "@/lib/url-preview";
 export const CAPTURE_CONDITIONS_SCHEMA_VERSION = 1 as const;
 
 /** Legacy rows with capture_conditions before evidence-only v3. */
@@ -76,6 +77,8 @@ export type CaptureConditionsV1 = {
     capture_conditions_schema_version: number;
     content_hash_version: number;
   };
+  /** 取得済み HTML head の読み取り。content_hash には含めない。 */
+  html_signals?: HtmlHeadSignalsV1;
 };
 
 /** Subset hashed in content_hash v2 (excludes meta and result dimensions). */
@@ -418,6 +421,7 @@ export function buildCaptureConditionsFromDirectFetch(input: {
   };
 }
 
+/** html_signals / meta / result は含めない（証跡の撮影条件だけ）。 */
 export function captureConditionsForContentHash(
   conditions: CaptureConditionsV1,
 ): ContentHashCaptureConditions {

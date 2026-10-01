@@ -29,6 +29,11 @@ export type RegionSearchLabels = {
   mockEmptyQuery: string;
   dashboardHint: string;
   dashboardCta: string;
+  dashboardSubmit: string;
+  dashboardSubmitPending: string;
+  dashboardQueryLabel: string;
+  dashboardRegionLabel: string;
+  dashboardRegionAria: string;
   previewLiveNote: string;
   previewLiveNoteMarketing: string;
   previewDirectAccess: string;
@@ -150,28 +155,21 @@ export function RegionSearchPanel({
       : "2026-05-04 14:32 UTC (example)";
 
   const hintText = mode === "marketing" ? labels.hint : labels.dashboardHint;
-  const recordPendingText = locale === "ja" ? "処理中…" : "Processing…";
-
-  function RecordAsObservationSubmitButton() {
-    return (
-      <PendingSubmitButton
-        label={labels.recordAsObservation}
-        pendingLabel={recordPendingText}
-        className="w-full rounded-full bg-ink px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-ink/92 hover:shadow-md active:translate-y-0 active:shadow-sm disabled:hover:shadow-sm sm:w-auto"
-        pendingClassName="hover:bg-ink"
-      />
-    );
-  }
-
-  const previewRegionLabel =
-    mode === "marketing" ? labels.previewDirectAccess : selectedLabel;
 
   return (
     <div className="space-y-8">
       <form
-        onSubmit={handleSubmit}
+        action={mode === "dashboard" ? recordWebVerifiedObservationAction : undefined}
+        onSubmit={mode === "marketing" ? handleSubmit : undefined}
         className="rounded-2xl border border-border bg-surface p-5 shadow-sm sm:p-8"
       >
+        {mode === "dashboard" ? (
+          <>
+            <input type="hidden" name="regionLabel" value={selectedLabel} />
+            <input type="hidden" name="verifiedTitle" value="" />
+            <input type="hidden" name="verifiedImageUrl" value="" />
+          </>
+        ) : null}
         {mode === "dashboard" && (
           <>
             <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
@@ -217,11 +215,12 @@ export function RegionSearchPanel({
         <div className={`grid gap-6 lg:grid-cols-2 lg:gap-8 ${mode === "dashboard" ? "mt-8" : ""}`}>
           <div>
             <label htmlFor={regionFieldId} className="block text-sm font-medium text-ink">
-              {labels.regionLabel}
+              {mode === "dashboard" ? labels.dashboardRegionLabel : labels.regionLabel}
             </label>
             <select
               id={regionFieldId}
-              aria-label={labels.regionAria}
+              name={mode === "dashboard" ? "region" : undefined}
+              aria-label={mode === "dashboard" ? labels.dashboardRegionAria : labels.regionAria}
               value={region}
               onChange={(e) => setRegion(e.target.value)}
               className="mt-2 w-full rounded-xl border border-border bg-surface-elevated px-4 py-3 text-sm text-ink outline-none ring-accent/25 focus:border-accent/40 focus:ring-2"
@@ -240,12 +239,14 @@ export function RegionSearchPanel({
           </div>
           <div>
             <label htmlFor={queryFieldId} className="block text-sm font-medium text-ink">
-              {labels.queryLabel}
+              {mode === "dashboard" ? labels.dashboardQueryLabel : labels.queryLabel}
             </label>
             <input
               id={queryFieldId}
-              type="search"
-              enterKeyHint="search"
+              name={mode === "dashboard" ? "url" : undefined}
+              type={mode === "dashboard" ? "text" : "search"}
+              required={mode === "dashboard"}
+              enterKeyHint={mode === "dashboard" ? "go" : "search"}
               autoComplete="off"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -256,40 +257,41 @@ export function RegionSearchPanel({
         </div>
 
         <div className="mt-8 flex flex-wrap items-center gap-3">
-          <button
-            type="submit"
-            className="inline-flex cursor-pointer rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-accent-hover hover:shadow-md active:translate-y-px"
-          >
-            {labels.submit}
-          </button>
-          {mode === "marketing" ? (
-            <Link
-              href="/login?mode=signup"
-              className="text-sm font-semibold text-accent hover:text-accent-hover"
-            >
-              {locale === "ja" ? "無料で始める →" : "Start for free →"}
-            </Link>
+          {mode === "dashboard" ? (
+            <PendingSubmitButton
+              label={labels.dashboardSubmit}
+              pendingLabel={labels.dashboardSubmitPending}
+              className="rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-accent-hover hover:shadow-md active:translate-y-px disabled:hover:shadow-sm"
+              pendingClassName="hover:bg-accent"
+            />
           ) : (
-            <Link
-              href="/dashboard/observations/new"
-              className="text-sm font-semibold text-accent hover:text-accent-hover"
-            >
-              {labels.dashboardCta}
-            </Link>
+            <>
+              <button
+                type="submit"
+                className="inline-flex cursor-pointer rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-accent-hover hover:shadow-md active:translate-y-px"
+              >
+                {labels.submit}
+              </button>
+              <Link
+                href="/login?mode=signup"
+                className="text-sm font-semibold text-accent hover:text-accent-hover"
+              >
+                {locale === "ja" ? "無料で始める →" : "Start for free →"}
+              </Link>
+            </>
           )}
         </div>
         <p className="mt-4 text-xs leading-relaxed text-ink-muted">{hintText}</p>
       </form>
 
-      {previewOn ? (
+      {mode === "marketing" && previewOn ? (
         <div className="rounded-2xl border border-accent/25 bg-accent-soft/30 p-6 sm:p-8">
           <h3 className="font-display text-sm font-semibold text-ink">{labels.mockTitle}</h3>
           <div className="mt-4 rounded-xl border border-border bg-surface p-5 shadow-sm">
             <div className="flex items-center gap-2 text-xs font-medium text-ink-muted">
               <span className="h-2 w-2 rounded-full bg-emerald-600" aria-hidden />
               <span>
-                {labels.mockSnapshot} · {previewRegionLabel} ·{" "}
-                {mode === "marketing" ? labels.previewSampleNote : exampleTime}
+                {labels.mockSnapshot} · {labels.previewDirectAccess} · {labels.previewSampleNote}
               </span>
             </div>
             <p className="mt-3 break-all text-sm font-medium text-ink">
@@ -328,17 +330,13 @@ export function RegionSearchPanel({
                         alt=""
                         width={768}
                         height={480}
-                        className={`w-full max-w-lg rounded-lg border border-border object-top ${
-                          mode === "marketing"
-                            ? "max-h-[min(55vh,420px)] object-contain"
-                            : "max-h-48 object-cover"
-                        }`}
+                        className="max-h-[min(55vh,420px)] w-full max-w-lg rounded-lg border border-border object-contain object-top"
                         loading="lazy"
                         unoptimized
                       />
                     ) : null}
                     <p className="text-xs leading-relaxed text-ink-muted">
-                      {mode === "marketing" ? labels.previewLiveNoteMarketing : labels.previewLiveNote}
+                      {labels.previewLiveNoteMarketing}
                     </p>
                     <a
                       href={livePreview.canonicalUrl}
@@ -360,19 +358,6 @@ export function RegionSearchPanel({
                           {labels.previewRegionCtaButton}
                         </Link>
                       </div>
-                    ) : null}
-                    {mode === "dashboard" ? (
-                      <form action={recordWebVerifiedObservationAction} className="mt-4 space-y-2">
-                        <input type="hidden" name="url" value={livePreview.canonicalUrl} />
-                        <input type="hidden" name="region" value={region} />
-                        <input type="hidden" name="regionLabel" value={selectedLabel} />
-                        <input type="hidden" name="verifiedTitle" value={livePreview.title ?? ""} />
-                        <input type="hidden" name="verifiedImageUrl" value={livePreview.image ?? ""} />
-                        <RecordAsObservationSubmitButton />
-                        <p className="text-xs leading-relaxed text-ink-muted">
-                          {labels.recordAsObservationHint}
-                        </p>
-                      </form>
                     ) : null}
                   </div>
                 ) : null}

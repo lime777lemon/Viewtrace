@@ -71,6 +71,10 @@ export default async function AdminVerifyFunnelPage() {
       <div className="rounded-2xl border border-border bg-surface-elevated p-5">
         <h2 className="text-sm font-semibold text-ink">Conversion</h2>
         <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <dt className="text-xs text-ink-muted">Verify view → next Observation</dt>
+            <dd className="font-mono text-sm">{pct(rates.loopConversionRate)}</dd>
+          </div>
           <div>
             <dt className="text-xs text-ink-muted">CTA click rate</dt>
             <dd className="font-mono text-sm">{pct(rates.ctaClickRate)}</dd>

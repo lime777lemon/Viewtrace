@@ -4,6 +4,10 @@ import { notFound, redirect } from "next/navigation";
 import { ObservationAnnotationPanel } from "@/components/dashboard/ObservationAnnotationPanel";
 import { ObservationPublicVerifyLink } from "@/components/dashboard/ObservationPublicVerifyLink";
 import { ObservationCaptureConditionsPanel } from "@/components/dashboard/ObservationCaptureConditionsPanel";
+import {
+  ObservationHtmlHeadSignalsPanel,
+  observationHtmlHeadCopyFrom,
+} from "@/components/dashboard/ObservationHtmlHeadSignalsPanel";
 import { ObservationCaptureTierBanner } from "@/components/dashboard/ObservationCaptureTierBanner";
 import { ObservationDetailSnapshotSection } from "@/components/dashboard/ObservationDetailSnapshotSection";
 import { ObservationDigitalSeal } from "@/components/dashboard/ObservationDigitalSeal";
@@ -191,6 +195,8 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
     proxyModeExternal: t.captureProxyExternal,
     proxyModeRetryWithout: t.captureProxyRetryWithout,
   };
+
+  const htmlHeadSignalsCopy = observationHtmlHeadCopyFrom(t);
 
   const comparePrevious = previousRaw
     ? {
@@ -415,6 +421,10 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
           conditions={obs.captureConditions}
           copy={captureConditionsCopy}
           locale={locale}
+        />
+        <ObservationHtmlHeadSignalsPanel
+          signals={obs.captureConditions?.html_signals}
+          copy={htmlHeadSignalsCopy}
         />
         {plan.autoObservationWatch && obs.regionValue ? (
           <ObservationWatchPanel

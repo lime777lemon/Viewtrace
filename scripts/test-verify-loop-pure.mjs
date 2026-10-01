@@ -64,6 +64,7 @@ function computeVerifyFunnel(rows) {
   return {
     counts,
     rates: {
+      loopConversionRate: ratio(counts.first_observation_created, counts.verify_view),
       ctaClickRate: ratio(counts.verify_cta_click, counts.verify_view),
       urlSubmissionRate: ratio(counts.url_submitted, counts.verify_cta_click),
       signupConversionRate: ratio(counts.signup_completed, counts.url_submitted),
@@ -105,6 +106,7 @@ const funnel = computeVerifyFunnel([
 assert.equal(funnel.counts.verify_view, 2);
 assert.equal(funnel.counts.verify_cta_click, 1);
 assert.equal(funnel.rates.ctaClickRate, 0.5);
+assert.equal(funnel.rates.loopConversionRate, 0.5);
 assert.equal(funnel.rates.urlSubmissionRate, 1);
 assert.equal(funnel.rates.signupConversionRate, 1);
 assert.equal(funnel.rates.firstObservationConversionRate, 1);

@@ -50,12 +50,12 @@ export function DashboardShell({
   const t = copy[locale].dashboard;
   const plan = getPlan(planId);
   const nav = [
-    { href: "/dashboard", label: t.nav.overview },
     { href: "/dashboard/region-search", label: t.nav.regionSearch },
     { href: "/dashboard/observations", label: t.nav.observations },
     ...(plan.autoObservationWatch
       ? [{ href: "/dashboard/auto-observations" as const, label: t.nav.autoObservations }]
       : []),
+    { href: "/dashboard", label: t.nav.overview },
     { href: "/dashboard/audit", label: t.nav.auditLog },
     { href: "/dashboard/purchases", label: t.nav.purchases },
     { href: "/dashboard/settings", label: t.nav.settings },

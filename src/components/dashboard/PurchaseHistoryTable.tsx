@@ -1,35 +1,25 @@
-import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
+import { formatJaDate, formatJaDateTime, formatUtcLabel } from "@/lib/format";
 import { copy, type Locale } from "@/lib/i18n";
+import type { StripeMonthlyInvoice } from "@/lib/stripe";
 
-export type PurchaseRecord = {
-  stripe_subscription_id: string | null;
-  plan_id: string | null;
-  status: string | null;
-  mode: "test" | "live" | null;
-  /** Stripe Subscription.created を Webhook / sync で保存した購入日時 */
-  created_at: string | null;
-  updated_at: string | null;
-};
-
-function maskId(id: string | null): string {
-  if (!id) return "-";
-  if (id.length <= 12) return id;
-  return `${id.slice(0, 6)}…${id.slice(-4)}`;
+function formatMoney(amountCents: number, currency: string, locale: Locale): string {
+  try {
+    return new Intl.NumberFormat(locale === "ja" ? "ja-JP" : "en-US", {
+      style: "currency",
+      currency: currency.toUpperCase(),
+    }).format(amountCents / 100);
+  } catch {
+    return `${(amountCents / 100).toFixed(2)} ${currency.toUpperCase()}`;
+  }
 }
 
 function StatusBadge({ status }: { status: string | null }) {
   const s = (status ?? "").toLowerCase();
   const map: Record<string, { label: string; className: string }> = {
-    active: { label: "active", className: "bg-emerald-100 text-emerald-900" },
-    trialing: { label: "trialing", className: "bg-emerald-100 text-emerald-900" },
-    past_due: { label: "past_due", className: "bg-amber-100 text-amber-900" },
-    canceled: { label: "canceled", className: "bg-zinc-200 text-zinc-900" },
-    unpaid: { label: "unpaid", className: "bg-red-100 text-red-900" },
-    incomplete: { label: "incomplete", className: "bg-amber-100 text-amber-900" },
-    incomplete_expired: {
-      label: "incomplete_expired",
-      className: "bg-zinc-200 text-zinc-900",
-    },
+    paid: { label: "paid", className: "bg-emerald-100 text-emerald-900" },
+    open: { label: "open", className: "bg-amber-100 text-amber-900" },
+    uncollectible: { label: "uncollectible", className: "bg-red-100 text-red-900" },
+    void: { label: "void", className: "bg-zinc-200 text-zinc-900" },
   };
   const v = map[s] ?? { label: status ?? "-", className: "bg-zinc-200 text-zinc-900" };
   return (
@@ -39,29 +29,28 @@ function StatusBadge({ status }: { status: string | null }) {
   );
 }
 
-function planLabel(planId: string | null, locale: Locale): string {
-  if (!planId) return "-";
-  if (planId === "freeplan") return locale === "ja" ? "フリープラン" : "Free plan";
-  if (planId === "starter") return "Starter";
-  if (planId === "pro") return "Pro";
-  return locale === "ja" ? `不明（${planId}）` : `Unknown (${planId})`;
+function periodLabel(row: StripeMonthlyInvoice, locale: Locale): string {
+  if (row.periodStart && row.periodEnd) {
+    return `${formatJaDate(row.periodStart, locale)} – ${formatJaDate(row.periodEnd, locale)}`;
+  }
+  return "—";
 }
 
 export function PurchaseHistoryTable({
-  rows,
+  invoices,
   locale,
   emptyMessage,
 }: {
-  rows: PurchaseRecord[];
+  invoices: StripeMonthlyInvoice[];
   locale: Locale;
   emptyMessage?: string;
 }) {
   const th = copy[locale].dashboardHome;
 
-  if (rows.length === 0) {
+  if (invoices.length === 0) {
     return (
       <p className="rounded-xl border border-dashed border-border bg-surface-elevated px-4 py-8 text-center text-sm text-ink-muted">
-        {emptyMessage ?? (locale === "ja" ? "購入履歴がありません。" : "No purchase history yet.")}
+        {emptyMessage ?? (locale === "ja" ? "月次の請求はまだありません。" : "No monthly invoices yet.")}
       </p>
     );
   }
@@ -69,73 +58,51 @@ export function PurchaseHistoryTable({
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-surface-elevated">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-220 text-left text-sm">
+        <table className="w-full min-w-200 text-left text-sm">
           <thead className="border-b border-border bg-surface text-xs font-semibold uppercase tracking-wide text-ink-muted">
             <tr>
-              <th className="px-4 py-3">{th.purchaseTablePurchaseDate}</th>
-              <th className="px-4 py-3">{th.purchaseTableLastUpdated}</th>
-              <th className="px-4 py-3">{locale === "ja" ? "プラン" : "Plan"}</th>
+              <th className="px-4 py-3">{th.purchaseTablePeriod}</th>
+              <th className="px-4 py-3">{th.purchaseTablePaidAt}</th>
+              <th className="px-4 py-3">{th.purchaseTableAmount}</th>
               <th className="px-4 py-3">{locale === "ja" ? "ステータス" : "Status"}</th>
-              <th className="px-4 py-3">{locale === "ja" ? "モード" : "Mode"}</th>
-              <th className="px-4 py-3">{locale === "ja" ? "サブスクID" : "Subscription ID"}</th>
+              <th className="px-4 py-3">{th.purchaseTableInvoice}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {rows.map((row, i) => {
-              const purchaseTs = row.created_at ?? row.updated_at;
-              const purchaseIsFallback = !row.created_at && Boolean(row.updated_at);
-              const updatedTs = row.updated_at;
-              return (
-                <tr
-                  key={`${row.stripe_subscription_id ?? "no-sub"}-${i}`}
-                  className="hover:bg-surface/80"
-                >
-                  <td className="px-4 py-3 align-top text-ink-muted">
-                    {purchaseTs ? (
-                      <>
-                        <span className="text-ink">{formatJaDateTime(purchaseTs, locale)}</span>
-                        <span className="mt-0.5 block text-[11px] text-ink-muted">
-                          {formatUtcLabel(purchaseTs)}
-                        </span>
-                        {purchaseIsFallback ? (
-                          <span className="mt-1 block text-[10px] italic text-ink-muted">
-                            {th.purchaseTablePurchaseDateFallbackHint}
-                          </span>
-                        ) : null}
-                      </>
-                    ) : (
-                      "-"
-                    )}
-                  </td>
-                  <td className="px-4 py-3 align-top text-ink-muted">
-                    {updatedTs ? (
-                      <>
-                        <span className="text-ink">{formatJaDateTime(updatedTs, locale)}</span>
-                        <span className="mt-0.5 block text-[11px] text-ink-muted">
-                          {formatUtcLabel(updatedTs)}
-                        </span>
-                      </>
-                    ) : (
-                      "-"
-                    )}
-                  </td>
-                  <td className="px-4 py-3 align-top text-ink">
-                    {planLabel(row.plan_id, locale)}
-                  </td>
-                  <td className="px-4 py-3 align-top">
-                    <StatusBadge status={row.status} />
-                  </td>
-                  <td className="px-4 py-3 align-top text-ink">{row.mode ?? "-"}</td>
-                  <td className="px-4 py-3 align-top font-mono text-xs text-ink">
-                    {maskId(row.stripe_subscription_id)}
-                  </td>
-                </tr>
-              );
-            })}
+            {invoices.map((row) => (
+              <tr key={row.id} className="hover:bg-surface/80">
+                <td className="px-4 py-3 align-top text-ink">{periodLabel(row, locale)}</td>
+                <td className="px-4 py-3 align-top text-ink-muted">
+                  <span className="text-ink">{formatJaDateTime(row.paidAt, locale)}</span>
+                  <span className="mt-0.5 block text-[11px] text-ink-muted">
+                    {formatUtcLabel(row.paidAt)}
+                  </span>
+                </td>
+                <td className="px-4 py-3 align-top font-medium text-ink">
+                  {formatMoney(row.amountCents, row.currency, locale)}
+                </td>
+                <td className="px-4 py-3 align-top">
+                  <StatusBadge status={row.status} />
+                </td>
+                <td className="px-4 py-3 align-top">
+                  {row.hostedInvoiceUrl ? (
+                    <a
+                      href={row.hostedInvoiceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-semibold text-accent hover:text-accent-hover"
+                    >
+                      {th.purchaseTableInvoiceOpen}
+                    </a>
+                  ) : (
+                    "—"
+                  )}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
     </div>
   );
 }
-

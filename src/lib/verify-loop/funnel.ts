@@ -11,6 +11,8 @@ export type VerifyFunnelCounts = {
 };
 
 export type VerifyFunnelRates = {
+  /** 中心指標: Verify を見たセッションのうち、次の Observation まで進んだ割合 */
+  loopConversionRate: number | null;
   ctaClickRate: number | null;
   urlSubmissionRate: number | null;
   signupConversionRate: number | null;
@@ -54,6 +56,7 @@ export function computeVerifyFunnel(
     first_observation_created: uniqueSessions(rows, "first_observation_created"),
   };
   const rates: VerifyFunnelRates = {
+    loopConversionRate: ratio(counts.first_observation_created, counts.verify_view),
     ctaClickRate: ratio(counts.verify_cta_click, counts.verify_view),
     urlSubmissionRate: ratio(counts.url_submitted, counts.verify_cta_click),
     signupConversionRate: ratio(counts.signup_completed, counts.url_submitted),

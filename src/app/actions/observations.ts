@@ -29,7 +29,7 @@ import {
 import { getPlan, TRIAL_CONFIG } from "@/lib/plans";
 import { getRegionOptions } from "@/lib/regions";
 import { fetchMicrolinkScreenshotUrl } from "@/lib/microlink-screenshot";
-import { normalizeUserUrlInput } from "@/lib/url-preview";
+import { htmlHeadSignalsHasAny, normalizeUserUrlInput } from "@/lib/url-preview";
 import { runUrlPreviewFetch } from "@/lib/url-preview-fetch";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
@@ -272,6 +272,10 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
       viaProxy: preview.ok ? preview.viaProxy : false,
       httpStatus: preview.ok ? preview.status : null,
     });
+  }
+
+  if (preview.ok && htmlHeadSignalsHasAny(preview.htmlSignals)) {
+    captureConditions = { ...captureConditions, html_signals: preview.htmlSignals };
   }
 
   const obs: Observation = {

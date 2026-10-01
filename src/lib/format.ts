@@ -7,6 +7,14 @@ export function formatJaDateTime(iso: string, locale: "ja" | "en" = "ja"): strin
   }).format(d);
 }
 
+export function formatJaDate(iso: string, locale: "ja" | "en" = "ja"): string {
+  const d = new Date(iso);
+  return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "ja-JP", {
+    dateStyle: "medium",
+    timeZone: "Asia/Tokyo",
+  }).format(d);
+}
+
 export function formatUtcLabel(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;

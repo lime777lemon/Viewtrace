@@ -1,9 +1,11 @@
 import { BROWSER_LIKE_HEADERS } from "@/lib/browser-fingerprint";
 import { fetchMicrolinkScreenshotUrl } from "@/lib/microlink-screenshot";
 import {
+  extractHtmlHeadSignals,
   extractHtmlPreviewMeta,
   isBlockedPreviewHost,
   readHtmlHeadForPreview,
+  type HtmlHeadSignalsV1,
 } from "@/lib/url-preview";
 import { getGeoProxyAgent } from "@/lib/geo/proxy";
 
@@ -17,6 +19,7 @@ export type UrlPreviewResult =
       status: number;
       headers: Record<string, string>;
       viaProxy: boolean;
+      htmlSignals: HtmlHeadSignalsV1;
     }
   | { ok: false; error: string };
 
@@ -111,6 +114,7 @@ export async function runUrlPreviewFetch(
       status: 0,
       headers: {},
       viaProxy: false,
+      htmlSignals: extractHtmlHeadSignals("", target, null),
     };
   }
 
@@ -217,11 +221,23 @@ export async function runUrlPreviewFetch(
         status: res.status,
         headers: headersOut,
         viaProxy: Boolean(proxy),
+        htmlSignals: extractHtmlHeadSignals(
+          "",
+          finalUrl,
+          headersOut["x-robots-tag"] ?? null,
+          res.status,
+        ),
       };
     }
 
     const chunk = await readHtmlHeadForPreview(res.body);
     const { title, image } = extractHtmlPreviewMeta(chunk, finalUrl);
+    const htmlSignals = extractHtmlHeadSignals(
+      chunk,
+      finalUrl,
+      headersOut["x-robots-tag"] ?? null,
+      res.status,
+    );
 
     let imageOut = image;
     if (screenshotFallback && (preferScreenshotOverOg || !imageOut)) {
@@ -242,6 +258,7 @@ export async function runUrlPreviewFetch(
       status: res.status,
       headers: headersOut,
       viaProxy: usedProxy,
+      htmlSignals,
     };
   } catch (err) {
     const kind = classifyNetworkError(err);

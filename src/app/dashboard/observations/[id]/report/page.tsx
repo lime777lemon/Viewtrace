@@ -3,6 +3,10 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ViewtraceLogo } from "@/components/brand/ViewtraceLogo";
 import { ObservationCaptureConditionsPanel } from "@/components/dashboard/ObservationCaptureConditionsPanel";
+import {
+  ObservationHtmlHeadSignalsPanel,
+  observationHtmlHeadCopyFrom,
+} from "@/components/dashboard/ObservationHtmlHeadSignalsPanel";
 import { ObservationNotVisible } from "@/components/dashboard/ObservationNotVisible";
 import { PrintReportButton } from "@/components/dashboard/PrintReportButton";
 import { getSession } from "@/lib/auth/session";
@@ -17,6 +21,7 @@ import { sanitizeObservationRouteId } from "@/lib/observation-route-id";
 import { contentHashVersionForObservation } from "@/lib/observation-content-hash";
 import { resolveObservationCaptureTier } from "@/lib/observation-capture-tier";
 import { getPlan } from "@/lib/plans";
+import { htmlHeadSignalsHasAny } from "@/lib/url-preview";
 import {
   isObservationScreenshotExpired,
   visibleSnapshotImageUrl,
@@ -126,6 +131,8 @@ export default async function ObservationReportPage({ params }: Props) {
     proxyModeRetryWithout: td.captureProxyRetryWithout,
   };
 
+  const htmlHeadSignalsCopy = observationHtmlHeadCopyFrom(td);
+
   const integrityLabel =
     integrity === "ok"
       ? locale === "ja"
@@ -203,6 +210,19 @@ export default async function ObservationReportPage({ params }: Props) {
             />
           </div>
         </section>
+
+        {obs.captureConditions?.html_signals &&
+        htmlHeadSignalsHasAny(obs.captureConditions.html_signals) ? (
+          <section>
+            <h2 className="text-sm font-semibold text-ink">{t.sectionHtmlHead}</h2>
+            <div className="mt-3">
+              <ObservationHtmlHeadSignalsPanel
+                signals={obs.captureConditions.html_signals}
+                copy={htmlHeadSignalsCopy}
+              />
+            </div>
+          </section>
+        ) : null}
 
         <section>
           <h2 className="text-sm font-semibold text-ink">{t.sectionUrl}</h2>
