@@ -22,6 +22,10 @@ export type ObservationWebhookPayload = {
   status: "success" | "failure";
   snapshotUrl?: string;
   snapshotSha256?: string;
+  screenshotVerdict?: "changed" | "same" | "unknown" | "incomparable";
+  previousObservationId?: string;
+  compareUrl?: string;
+  /** @deprecated Watch 判定には使わない。互換のため残す。 */
   diffRatio?: number;
   recordUrl: string;
   verifyUrl?: string;

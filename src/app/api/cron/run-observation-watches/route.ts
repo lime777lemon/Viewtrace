@@ -21,14 +21,27 @@ import {
   type WatchNotifyMode,
 } from "@/lib/observation-watch-schedule";
 import { uploadObservationSnapshotPng } from "@/lib/observation-snapshot-storage";
-import { computeSnapshotDiffRatio } from "@/lib/snapshot-diff";
+import {
+  screenshotCompareField,
+  shouldNotifyWatchOnScreenshot,
+} from "@/lib/observation-compare";
+import { findPreviousObservationForCompare } from "@/lib/observation-previous";
 import {
   normalizeObservationWebhookUrl,
   postObservationWebhook,
 } from "@/lib/observation-webhook";
 import { sendResendEmail, isResendConfigured } from "@/lib/resend";
-import { buildObservationRecordOpenUrls } from "@/lib/observation-record-open-urls";
+import {
+  buildObservationCompareOpenUrl,
+  buildObservationRecordOpenUrls,
+} from "@/lib/observation-record-open-urls";
 import { getAppOriginForEmailLinks } from "@/lib/site";
+import { getPlan, parsePlanId, type PlanDefinition } from "@/lib/plans";
+import {
+  canStartObservationBatch,
+  countObservationsThisUtcMonth,
+  remainingObservations,
+} from "@/lib/observation-quota";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -126,11 +139,10 @@ export async function POST(req: Request) {
 
   const svc = admin;
 
-  const threshold = Number(process.env.OBS_DIFF_THRESHOLD ?? 0.07);
   /**
-   * Vercel Cron: `0 0 * * *` = 00:00 UTC = 09:00 JST = 前日 20:00 ET (EDT)。
-   * daily ウォッチは UTC 0:00 起点。Cron は数十分遅れることがあるため 1 時間先まで拾う。
-   * さらに「今日（UTC）の定刻スロットを未実行」の daily は `next_run_at` が未来でも実行する。
+   * Vercel Cron: hourly (`0 * * * *`) so Pro の 6 時間スロットに間に合う。
+   * daily Watch の基準は UTC 0:00。遅延を拾うため 1 時間先まで対象にする。
+   * 「今日（UTC）の定刻スロットを未実行」の daily は `next_run_at` が未来でも実行する。
    */
   const SCHEDULE_HORIZON_MS = 60 * 60 * 1000;
   const now = new Date();
@@ -149,7 +161,7 @@ export async function POST(req: Request) {
   const { data: watches, error } = await svc
     .from("observation_watches")
     .select(
-      "id,user_id,url,region,enabled,last_notified_at,schedule_frequency,repeat_count,notify_mode,snapshot_full_page,next_run_at,last_run_at,webhook_url",
+      "id,user_id,url,region,enabled,last_notified_at,schedule_frequency,repeat_count,notify_mode,snapshot_full_page,next_run_at,last_run_at,webhook_url,plan_id",
     )
     .eq("enabled", true)
     .or(
@@ -165,6 +177,8 @@ export async function POST(req: Request) {
   let ran = 0;
   let notified = 0;
   let failureNotified = 0;
+  let quotaSkipped = 0;
+  let quotaSkipNotified = 0;
 
   const dashboardUrl = `${getAppOriginForEmailLinks()}/dashboard/observations`;
 
@@ -230,6 +244,170 @@ export async function POST(req: Request) {
     return false;
   }
 
+  const planCache = new Map<string, PlanDefinition>();
+  async function planForUser(userId: string, watchPlanId: string): Promise<PlanDefinition> {
+    const cached = planCache.get(userId);
+    if (cached) return cached;
+    const { data, error } = await svc.from("users").select("plan").eq("id", userId).maybeSingle();
+    const fromUsers =
+      !error && data && typeof (data as { plan?: unknown }).plan === "string"
+        ? parsePlanId(String((data as { plan: string }).plan))
+        : null;
+    const plan = getPlan(fromUsers ?? parsePlanId(watchPlanId || undefined));
+    planCache.set(userId, plan);
+    return plan;
+  }
+
+  async function sendCronQuotaSkipEmail(params: {
+    userEmail: string | null;
+    userId: string;
+    required: number;
+    remaining: number;
+  }): Promise<boolean> {
+    const { userEmail, userId, required, remaining } = params;
+    if (!userEmail) {
+      console.warn("[cron] quota skip email skipped: user_email_missing", { userId });
+      return false;
+    }
+    if (!isResendConfigured()) {
+      console.warn("[cron] quota skip email skipped: resend_not_configured", { userId });
+      return false;
+    }
+    const checkoutUrl = `${getAppOriginForEmailLinks()}/checkout?plan=starter`;
+    const subject = "Viewtrace: scheduled run skipped / 定期観測をスキップしました";
+    const text = [
+      `${required} required`,
+      `${remaining} remaining`,
+      "Scheduled run skipped",
+      "",
+      "You've reached your monthly Observation limit. Upgrade to continue.",
+      "今月の Observation 上限のため、今回の定期実行は行いません。続けるにはプランをアップグレードしてください。",
+      "",
+      `Dashboard / ダッシュボード: ${dashboardUrl}`,
+      `Upgrade / アップグレード: ${checkoutUrl}`,
+      "",
+      emailAccountHintText(userEmail),
+    ].join("\n");
+    const html = [
+      `<p><strong>${required} required</strong><br/>${remaining} remaining<br/>Scheduled run skipped</p>`,
+      "<p>You've reached your monthly Observation limit. Upgrade to continue.</p>",
+      "<p>今月の Observation 上限のため、今回の定期実行は行いません。続けるにはプランをアップグレードしてください。</p>",
+      `<p><a href="${escapeHtml(dashboardUrl)}" style="color:#2563eb;text-decoration:underline;">Open dashboard / ダッシュボードを開く</a></p>`,
+      `<p><a href="${escapeHtml(checkoutUrl)}" style="color:#2563eb;text-decoration:underline;">Upgrade / アップグレード</a></p>`,
+      emailAccountHintHtml(userEmail),
+    ].join("");
+    const res = await sendResendEmail({ to: userEmail, subject, text, html });
+    if (res.ok) return true;
+    console.warn("[cron] quota skip email failed", { userId, error: res.error });
+    return false;
+  }
+
+  type DueWatch = {
+    watchId: string;
+    userId: string;
+    url: string;
+    region: string;
+    freq: WatchFrequency;
+    repeatCount: number;
+    maxDailyRepeats: number;
+  };
+
+  const skipWatchIds = new Set<string>();
+  const remainingByUser = new Map<string, number>();
+  const dueByUser = new Map<string, DueWatch[]>();
+
+  for (const w of watches ?? []) {
+    const row = w as unknown as Record<string, unknown>;
+    const url = getString(row, "url");
+    const region = getString(row, "region");
+    const watchId = getString(row, "id");
+    const userId = getString(row, "user_id");
+    if (!url || !region || !watchId || !userId) continue;
+
+    const watchPlanId = getString(row, "plan_id");
+    const plan = await planForUser(userId, watchPlanId);
+    const freq = parseWatchFrequency(getString(row, "schedule_frequency")) ?? ("daily" as WatchFrequency);
+    const repeatCount = clampRepeatCount(freq, getNum(row, "repeat_count", 1), plan.watchMaxDailyRepeats);
+    const nextRunAtRaw = getString(row, "next_run_at");
+    const lastRunAtRaw = getString(row, "last_run_at");
+    const dueByNextRun =
+      !nextRunAtRaw || new Date(nextRunAtRaw).getTime() <= new Date(horizonIso).getTime();
+    const dueByDailyAnchor =
+      freq === "daily" &&
+      isDailyWatchDueOnCronDay(now, lastRunAtRaw || null, repeatCount, plan.watchMaxDailyRepeats);
+    if (!dueByNextRun && !dueByDailyAnchor) continue;
+
+    const entry: DueWatch = {
+      watchId,
+      userId,
+      url,
+      region,
+      freq,
+      repeatCount,
+      maxDailyRepeats: plan.watchMaxDailyRepeats,
+    };
+    const list = dueByUser.get(userId) ?? [];
+    list.push(entry);
+    dueByUser.set(userId, list);
+  }
+
+  for (const [userId, list] of dueByUser) {
+    const plan = planCache.get(userId) ?? getPlan("freeplan");
+    const used = await countObservationsThisUtcMonth(svc, userId, now);
+    if (used == null || !plan.autoObservationWatch) {
+      for (const item of list) {
+        skipWatchIds.add(item.watchId);
+        const nextRun = computeNextRunAfter(now, item.freq, item.repeatCount, item.maxDailyRepeats).toISOString();
+        await svc
+          .from("observation_watches")
+          .update({ last_run_at: now.toISOString(), next_run_at: nextRun })
+          .eq("id", item.watchId);
+      }
+      quotaSkipped += list.length;
+      await appendAuditEventAsService(svc, userId, {
+        scope: "system",
+        action: "observation.cron_quota_skipped",
+        meta: {
+          required: list.length,
+          remaining: used == null ? null : remainingObservations(used, plan.monthlyObservations),
+          reason: used == null ? "count_failed" : "watch_not_on_plan",
+        },
+      });
+      continue;
+    }
+
+    const remaining = remainingObservations(used, plan.monthlyObservations);
+    remainingByUser.set(userId, remaining);
+    if (canStartObservationBatch(remaining, list.length)) continue;
+
+    for (const item of list) {
+      skipWatchIds.add(item.watchId);
+      const nextRun = computeNextRunAfter(now, item.freq, item.repeatCount, item.maxDailyRepeats).toISOString();
+      await svc
+        .from("observation_watches")
+        .update({ last_run_at: now.toISOString(), next_run_at: nextRun })
+        .eq("id", item.watchId);
+    }
+    quotaSkipped += list.length;
+    await appendAuditEventAsService(svc, userId, {
+      scope: "system",
+      action: "observation.cron_quota_skipped",
+      meta: {
+        required: list.length,
+        remaining,
+        reason: "insufficient_remaining",
+      },
+    });
+    const userEmail = await getUserEmail(userId);
+    const sent = await sendCronQuotaSkipEmail({
+      userEmail,
+      userId,
+      required: list.length,
+      remaining,
+    });
+    if (sent) quotaSkipNotified += 1;
+  }
+
   for (const w of watches ?? []) {
     ran += 1;
     const row = w as unknown as Record<string, unknown>;
@@ -237,27 +415,43 @@ export async function POST(req: Request) {
     const region = getString(row, "region");
     const watchId = getString(row, "id");
     const userId = getString(row, "user_id");
-    const freq = parseWatchFrequency(getString(row, "schedule_frequency")) ?? ("daily" as WatchFrequency);
-    const repeatCount = clampRepeatCount(freq, getNum(row, "repeat_count", 1));
     const notifyMode: WatchNotifyMode = parseWatchNotifyMode(getString(row, "notify_mode")) ?? "always";
     const fullPage = getBool(row, "snapshot_full_page", false);
     const webhookUrl = normalizeObservationWebhookUrl(getString(row, "webhook_url") || null);
 
     if (!url || !region || !watchId || !userId) continue;
+    if (skipWatchIds.has(watchId)) continue;
 
+    const watchPlanId = getString(row, "plan_id");
+    const plan = await planForUser(userId, watchPlanId);
+    const freq = parseWatchFrequency(getString(row, "schedule_frequency")) ?? ("daily" as WatchFrequency);
+    const repeatCount = clampRepeatCount(freq, getNum(row, "repeat_count", 1), plan.watchMaxDailyRepeats);
     const nextRunAtRaw = getString(row, "next_run_at");
     const lastRunAtRaw = getString(row, "last_run_at");
     const dueByNextRun =
       !nextRunAtRaw || new Date(nextRunAtRaw).getTime() <= new Date(horizonIso).getTime();
     const dueByDailyAnchor =
-      freq === "daily" && isDailyWatchDueOnCronDay(now, lastRunAtRaw || null, repeatCount);
+      freq === "daily" &&
+      isDailyWatchDueOnCronDay(now, lastRunAtRaw || null, repeatCount, plan.watchMaxDailyRepeats);
     if (!dueByNextRun && !dueByDailyAnchor) continue;
+
+    const remaining = remainingByUser.get(userId) ?? 0;
+    if (remaining < 1) {
+      skipWatchIds.add(watchId);
+      quotaSkipped += 1;
+      const nextRun = computeNextRunAfter(now, freq, repeatCount, plan.watchMaxDailyRepeats).toISOString();
+      await svc
+        .from("observation_watches")
+        .update({ last_run_at: now.toISOString(), next_run_at: nextRun })
+        .eq("id", watchId);
+      continue;
+    }
 
     const userEmail = await getUserEmail(userId);
 
     const shot = await runBrowserlessScreenshotWithProxyRetry({ url, region, fullPage });
 
-    const nextRun = computeNextRunAfter(new Date(), freq, repeatCount).toISOString();
+    const nextRun = computeNextRunAfter(new Date(), freq, repeatCount, plan.watchMaxDailyRepeats).toISOString();
 
     if (!shot.ok) {
       console.warn("[cron] screenshot failed", { watchId, url, region, error: shot.error, detail: shot.detail });
@@ -328,6 +522,14 @@ export async function POST(req: Request) {
       viaResidential: shot.viaResidential ?? false,
       viaExternalProxy: shot.viaExternalProxy ?? false,
       usedRetryWithoutProxy: shot.usedRetryWithoutProxy ?? false,
+      residentialStateApplied: shot.residentialStateApplied ?? false,
+      durationMs: shot.durationMs ?? null,
+      estimatedTimeUnits: shot.estimatedTimeUnits ?? null,
+      proxyBytes: shot.proxyBytes ?? null,
+      proxyBytesMeasuredAttempts: shot.proxyBytesMeasuredAttempts ?? null,
+      fallback: shot.usedRetryWithoutProxy ?? false,
+      attempts: shot.attempts ?? null,
+      attemptsLog: shot.attemptsLog ?? null,
       storageFormat: "webp",
       webpQuality: 86,
       imageWidthPx: pngDims?.width ?? null,
@@ -346,6 +548,8 @@ export async function POST(req: Request) {
       status: blobUrl ? "success" : "failure",
       note,
       snapshotImageUrl: blobUrl ?? undefined,
+      snapshotSha256: snapshotSha256Stored ?? undefined,
+      snapshotPhash: snapshotPhashStored ?? undefined,
       captureConditions,
       events: undefined,
     };
@@ -440,31 +644,24 @@ export async function POST(req: Request) {
       .update({ last_run_at: capturedAt, next_run_at: nextRun })
       .eq("id", watchId);
 
+    remainingByUser.set(userId, Math.max(0, remaining - 1));
+
     const { openUrl } = buildObservationRecordOpenUrls(getAppOriginForEmailLinks(), obsId);
+    const previous = blobUrl
+      ? await findPreviousObservationForCompare(svc, {
+          userId,
+          url,
+          region,
+          beforeCapturedAt: capturedAt,
+          excludeId: obsId,
+        })
+      : null;
+    const screenshot = previous ? screenshotCompareField(previous, obsForHash) : null;
+    const compareOpenUrl = previous
+      ? buildObservationCompareOpenUrl(getAppOriginForEmailLinks(), previous.id, obsId)
+      : null;
 
     if (webhookUrl) {
-      let diffRatio: number | undefined;
-      if (blobUrl) {
-        const { data: previous } = await svc
-          .from("observations")
-          .select("snapshot_image_url")
-          .eq("user_id", userId)
-          .eq("url", url)
-          .eq("region", region)
-          .neq("id", obsId)
-          .not("snapshot_image_url", "is", null)
-          .is("snapshot_purged_at", null)
-          .order("captured_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        const prevUrl =
-          typeof previous?.snapshot_image_url === "string" ? previous.snapshot_image_url : "";
-        if (prevUrl) {
-          const ratio = await computeSnapshotDiffRatio(blobUrl, prevUrl);
-          if (ratio !== null) diffRatio = ratio;
-        }
-      }
-
       const posted = await postObservationWebhook(webhookUrl, {
         event: "observation.auto_saved",
         observationId: obsId,
@@ -474,7 +671,9 @@ export async function POST(req: Request) {
         status: blobUrl ? "success" : "failure",
         snapshotUrl: blobUrl ?? undefined,
         snapshotSha256: snapshotSha256Stored ?? undefined,
-        diffRatio,
+        screenshotVerdict: screenshot?.verdict,
+        previousObservationId: previous?.id,
+        compareUrl: compareOpenUrl ?? undefined,
         recordUrl: openUrl,
         verifyUrl: buildPublicVerifyUrlForObservation(verifyToken),
       });
@@ -499,9 +698,12 @@ export async function POST(req: Request) {
           blobUrl ? `Snapshot / スナップショット: ${blobUrl}` : "Snapshot: not stored (check dashboard).",
           "",
           `Open record / 記録を開く: ${openUrl}`,
+          compareOpenUrl ? `Open compare / 比較を開く: ${compareOpenUrl}` : "",
           "",
           emailAccountHintText(userEmail),
-        ].join("\n");
+        ]
+          .filter((line) => line !== "")
+          .join("\n");
         const html = [
           "<p>A new scheduled observation was recorded.</p>",
           "<p>新しい定期自動観測の記録が追加されました。</p>",
@@ -511,6 +713,7 @@ export async function POST(req: Request) {
             ? `<p><a href="${escapeHtml(blobUrl)}">Snapshot link</a></p>`
             : "<p>Snapshot was not stored to Blob; open the dashboard for details.</p>",
           observationRecordLinkHtml(openUrl),
+          compareOpenUrl ? observationCompareLinkHtml(compareOpenUrl) : "",
           emailAccountHintHtml(userEmail),
         ].join("");
 
@@ -524,71 +727,52 @@ export async function POST(req: Request) {
       }
     }
 
-    if (notifyMode === "change_only" && blobUrl) {
-      const { data: recent } = await svc
-        .from("observations")
-        .select("id,snapshot_image_url,captured_at")
-        .eq("user_id", userId)
-        .eq("url", url)
-        .eq("region", region)
-        .not("snapshot_image_url", "is", null)
-        .is("snapshot_purged_at", null)
-        .order("captured_at", { ascending: false })
-        .limit(2);
-      if (!recent || recent.length < 2) continue;
+    if (
+      notifyMode === "change_only" &&
+      screenshot &&
+      shouldNotifyWatchOnScreenshot(screenshot.verdict) &&
+      compareOpenUrl
+    ) {
+      if (!userEmail) {
+        console.warn("[cron] email skipped: user_email_missing", { watchId, userId });
+      } else if (!isResendConfigured()) {
+        console.warn("[cron] email skipped: resend_not_configured", { watchId, userId });
+      } else {
+        const subject = "Viewtrace: Screenshot difference detected";
+        const text = [
+          "Screenshot difference detected",
+          "前回の Observation とスクリーンショットの内容が異なります。ページ自体が変更されたとは限りません。",
+          "",
+          `URL: ${url}`,
+          `Region / 地域: ${region}`,
+          "",
+          `Open compare / 比較を開く: ${compareOpenUrl}`,
+          `Open record / 記録を開く: ${openUrl}`,
+          "",
+          emailAccountHintText(userEmail),
+        ].join("\n");
+        const html = [
+          "<p><strong>Screenshot difference detected</strong></p>",
+          "<p>前回の Observation とスクリーンショットの内容が異なります。ページ自体が変更されたとは限りません。</p>",
+          `<p><strong>URL</strong><br/>${escapeHtml(url)}</p>`,
+          `<p><strong>Region</strong> / 地域<br/>${escapeHtml(region)}</p>`,
+          observationCompareLinkHtml(compareOpenUrl),
+          observationRecordLinkHtml(openUrl),
+          emailAccountHintHtml(userEmail),
+        ].join("");
 
-      const [a, b] = recent;
-      if (!a.snapshot_image_url || !b.snapshot_image_url) continue;
-
-      const ratio = await computeSnapshotDiffRatio(a.snapshot_image_url, b.snapshot_image_url);
-      await svc.from("observation_watches").update({ last_diff_ratio: ratio }).eq("id", watchId);
-
-      if (ratio !== null && ratio >= threshold) {
-        if (!userEmail) {
-          console.warn("[cron] email skipped: user_email_missing", { watchId, userId });
-        } else if (!isResendConfigured()) {
-          console.warn("[cron] email skipped: resend_not_configured", { watchId, userId });
+        const res = await sendResendEmail({ to: userEmail, subject, text, html });
+        if (res.ok) {
+          notified += 1;
+          await markWatchNotified(watchId);
         } else {
-          const subject = `Viewtrace: 変化を検知しました（${Math.round(ratio * 1000) / 10}%）`;
-          const text = [
-            "差分が大きい変更を検知しました。",
-            "",
-            `URL: ${url}`,
-            `地域: ${region}`,
-            `差分率: ${Math.round(ratio * 1000) / 10}%`,
-            "",
-            `最新スナップショット: ${a.snapshot_image_url}`,
-            `前回スナップショット: ${b.snapshot_image_url}`,
-            "",
-            `Open record / 記録を開く: ${openUrl}`,
-            "",
-            emailAccountHintText(userEmail),
-          ].join("\n");
-
-          const html = [
-            "<p>差分が大きい変更を検知しました。</p>",
-            `<p><strong>URL</strong><br/>${escapeHtml(url)}</p>`,
-            `<p><strong>地域</strong><br/>${escapeHtml(region)}</p>`,
-            `<p><strong>差分率</strong><br/>${Math.round(ratio * 1000) / 10}%</p>`,
-            `<p><a href="${escapeHtml(a.snapshot_image_url)}">最新スナップショット</a></p>`,
-            `<p><a href="${escapeHtml(b.snapshot_image_url)}">前回スナップショット</a></p>`,
-            observationRecordLinkHtml(openUrl),
-            emailAccountHintHtml(userEmail),
-          ].join("");
-
-          const res = await sendResendEmail({ to: userEmail, subject, text, html });
-          if (res.ok) {
-            notified += 1;
-            await markWatchNotified(watchId);
-          } else {
-            console.warn("[cron] email failed", { watchId, userId, error: res.error });
-          }
+          console.warn("[cron] email failed", { watchId, userId, error: res.error });
         }
       }
     }
   }
 
-  return okJson({ ran, notified, failureNotified });
+  return okJson({ ran, notified, failureNotified, quotaSkipped, quotaSkipNotified });
 }
 
 function escapeHtml(s: string): string {
@@ -625,6 +809,18 @@ function emailAccountHintHtml(recipientEmail: string): string {
  * 主リンクは `/api/open/observation?id=`（パスが短く iOS で壊れにくく、API で 302→ダッシュボード）。
  * クリックできない環境向けに、同じ短い URL をプレーンテキストでも併記する。
  */
+function observationCompareLinkHtml(compareUrl: string): string {
+  const primary = escapeHtml(compareUrl);
+  return [
+    '<p style="margin:12px 0;line-height:1.5;word-break:break-all;overflow-wrap:anywhere;-webkit-hyphens:none;hyphens:none;">',
+    `<a href="${primary}" style="color:#2563eb;text-decoration:underline;word-break:break-all;overflow-wrap:anywhere;">Open compare / 比較を開く</a>`,
+    "</p>",
+    '<p style="margin:8px 0 0;font-size:13px;color:#444;line-height:1.45;word-break:break-all;overflow-wrap:anywhere;-webkit-hyphens:none;hyphens:none;">',
+    primary,
+    "</p>",
+  ].join("");
+}
+
 function observationRecordLinkHtml(openUrl: string): string {
   const primary = escapeHtml(openUrl);
   return [

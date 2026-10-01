@@ -3,6 +3,7 @@ import type { Observation, ObservationHistoryEvent } from "@/lib/demo/observatio
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
 import type { Locale } from "@/lib/i18n";
 import { copy } from "@/lib/i18n";
+import { observationGeoCopyFrom, observationGeoReadout } from "@/lib/observation-geo-readout";
 import {
   localizeObservationEventDetail,
   localizeObservationEventLabel,
@@ -56,7 +57,14 @@ export function ObservationDetailSnapshotSection({
 }: Props) {
   const history = obs.events?.length ? obs.events : defaultHistory(obs, locale);
   const openUrl = resolvedCanonical ?? obs.url;
-  const metaLine = `snapshot · ${obs.regionLabel} · ${formatUtcLabel(obs.capturedAt)}`;
+  const geo = observationGeoReadout({
+    requestedLabel: obs.regionLabel,
+    regionValue: obs.regionValue,
+    captureConditions: obs.captureConditions,
+    copy: observationGeoCopyFrom(copy[locale].observationDetail),
+    locale,
+  });
+  const metaLine = `snapshot · ${geo.headline} · ${formatUtcLabel(obs.capturedAt)}`;
   const fetchSnapshot = obs.status === "success";
   const captureEventDetailRaw = obs.events?.find((e) => e.kind === "capture")?.detail;
   const captureEventDetail = captureEventDetailRaw

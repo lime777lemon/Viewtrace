@@ -1,4 +1,6 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import type { CaptureConditionsV1 } from "@/lib/capture-conditions";
+import { parseCaptureConditionsFromDb } from "@/lib/capture-conditions";
 import type { ObservationStatus } from "@/lib/demo/observations";
 import {
   isObservationScreenshotExpired,
@@ -6,17 +8,21 @@ import {
 } from "@/lib/observation-screenshot-retention";
 import { getPlan, parsePlanId } from "@/lib/plans";
 import { sanitizeVerifyTokenParam } from "@/lib/observation-verify-token";
+import type { HtmlHeadSignalsV1 } from "@/lib/url-preview";
 
 export type PublicVerifyObservation = {
   id: string;
   url: string;
   capturedAt: string;
   regionLabel: string;
+  regionValue?: string;
   status: ObservationStatus;
   snapshotImageUrl?: string;
   snapshotSha256?: string;
   contentHash?: string;
   screenshotExpired: boolean;
+  captureConditions: CaptureConditionsV1 | null;
+  htmlSignals?: HtmlHeadSignalsV1;
 };
 
 async function retentionDaysForOwner(
@@ -47,7 +53,7 @@ export async function fetchObservationForPublicVerify(
   const { data: row, error } = await admin
     .from("observations")
     .select(
-      "id,user_id,url,region_label,status,captured_at,snapshot_image_url,snapshot_sha256,content_hash,snapshot_purged_at",
+      "id,user_id,url,region,region_label,status,captured_at,snapshot_image_url,snapshot_sha256,content_hash,snapshot_purged_at,capture_conditions",
     )
     .eq("verify_token", token)
     .maybeSingle();
@@ -89,6 +95,8 @@ export async function fetchObservationForPublicVerify(
     retentionDays,
   );
 
+  const captureConditions = parseCaptureConditionsFromDb(row.capture_conditions);
+
   return {
     id: String(row.id),
     url: typeof row.url === "string" ? row.url : "",
@@ -97,10 +105,13 @@ export async function fetchObservationForPublicVerify(
       typeof row.region_label === "string" && row.region_label.trim()
         ? row.region_label.trim()
         : "—",
+    regionValue: typeof row.region === "string" && row.region.trim() ? row.region.trim() : undefined,
     status,
     snapshotImageUrl,
     snapshotSha256,
     contentHash,
     screenshotExpired,
+    captureConditions,
+    htmlSignals: captureConditions?.html_signals,
   };
 }

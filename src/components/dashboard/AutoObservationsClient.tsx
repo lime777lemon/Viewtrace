@@ -85,6 +85,8 @@ type Props = {
   latestObservationIdByWatchKey: Record<string, string>;
   showShare: boolean;
   showCsvExport: boolean;
+  monthlyLimit: number;
+  maxDailyRepeats: number;
   showInvalidBanner: boolean;
   showInvalidUrlBanner: boolean;
   showInvalidRegionBanner: boolean;
@@ -103,6 +105,8 @@ export function AutoObservationsClient({
   latestObservationIdByWatchKey,
   showShare,
   showCsvExport,
+  monthlyLimit,
+  maxDailyRepeats,
   showInvalidBanner,
   showInvalidUrlBanner,
   showInvalidRegionBanner,
@@ -118,7 +122,7 @@ export function AutoObservationsClient({
     enabled: true,
     frequency: "daily",
     repeat: 1,
-    notify: "always",
+    notify: "change_only",
   });
 
   const [rowSnapshots, setRowSnapshots] = useState<Record<string, WatchScheduleValues>>({});
@@ -258,7 +262,9 @@ export function AutoObservationsClient({
             initialEnabled
             initialFrequency="daily"
             initialRepeat={1}
-            initialNotify="always"
+            initialNotify="change_only"
+            monthlyLimit={monthlyLimit}
+            maxDailyRepeats={maxDailyRepeats}
             onValuesChange={handleAddScheduleChange}
           />
           <WatchWebhookField
@@ -294,7 +300,7 @@ export function AutoObservationsClient({
           <ul className="mt-4 space-y-6">
             {watches.map((w) => {
               const freq = parseWatchFrequency(String(w.schedule_frequency ?? "")) ?? ("daily" as WatchFrequency);
-              const rep = clampRepeatCount(freq, Number(w.repeat_count ?? 1));
+              const rep = clampRepeatCount(freq, Number(w.repeat_count ?? 1), maxDailyRepeats);
               const notify = parseWatchNotifyMode(String(w.notify_mode ?? "")) ?? ("always" as WatchNotifyMode);
               const regionLabel =
                 regions.find((r) => r.value === w.region)?.label ?? w.region;
@@ -341,6 +347,7 @@ export function AutoObservationsClient({
                       urlDisplay={w.url}
                       regionDisplay={regionLabel}
                       values={rowValues}
+                      monthlyLimit={monthlyLimit}
                       footnote={copy.summarySavedFootnote}
                     />
                   </div>
@@ -382,6 +389,8 @@ export function AutoObservationsClient({
                       initialFrequency={freq}
                       initialRepeat={rep}
                       initialNotify={notify}
+                      monthlyLimit={monthlyLimit}
+                      maxDailyRepeats={maxDailyRepeats}
                       onValuesChange={(v) => setRowSnapshot(w.id, v)}
                     />
                     <WatchWebhookField

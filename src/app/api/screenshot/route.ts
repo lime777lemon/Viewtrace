@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { runBrowserlessScreenshot } from "@/lib/browserless-screenshot";
+import { runBrowserlessScreenshotWithProxyRetry } from "@/lib/browserless-screenshot";
 import { getSession } from "@/lib/auth/session";
 import { getPlan } from "@/lib/plans";
 import { isBlockedPreviewHost, normalizeUserUrlInput } from "@/lib/url-preview";
@@ -74,7 +74,7 @@ export async function POST(req: Request) {
       ? (body as { region: string }).region.trim()
       : "";
 
-  const result = await runBrowserlessScreenshot({
+  const result = await runBrowserlessScreenshotWithProxyRetry({
     url: urlInput,
     region: regionRaw || undefined,
     fullPage,

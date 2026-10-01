@@ -8,6 +8,7 @@ import {
   type WatchFrequency,
   type WatchNotifyMode,
 } from "@/lib/observation-watch-schedule";
+import { estimateMonthlyWatchObservations } from "@/lib/observation-quota";
 
 export type WatchScheduleFieldsCopy = {
   frequencyLabel: string;
@@ -21,6 +22,10 @@ export type WatchScheduleFieldsCopy = {
   monitoringOn: string;
   monitoringOff: string;
   monitoringStateLabel: string;
+  estimateLabel: string;
+  estimateValue: string;
+  planIncludes: string;
+  unitHint: string;
 };
 
 export type WatchScheduleValues = {
@@ -36,6 +41,8 @@ type Props = {
   initialFrequency: WatchFrequency;
   initialRepeat: number;
   initialNotify: WatchNotifyMode;
+  monthlyLimit: number;
+  maxDailyRepeats?: number;
   /** フォームの監視・スケジュール・通知の値が変わるたびに呼ばれる（要約表示など） */
   onValuesChange?: (v: WatchScheduleValues) => void;
 };
@@ -47,16 +54,20 @@ export function WatchScheduleFields({
   initialFrequency,
   initialRepeat,
   initialNotify,
+  monthlyLimit,
+  maxDailyRepeats = 24,
   onValuesChange,
 }: Props) {
   const [enabled, setEnabled] = useState(initialEnabled);
   const [notify, setNotify] = useState<WatchNotifyMode>(initialNotify);
   const [frequency, setFrequency] = useState<WatchFrequency>(initialFrequency);
-  const [repeat, setRepeat] = useState(() => clampRepeatCount(initialFrequency, initialRepeat));
+  const [repeat, setRepeat] = useState(() =>
+    clampRepeatCount(initialFrequency, initialRepeat, maxDailyRepeats),
+  );
 
   useEffect(() => {
-    setRepeat((r) => clampRepeatCount(frequency, r));
-  }, [frequency]);
+    setRepeat((r) => clampRepeatCount(frequency, r, maxDailyRepeats));
+  }, [frequency, maxDailyRepeats]);
 
   const onValuesChangeRef = useRef(onValuesChange);
   onValuesChangeRef.current = onValuesChange;
@@ -65,17 +76,17 @@ export function WatchScheduleFields({
     onValuesChangeRef.current?.({
       enabled,
       frequency,
-      repeat: clampRepeatCount(frequency, repeat),
+      repeat: clampRepeatCount(frequency, repeat, maxDailyRepeats),
       notify,
     });
-  }, [enabled, frequency, repeat, notify]);
+  }, [enabled, frequency, repeat, notify, maxDailyRepeats]);
 
   useEffect(() => {
     setEnabled(initialEnabled);
     setNotify(initialNotify);
     setFrequency(initialFrequency);
-    setRepeat(clampRepeatCount(initialFrequency, initialRepeat));
-  }, [initialEnabled, initialNotify, initialFrequency, initialRepeat]);
+    setRepeat(clampRepeatCount(initialFrequency, initialRepeat, maxDailyRepeats));
+  }, [initialEnabled, initialNotify, initialFrequency, initialRepeat, maxDailyRepeats]);
 
   const freqOptions: { value: WatchFrequency; label: string }[] = useMemo(
     () => [
@@ -86,8 +97,9 @@ export function WatchScheduleFields({
     [copy],
   );
 
-  const repeatMax = maxRepeatForFrequency(frequency);
+  const repeatMax = maxRepeatForFrequency(frequency, maxDailyRepeats);
   const repeatOptions = useMemo(() => Array.from({ length: repeatMax }, (_, i) => i + 1), [repeatMax]);
+  const monthlyEstimate = estimateMonthlyWatchObservations(frequency, repeat, 1);
 
   return (
     <div className="space-y-4">
@@ -129,7 +141,7 @@ export function WatchScheduleFields({
           <span className="text-xs font-semibold text-ink-muted">{copy.repeatLabel}</span>
           <select
             value={String(repeat)}
-            onChange={(e) => setRepeat(clampRepeatCount(frequency, Number(e.target.value)))}
+            onChange={(e) => setRepeat(clampRepeatCount(frequency, Number(e.target.value), maxDailyRepeats))}
             className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
           >
             {repeatOptions.map((n) => (
@@ -166,6 +178,13 @@ export function WatchScheduleFields({
           {copy.notifyChangeOnly}
         </label>
       </fieldset>
+
+      <div className="rounded-lg border border-dashed border-border bg-surface px-3 py-2.5 text-sm">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-muted">{copy.estimateLabel}</p>
+        <p className="mt-1 font-medium text-ink">{copy.estimateValue.replace("{n}", String(monthlyEstimate))}</p>
+        <p className="mt-1 text-xs text-ink-muted">{copy.planIncludes.replace("{limit}", String(monthlyLimit))}</p>
+        <p className="mt-1 text-xs text-ink-muted">{copy.unitHint}</p>
+      </div>
     </div>
   );
 }

@@ -22,6 +22,11 @@ export type PlanDefinition = {
   snapshotFullPage: boolean;
   /** Starter / Pro: URL を定期自動観測しメール通知 */
   autoObservationWatch: boolean;
+  /**
+   * daily Watch の 1 日あたり最大実行回数。Starter は 1（1日1回）。
+   * Pro は 4（6時間ごと）。実測原価 C が出るまで増やさない。
+   */
+  watchMaxDailyRepeats: number;
 };
 
 /** 無料トライアル（LP・請求設計と一致） */
@@ -46,6 +51,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     allUsStates: false,
     snapshotFullPage: false,
     autoObservationWatch: false,
+    watchMaxDailyRepeats: 1,
   },
   starter: {
     id: "starter",
@@ -61,12 +67,14 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     allUsStates: false,
     snapshotFullPage: false,
     autoObservationWatch: true,
+    watchMaxDailyRepeats: 1,
   },
   pro: {
     id: "pro",
     name: "Pro",
     priceLabel: "$99/月",
     priceMonthlyUsd: 99,
+    /** 2000 は実測変動原価 C が出るまで採用しない。安全側は price×0.25÷C */
     monthlyObservations: 1500,
     retentionDays: 60,
     locationsKey: "all_us_states_major_countries",
@@ -76,6 +84,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     allUsStates: true,
     snapshotFullPage: true,
     autoObservationWatch: true,
+    watchMaxDailyRepeats: 4,
   },
 };
 
@@ -89,7 +98,7 @@ function parseOverageUsdFromEnv(): number | null {
 }
 
 /**
- * 枠超過時の従量単価（USD / 回）。
+ * 枠超過時の従量単価（USD / 回）。初期は使わない（上限で停止）。
  * `NEXT_PUBLIC_OVERAGE_PER_OBSERVATION_USD` または `OVERAGE_PER_OBSERVATION_USD` に正の数を設定したときだけ返す。
  * 未設定・空・0 以下は null（LP・FAQ・プラン表記では従量を出さない）。
  */

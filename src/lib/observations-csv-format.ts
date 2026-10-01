@@ -10,6 +10,7 @@ function csvCell(value: string): string {
 
 function captureFlatFields(obs: Observation) {
   const c = obs.captureConditions;
+  const cost = c?.cost_signals;
   if (!c) {
     return {
       engine: "",
@@ -20,9 +21,21 @@ function captureFlatFields(obs: Observation) {
       userAgent: "",
       proxyMode: "",
       proxyProvider: "",
+      observedRegion: "",
+      costDurationMs: "",
+      costEstimatedTimeUnits: "",
+      costProxyBytes: "",
+      costProxyBytesMeasuredAttempts: "",
+      costFallback: "",
+      costScreenshotBytes: "",
+      costAttempts: "",
       json: "",
     };
   }
+  const observed =
+    c.geo.proxy_mode === "retry_without_proxy" || c.geo.proxy_mode === "none"
+      ? "no_geo_proxy"
+      : [c.geo.country, c.geo.state].filter(Boolean).join("-");
   return {
     engine: c.engine.name,
     fullPage: c.full_page_requested ? "full_page" : "viewport",
@@ -32,6 +45,21 @@ function captureFlatFields(obs: Observation) {
     userAgent: c.browser.user_agent,
     proxyMode: c.geo.proxy_mode,
     proxyProvider: c.geo.proxy_provider ?? "",
+    observedRegion: observed,
+    costDurationMs: cost?.duration_ms != null ? String(cost.duration_ms) : "",
+    costEstimatedTimeUnits:
+      cost?.estimated_time_units != null ? String(cost.estimated_time_units) : "",
+    costProxyBytes: cost?.proxy_bytes != null ? String(cost.proxy_bytes) : "",
+    costProxyBytesMeasuredAttempts:
+      cost?.proxy_bytes_measured_attempts != null ? String(cost.proxy_bytes_measured_attempts) : "",
+    costFallback: cost ? (cost.fallback ? "1" : "0") : "",
+    costScreenshotBytes:
+      cost?.screenshot_bytes != null
+        ? String(cost.screenshot_bytes)
+        : c.result.snapshot_bytes != null
+          ? String(c.result.snapshot_bytes)
+          : "",
+    costAttempts: cost?.attempts != null ? String(cost.attempts) : "",
     json: JSON.stringify(c),
   };
 }
@@ -43,9 +71,17 @@ const STANDARD_EXTRA = [
   "captureFullPage",
   "captureCountry",
   "captureState",
+  "observedRegion",
   "captureViewport",
   "captureProxyMode",
   "captureProxyProvider",
+  "costDurationMs",
+  "costEstimatedTimeUnits",
+  "costProxyBytes",
+  "costProxyBytesMeasuredAttempts",
+  "costFallback",
+  "costScreenshotBytes",
+  "costAttempts",
 ] as const;
 
 const AUDIT_EXTRA = ["captureConditionsJson"] as const;
@@ -87,9 +123,17 @@ export function observationsToCsv(rows: Observation[], mode: ObservationsCsvMode
         cap.fullPage,
         cap.country,
         cap.state,
+        cap.observedRegion,
         csvCell(cap.viewport),
         cap.proxyMode,
         cap.proxyProvider,
+        cap.costDurationMs,
+        cap.costEstimatedTimeUnits,
+        cap.costProxyBytes,
+        cap.costProxyBytesMeasuredAttempts,
+        cap.costFallback,
+        cap.costScreenshotBytes,
+        cap.costAttempts,
       ];
       if (mode === "audit") {
         base.push(cap.json ? csvCell(cap.json) : "");

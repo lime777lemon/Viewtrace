@@ -30,14 +30,18 @@ export function shortenWatchOptionLabelForPreview(label: string): string {
   return full;
 }
 
-export function maxRepeatForFrequency(f: WatchFrequency): number {
-  if (f === "daily") return 24;
+export function maxRepeatForFrequency(f: WatchFrequency, maxDailyRepeats = 24): number {
+  if (f === "daily") {
+    const cap = Math.floor(Number(maxDailyRepeats));
+    const bounded = Number.isFinite(cap) ? Math.max(1, Math.min(24, cap)) : 1;
+    return bounded;
+  }
   if (f === "weekly") return 7;
   return 4;
 }
 
-export function clampRepeatCount(f: WatchFrequency, n: number): number {
-  const max = maxRepeatForFrequency(f);
+export function clampRepeatCount(f: WatchFrequency, n: number, maxDailyRepeats = 24): number {
+  const max = maxRepeatForFrequency(f, maxDailyRepeats);
   const v = Math.floor(Number(n));
   if (!Number.isFinite(v)) return 1;
   return Math.max(1, Math.min(v, max));
@@ -64,8 +68,9 @@ export function isDailyWatchDueOnCronDay(
   now: Date,
   lastRunAt: string | null | undefined,
   repeatCount: number,
+  maxDailyRepeats = 24,
 ): boolean {
-  const capped = clampRepeatCount("daily", repeatCount);
+  const capped = clampRepeatCount("daily", repeatCount, maxDailyRepeats);
   const todayStart = startOfUtcDay(now);
   const slotMs = MS_PER_DAY / capped;
   const firstSlotToday = new Date(todayStart.getTime());
@@ -82,8 +87,13 @@ export function isDailyWatchDueOnCronDay(
  * - daily: UTC 0:00 起点で期間内を repeat 回に均等分割（9:00 JST / NY 前日 20:00 基準）
  * - weekly / monthly: 実行完了時刻から期間内を repeat 回に均等分割
  */
-export function computeNextRunAfter(from: Date, frequency: WatchFrequency, repeatCount: number): Date {
-  const capped = clampRepeatCount(frequency, repeatCount);
+export function computeNextRunAfter(
+  from: Date,
+  frequency: WatchFrequency,
+  repeatCount: number,
+  maxDailyRepeats = 24,
+): Date {
+  const capped = clampRepeatCount(frequency, repeatCount, maxDailyRepeats);
 
   if (frequency === "daily") {
     const slotMs = MS_PER_DAY / capped;

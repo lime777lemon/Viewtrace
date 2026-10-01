@@ -70,8 +70,8 @@ export async function saveObservationWatchAction(formData: FormData): Promise<vo
   const repeatRaw = Number(String(formData.get("repeat_count") ?? "1").trim());
 
   const scheduleFrequency = parseWatchFrequency(freqRaw) ?? ("daily" as WatchFrequency);
-  const notifyMode: WatchNotifyMode = parseWatchNotifyMode(notifyRaw) ?? "always";
-  const repeatCount = clampRepeatCount(scheduleFrequency, repeatRaw);
+  const notifyMode: WatchNotifyMode = parseWatchNotifyMode(notifyRaw) ?? "change_only";
+  const repeatCount = clampRepeatCount(scheduleFrequency, repeatRaw, plan.watchMaxDailyRepeats);
 
   const webhookRaw = String(formData.get("webhook_url") ?? "").trim();
   const webhookUrl = webhookRaw ? normalizeObservationWebhookUrl(webhookRaw) : null;

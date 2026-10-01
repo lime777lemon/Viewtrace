@@ -1,5 +1,6 @@
 import type { WatchFrequency } from "@/lib/observation-watch-schedule";
 import type { WatchScheduleFieldsCopy, WatchScheduleValues } from "@/components/dashboard/WatchScheduleFields";
+import { estimateMonthlyWatchObservations } from "@/lib/observation-quota";
 
 function frequencyLabel(copy: WatchScheduleFieldsCopy, f: WatchFrequency): string {
   if (f === "daily") return copy.frequencyDaily;
@@ -15,6 +16,7 @@ type Props = {
   urlDisplay: string;
   regionDisplay: string;
   values: WatchScheduleValues;
+  monthlyLimit: number;
   footnote?: string;
 };
 
@@ -27,6 +29,7 @@ export function WatchSettingsReadout({
   urlDisplay,
   regionDisplay,
   values,
+  monthlyLimit,
   footnote,
 }: Props) {
   const monitoring = values.enabled ? scheduleCopy.monitoringOn : scheduleCopy.monitoringOff;
@@ -34,6 +37,7 @@ export function WatchSettingsReadout({
     values.notify === "always" ? scheduleCopy.notifyAlways : scheduleCopy.notifyChangeOnly;
   const freq = frequencyLabel(scheduleCopy, values.frequency);
   const repeat = String(values.repeat);
+  const monthlyEstimate = estimateMonthlyWatchObservations(values.frequency, values.repeat, 1);
 
   return (
     <div className="rounded-lg border border-border bg-surface px-4 py-3 text-sm shadow-sm" aria-live="polite">
@@ -62,6 +66,15 @@ export function WatchSettingsReadout({
         <div className="grid gap-0.5 sm:grid-cols-[minmax(7.5rem,auto)_1fr] sm:gap-x-3">
           <dt className="text-xs font-medium text-ink-muted">{scheduleCopy.notifyLabel}</dt>
           <dd className="text-xs leading-relaxed sm:text-sm">{notify}</dd>
+        </div>
+        <div className="grid gap-0.5 sm:grid-cols-[minmax(7.5rem,auto)_1fr] sm:gap-x-3">
+          <dt className="text-xs font-medium text-ink-muted">{scheduleCopy.estimateLabel}</dt>
+          <dd className="text-xs leading-relaxed sm:text-sm">
+            {scheduleCopy.estimateValue.replace("{n}", String(monthlyEstimate))}
+            <span className="mt-0.5 block text-ink-muted">
+              {scheduleCopy.planIncludes.replace("{limit}", String(monthlyLimit))}
+            </span>
+          </dd>
         </div>
       </dl>
       {footnote ? <p className="mt-3 border-t border-border pt-2 text-xs text-ink-muted">{footnote}</p> : null}

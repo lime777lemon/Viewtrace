@@ -9,6 +9,8 @@ import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
 import { copy, type Locale } from "@/lib/i18n";
 import { localizeObservationNote } from "@/lib/i18n/observation-persisted-copy";
 import { normalizeObservationTags } from "@/lib/observation-tags";
+import { ObservationRegionReadout } from "@/components/dashboard/ObservationRegionReadout";
+import { observationGeoCopyFrom } from "@/lib/observation-geo-readout";
 import { isObservationScreenshotExpired } from "@/lib/observation-screenshot-retention";
 
 function StatusBadge({
@@ -42,6 +44,7 @@ function RowTagEditor({
   locale: Locale;
 }) {
   const t = copy[locale].observationsListPage;
+  const geoCopy = observationGeoCopyFrom(copy[locale].observationDetail);
   const router = useRouter();
   const [value, setValue] = useState("");
   const [pending, setPending] = useState(false);
@@ -110,6 +113,7 @@ export function ObservationsTable({
   retentionDays?: number;
 }) {
   const tb = copy[locale].observationsTable;
+  const geoCopy = observationGeoCopyFrom(copy[locale].observationDetail);
   if (rows.length === 0) {
     return (
       <p className="rounded-xl border border-dashed border-border bg-surface-elevated px-4 py-8 text-center text-sm text-ink-muted">
@@ -144,8 +148,15 @@ export function ObservationsTable({
                 <td className="max-w-55 truncate px-4 py-3 align-top font-mono text-xs text-ink">
                   {row.url}
                 </td>
-                <td className="whitespace-nowrap px-4 py-3 align-top text-ink">
-                  {row.regionLabel}
+                <td className="px-4 py-3 align-top text-ink">
+                  <ObservationRegionReadout
+                    requestedLabel={row.regionLabel}
+                    regionValue={row.regionValue}
+                    captureConditions={row.captureConditions}
+                    copy={geoCopy}
+                    locale={locale}
+                    compact
+                  />
                 </td>
                 <td className="px-4 py-3 align-top">
                   <StatusBadge status={row.status} locale={locale} />

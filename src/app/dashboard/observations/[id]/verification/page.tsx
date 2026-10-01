@@ -65,7 +65,7 @@ export default async function ObservationVerificationReportPage({ params }: Prop
   const verifyUrl = verifyToken ? buildPublicVerifyUrlForObservation(verifyToken) : "—";
 
   const capturedLabel = `${formatJaDateTime(obs.capturedAt, locale)} · ${formatUtcLabel(obs.capturedAt)}`;
-  const country = formatVerificationReportCountry(obs);
+  const country = formatVerificationReportCountry(obs, locale);
 
   const reportCopy = {
     title: t.title,

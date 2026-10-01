@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/run-observation-watches",
-      "schedule": "0 0 * * *"
+      "schedule": "0 * * * *"
     },
     {
       "path": "/api/cron/ops-monitoring",

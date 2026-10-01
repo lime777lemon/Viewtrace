@@ -2,7 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ViewtraceLogo } from "@/components/brand/ViewtraceLogo";
-import { ObservationCaptureConditionsPanel } from "@/components/dashboard/ObservationCaptureConditionsPanel";
+import {
+  ObservationCaptureConditionsPanel,
+  observationCaptureConditionsCopyFrom,
+} from "@/components/dashboard/ObservationCaptureConditionsPanel";
+import { ObservationRegionReadout } from "@/components/dashboard/ObservationRegionReadout";
+import { observationGeoCopyFrom } from "@/lib/observation-geo-readout";
 import {
   ObservationHtmlHeadSignalsPanel,
   observationHtmlHeadCopyFrom,
@@ -103,33 +108,8 @@ export default async function ObservationReportPage({ params }: Props) {
         )[captureTier];
   const contentHashVersion = contentHashVersionForObservation(obs);
 
-  const captureConditionsCopy = {
-    title: td.captureConditionsTitle,
-    legacyMissing: td.captureConditionsLegacy,
-    browser: td.captureBrowser,
-    userAgent: td.captureUserAgent,
-    country: td.captureCountry,
-    state: td.captureState,
-    viewport: td.captureViewport,
-    captureScope: td.captureScope,
-    captureScopeFullPage: td.captureScopeFullPage,
-    captureScopeViewport: td.captureScopeViewport,
-    proxyMode: td.captureProxyMode,
-    proxyProvider: td.captureProxyProvider,
-    engine: td.captureEngine,
-    engineBrowserless: td.captureEngineBrowserless,
-    engineMicrolink: td.captureEngineMicrolink,
-    engineDirectFetch: td.captureEngineDirectFetch,
-    engineFormUpload: td.captureEngineFormUpload,
-    browserlessHost: td.captureBrowserlessHost,
-    browserlessApi: td.captureBrowserlessApi,
-    waitUntil: td.captureWaitUntil,
-    imageSize: td.captureImageSize,
-    proxyModeNone: td.captureProxyNone,
-    proxyModeResidential: td.captureProxyResidential,
-    proxyModeExternal: td.captureProxyExternal,
-    proxyModeRetryWithout: td.captureProxyRetryWithout,
-  };
+  const captureConditionsCopy = observationCaptureConditionsCopyFrom(td);
+  const geoCopy = observationGeoCopyFrom(td);
 
   const htmlHeadSignalsCopy = observationHtmlHeadCopyFrom(td);
 
@@ -219,6 +199,7 @@ export default async function ObservationReportPage({ params }: Props) {
               <ObservationHtmlHeadSignalsPanel
                 signals={obs.captureConditions.html_signals}
                 copy={htmlHeadSignalsCopy}
+                requestedUrl={obs.url}
               />
             </div>
           </section>
@@ -232,7 +213,13 @@ export default async function ObservationReportPage({ params }: Props) {
         <section>
           <h2 className="text-sm font-semibold text-ink">{t.sectionRegion}</h2>
           <p className="mt-2 text-sm text-ink">
-            {obs.regionLabel}
+            <ObservationRegionReadout
+              requestedLabel={obs.regionLabel}
+              regionValue={obs.regionValue}
+              captureConditions={obs.captureConditions}
+              copy={geoCopy}
+              locale={locale}
+            />
             {obs.regionValue ? ` (${obs.regionValue})` : ""}
           </p>
         </section>

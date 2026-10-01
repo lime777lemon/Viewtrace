@@ -12,3 +12,14 @@ export function buildObservationRecordOpenUrls(appOrigin: string, obsId: string)
   const openUrl = `${origin}/api/open/observation?id=${encodeURIComponent(id)}`;
   return { openUrl, detailUrl, id };
 }
+
+export function buildObservationCompareOpenUrl(
+  appOrigin: string,
+  leftId: string,
+  rightId: string,
+): string {
+  const origin = appOrigin.replace(/\/+$/, "");
+  const a = sanitizeObservationRouteId(leftId) || leftId.trim();
+  const b = sanitizeObservationRouteId(rightId) || rightId.trim();
+  return `${origin}/api/open/compare?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`;
+}

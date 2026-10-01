@@ -28,7 +28,93 @@ export type ObservationCaptureConditionsCopy = {
   proxyModeResidential: string;
   proxyModeExternal: string;
   proxyModeRetryWithout: string;
+  costTitle: string;
+  costDuration: string;
+  costUnits: string;
+  costProxyBytes: string;
+  costFallback: string;
+  costFallbackYes: string;
+  costFallbackNo: string;
+  costScreenshotBytes: string;
+  costAttempts: string;
+  costProxyUnmeasured: string;
 };
+
+export function observationCaptureConditionsCopyFrom(t: {
+  captureConditionsTitle: string;
+  captureConditionsLegacy: string;
+  captureBrowser: string;
+  captureUserAgent: string;
+  captureCountry: string;
+  captureState: string;
+  captureViewport: string;
+  captureScope: string;
+  captureScopeFullPage: string;
+  captureScopeViewport: string;
+  captureProxyMode: string;
+  captureProxyProvider: string;
+  captureEngine: string;
+  captureEngineBrowserless: string;
+  captureEngineMicrolink: string;
+  captureEngineDirectFetch: string;
+  captureEngineFormUpload: string;
+  captureBrowserlessHost: string;
+  captureBrowserlessApi: string;
+  captureWaitUntil: string;
+  captureImageSize: string;
+  captureProxyNone: string;
+  captureProxyResidential: string;
+  captureProxyExternal: string;
+  captureProxyRetryWithout: string;
+  captureCostTitle: string;
+  captureCostDuration: string;
+  captureCostUnits: string;
+  captureCostProxyBytes: string;
+  captureCostFallback: string;
+  captureCostFallbackYes: string;
+  captureCostFallbackNo: string;
+  captureCostScreenshotBytes: string;
+  captureCostAttempts: string;
+  captureCostProxyUnmeasured: string;
+}): ObservationCaptureConditionsCopy {
+  return {
+    title: t.captureConditionsTitle,
+    legacyMissing: t.captureConditionsLegacy,
+    browser: t.captureBrowser,
+    userAgent: t.captureUserAgent,
+    country: t.captureCountry,
+    state: t.captureState,
+    viewport: t.captureViewport,
+    captureScope: t.captureScope,
+    captureScopeFullPage: t.captureScopeFullPage,
+    captureScopeViewport: t.captureScopeViewport,
+    proxyMode: t.captureProxyMode,
+    proxyProvider: t.captureProxyProvider,
+    engine: t.captureEngine,
+    engineBrowserless: t.captureEngineBrowserless,
+    engineMicrolink: t.captureEngineMicrolink,
+    engineDirectFetch: t.captureEngineDirectFetch,
+    engineFormUpload: t.captureEngineFormUpload,
+    browserlessHost: t.captureBrowserlessHost,
+    browserlessApi: t.captureBrowserlessApi,
+    waitUntil: t.captureWaitUntil,
+    imageSize: t.captureImageSize,
+    proxyModeNone: t.captureProxyNone,
+    proxyModeResidential: t.captureProxyResidential,
+    proxyModeExternal: t.captureProxyExternal,
+    proxyModeRetryWithout: t.captureProxyRetryWithout,
+    costTitle: t.captureCostTitle,
+    costDuration: t.captureCostDuration,
+    costUnits: t.captureCostUnits,
+    costProxyBytes: t.captureCostProxyBytes,
+    costFallback: t.captureCostFallback,
+    costFallbackYes: t.captureCostFallbackYes,
+    costFallbackNo: t.captureCostFallbackNo,
+    costScreenshotBytes: t.captureCostScreenshotBytes,
+    costAttempts: t.captureCostAttempts,
+    costProxyUnmeasured: t.captureCostProxyUnmeasured,
+  };
+}
 
 type Props = {
   conditions: CaptureConditionsV1 | null | undefined;
@@ -59,6 +145,21 @@ function proxyModeLabel(mode: CaptureConditionsV1["geo"]["proxy_mode"], copy: Ob
   return map[mode];
 }
 
+function formatByteSize(bytes: number | null | undefined): string {
+  if (bytes == null || !Number.isFinite(bytes) || bytes < 0) return "—";
+  if (bytes >= 1_000_000) return `${(bytes / 1_000_000).toFixed(3)} MB`;
+  if (bytes >= 1000) return `${(bytes / 1000).toFixed(1)} KB`;
+  return `${bytes} B`;
+}
+
+function formatProxyBytes(
+  bytes: number | null | undefined,
+  copy: ObservationCaptureConditionsCopy,
+): string {
+  if (bytes == null) return copy.costProxyUnmeasured;
+  return formatByteSize(bytes);
+}
+
 export function ObservationCaptureConditionsPanel({ conditions, copy, locale }: Props) {
   if (!conditions) {
     return (
@@ -79,6 +180,7 @@ export function ObservationCaptureConditionsPanel({ conditions, copy, locale }: 
       : "—";
 
   const countryState = [conditions.geo.country, conditions.geo.state].filter(Boolean).join(" / ") || "—";
+  const cost = conditions.cost_signals;
 
   return (
     <div className="rounded-xl border border-border bg-surface-elevated p-4 sm:col-span-2">
@@ -139,6 +241,45 @@ export function ObservationCaptureConditionsPanel({ conditions, copy, locale }: 
           </>
         ) : null}
       </dl>
+      {cost ? (
+        <>
+          <h3 className="mt-4 text-xs font-semibold uppercase tracking-wider text-ink-muted">
+            {copy.costTitle}
+          </h3>
+          <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+            <div>
+              <dt className="text-xs text-ink-muted">{copy.costDuration}</dt>
+              <dd className="mt-0.5 text-sm text-ink">
+                {cost.duration_ms != null ? `${cost.duration_ms} ms` : "—"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-ink-muted">{copy.costUnits}</dt>
+              <dd className="mt-0.5 text-sm text-ink">{cost.estimated_time_units ?? "—"}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-ink-muted">{copy.costProxyBytes}</dt>
+              <dd className="mt-0.5 text-sm text-ink">{formatProxyBytes(cost.proxy_bytes, copy)}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-ink-muted">{copy.costFallback}</dt>
+              <dd className="mt-0.5 text-sm text-ink">
+                {cost.fallback ? copy.costFallbackYes : copy.costFallbackNo}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-ink-muted">{copy.costScreenshotBytes}</dt>
+              <dd className="mt-0.5 text-sm text-ink">
+                {formatByteSize(cost.screenshot_bytes ?? conditions.result.snapshot_bytes)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-ink-muted">{copy.costAttempts}</dt>
+              <dd className="mt-0.5 text-sm text-ink">{cost.attempts ?? "—"}</dd>
+            </div>
+          </dl>
+        </>
+      ) : null}
       {locale === "ja" && conditions.viewport.source === "browserless_implicit_default" ? (
         <p className="mt-3 text-xs text-ink-muted">
           ビューポートは Browserless の既定値です（明示指定なし・既存キャプチャとの差分を抑えるため）。

@@ -19,6 +19,9 @@ export type ObservationHtmlHeadSignalsCopy = {
   viewport: string;
   httpStatus: string;
   finalUrl: string;
+  redirect: string;
+  redirectYes: string;
+  redirectNo: string;
   openGraph: string;
   openGraphDetected: string;
   twitterCard: string;
@@ -49,6 +52,9 @@ export function observationHtmlHeadCopyFrom(t: {
   htmlHeadViewport: string;
   htmlHeadHttpStatus: string;
   htmlHeadFinalUrl: string;
+  htmlHeadRedirect: string;
+  htmlHeadRedirectYes: string;
+  htmlHeadRedirectNo: string;
   htmlHeadOpenGraph: string;
   htmlHeadOpenGraphDetected: string;
   htmlHeadTwitterCard: string;
@@ -78,6 +84,9 @@ export function observationHtmlHeadCopyFrom(t: {
     viewport: t.htmlHeadViewport,
     httpStatus: t.htmlHeadHttpStatus,
     finalUrl: t.htmlHeadFinalUrl,
+    redirect: t.htmlHeadRedirect,
+    redirectYes: t.htmlHeadRedirectYes,
+    redirectNo: t.htmlHeadRedirectNo,
     openGraph: t.htmlHeadOpenGraph,
     openGraphDetected: t.htmlHeadOpenGraphDetected,
     twitterCard: t.htmlHeadTwitterCard,
@@ -94,7 +103,26 @@ export function observationHtmlHeadCopyFrom(t: {
 type Props = {
   signals: HtmlHeadSignalsV1 | undefined;
   copy: ObservationHtmlHeadSignalsCopy;
+  requestedUrl?: string;
 };
+
+function redirected(
+  requestedUrl: string | undefined,
+  finalUrl: string | null | undefined,
+): boolean | null {
+  const a = requestedUrl?.trim();
+  const b = finalUrl?.trim();
+  if (!a || !b) return null;
+  try {
+    const left = new URL(a);
+    const right = new URL(b);
+    left.hash = "";
+    right.hash = "";
+    return left.href !== right.href;
+  } catch {
+    return a !== b;
+  }
+}
 
 function dash(value: string | null | undefined): string {
   const v = value?.trim();
@@ -107,7 +135,7 @@ function withLength(value: string | null | undefined, charsLabel: string): strin
   return `${v} (${[...v].length} ${charsLabel})`;
 }
 
-export function ObservationHtmlHeadSignalsPanel({ signals, copy }: Props) {
+export function ObservationHtmlHeadSignalsPanel({ signals, copy, requestedUrl }: Props) {
   if (!signals || !htmlHeadSignalsHasAny(signals)) return null;
 
   const jsonLd =
@@ -129,6 +157,9 @@ export function ObservationHtmlHeadSignalsPanel({ signals, copy }: Props) {
         : "—";
   const httpLabel =
     signals.http_status != null && signals.http_status > 0 ? String(signals.http_status) : "—";
+  const redirectState = redirected(requestedUrl, signals.final_url);
+  const redirectLabel =
+    redirectState === true ? copy.redirectYes : redirectState === false ? copy.redirectNo : "—";
 
   return (
     <div className="rounded-xl border border-border bg-surface-elevated p-4 sm:col-span-2">
@@ -146,6 +177,10 @@ export function ObservationHtmlHeadSignalsPanel({ signals, copy }: Props) {
         <div className="sm:col-span-2">
           <dt className="text-xs text-ink-muted">{copy.finalUrl}</dt>
           <dd className="mt-0.5 break-all font-mono text-xs text-ink">{dash(signals.final_url)}</dd>
+        </div>
+        <div>
+          <dt className="text-xs text-ink-muted">{copy.redirect}</dt>
+          <dd className="mt-0.5 text-sm text-ink">{redirectLabel}</dd>
         </div>
         <div className="sm:col-span-2">
           <dt className="text-xs text-ink-muted">{copy.documentTitle}</dt>

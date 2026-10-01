@@ -65,24 +65,58 @@ function coerceRecordingUrl(urlRaw: string): string | null {
   return null;
 }
 
-export async function recordWebVerifiedObservationAction(formData: FormData): Promise<void> {
-  const session = await getSession();
-  if (!session) redirect("/login?next=/dashboard/observations/new");
+export type RecordObservationFailureCode =
+  | "unauthenticated"
+  | "invalid"
+  | "region"
+  | "trial_expired"
+  | "trial_limit"
+  | "monthly_limit";
 
-  const urlRaw = String(formData.get("url") ?? "").trim();
-  const regionValue = String(formData.get("region") ?? "").trim();
-  let regionLabel = String(formData.get("regionLabel") ?? "").trim();
-  const verifiedTitle = String(formData.get("verifiedTitle") ?? "").trim();
-  const verifiedImageUrl = String(formData.get("verifiedImageUrl") ?? "").trim();
+export type RecordObservationResult =
+  | { ok: true; id: string }
+  | { ok: false; code: RecordObservationFailureCode };
+
+function parseObservationForm(formData: FormData): {
+  urlRaw: string;
+  regionValue: string;
+  regionLabel: string;
+  verifiedTitle: string;
+  verifiedImageUrl: string;
+} {
+  return {
+    urlRaw: String(formData.get("url") ?? "").trim(),
+    regionValue: String(formData.get("region") ?? "").trim(),
+    regionLabel: String(formData.get("regionLabel") ?? "").trim(),
+    verifiedTitle: String(formData.get("verifiedTitle") ?? "").trim(),
+    verifiedImageUrl: String(formData.get("verifiedImageUrl") ?? "").trim(),
+  };
+}
+
+async function recordOneObservation(input: {
+  urlRaw: string;
+  regionValue: string;
+  regionLabel: string;
+  verifiedTitle: string;
+  verifiedImageUrl: string;
+}): Promise<RecordObservationResult> {
+  const session = await getSession();
+  if (!session) return { ok: false, code: "unauthenticated" };
+
+  const urlRaw = input.urlRaw;
+  const regionValue = input.regionValue;
+  let regionLabel = input.regionLabel;
+  const verifiedTitle = input.verifiedTitle;
+  const verifiedImageUrl = input.verifiedImageUrl;
 
   const url = coerceRecordingUrl(urlRaw);
   if (!url || !regionValue) {
-    redirect("/dashboard/observations/new?error=invalid");
+    return { ok: false, code: "invalid" };
   }
 
   const allowedRegions = getRegionOptions(session.plan);
   if (!allowedRegions.some((r) => r.value === regionValue)) {
-    redirect("/dashboard/observations/new?error=region");
+    return { ok: false, code: "region" };
   }
 
   if (!regionLabel) {
@@ -91,14 +125,14 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
 
   if (session.trialEligible) {
     if (session.trialExpired) {
-      redirect("/checkout?plan=starter&reason=trial_expired");
+      return { ok: false, code: "trial_expired" };
     }
     const existing = await readUserObservations();
     const trialUsed = session.trialStartedAt
       ? countObservationsSinceTrialStart(existing, session.trialStartedAt)
       : existing.length;
     if (trialUsed >= TRIAL_CONFIG.freeObservations) {
-      redirect("/checkout?plan=starter&reason=trial_observation_limit");
+      return { ok: false, code: "trial_limit" };
     }
   }
 
@@ -239,6 +273,14 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
       viaResidential: lastBrowserlessShot.viaResidential ?? false,
       viaExternalProxy: lastBrowserlessShot.viaExternalProxy ?? false,
       usedRetryWithoutProxy: lastBrowserlessShot.usedRetryWithoutProxy ?? false,
+      residentialStateApplied: lastBrowserlessShot.residentialStateApplied ?? false,
+      durationMs: lastBrowserlessShot.durationMs ?? null,
+      estimatedTimeUnits: lastBrowserlessShot.estimatedTimeUnits ?? null,
+      proxyBytes: lastBrowserlessShot.proxyBytes ?? null,
+      proxyBytesMeasuredAttempts: lastBrowserlessShot.proxyBytesMeasuredAttempts ?? null,
+      fallback: lastBrowserlessShot.usedRetryWithoutProxy ?? false,
+      attempts: lastBrowserlessShot.attempts ?? null,
+      attemptsLog: lastBrowserlessShot.attemptsLog ?? null,
       storageFormat: "webp",
       webpQuality,
       imageWidthPx: dims?.width ?? null,
@@ -336,7 +378,7 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
         region: regionValue,
       },
     });
-    redirect("/dashboard/observations/new?error=limit");
+    return { ok: false, code: "monthly_limit" };
   }
 
   if (saved.ok) {
@@ -352,7 +394,34 @@ export async function recordWebVerifiedObservationAction(formData: FormData): Pr
         browserless: browserlessOn,
       },
     });
+    return { ok: true, id };
   }
 
-  redirect(`/dashboard/observations/${id}`);
+  return { ok: false, code: "invalid" };
+}
+
+export async function recordObservationForRegionAction(
+  formData: FormData,
+): Promise<RecordObservationResult> {
+  return recordOneObservation(parseObservationForm(formData));
+}
+
+export async function recordWebVerifiedObservationAction(formData: FormData): Promise<void> {
+  const result = await recordOneObservation(parseObservationForm(formData));
+  if (result.ok) {
+    redirect(`/dashboard/observations/${result.id}`);
+  }
+  if (result.code === "unauthenticated") {
+    redirect("/login?next=/dashboard/observations/new");
+  }
+  if (result.code === "trial_expired") {
+    redirect("/checkout?plan=starter&reason=trial_expired");
+  }
+  if (result.code === "trial_limit") {
+    redirect("/checkout?plan=starter&reason=trial_observation_limit");
+  }
+  if (result.code === "monthly_limit") {
+    redirect("/dashboard/observations/new?error=limit");
+  }
+  redirect("/dashboard/observations/new?error=invalid");
 }

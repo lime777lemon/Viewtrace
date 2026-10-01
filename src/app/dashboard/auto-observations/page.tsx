@@ -49,6 +49,10 @@ export default async function AutoObservationsPage({
     monitoringOn: tDetail.watchMonitoringOn,
     monitoringOff: tDetail.watchMonitoringOff,
     monitoringStateLabel: tDetail.watchMonitoringStateLabel,
+    estimateLabel: tDetail.watchEstimateLabel,
+    estimateValue: tDetail.watchEstimateValue,
+    planIncludes: tDetail.watchPlanIncludes,
+    unitHint: tDetail.watchUnitHint,
     save: tDetail.watchSave,
     webhookLabel: tDetail.watchWebhookLabel,
     webhookHint: tDetail.watchWebhookHint,
@@ -83,6 +87,10 @@ export default async function AutoObservationsPage({
     monitoringOn: panelCopy.monitoringOn,
     monitoringOff: panelCopy.monitoringOff,
     monitoringStateLabel: panelCopy.monitoringStateLabel,
+    estimateLabel: panelCopy.estimateLabel,
+    estimateValue: panelCopy.estimateValue,
+    planIncludes: panelCopy.planIncludes,
+    unitHint: panelCopy.unitHint,
   };
 
   if (!plan.autoObservationWatch) {
@@ -159,6 +167,8 @@ export default async function AutoObservationsPage({
       latestObservationIdByWatchKey={latestObservationIdByWatchKey}
       showShare={plan.autoObservationWatch}
       showCsvExport={plan.csvExport}
+      monthlyLimit={plan.monthlyObservations}
+      maxDailyRepeats={plan.watchMaxDailyRepeats}
       showInvalidBanner={sp.error === "invalid"}
       showInvalidUrlBanner={sp.error === "invalid_url"}
       showInvalidRegionBanner={sp.error === "invalid_region"}

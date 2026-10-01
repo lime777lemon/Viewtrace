@@ -5,6 +5,12 @@ import {
 import { resolveGeoProxyUrl } from "@/lib/geo/proxy";
 import { resolveBrowserlessResidentialTarget } from "@/lib/regions";
 import type { HtmlHeadSignalsV1 } from "@/lib/url-preview";
+import {
+  nonNegativeNumberOrNull,
+  summarizeCaptureCostAttempts,
+  type CaptureCostAttemptStage,
+  type CaptureCostAttemptV1,
+} from "@/lib/observation-cost-signals";
 export const CAPTURE_CONDITIONS_SCHEMA_VERSION = 1 as const;
 
 /** Legacy rows with capture_conditions before evidence-only v3. */
@@ -79,6 +85,24 @@ export type CaptureConditionsV1 = {
   };
   /** 取得済み HTML head の読み取り。content_hash には含めない。 */
   html_signals?: HtmlHeadSignalsV1;
+  /** Observation 原価の実測用。content_hash には含めない。 */
+  cost_signals?: CaptureCostSignalsV1;
+};
+
+export type { CaptureCostAttemptStage, CaptureCostAttemptV1 };
+
+export type CaptureCostSignalsV1 = {
+  /** 全 billed attempts の合計。最終成功だけではない */
+  duration_ms: number | null;
+  /** 試行ごとの時間 units の合計（セッション単位の下限を足す） */
+  estimated_time_units: number | null;
+  /** プロキシ使用試行がすべて測定できたときだけ合計。それ以外は null */
+  proxy_bytes: number | null;
+  proxy_bytes_measured_attempts: number;
+  fallback: boolean;
+  screenshot_bytes: number | null;
+  attempts: number | null;
+  attempts_log?: CaptureCostAttemptV1[];
 };
 
 /** Subset hashed in content_hash v2 (excludes meta and result dimensions). */
@@ -152,6 +176,8 @@ export function resolveCaptureProxyMode(input: {
   viaExternalProxy: boolean;
   usedRetryWithoutProxy: boolean;
   regionInput: string;
+  /** false のとき geo.state は出さない（国単位 residential。観測事実以上を書かない） */
+  residentialStateApplied?: boolean;
 }): {
   proxy_mode: CaptureProxyMode;
   proxy_provider: CaptureConditionsV1["geo"]["proxy_provider"];
@@ -160,13 +186,15 @@ export function resolveCaptureProxyMode(input: {
   state: string | null;
 } {
   const geo = resolveGeoFromRegion(input.regionInput);
+  const stateApplied = input.residentialStateApplied === true;
+  const state = stateApplied ? geo.state : null;
   if (input.usedRetryWithoutProxy) {
     return {
       proxy_mode: "retry_without_proxy",
       proxy_provider: null,
       proxy_sticky: null,
-      country: geo.country,
-      state: geo.state,
+      country: null,
+      state: null,
     };
   }
   if (input.viaExternalProxy) {
@@ -185,7 +213,7 @@ export function resolveCaptureProxyMode(input: {
       proxy_provider: "browserless",
       proxy_sticky: true,
       country: geo.country,
-      state: geo.state,
+      state,
     };
   }
   return {
@@ -193,7 +221,7 @@ export function resolveCaptureProxyMode(input: {
     proxy_provider: null,
     proxy_sticky: null,
     country: geo.country,
-    state: geo.state,
+    state,
   };
 }
 
@@ -225,6 +253,7 @@ export type BuildBrowserlessCaptureConditionsInput = {
   viaResidential: boolean;
   viaExternalProxy: boolean;
   usedRetryWithoutProxy: boolean;
+  residentialStateApplied?: boolean;
   storageFormat: "webp" | "png";
   webpQuality: number | null;
   imageWidthPx: number | null;
@@ -232,6 +261,13 @@ export type BuildBrowserlessCaptureConditionsInput = {
   snapshotBytes: number | null;
   snapshotContentType: string | null;
   snapshotSha256Present: boolean;
+  durationMs?: number | null;
+  estimatedTimeUnits?: number | null;
+  proxyBytes?: number | null;
+  proxyBytesMeasuredAttempts?: number | null;
+  fallback?: boolean;
+  attempts?: number | null;
+  attemptsLog?: CaptureCostAttemptV1[] | null;
 };
 
 export function buildCaptureConditionsFromBrowserless(
@@ -241,6 +277,7 @@ export function buildCaptureConditionsFromBrowserless(
     viaResidential: input.viaResidential,
     viaExternalProxy: input.viaExternalProxy,
     usedRetryWithoutProxy: input.usedRetryWithoutProxy,
+    residentialStateApplied: input.residentialStateApplied,
     regionInput: input.regionInput,
   });
 
@@ -279,6 +316,25 @@ export function buildCaptureConditionsFromBrowserless(
       snapshot_sha256_present: input.snapshotSha256Present,
     },
     meta: optionalMeta(),
+    cost_signals: buildCostSignals(input),
+  };
+}
+
+function buildCostSignals(input: BuildBrowserlessCaptureConditionsInput): CaptureCostSignalsV1 {
+  const log = input.attemptsLog?.length ? input.attemptsLog : null;
+  const fromLog = log ? summarizeCaptureCostAttempts(log) : null;
+  return {
+    duration_ms: fromLog?.duration_ms ?? nonNegativeNumberOrNull(input.durationMs),
+    estimated_time_units:
+      fromLog?.estimated_time_units ?? nonNegativeNumberOrNull(input.estimatedTimeUnits),
+    proxy_bytes: fromLog ? fromLog.proxy_bytes : nonNegativeNumberOrNull(input.proxyBytes),
+    proxy_bytes_measured_attempts:
+      fromLog?.proxy_bytes_measured_attempts ??
+      (nonNegativeNumberOrNull(input.proxyBytesMeasuredAttempts) ?? 0),
+    fallback: input.fallback === true || input.usedRetryWithoutProxy,
+    screenshot_bytes: nonNegativeNumberOrNull(input.snapshotBytes),
+    attempts: fromLog?.attempts ?? nonNegativeNumberOrNull(input.attempts),
+    ...(log ? { attempts_log: log } : {}),
   };
 }
 
@@ -421,7 +477,7 @@ export function buildCaptureConditionsFromDirectFetch(input: {
   };
 }
 
-/** html_signals / meta / result は含めない（証跡の撮影条件だけ）。 */
+/** html_signals / cost_signals / meta / result は含めない（証跡の撮影条件だけ）。 */
 export function captureConditionsForContentHash(
   conditions: CaptureConditionsV1,
 ): ContentHashCaptureConditions {

@@ -10,6 +10,8 @@ type PendingSubmitButtonProps = {
   pendingClassName?: string;
   /** Override the parent form action for this submit button. */
   formAction?: (formData: FormData) => void | Promise<void>;
+  disabled?: boolean;
+  waiting?: boolean;
 };
 
 export function PendingSubmitButton({
@@ -18,21 +20,25 @@ export function PendingSubmitButton({
   className = "",
   pendingClassName = "",
   formAction,
+  disabled = false,
+  waiting = false,
 }: PendingSubmitButtonProps) {
   const { pending } = useFormStatus();
+  const blocked = pending || disabled || waiting;
+  const wait = pending || waiting;
 
   return (
     <button
       type="submit"
       formAction={formAction}
-      disabled={pending}
-      aria-disabled={pending}
-      aria-busy={pending}
+      disabled={blocked}
+      aria-disabled={blocked}
+      aria-busy={wait}
       className={`inline-flex cursor-pointer items-center justify-center gap-2 transition disabled:cursor-not-allowed disabled:opacity-80 ${className} ${
-        pending ? pendingClassName : ""
+        wait ? pendingClassName : ""
       }`}
     >
-      {pending ? (
+      {wait ? (
         <>
           <span
             aria-hidden

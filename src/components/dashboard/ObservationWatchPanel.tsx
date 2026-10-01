@@ -40,6 +40,8 @@ type Props = {
   redirectAfter?: "auto-observations" | "observations";
   showShare?: boolean;
   showCsvExport?: boolean;
+  monthlyLimit: number;
+  maxDailyRepeats: number;
 };
 
 export function ObservationWatchPanel({
@@ -56,6 +58,8 @@ export function ObservationWatchPanel({
   redirectAfter,
   showShare = false,
   showCsvExport = false,
+  monthlyLimit,
+  maxDailyRepeats,
 }: Props) {
   const scheduleCopy: WatchScheduleFieldsCopy = copy;
 
@@ -99,6 +103,8 @@ export function ObservationWatchPanel({
             initialFrequency={initialFrequency}
             initialRepeat={initialRepeat}
             initialNotify={initialNotify}
+            monthlyLimit={monthlyLimit}
+            maxDailyRepeats={maxDailyRepeats}
           />
 
           <WatchWebhookField

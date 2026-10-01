@@ -11,7 +11,7 @@ export type VerifyFunnelCounts = {
 };
 
 export type VerifyFunnelRates = {
-  /** 中心指標: Verify を見たセッションのうち、次の Observation まで進んだ割合 */
+  /** 公開リンクの二次指標。プロダクトの中心は Observation 反復（Signup → 1回目 → 2回目） */
   loopConversionRate: number | null;
   ctaClickRate: number | null;
   urlSubmissionRate: number | null;

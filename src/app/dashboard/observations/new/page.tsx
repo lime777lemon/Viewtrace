@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { NewObservationForm } from "@/components/dashboard/NewObservationForm";
 import { getSession } from "@/lib/auth/session";
@@ -6,6 +7,7 @@ import {
   countObservationsSinceTrialStart,
   readUserObservations,
 } from "@/lib/demo/user-observations";
+import { getDemoUsageThisMonth } from "@/lib/demo/usage";
 import { getPlan, TRIAL_CONFIG } from "@/lib/plans";
 import { getSnapshotCapabilityCopy } from "@/lib/plans/snapshot-ui";
 import { getRegionOptions } from "@/lib/regions";
@@ -25,6 +27,7 @@ export default async function NewObservationPage({
   const session = await getSession();
   if (!session) redirect("/login?next=/dashboard/observations/new");
 
+  let trialRemaining: number | null = null;
   if (session.trialEligible) {
     if (session.trialExpired) {
       redirect("/checkout?plan=starter&reason=trial_expired");
@@ -36,6 +39,7 @@ export default async function NewObservationPage({
     if (trialUsed >= TRIAL_CONFIG.freeObservations) {
       redirect("/checkout?plan=starter&reason=trial_observation_limit");
     }
+    trialRemaining = Math.max(0, TRIAL_CONFIG.freeObservations - trialUsed);
   }
 
   const plan = getPlan(session.plan);
@@ -46,6 +50,11 @@ export default async function NewObservationPage({
     .replace("{marketing}", snap.marketing)
     .replace("{technical}", snap.technical);
   const regions = getRegionOptions(session.plan);
+  const usage = await getDemoUsageThisMonth(session.plan);
+  let remainingSlots = Math.max(0, usage.limit - usage.used);
+  if (trialRemaining != null) {
+    remainingSlots = Math.min(remainingSlots, trialRemaining);
+  }
   const sp = await searchParams;
   const defaultUrl = sp.url ? decodeURIComponent(sp.url) : "";
   const defaultRegion = sp.region && regions.some((r) => r.value === sp.region) ? sp.region : undefined;
@@ -57,9 +66,18 @@ export default async function NewObservationPage({
         <p className="mt-1 text-sm text-ink-muted">{intro}</p>
         {sp.error ? (
           <p className="mt-2 text-sm font-medium text-red-700" role="alert">
-            {sp.error === "limit"
-              ? `今月の上限（${plan.monthlyObservations}件）に達しました。翌月以降に再度お試しください。`
-              : "入力を確認してください（URL または地域が無効です）。"}
+            {sp.error === "limit" ? (
+              <>
+                {tSettings.observationMonthlyLimit.replace("{limit}", String(plan.monthlyObservations))}{" "}
+                <Link href="/checkout?plan=starter" className="underline hover:text-red-900">
+                  {locale === "ja" ? "アップグレード" : "Upgrade"}
+                </Link>
+              </>
+            ) : (
+              locale === "ja"
+                ? "入力を確認してください（URL または地域が無効です）。"
+                : "Check the URL or region and try again."
+            )}
           </p>
         ) : null}
         <p className="mt-2 rounded-lg border border-border bg-surface-elevated px-3 py-2 text-xs text-ink-muted">
@@ -77,10 +95,22 @@ export default async function NewObservationPage({
         regions={regions}
         defaultUrl={defaultUrl}
         defaultRegion={defaultRegion}
+        locale={locale}
+        remainingSlots={remainingSlots}
         labels={{
           observationSubmit: tSettings.observationSubmit,
           observationSubmitPending: tSettings.observationSubmitPending,
           observationCancel: tSettings.observationCancel,
+          regionLabel: tSettings.observationRegionLabel,
+          regionsHint: tSettings.observationRegionsHint,
+          regionsCost: tSettings.observationRegionsCost,
+          regionsMax: tSettings.observationRegionsMax,
+          regionsQuota: tSettings.observationRegionsQuota,
+          regionsProgress: tSettings.observationRegionsProgress,
+          observeN: tSettings.observationObserveN,
+          remainingHint: tSettings.observationRemainingHint,
+          suggestedLabel: tSettings.observationSuggestedRegions,
+          runError: tSettings.observationRunError,
         }}
       />
     </div>

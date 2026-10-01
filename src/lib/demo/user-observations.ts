@@ -17,6 +17,8 @@ import { inheritedTagsForUrl } from "@/lib/observation-url-tags";
 import { normalizeObservationTags } from "@/lib/observation-tags";
 import { markVerifyLoopFirstObservation } from "@/lib/verify-loop/track";
 import { expireDueObservationScreenshots } from "@/lib/expire-observation-screenshots";
+import { countObservationsThisUtcMonth } from "@/lib/observation-quota";
+import { observationUrlIdentity, observationUrlLookupVariants } from "@/lib/observation-compare";
 
 export const USER_OBSERVATIONS_COOKIE = "viewtrace_user_obs";
 
@@ -213,6 +215,40 @@ export async function readUserObservations(): Promise<Observation[]> {
     .filter((x): x is Observation => Boolean(x));
 }
 
+/** 同一 URL 識別子の記録（Time / Region Compare）。末尾 `/` 違いは variants で拾い、JS で identity 確認。 */
+export async function listObservationsForUrlIdentity(url: string): Promise<Observation[]> {
+  const session = await getSession();
+  if (!session) return [];
+  const identity = observationUrlIdentity(url);
+  const variants = observationUrlLookupVariants(url);
+  if (variants.length === 0) return [];
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("observations")
+    .select(OBSERVATION_ROW_SELECT)
+    .in("url", variants)
+    .order("captured_at", { ascending: true })
+    .limit(80);
+  if (error || !data) return [];
+
+  return data
+    .map((row) => mapDbRowToObservation(row as unknown as Record<string, unknown>, session.plan))
+    .filter((x): x is Observation => Boolean(x))
+    .filter((row) => (identity ? observationUrlIdentity(row.url) === identity : row.url.trim() === url.trim()));
+}
+
+/** 同一 URL × 地域の記録（時刻比較用）。RLS で自分の行だけ。 */
+export async function listObservationsForUrlRegion(
+  url: string,
+  region: string,
+): Promise<Observation[]> {
+  const trimmedRegion = region.trim();
+  if (!trimmedRegion) return [];
+  const related = await listObservationsForUrlIdentity(url);
+  return related.filter((row) => (row.regionValue ?? "").trim() === trimmedRegion);
+}
+
 /** 一覧の件数上限外でも、RLS 下で自分の行なら ID だけで取得できる（メールの「記録を開く」用） */
 async function fetchObservationByIdForCurrentUser(
   id: string,
@@ -277,17 +313,12 @@ export async function appendUserObservation(
   } = await supabase.auth.getUser();
   if (!user?.id) return { ok: false, code: "monthly_limit" };
 
-  // Monthly limit (UTC month) using capturedAt
-  const now = new Date();
-  const monthStartUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0));
-  const { count, error: cntErr } = await supabase
-    .from("observations")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", user.id)
-    .gte("captured_at", monthStartUtc.toISOString());
-  if (cntErr) {
-    // If count fails, fail open (allow insert) to avoid blocking recording.
-  } else if ((count ?? 0) >= opts.monthlyLimit) {
+  const used = await countObservationsThisUtcMonth(supabase, user.id);
+  if (used == null) {
+    console.warn("[observations] monthly count failed; refusing insert");
+    return { ok: false, code: "monthly_limit" };
+  }
+  if (used >= opts.monthlyLimit) {
     return { ok: false, code: "monthly_limit" };
   }
 

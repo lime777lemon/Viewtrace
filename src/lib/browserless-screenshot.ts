@@ -4,6 +4,13 @@ import {
 } from "@/lib/browser-fingerprint";
 import { resolveGeoProxyUrl } from "@/lib/geo/proxy";
 import { isValidObservationRegion, resolveBrowserlessResidentialTarget } from "@/lib/regions";
+import {
+  estimatedBrowserTimeUnits,
+  parseMeasuredProxyBytes,
+  summarizeCaptureCostAttempts,
+  type CaptureCostAttemptStage,
+  type CaptureCostAttemptV1,
+} from "@/lib/observation-cost-signals";
 import { isBlockedPreviewHost, normalizeUserUrlInput } from "@/lib/url-preview";
 
 const DEFAULT_BROWSERLESS_SCREENSHOT = "https://production-sfo.browserless.io/screenshot";
@@ -17,6 +24,32 @@ export function isBrowserlessResidentialEnabled(): boolean {
   const raw = process.env.VIEWTRACE_BROWSERLESS_RESIDENTIAL?.trim().toLowerCase();
   if (raw === "0" || raw === "false" || raw === "off") return false;
   return true;
+}
+
+/**
+ * US 州の `proxyState` は Browserless Scale（500k+）向け。
+ * 現行 Starter 180k は 401 "State level proxying not allowed" になるので既定オフ。
+ * Scale に上げたあと `VIEWTRACE_BROWSERLESS_PROXY_STATE=1` で有効化。
+ */
+export function isBrowserlessProxyStateEnabled(): boolean {
+  const raw = process.env.VIEWTRACE_BROWSERLESS_PROXY_STATE?.trim().toLowerCase();
+  return raw === "1" || raw === "true" || raw === "on";
+}
+
+export function buildBrowserlessResidentialSearchParams(
+  regionRaw: string,
+  includeState: boolean,
+): URLSearchParams | null {
+  const target = resolveBrowserlessResidentialTarget(regionRaw);
+  if (!target) return null;
+  const params = new URLSearchParams();
+  params.set("proxy", "residential");
+  params.set("proxyCountry", target.country);
+  if (includeState && target.state) {
+    params.set("proxyState", target.state);
+  }
+  params.set("proxySticky", "true");
+  return params;
 }
 
 function browserlessScreenshotEndpointWithToken(): string | null {
@@ -39,28 +72,62 @@ export type BrowserlessScreenshotResult =
       png: ArrayBuffer;
       normalizedUrl: string;
       viaResidential?: boolean;
+      /** true のときだけ Browserless に proxyState を付けた */
+      residentialStateApplied?: boolean;
       viaExternalProxy?: boolean;
       /** 地理ルーティング失敗後、プロキシなしで再試行して成功した */
       usedRetryWithoutProxy?: boolean;
+      durationMs?: number;
+      estimatedTimeUnits?: number;
+      proxyBytes?: number | null;
+      proxyBytesMeasuredAttempts?: number;
+      attempts?: number;
+      attemptsLog?: CaptureCostAttemptV1[];
     }
   | {
       ok: false;
       error: string;
       upstreamStatus?: number;
       detail?: string;
+      durationMs?: number;
+      estimatedTimeUnits?: number;
+      proxyBytes?: number | null;
+      proxyBytesMeasuredAttempts?: number;
+      attempts?: number;
+      attemptsLog?: CaptureCostAttemptV1[];
+      viaResidential?: boolean;
+      residentialStateApplied?: boolean;
+      viaExternalProxy?: boolean;
     };
 
-function applyBrowserlessResidentialParams(endpoint: URL, regionRaw: string): boolean {
-  const target = resolveBrowserlessResidentialTarget(regionRaw);
-  if (!target) return false;
-  endpoint.searchParams.set("proxy", "residential");
-  endpoint.searchParams.set("proxyCountry", target.country);
-  if (target.state) {
-    endpoint.searchParams.set("proxyState", target.state);
+function applyBrowserlessResidentialParams(
+  endpoint: URL,
+  regionRaw: string,
+  includeState: boolean,
+): boolean {
+  const params = buildBrowserlessResidentialSearchParams(regionRaw, includeState);
+  if (!params) return false;
+  for (const [key, value] of params.entries()) {
+    endpoint.searchParams.set(key, value);
   }
-  endpoint.searchParams.set("proxySticky", "true");
   return true;
 }
+
+function readProxyBytesFromHeaders(headers: Headers): number | null {
+  const names = [
+    "x-proxy-bytes",
+    "x-browserless-proxy-bytes",
+    "browserless-proxy-bytes",
+    "x-proxy-bandwidth",
+  ];
+  for (const name of names) {
+    const parsed = parseMeasuredProxyBytes(headers.get(name));
+    if (parsed != null) return parsed;
+  }
+  return null;
+}
+
+export { estimatedBrowserTimeUnits };
 
 /**
  * Browserless の /screenshot を呼び、PNG を返す。
@@ -72,6 +139,8 @@ export async function runBrowserlessScreenshot(params: {
   region?: string;
   fullPage: boolean;
   disableProxy?: boolean;
+  /** US 州を proxyState で指定するか。未指定ならプラン既定（Starter では false）。 */
+  residentialState?: boolean;
 }): Promise<BrowserlessScreenshotResult> {
   const endpoint = browserlessScreenshotEndpointWithToken();
   if (!endpoint) {
@@ -120,6 +189,8 @@ export async function runBrowserlessScreenshot(params: {
 
   let viaResidential = false;
   let viaExternalProxy = false;
+  let residentialStateApplied = false;
+  const includeState = params.residentialState === true;
 
   const endpointUrl = new URL(endpoint);
   if (geoProxyForBrowserless) {
@@ -131,7 +202,9 @@ export async function runBrowserlessScreenshot(params: {
     regionRaw &&
     isValidObservationRegion(regionRaw)
   ) {
-    viaResidential = applyBrowserlessResidentialParams(endpointUrl, regionRaw);
+    viaResidential = applyBrowserlessResidentialParams(endpointUrl, regionRaw, includeState);
+    residentialStateApplied =
+      viaResidential && includeState && Boolean(resolveBrowserlessResidentialTarget(regionRaw)?.state);
   }
 
   const browserlessEndpoint = endpointUrl.href;
@@ -155,6 +228,7 @@ export async function runBrowserlessScreenshot(params: {
 
   const ac = new AbortController();
   const t = setTimeout(() => ac.abort(), 55_000);
+  const startedAt = Date.now();
   let upstream: Response;
   try {
     upstream = await fetch(browserlessEndpoint, {
@@ -165,10 +239,20 @@ export async function runBrowserlessScreenshot(params: {
     });
   } catch {
     clearTimeout(t);
-    return { ok: false, error: "browserless_network_error" };
+    return {
+      ok: false,
+      error: "browserless_network_error",
+      durationMs: Date.now() - startedAt,
+      proxyBytes: null,
+      viaResidential,
+      residentialStateApplied,
+      viaExternalProxy,
+    };
   } finally {
     clearTimeout(t);
   }
+  const durationMs = Date.now() - startedAt;
+  const proxyBytes = readProxyBytesFromHeaders(upstream.headers);
 
   if (!upstream.ok) {
     const errText = await upstream.text().catch(() => "");
@@ -177,6 +261,11 @@ export async function runBrowserlessScreenshot(params: {
       error: "browserless_error",
       upstreamStatus: upstream.status,
       detail: errText.slice(0, 500),
+      durationMs,
+      proxyBytes,
+      viaResidential,
+      residentialStateApplied,
+      viaExternalProxy,
     };
   }
 
@@ -187,6 +276,11 @@ export async function runBrowserlessScreenshot(params: {
       ok: false,
       error: "unexpected_response",
       detail: text.slice(0, 500),
+      durationMs,
+      proxyBytes,
+      viaResidential,
+      residentialStateApplied,
+      viaExternalProxy,
     };
   }
 
@@ -196,8 +290,50 @@ export async function runBrowserlessScreenshot(params: {
     png,
     normalizedUrl: target,
     viaResidential,
+    residentialStateApplied,
     viaExternalProxy,
+    durationMs,
+    proxyBytes,
   };
+}
+
+function shotToAttemptCost(
+  shot: BrowserlessScreenshotResult,
+  stage: CaptureCostAttemptStage,
+  usedProxy: boolean,
+): CaptureCostAttemptV1 {
+  const durationMs = shot.durationMs ?? null;
+  const billed = durationMs != null;
+  return {
+    stage,
+    ok: shot.ok,
+    billed,
+    duration_ms: durationMs,
+    estimated_time_units: durationMs != null ? estimatedBrowserTimeUnits(durationMs) : null,
+    proxy_bytes: shot.proxyBytes ?? null,
+    used_proxy: usedProxy,
+    error: shot.ok ? null : shot.error,
+  };
+}
+
+function withAttemptTotals(
+  shot: BrowserlessScreenshotResult,
+  log: CaptureCostAttemptV1[],
+  extra: { usedRetryWithoutProxy?: boolean } = {},
+): BrowserlessScreenshotResult {
+  const sum = summarizeCaptureCostAttempts(log);
+  const cost = {
+    durationMs: sum.duration_ms ?? undefined,
+    estimatedTimeUnits: sum.estimated_time_units ?? undefined,
+    proxyBytes: sum.proxy_bytes,
+    proxyBytesMeasuredAttempts: sum.proxy_bytes_measured_attempts,
+    attempts: sum.attempts,
+    attemptsLog: log,
+  };
+  if (shot.ok) {
+    return { ...shot, ...extra, ...cost };
+  }
+  return { ...shot, ...extra, ...cost };
 }
 
 function geoRoutingRequested(regionRaw: string | undefined, disableProxy: boolean): boolean {
@@ -209,26 +345,57 @@ function geoRoutingRequested(regionRaw: string | undefined, disableProxy: boolea
   return isBrowserlessResidentialEnabled() && isValidObservationRegion(regionRaw);
 }
 
-/** 地理ルーティング（内蔵 residential または外部プロキシ）失敗時、プロキシなしで 1 回だけ再試行する */
+function isStateProxyDenied(shot: BrowserlessScreenshotResult): boolean {
+  if (shot.ok) return false;
+  if (shot.upstreamStatus !== 401 && shot.upstreamStatus !== 400) return false;
+  const detail = (shot.detail ?? "").toLowerCase();
+  return detail.includes("state level") || detail.includes("proxying not allowed");
+}
+
+/**
+ * 1 本ずつ試す（並列に投げない）。
+ * 1. 州（opt-in かつ US-*）
+ * 2. 国（Starter 180k の既定。US-CA は us のみ）
+ * 3. プロキシなし
+ */
 export async function runBrowserlessScreenshotWithProxyRetry(params: {
   url: string;
   region?: string;
   fullPage: boolean;
 }): Promise<BrowserlessScreenshotResult> {
-  const shot = await runBrowserlessScreenshot(params);
-  if (
-    !shot.ok &&
-    shot.error === "browserless_error" &&
-    geoRoutingRequested(params.region, false)
-  ) {
-    const retry = await runBrowserlessScreenshot({ ...params, disableProxy: true });
-    if (retry.ok) {
-      return { ...retry, usedRetryWithoutProxy: true };
+  const log: CaptureCostAttemptV1[] = [];
+  const geo = geoRoutingRequested(params.region, false);
+  const hasUsState = Boolean(resolveBrowserlessResidentialTarget(params.region ?? "")?.state);
+  const tryStateFirst = geo && hasUsState && isBrowserlessProxyStateEnabled();
+
+  if (tryStateFirst) {
+    const withState = await runBrowserlessScreenshot({ ...params, residentialState: true });
+    log.push(shotToAttemptCost(withState, "state", true));
+    if (withState.ok) return withAttemptTotals(withState, log, { usedRetryWithoutProxy: false });
+    if (withState.error !== "browserless_error" && !isStateProxyDenied(withState)) {
+      return withAttemptTotals(withState, log);
     }
-    return retry;
   }
-  if (shot.ok) {
-    return { ...shot, usedRetryWithoutProxy: false };
+
+  if (geo) {
+    const country = await runBrowserlessScreenshot({
+      ...params,
+      residentialState: false,
+      disableProxy: false,
+    });
+    log.push(shotToAttemptCost(country, "country", true));
+    if (country.ok) return withAttemptTotals(country, log, { usedRetryWithoutProxy: false });
+    if (country.error !== "browserless_error") return withAttemptTotals(country, log);
+
+    const retry = await runBrowserlessScreenshot({ ...params, disableProxy: true });
+    log.push(shotToAttemptCost(retry, "no_proxy", false));
+    if (retry.ok) return withAttemptTotals(retry, log, { usedRetryWithoutProxy: true });
+    return withAttemptTotals(retry, log);
   }
-  return shot;
+
+  const shot = await runBrowserlessScreenshot(params);
+  const usedProxy = Boolean(shot.viaResidential || shot.viaExternalProxy);
+  log.push(shotToAttemptCost(shot, "direct", usedProxy));
+  if (shot.ok) return withAttemptTotals(shot, log, { usedRetryWithoutProxy: false });
+  return withAttemptTotals(shot, log);
 }

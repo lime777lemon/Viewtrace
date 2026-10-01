@@ -2,8 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ObservationAnnotationPanel } from "@/components/dashboard/ObservationAnnotationPanel";
+import { ObservationComparePrompt } from "@/components/dashboard/ObservationComparePrompt";
+import { ObservationMetadataChanges } from "@/components/dashboard/ObservationMetadataChanges";
 import { ObservationPublicVerifyLink } from "@/components/dashboard/ObservationPublicVerifyLink";
-import { ObservationCaptureConditionsPanel } from "@/components/dashboard/ObservationCaptureConditionsPanel";
+import {
+  ObservationCaptureConditionsPanel,
+  observationCaptureConditionsCopyFrom,
+} from "@/components/dashboard/ObservationCaptureConditionsPanel";
+import { ObservationRegionReadout } from "@/components/dashboard/ObservationRegionReadout";
+import { observationGeoCopyFrom } from "@/lib/observation-geo-readout";
 import {
   ObservationHtmlHeadSignalsPanel,
   observationHtmlHeadCopyFrom,
@@ -19,7 +26,10 @@ import { ObservationSnapshotBinaryPanel } from "@/components/dashboard/Observati
 import { getSession } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCachedUrlPreviewForObservation } from "@/lib/demo/observation-snapshot";
-import { getObservationMergedForPlan } from "@/lib/demo/user-observations";
+import {
+  getObservationMergedForPlan,
+  listObservationsForUrlIdentity,
+} from "@/lib/demo/user-observations";
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
 import { reconcileObservationContentHashIfNeeded } from "@/lib/observation-content-hash-repair";
 import { contentHashVersionForObservation } from "@/lib/observation-content-hash";
@@ -138,9 +148,10 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
   const watchRepeat = clampRepeatCount(
     watchFrequency,
     typeof watchRow?.repeat_count === "number" ? watchRow.repeat_count : Number(watchRow?.repeat_count ?? 1),
+    plan.watchMaxDailyRepeats,
   );
   const watchNotify: WatchNotifyMode =
-    parseWatchNotifyMode(String(watchRow?.notify_mode ?? "")) ?? "always";
+    parseWatchNotifyMode(String(watchRow?.notify_mode ?? "")) ?? "change_only";
 
   const screenshotExpired = isObservationScreenshotExpired(obs, plan.retentionDays);
   const storedVisibleImage = visibleSnapshotImageUrl(obs, plan.retentionDays);
@@ -166,35 +177,16 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
         })
       : null;
 
+  const compareRelated =
+    obs.url && obs.regionValue ? await listObservationsForUrlIdentity(obs.url) : [obs];
+  const compareSiblings = compareRelated.filter(
+    (row) => (row.regionValue ?? "") === (obs.regionValue ?? ""),
+  );
+
   const contentHashVersion = contentHashVersionForObservation(obs);
 
-  const captureConditionsCopy = {
-    title: t.captureConditionsTitle,
-    legacyMissing: t.captureConditionsLegacy,
-    browser: t.captureBrowser,
-    userAgent: t.captureUserAgent,
-    country: t.captureCountry,
-    state: t.captureState,
-    viewport: t.captureViewport,
-    captureScope: t.captureScope,
-    captureScopeFullPage: t.captureScopeFullPage,
-    captureScopeViewport: t.captureScopeViewport,
-    proxyMode: t.captureProxyMode,
-    proxyProvider: t.captureProxyProvider,
-    engine: t.captureEngine,
-    engineBrowserless: t.captureEngineBrowserless,
-    engineMicrolink: t.captureEngineMicrolink,
-    engineDirectFetch: t.captureEngineDirectFetch,
-    engineFormUpload: t.captureEngineFormUpload,
-    browserlessHost: t.captureBrowserlessHost,
-    browserlessApi: t.captureBrowserlessApi,
-    waitUntil: t.captureWaitUntil,
-    imageSize: t.captureImageSize,
-    proxyModeNone: t.captureProxyNone,
-    proxyModeResidential: t.captureProxyResidential,
-    proxyModeExternal: t.captureProxyExternal,
-    proxyModeRetryWithout: t.captureProxyRetryWithout,
-  };
+  const captureConditionsCopy = observationCaptureConditionsCopyFrom(t);
+  const geoCopy = observationGeoCopyFrom(t);
 
   const htmlHeadSignalsCopy = observationHtmlHeadCopyFrom(t);
 
@@ -249,6 +241,19 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
         obs={obs}
         locale={locale}
         screenshotExpired={screenshotExpired}
+      />
+
+      <ObservationComparePrompt
+        observation={obs}
+        timeSiblings={compareSiblings}
+        regionCandidates={compareRelated}
+        locale={locale}
+      />
+
+      <ObservationMetadataChanges
+        current={obs}
+        timeSiblings={compareSiblings}
+        locale={locale}
       />
 
       {(() => {
@@ -344,7 +349,15 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
           <dt className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
             {t.region}
           </dt>
-          <dd className="mt-1 text-sm text-ink">{obs.regionLabel}</dd>
+          <dd className="mt-1 text-sm text-ink">
+            <ObservationRegionReadout
+              requestedLabel={obs.regionLabel}
+              regionValue={obs.regionValue}
+              captureConditions={obs.captureConditions}
+              copy={geoCopy}
+              locale={locale}
+            />
+          </dd>
         </div>
         {displayTitle ? (
           <div className="rounded-xl border border-border bg-surface-elevated p-4 sm:col-span-2">
@@ -425,6 +438,7 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
         <ObservationHtmlHeadSignalsPanel
           signals={obs.captureConditions?.html_signals}
           copy={htmlHeadSignalsCopy}
+          requestedUrl={obs.url}
         />
         {plan.autoObservationWatch && obs.regionValue ? (
           <ObservationWatchPanel
@@ -450,6 +464,10 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
               monitoringOn: t.watchMonitoringOn,
               monitoringOff: t.watchMonitoringOff,
               monitoringStateLabel: t.watchMonitoringStateLabel,
+              estimateLabel: t.watchEstimateLabel,
+              estimateValue: t.watchEstimateValue,
+              planIncludes: t.watchPlanIncludes,
+              unitHint: t.watchUnitHint,
               save: t.watchSave,
               webhookLabel: t.watchWebhookLabel,
               webhookHint: t.watchWebhookHint,
@@ -467,6 +485,8 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
             initialWebhookUrl={watchWebhookUrl || null}
             showShare={plan.autoObservationWatch}
             showCsvExport={plan.csvExport}
+            monthlyLimit={plan.monthlyObservations}
+            maxDailyRepeats={plan.watchMaxDailyRepeats}
           />
         ) : null}
       </dl>
