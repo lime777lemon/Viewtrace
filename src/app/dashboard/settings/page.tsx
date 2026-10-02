@@ -3,8 +3,10 @@ import { OptionalProfileForm } from "@/components/dashboard/OptionalProfileForm"
 import { PlanSwitchForms } from "@/components/dashboard/PlanSwitchForms";
 import { BillingActions } from "@/components/dashboard/BillingActions";
 import { getSession } from "@/lib/auth/session";
-import { TRIAL_CONFIG, getPlan } from "@/lib/plans";
+import { LandingPlanDetails } from "@/components/plans/LandingPlanDetails";
+import { getOveragePerObservationUsd, TRIAL_CONFIG, getPlan } from "@/lib/plans";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
+import { getLandingPlanCopy } from "@/lib/plans/landing-copy";
 import { getPlanLabels, getTrialPlanUi } from "@/lib/plans/labels";
 import { copy } from "@/lib/i18n";
 
@@ -20,9 +22,25 @@ export default async function SettingsPage() {
   const plan = session ? getPlan(session.plan) : null;
   const labels = session ? getPlanLabels(session.plan, locale) : null;
   const trialUi = getTrialPlanUi(locale);
+  const paidLandingPlan =
+    session && !session.trialEligible && (session.plan === "starter" || session.plan === "pro")
+      ? getLandingPlanCopy(locale, session.plan)
+      : undefined;
+  const overageUsd = getOveragePerObservationUsd();
+  const overageFeature =
+    paidLandingPlan && overageUsd != null
+      ? copy[locale].planFeatureOverage.replace(
+          "{price}",
+          new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+            maximumFractionDigits: overageUsd % 1 === 0 ? 0 : 2,
+          }).format(overageUsd),
+        )
+      : undefined;
 
   return (
-    <div className="mx-auto max-w-2xl space-y-8">
+    <div className="mx-auto max-w-5xl space-y-8">
       <div>
         <h1 className="font-display text-2xl font-semibold tracking-tight">{t.title}</h1>
         <p className="mt-1 text-sm text-ink-muted">{t.subtitle}</p>
@@ -59,45 +77,36 @@ export default async function SettingsPage() {
         <h2 className="text-sm font-semibold text-ink">{t.sectionPlan}</h2>
         {plan ? (
           <>
-            <p className="mt-3 font-display text-xl font-semibold text-ink">
-              {session?.trialEligible ? trialUi.name : plan.name}
-            </p>
-            <p className="mt-1 text-sm text-ink-muted">
-              {session?.trialEligible ? trialUi.priceLabel : labels?.priceLabel ?? plan.priceLabel}
-            </p>
-            <p className="mt-2 text-sm text-ink-muted">
-              {session?.trialEligible ? t.trialAudience : labels?.audienceLabel ?? plan.audienceLabel}
-            </p>
-            <ul className="mt-4 space-y-2 text-sm text-ink-muted">
-              {session?.trialEligible ? (
-                <>
+            {paidLandingPlan ? (
+              <div className="mt-4">
+                <LandingPlanDetails
+                  plan={paidLandingPlan}
+                  extraFeatures={overageFeature ? [overageFeature] : undefined}
+                  headingLevel="h3"
+                />
+              </div>
+            ) : (
+              <>
+                <p className="mt-3 font-display text-xl font-semibold text-ink">
+                  {session?.trialEligible ? trialUi.name : plan.name}
+                </p>
+                <p className="mt-1 text-sm text-ink-muted">
+                  {session?.trialEligible ? trialUi.priceLabel : labels?.priceLabel ?? plan.priceLabel}
+                </p>
+                <p className="mt-2 text-sm text-ink-muted">
+                  {session?.trialEligible ? t.trialAudience : labels?.audienceLabel ?? plan.audienceLabel}
+                </p>
+                <ul className="mt-4 space-y-2 text-sm text-ink-muted">
                   <li>
                     {t.trialObservations.replace("{limit}", String(TRIAL_CONFIG.freeObservations))}
                   </li>
-                  <li>
-                    {t.trialDays.replace("{days}", String(TRIAL_CONFIG.trialDays))}
-                  </li>
+                  <li>{t.trialDays.replace("{days}", String(TRIAL_CONFIG.trialDays))}</li>
                   <li>{labels?.coverageLabel ?? plan.coverageLabel}</li>
                   <li>{t.csvNotAvailable}</li>
                   <li>{t.snapshotsAvailable}</li>
-                </>
-              ) : (
-                <>
-                  <li>{t.planMonthlyLimit.replace("{limit}", String(plan.monthlyObservations))}</li>
-                  <li>{t.planRetentionDays.replace("{days}", String(plan.retentionDays))}</li>
-                  <li>{labels?.coverageLabel ?? plan.coverageLabel}</li>
-                  <li>{plan.csvExport ? t.csvAvailable : t.csvProOnly}</li>
-                  <li>
-                    <span className="font-medium text-ink">
-                      {plan.snapshotFullPage ? t.snapshotMarketingPro : t.snapshotMarketingStarter}
-                    </span>
-                    <span className="mt-0.5 block text-xs text-ink-muted">
-                      {plan.snapshotFullPage ? t.snapshotTechnicalPro : t.snapshotTechnicalStarter}
-                    </span>
-                  </li>
-                </>
-              )}
-            </ul>
+                </ul>
+              </>
+            )}
 
             {session ? (
               <>

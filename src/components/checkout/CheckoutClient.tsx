@@ -6,8 +6,10 @@ import { demoCheckoutAction } from "@/app/actions/checkout";
 import { ViewtraceLogo } from "@/components/brand/ViewtraceLogo";
 import { copy, type Locale } from "@/lib/i18n";
 import { LOCALE_COOKIE } from "@/lib/i18n/locale-cookie";
+import { LandingPlanDetails } from "@/components/plans/LandingPlanDetails";
 import type { PlanId } from "@/lib/plans";
 import { getPlan } from "@/lib/plans";
+import { getLandingPlanCopy } from "@/lib/plans/landing-copy";
 import { getPlanLabels } from "@/lib/plans/labels";
 import type { StripeMode } from "@/lib/stripe";
 
@@ -39,19 +41,14 @@ export function CheckoutClient({
   const plan = getPlan(planId);
   const planLabels = getPlanLabels(planId, locale);
   const lpPlan =
-    planId === "starter" || planId === "pro"
-      ? landing.plans.find((p) => p.name === plan.name)
-      : undefined;
-  const summaryFeatures =
+    planId === "starter" || planId === "pro" ? getLandingPlanCopy(locale, planId) : undefined;
+  const overageFeature =
     lpPlan && overagePerObservationUsd != null
-      ? [
-          ...lpPlan.features,
-          landing.planFeatureOverage.replace(
-            "{price}",
-            formatOverageUsdLabel(overagePerObservationUsd),
-          ),
-        ]
-      : lpPlan?.features;
+      ? landing.planFeatureOverage.replace(
+          "{price}",
+          formatOverageUsdLabel(overagePerObservationUsd),
+        )
+      : undefined;
   const [state, formAction, pending] = useActionState(demoCheckoutAction, null);
   const emailId = useId();
 
@@ -209,26 +206,13 @@ export function CheckoutClient({
           <section className="rounded-2xl border border-border bg-surface-elevated p-6 sm:p-8">
             <h2 className="font-display text-lg font-semibold">{t.orderSummary}</h2>
             <p className="mt-1 text-sm text-ink-muted">{t.planLabel}</p>
-            {lpPlan && summaryFeatures ? (
-              <>
-                <h3 className="mt-2 font-display text-xl font-semibold text-ink">{lpPlan.name}</h3>
-                <p className="mt-1 text-sm font-medium text-ink">{lpPlan.description}</p>
-                {"subdescription" in lpPlan && lpPlan.subdescription ? (
-                  <p className="mt-2 text-sm leading-relaxed text-ink-muted">{lpPlan.subdescription}</p>
-                ) : null}
-                <p className="mt-6 flex items-baseline gap-1">
-                  <span className="font-display text-3xl font-semibold text-ink">{lpPlan.price}</span>
-                  <span className="text-sm text-ink-muted">{lpPlan.period}</span>
-                </p>
-                <ul className="mt-6 space-y-2.5 text-sm text-ink-muted">
-                  {summaryFeatures.map((f) => (
-                    <li key={f} className="flex gap-2">
-                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
-                      <span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-              </>
+            {lpPlan ? (
+              <div className="mt-2">
+                <LandingPlanDetails
+                  plan={lpPlan}
+                  extraFeatures={overageFeature ? [overageFeature] : undefined}
+                />
+              </div>
             ) : (
               <>
                 <p className="mt-2 font-display text-xl font-semibold">
