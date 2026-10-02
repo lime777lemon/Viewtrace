@@ -146,5 +146,11 @@ BEGIN
     WHERE enabled = true;
 END $$;
 
+ALTER TABLE public.observation_watches
+  ADD COLUMN IF NOT EXISTS notify_on_metadata boolean NOT NULL DEFAULT false;
+
+COMMENT ON COLUMN public.observation_watches.notify_on_metadata IS
+  'When true, cron also emails if title / canonical / noindex changed. Default false. No extra Observation.';
+
 -- PostgREST にスキーマの再読み込みを促す（環境によっては無視されることがあります）
 NOTIFY pgrst, 'reload schema';

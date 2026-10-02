@@ -17,7 +17,7 @@ Screenshot の判定は三値のみ: Same / Changed / Not comparable。Changed �
 
 Verify（`/verify/[token]`）は削除しない。成長ループではなく、**納品・共有の公開サーフェス**。Verify → 次の Observation を最重要 KPI にしない。Powered by ViewTrace は残す。
 
-次に足す順: **Monitor v1（Watch）** → HTML Signals が自動観測に載ってから metadata alert → Share Collection。Compare は一旦完成。サイト全体 SEO crawler / Score / AI 診断は後。
+次に足す順: **Monitor v1（Watch）** → Share Collection。html_signals の表示は常時（選ばせない）。メタ差分メールだけ Watch で選ばせる。Compare は一旦完成。サイト全体 SEO crawler / Score / AI 診断は後。
 
 1 地域 = 1 Observation。複数地域は件数分消費。Compare / Share / SHA は 0。Watch も 1 URL × 1 地域 × 1 実行 = 1。残量不足なら定期実行は部分実行せずスキップ。超過従量はしない。原価設計は一旦止める。Starter 500 / Pro 1500 は仮置き（2000 に戻さない）。国単位 residential 20〜50 件で CSV を渡し、①上限（P75〜P90 の C、100%消費で変動費 25%）と②損益分岐（実利用率の貢献利益で固定費を割る）を分ける。C に $200 を混ぜない。計測項目は増やさない。proxy_bytes の 0 は実測 0、null は未測定。`retry_without_proxy` は C に使わない。超過上限 $20。State Geo は Starter では保証しない。US-CA を選んでも国単位で取れたら California と表示しない。
 

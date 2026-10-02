@@ -26,6 +26,7 @@ function fieldLabel(
     description: string;
     canonical: string;
     robots: string;
+    noindex: string;
     ogImage: string;
   },
 ): string {
@@ -42,6 +43,8 @@ function fieldLabel(
       return t.canonical;
     case "robots":
       return t.robots;
+    case "noindex":
+      return t.noindex;
     case "ogImage":
       return t.ogImage;
   }
@@ -93,6 +96,94 @@ function SnapshotPane({
       ) : (
         <p className="px-4 py-16 text-center text-sm text-ink-muted">{noImage}</p>
       )}
+    </div>
+  );
+}
+
+function CompareFieldTable({
+  title,
+  factColumn,
+  rows,
+  left,
+  right,
+  locale,
+  labels,
+}: {
+  title: string;
+  factColumn: string;
+  rows: ObservationCompareField[];
+  left: Observation;
+  right: Observation;
+  locale: Locale;
+  labels: (typeof copy)[Locale]["observationCompare"];
+}) {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-border bg-surface-elevated">
+      <table className="w-full text-left text-sm">
+        <thead>
+          <tr className="border-b border-border text-xs uppercase tracking-wider text-ink-muted">
+            <th className="px-4 py-3 font-semibold">{title}</th>
+            <th className="px-4 py-3 font-semibold">{factColumn}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => {
+            const verdictLabel =
+              row.verdict === "changed"
+                ? labels.changed
+                : row.verdict === "same"
+                  ? labels.same
+                  : row.verdict === "incomparable"
+                    ? labels.notComparable
+                    : labels.unknown;
+            const showValues =
+              row.verdict !== "same" && row.verdict !== "incomparable" && row.key !== "screenshot";
+            const screenshotHint =
+              row.key !== "screenshot"
+                ? null
+                : row.verdict === "changed"
+                  ? labels.screenshotChangedHint
+                  : row.verdict === "incomparable"
+                    ? row.incomparableReason === "scope"
+                      ? labels.screenshotIncomparableScope
+                      : row.incomparableReason === "viewport"
+                        ? labels.screenshotIncomparableViewport
+                        : labels.screenshotIncomparableUnknown
+                    : null;
+            return (
+              <tr key={row.key} className="border-b border-border/70 last:border-b-0">
+                <th className="align-top px-4 py-3 font-semibold text-ink">{fieldLabel(row.key, labels)}</th>
+                <td className="px-4 py-3">
+                  <p
+                    className={
+                      row.verdict === "changed"
+                        ? "text-xs font-semibold uppercase tracking-wider text-accent"
+                        : "text-xs font-semibold uppercase tracking-wider text-ink-muted"
+                    }
+                  >
+                    {verdictLabel}
+                  </p>
+                  {screenshotHint ? (
+                    <p className="mt-2 text-xs leading-relaxed text-ink-muted">{screenshotHint}</p>
+                  ) : null}
+                  {showValues ? (
+                    <dl className="mt-2 grid gap-2 text-xs text-ink">
+                      <div>
+                        <dt className="text-ink-muted">{heading(left, locale)}</dt>
+                        <dd className="mt-0.5 break-all font-mono">{displayValue(row.left, labels.emptyValue)}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-ink-muted">{heading(right, locale)}</dt>
+                        <dd className="mt-0.5 break-all font-mono">{displayValue(row.right, labels.emptyValue)}</dd>
+                      </div>
+                    </dl>
+                  ) : null}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -205,72 +296,24 @@ export function ObservationCompareView({
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-border bg-surface-elevated">
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr className="border-b border-border text-xs uppercase tracking-wider text-ink-muted">
-              <th className="px-4 py-3 font-semibold"> </th>
-              <th className="px-4 py-3 font-semibold">{t.factColumn}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {fields.map((row) => {
-              const verdictLabel =
-                row.verdict === "changed"
-                  ? t.changed
-                  : row.verdict === "same"
-                    ? t.same
-                    : row.verdict === "incomparable"
-                      ? t.notComparable
-                      : t.unknown;
-              const showValues = row.verdict !== "same" && row.verdict !== "incomparable" && row.key !== "screenshot";
-              const screenshotHint =
-                row.key !== "screenshot"
-                  ? null
-                  : row.verdict === "changed"
-                    ? t.screenshotChangedHint
-                    : row.verdict === "incomparable"
-                      ? row.incomparableReason === "scope"
-                        ? t.screenshotIncomparableScope
-                        : row.incomparableReason === "viewport"
-                          ? t.screenshotIncomparableViewport
-                          : t.screenshotIncomparableUnknown
-                      : null;
-              return (
-                <tr key={row.key} className="border-b border-border/70 last:border-b-0">
-                  <th className="align-top px-4 py-3 font-semibold text-ink">{fieldLabel(row.key, t)}</th>
-                  <td className="px-4 py-3">
-                    <p
-                      className={
-                        row.verdict === "changed"
-                          ? "text-xs font-semibold uppercase tracking-wider text-accent"
-                          : "text-xs font-semibold uppercase tracking-wider text-ink-muted"
-                      }
-                    >
-                      {verdictLabel}
-                    </p>
-                    {screenshotHint ? (
-                      <p className="mt-2 text-xs leading-relaxed text-ink-muted">{screenshotHint}</p>
-                    ) : null}
-                    {showValues ? (
-                      <dl className="mt-2 grid gap-2 text-xs text-ink">
-                        <div>
-                          <dt className="text-ink-muted">{heading(left, locale)}</dt>
-                          <dd className="mt-0.5 break-all font-mono">{displayValue(row.left, t.emptyValue)}</dd>
-                        </div>
-                        <div>
-                          <dt className="text-ink-muted">{heading(right, locale)}</dt>
-                          <dd className="mt-0.5 break-all font-mono">{displayValue(row.right, t.emptyValue)}</dd>
-                        </div>
-                      </dl>
-                    ) : null}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <CompareFieldTable
+        title={t.screenshotGroup}
+        factColumn={t.factColumn}
+        rows={fields.filter((row) => row.key === "screenshot")}
+        left={left}
+        right={right}
+        locale={locale}
+        labels={t}
+      />
+      <CompareFieldTable
+        title={t.metadataGroup}
+        factColumn={t.factColumn}
+        rows={fields.filter((row) => row.key !== "screenshot")}
+        left={left}
+        right={right}
+        locale={locale}
+        labels={t}
+      />
     </div>
   );
 }

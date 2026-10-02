@@ -1,6 +1,10 @@
 import { notFound } from "next/navigation";
 import { ObservationComparePrompt } from "@/components/dashboard/ObservationComparePrompt";
 import { ObservationCompareView } from "@/components/dashboard/ObservationCompareView";
+import {
+  ObservationHtmlHeadSignalsPanel,
+  observationHtmlHeadCopyFrom,
+} from "@/components/dashboard/ObservationHtmlHeadSignalsPanel";
 import { copy } from "@/lib/i18n";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { compareObservations, orderObservationsByCapturedAt } from "@/lib/observation-compare";
@@ -21,6 +25,7 @@ export default async function DevComparePreviewPage({ searchParams }: Props) {
   if (process.env.NODE_ENV !== "development") notFound();
   const locale = await getRequestLocale();
   const t = copy[locale].observationCompare;
+  const htmlCopy = observationHtmlHeadCopyFrom(copy[locale].observationDetail);
   const fixture = (await searchParams).fixture?.trim() ?? "time";
 
   return (
@@ -36,15 +41,24 @@ export default async function DevComparePreviewPage({ searchParams }: Props) {
           />
         ) : null}
         {fixture === "time" ? (
-          <ObservationCompareView
-            left={orderObservationsByCapturedAt(compareFixtureTimeLeft, compareFixtureTimeRight)[0]}
-            right={orderObservationsByCapturedAt(compareFixtureTimeLeft, compareFixtureTimeRight)[1]}
-            siblings={[compareFixtureTimeLeft, compareFixtureTimeRight]}
-            fields={compareObservations(compareFixtureTimeLeft, compareFixtureTimeRight)}
-            locale={locale}
-            retentionDays={60}
-            mode="time"
-          />
+          <>
+            <ObservationCompareView
+              left={orderObservationsByCapturedAt(compareFixtureTimeLeft, compareFixtureTimeRight)[0]}
+              right={orderObservationsByCapturedAt(compareFixtureTimeLeft, compareFixtureTimeRight)[1]}
+              siblings={[compareFixtureTimeLeft, compareFixtureTimeRight]}
+              fields={compareObservations(compareFixtureTimeLeft, compareFixtureTimeRight)}
+              locale={locale}
+              retentionDays={60}
+              mode="time"
+            />
+            <div className="mt-8">
+              <ObservationHtmlHeadSignalsPanel
+                signals={compareFixtureTimeRight.captureConditions?.html_signals}
+                copy={htmlCopy}
+                requestedUrl={compareFixtureTimeRight.url}
+              />
+            </div>
+          </>
         ) : null}
         {fixture === "region" ? (
           <ObservationCompareView

@@ -8,6 +8,17 @@ export const OBSERVATION_COMPARE_FIELD_KEYS = [
   "description",
   "canonical",
   "robots",
+  "noindex",
+  "ogImage",
+] as const;
+
+export const OBSERVATION_COMPARE_METADATA_KEYS = [
+  "finalUrl",
+  "title",
+  "description",
+  "canonical",
+  "robots",
+  "noindex",
   "ogImage",
 ] as const;
 
@@ -103,6 +114,13 @@ function finalUrlOf(obs: Observation): string {
 function robotsOf(obs: Observation): string {
   const s = signalsOf(obs);
   return [text(s?.robots_meta), text(s?.x_robots_tag)].filter(Boolean).join(" · ");
+}
+
+function noindexOf(obs: Observation): string {
+  const value = signalsOf(obs)?.noindex;
+  if (value === true) return "true";
+  if (value === false) return "false";
+  return "";
 }
 
 function screenshotLabel(obs: Observation): string {
@@ -297,6 +315,12 @@ export function compareObservations(left: Observation, right: Observation): Obse
       left: robotsOf(left),
       right: robotsOf(right),
       verdict: textVerdict(robotsOf(left), robotsOf(right)),
+    },
+    {
+      key: "noindex",
+      left: noindexOf(left),
+      right: noindexOf(right),
+      verdict: textVerdict(noindexOf(left), noindexOf(right)),
     },
     {
       key: "ogImage",

@@ -35,7 +35,17 @@ export const compareFixtureTimeLeft: Observation = {
       json_ld_types: [],
       final_url: "https://example.com/campaign/summer-sale",
     },
-    { full_page_requested: false, viewport: { width: 1280, height: 720, device_scale_factor: 1, source: "browserless_implicit_default" } },
+    {
+      full_page_requested: false,
+      viewport: { width: 1280, height: 720, device_scale_factor: 1, source: "browserless_implicit_default" },
+      geo: {
+        country: "jp",
+        state: "13",
+        proxy_mode: "browserless_residential",
+        proxy_provider: "browserless",
+        proxy_sticky: null,
+      },
+    },
   ),
 };
 
@@ -62,7 +72,17 @@ export const compareFixtureTimeRight: Observation = {
       json_ld_types: [],
       final_url: "https://example.com/campaign/summer-sale",
     },
-    { full_page_requested: false, viewport: { width: 1280, height: 720, device_scale_factor: 1, source: "browserless_implicit_default" } },
+    {
+      full_page_requested: false,
+      viewport: { width: 1280, height: 720, device_scale_factor: 1, source: "browserless_implicit_default" },
+      geo: {
+        country: "jp",
+        state: "13",
+        proxy_mode: "browserless_residential",
+        proxy_provider: "browserless",
+        proxy_sticky: null,
+      },
+    },
   ),
 };
 
@@ -89,7 +109,17 @@ export const compareFixtureRegionLeft: Observation = {
       json_ld_types: [],
       final_url: "https://example.com/lp/geo",
     },
-    { full_page_requested: true, viewport: { width: 1280, height: 720, device_scale_factor: 1, source: "browserless_implicit_default" } },
+    {
+      full_page_requested: true,
+      viewport: { width: 1280, height: 720, device_scale_factor: 1, source: "browserless_implicit_default" },
+      geo: {
+        country: "jp",
+        state: "13",
+        proxy_mode: "browserless_residential",
+        proxy_provider: "browserless",
+        proxy_sticky: null,
+      },
+    },
   ),
 };
 
@@ -116,7 +146,17 @@ export const compareFixtureRegionRight: Observation = {
       json_ld_types: [],
       final_url: "https://example.com/lp/geo",
     },
-    { full_page_requested: false, viewport: { width: 1280, height: 720, device_scale_factor: 1, source: "browserless_implicit_default" } },
+    {
+      full_page_requested: false,
+      viewport: { width: 1280, height: 720, device_scale_factor: 1, source: "browserless_implicit_default" },
+      geo: {
+        country: "us",
+        state: null,
+        proxy_mode: "browserless_residential",
+        proxy_provider: "browserless",
+        proxy_sticky: null,
+      },
+    },
   ),
 };
 

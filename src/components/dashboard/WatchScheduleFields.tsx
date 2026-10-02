@@ -19,6 +19,10 @@ export type WatchScheduleFieldsCopy = {
   notifyLabel: string;
   notifyAlways: string;
   notifyChangeOnly: string;
+  notifyOnMetadata: string;
+  notifyOnMetadataHint: string;
+  notifyOnMetadataOn: string;
+  notifyOnMetadataOff: string;
   monitoringOn: string;
   monitoringOff: string;
   monitoringStateLabel: string;
@@ -33,6 +37,7 @@ export type WatchScheduleValues = {
   frequency: WatchFrequency;
   repeat: number;
   notify: WatchNotifyMode;
+  notifyOnMetadata: boolean;
 };
 
 type Props = {
@@ -41,6 +46,7 @@ type Props = {
   initialFrequency: WatchFrequency;
   initialRepeat: number;
   initialNotify: WatchNotifyMode;
+  initialNotifyOnMetadata?: boolean;
   monthlyLimit: number;
   maxDailyRepeats?: number;
   /** フォームの監視・スケジュール・通知の値が変わるたびに呼ばれる（要約表示など） */
@@ -54,12 +60,14 @@ export function WatchScheduleFields({
   initialFrequency,
   initialRepeat,
   initialNotify,
+  initialNotifyOnMetadata = false,
   monthlyLimit,
   maxDailyRepeats = 24,
   onValuesChange,
 }: Props) {
   const [enabled, setEnabled] = useState(initialEnabled);
   const [notify, setNotify] = useState<WatchNotifyMode>(initialNotify);
+  const [notifyOnMetadata, setNotifyOnMetadata] = useState(initialNotifyOnMetadata);
   const [frequency, setFrequency] = useState<WatchFrequency>(initialFrequency);
   const [repeat, setRepeat] = useState(() =>
     clampRepeatCount(initialFrequency, initialRepeat, maxDailyRepeats),
@@ -78,15 +86,17 @@ export function WatchScheduleFields({
       frequency,
       repeat: clampRepeatCount(frequency, repeat, maxDailyRepeats),
       notify,
+      notifyOnMetadata,
     });
-  }, [enabled, frequency, repeat, notify, maxDailyRepeats]);
+  }, [enabled, frequency, repeat, notify, notifyOnMetadata, maxDailyRepeats]);
 
   useEffect(() => {
     setEnabled(initialEnabled);
     setNotify(initialNotify);
+    setNotifyOnMetadata(initialNotifyOnMetadata);
     setFrequency(initialFrequency);
     setRepeat(clampRepeatCount(initialFrequency, initialRepeat, maxDailyRepeats));
-  }, [initialEnabled, initialNotify, initialFrequency, initialRepeat, maxDailyRepeats]);
+  }, [initialEnabled, initialNotify, initialNotifyOnMetadata, initialFrequency, initialRepeat, maxDailyRepeats]);
 
   const freqOptions: { value: WatchFrequency; label: string }[] = useMemo(
     () => [
@@ -176,6 +186,19 @@ export function WatchScheduleFields({
             className="size-4 border-border text-accent"
           />
           {copy.notifyChangeOnly}
+        </label>
+        <label className="flex cursor-pointer items-start gap-2 pt-1">
+          <input type="hidden" name="notify_on_metadata" value={notifyOnMetadata ? "true" : "false"} />
+          <input
+            type="checkbox"
+            checked={notifyOnMetadata}
+            onChange={(e) => setNotifyOnMetadata(e.target.checked)}
+            className="mt-0.5 size-4 border-border text-accent"
+          />
+          <span>
+            <span className="block">{copy.notifyOnMetadata}</span>
+            <span className="mt-0.5 block text-xs text-ink-muted">{copy.notifyOnMetadataHint}</span>
+          </span>
         </label>
       </fieldset>
 

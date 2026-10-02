@@ -29,6 +29,7 @@ export type AutoObsWatchRow = {
   schedule_frequency: string | null;
   repeat_count: number | null;
   notify_mode: string | null;
+  notify_on_metadata?: boolean | null;
   webhook_url: string | null;
 };
 
@@ -123,6 +124,7 @@ export function AutoObservationsClient({
     frequency: "daily",
     repeat: 1,
     notify: "change_only",
+    notifyOnMetadata: false,
   });
 
   const [rowSnapshots, setRowSnapshots] = useState<Record<string, WatchScheduleValues>>({});
@@ -154,6 +156,9 @@ export function AutoObservationsClient({
           : scheduleCopy.frequencyMonthly;
     const notify =
       addSchedule.notify === "always" ? scheduleCopy.notifyAlways : scheduleCopy.notifyChangeOnly;
+    const metadataNotify = addSchedule.notifyOnMetadata
+      ? scheduleCopy.notifyOnMetadataOn
+      : scheduleCopy.notifyOnMetadataOff;
     const mon = addSchedule.enabled ? scheduleCopy.monitoringOn : scheduleCopy.monitoringOff;
     const rep = String(addSchedule.repeat);
     return [
@@ -163,6 +168,7 @@ export function AutoObservationsClient({
       shortenWatchOptionLabelForPreview(freq),
       rep,
       shortenWatchOptionLabelForPreview(notify),
+      metadataNotify,
     ].join(" · ");
   }, [addUrl, addRegionLabel, addSchedule, copy.summaryUrlEmpty, scheduleCopy]);
 
@@ -302,6 +308,7 @@ export function AutoObservationsClient({
               const freq = parseWatchFrequency(String(w.schedule_frequency ?? "")) ?? ("daily" as WatchFrequency);
               const rep = clampRepeatCount(freq, Number(w.repeat_count ?? 1), maxDailyRepeats);
               const notify = parseWatchNotifyMode(String(w.notify_mode ?? "")) ?? ("always" as WatchNotifyMode);
+              const notifyOnMetadata = Boolean(w.notify_on_metadata);
               const regionLabel =
                 regions.find((r) => r.value === w.region)?.label ?? w.region;
               const rowValues: WatchScheduleValues =
@@ -310,6 +317,7 @@ export function AutoObservationsClient({
                   frequency: freq,
                   repeat: rep,
                   notify,
+                  notifyOnMetadata,
                 };
               const watchKey = `${w.url}\u0000${w.region}`;
               const latestObservationId = latestObservationIdByWatchKey[watchKey];
@@ -389,6 +397,7 @@ export function AutoObservationsClient({
                       initialFrequency={freq}
                       initialRepeat={rep}
                       initialNotify={notify}
+                      initialNotifyOnMetadata={notifyOnMetadata}
                       monthlyLimit={monthlyLimit}
                       maxDailyRepeats={maxDailyRepeats}
                       onValuesChange={(v) => setRowSnapshot(w.id, v)}

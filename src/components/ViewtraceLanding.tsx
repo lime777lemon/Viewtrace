@@ -338,7 +338,110 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
           </div>
         </section>
 
-        <section id="auto-observations" className="border-b border-border bg-surface-elevated">
+        <section id="page-metadata" className="border-b border-border bg-surface-elevated">
+          <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-14">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#276248] sm:text-xs">
+              {t.pageMetadata.kicker}
+            </p>
+            <h2 className="font-display mt-3 max-w-3xl text-2xl font-semibold leading-snug text-ink sm:text-3xl">
+              {t.pageMetadata.title}
+            </h2>
+            <p className="mt-4 max-w-3xl text-sm leading-relaxed text-ink-muted sm:text-base">
+              {t.pageMetadata.body}
+            </p>
+            <div className="mt-10 grid items-start gap-8 lg:grid-cols-2 lg:gap-12">
+              <div className="grid gap-4">
+                {t.pageMetadata.points.map((item) => (
+                  <article
+                    key={item.title}
+                    className="rounded-2xl border border-border bg-surface p-5 shadow-sm"
+                  >
+                    <h3 className="font-display text-base font-semibold text-ink">
+                      {item.title}
+                    </h3>
+                    <p className="mt-2 text-sm leading-relaxed text-ink-muted">{item.body}</p>
+                  </article>
+                ))}
+              </div>
+              <aside className="space-y-4 rounded-2xl border border-border bg-surface p-6 shadow-sm sm:p-8">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-muted">
+                  {t.pageMetadata.panelKicker}
+                </p>
+                <dl className="space-y-3 text-sm">
+                  <div>
+                    <dt className="text-xs font-medium text-ink-muted">{t.pageMetadata.fieldTitle}</dt>
+                    <dd className="mt-0.5 text-ink">{t.pageMetadata.mockTitle}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-medium text-ink-muted">
+                      {t.pageMetadata.fieldDescription}
+                    </dt>
+                    <dd className="mt-0.5 text-ink">{t.pageMetadata.mockDescription}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-medium text-ink-muted">
+                      {t.pageMetadata.fieldCanonical}
+                    </dt>
+                    <dd className="mt-0.5 break-all font-mono text-xs text-ink">
+                      {t.pageMetadata.mockCanonical}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-medium text-ink-muted">{t.pageMetadata.fieldRobots}</dt>
+                    <dd className="mt-0.5 font-mono text-xs text-ink">{t.pageMetadata.mockRobots}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-medium text-ink-muted">{t.pageMetadata.fieldOg}</dt>
+                    <dd className="mt-0.5 text-ink">{t.pageMetadata.mockOg}</dd>
+                  </div>
+                </dl>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-muted">
+                    {t.pageMetadata.searchPreview}
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed text-ink-muted">
+                    {t.pageMetadata.searchPreviewHint}
+                  </p>
+                  <div className="mt-2 rounded-lg border border-border bg-white px-3 py-2.5">
+                    <p className="text-sm font-medium text-[#1a0dab]">{t.pageMetadata.mockTitle}</p>
+                    <p className="mt-0.5 text-xs text-[#006621]">{t.pageMetadata.mockHost}</p>
+                    <p className="mt-1 text-xs leading-relaxed text-[#4d5156]">
+                      {t.pageMetadata.mockDescription}
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-muted">
+                    {t.pageMetadata.ogPreview}
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed text-ink-muted">
+                    {t.pageMetadata.ogPreviewHint}
+                  </p>
+                  <div className="mt-2 rounded-lg border border-border bg-white px-3 py-2.5">
+                    <p className="text-sm font-semibold text-ink">{t.pageMetadata.mockOg}</p>
+                    <p className="mt-1 text-xs leading-relaxed text-ink-muted">
+                      {t.pageMetadata.mockDescription}
+                    </p>
+                    <p className="mt-2 break-all font-mono text-[11px] text-ink-muted">
+                      {t.pageMetadata.mockOgImage}
+                    </p>
+                  </div>
+                </div>
+              </aside>
+            </div>
+            <p className="mt-8 max-w-3xl text-sm leading-relaxed text-ink-muted">
+              {t.pageMetadata.note}
+            </p>
+            <Link
+              href="/login?mode=signup"
+              className="mt-6 inline-flex items-center text-sm font-semibold text-accent transition hover:text-accent-hover"
+            >
+              {t.pageMetadata.cta}
+            </Link>
+          </div>
+        </section>
+
+        <section id="auto-observations" className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-14">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#276248] sm:text-xs">
               {t.autoWatch.kicker}

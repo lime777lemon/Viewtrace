@@ -8,6 +8,7 @@ import {
   clampRepeatCount,
   parseWatchFrequency,
   parseWatchNotifyMode,
+  parseWatchNotifyOnMetadata,
   type WatchFrequency,
   type WatchNotifyMode,
 } from "@/lib/observation-watch-schedule";
@@ -71,6 +72,7 @@ export async function saveObservationWatchAction(formData: FormData): Promise<vo
 
   const scheduleFrequency = parseWatchFrequency(freqRaw) ?? ("daily" as WatchFrequency);
   const notifyMode: WatchNotifyMode = parseWatchNotifyMode(notifyRaw) ?? "change_only";
+  const notifyOnMetadata = parseWatchNotifyOnMetadata(formData.get("notify_on_metadata"));
   const repeatCount = clampRepeatCount(scheduleFrequency, repeatRaw, plan.watchMaxDailyRepeats);
 
   const webhookRaw = String(formData.get("webhook_url") ?? "").trim();
@@ -105,15 +107,23 @@ export async function saveObservationWatchAction(formData: FormData): Promise<vo
     schedule_frequency: scheduleFrequency,
     repeat_count: repeatCount,
     notify_mode: notifyMode,
+    notify_on_metadata: notifyOnMetadata,
     snapshot_full_page: snapshotFullPage,
     plan_id: session.plan,
     webhook_url: webhookUrl,
     updated_at: nowIso,
   };
 
-  const { error } = await supabase.from("observation_watches").upsert(payload, {
+  let { error } = await supabase.from("observation_watches").upsert(payload, {
     onConflict: "user_id,url,region",
   });
+  if (error?.code === "PGRST204" || /notify_on_metadata/i.test(error?.message ?? "")) {
+    const { notify_on_metadata: _omit, ...legacyPayload } = payload;
+    void _omit;
+    ({ error } = await supabase.from("observation_watches").upsert(legacyPayload, {
+      onConflict: "user_id,url,region",
+    }));
+  }
   if (error) {
     console.error("[observation-watches] upsert failed", error);
     if (redirectAfter === "auto-observations") {

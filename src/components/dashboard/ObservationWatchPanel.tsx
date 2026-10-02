@@ -34,6 +34,7 @@ type Props = {
   initialFrequency: WatchFrequency;
   initialRepeat: number;
   initialNotify: WatchNotifyMode;
+  initialNotifyOnMetadata?: boolean;
   copy: ObservationWatchPanelCopy;
   initialWebhookUrl?: string | null;
   /** 保存後の遷移（未指定かつ observationId あり→詳細へ） */
@@ -53,6 +54,7 @@ export function ObservationWatchPanel({
   initialFrequency,
   initialRepeat,
   initialNotify,
+  initialNotifyOnMetadata = false,
   copy,
   initialWebhookUrl,
   redirectAfter,
@@ -103,6 +105,7 @@ export function ObservationWatchPanel({
             initialFrequency={initialFrequency}
             initialRepeat={initialRepeat}
             initialNotify={initialNotify}
+            initialNotifyOnMetadata={initialNotifyOnMetadata}
             monthlyLimit={monthlyLimit}
             maxDailyRepeats={maxDailyRepeats}
           />

@@ -16,14 +16,11 @@ import { ObservationNotVisible } from "@/components/dashboard/ObservationNotVisi
 import { PrintReportButton } from "@/components/dashboard/PrintReportButton";
 import { getSession } from "@/lib/auth/session";
 import { getObservationMergedForPlan } from "@/lib/demo/user-observations";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { reconcileObservationContentHashIfNeeded } from "@/lib/observation-content-hash-repair";
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
 import { copy } from "@/lib/i18n";
 import { localizeObservationNote } from "@/lib/i18n/observation-persisted-copy";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { sanitizeObservationRouteId } from "@/lib/observation-route-id";
-import { contentHashVersionForObservation } from "@/lib/observation-content-hash";
 import { resolveObservationCaptureTier } from "@/lib/observation-capture-tier";
 import { getPlan } from "@/lib/plans";
 import { htmlHeadSignalsHasAny } from "@/lib/url-preview";
@@ -62,7 +59,7 @@ export default async function ObservationReportPage({ params }: Props) {
   if (!session) {
     redirect(`/login?next=${encodeURIComponent(`/dashboard/observations/${id}/report`)}`);
   }
-  let obs = await getObservationMergedForPlan(id, session.plan);
+  const obs = await getObservationMergedForPlan(id, session.plan);
   if (!obs) {
     return (
       <ObservationNotVisible
@@ -73,10 +70,6 @@ export default async function ObservationReportPage({ params }: Props) {
     );
   }
 
-  const supabase = await createSupabaseServerClient();
-  const reconciled = await reconcileObservationContentHashIfNeeded(supabase, obs);
-  obs = reconciled.obs;
-  const integrity = reconciled.integrity;
   const screenshotExpired = isObservationScreenshotExpired(
     obs,
     getPlan(session.plan).retentionDays,
@@ -106,27 +99,10 @@ export default async function ObservationReportPage({ params }: Props) {
             none: ct.hintNoImage,
           } as const
         )[captureTier];
-  const contentHashVersion = contentHashVersionForObservation(obs);
-
   const captureConditionsCopy = observationCaptureConditionsCopyFrom(td);
   const geoCopy = observationGeoCopyFrom(td);
 
   const htmlHeadSignalsCopy = observationHtmlHeadCopyFrom(td);
-
-  const integrityLabel =
-    integrity === "ok"
-      ? locale === "ja"
-        ? "一致"
-        : "OK"
-      : integrity === "missing"
-        ? locale === "ja"
-          ? "未設定"
-          : "N/A"
-        : integrity === "mismatch"
-          ? locale === "ja"
-            ? "不一致"
-            : "MISMATCH"
-          : "—";
 
   return (
     <>
@@ -261,13 +237,8 @@ export default async function ObservationReportPage({ params }: Props) {
           <h2 className="text-sm font-semibold text-ink">{t.sectionHashes}</h2>
           <dl className="mt-3 space-y-3 font-mono text-xs text-ink">
             <div>
-              <dt className="text-ink-muted">
-                {t.hashContent} (v{contentHashVersion})
-              </dt>
+              <dt className="text-ink-muted">{t.hashContent}</dt>
               <dd className="mt-1 break-all">{obs.contentHash ?? "—"}</dd>
-              <dd className="mt-1 text-ink-muted">
-                {t.reportIntegrity}: {integrityLabel}
-              </dd>
             </div>
             <div>
               <dt className="text-ink-muted">{t.hashSnapshot}</dt>

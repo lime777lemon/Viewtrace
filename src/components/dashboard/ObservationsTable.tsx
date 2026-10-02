@@ -137,37 +137,51 @@ export function ObservationsTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {rows.map((row) => (
+            {rows.map((row) => {
+              const detailHref = `/dashboard/observations/${row.id}`;
+              const capturedLabel = formatJaDateTime(row.capturedAt, locale);
+              const detailAria = `${tb.actionDetail}: ${capturedLabel}`;
+              const cellLinkClass =
+                "block h-full px-4 py-3 no-underline outline-offset-[-2px] hover:bg-accent-soft/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent";
+              return (
               <tr key={row.id} className="hover:bg-surface/80">
-                <td className="px-4 py-3 align-top text-ink-muted">
-                  <span className="text-ink">{formatJaDateTime(row.capturedAt, locale)}</span>
-                  <span className="mt-0.5 block text-[11px] text-ink-muted">
-                    {formatUtcLabel(row.capturedAt)}
-                  </span>
-                </td>
-                <td className="max-w-55 truncate px-4 py-3 align-top font-mono text-xs text-ink">
-                  {row.url}
-                </td>
-                <td className="px-4 py-3 align-top text-ink">
-                  <ObservationRegionReadout
-                    requestedLabel={row.regionLabel}
-                    regionValue={row.regionValue}
-                    captureConditions={row.captureConditions}
-                    copy={geoCopy}
-                    locale={locale}
-                    compact
-                  />
-                </td>
-                <td className="px-4 py-3 align-top">
-                  <StatusBadge status={row.status} locale={locale} />
-                  {retentionDays != null && isObservationScreenshotExpired(row, retentionDays) ? (
-                    <span className="mt-1 block text-[11px] text-ink-muted">{tb.screenshotExpired}</span>
-                  ) : null}
-                  {row.note ? (
-                    <span className="mt-1 block text-[11px] text-ink-muted">
-                      {localizeObservationNote(row.note, locale)}
+                <td className="p-0 align-top text-ink-muted">
+                  <Link href={detailHref} aria-label={detailAria} className={cellLinkClass}>
+                    <span className="text-ink">{capturedLabel}</span>
+                    <span className="mt-0.5 block text-[11px] text-ink-muted">
+                      {formatUtcLabel(row.capturedAt)}
                     </span>
-                  ) : null}
+                  </Link>
+                </td>
+                <td className="max-w-55 p-0 align-top font-mono text-xs text-ink">
+                  <Link href={detailHref} aria-label={detailAria} className={`${cellLinkClass} min-w-0 truncate`}>
+                    {row.url}
+                  </Link>
+                </td>
+                <td className="p-0 align-top text-ink">
+                  <Link href={detailHref} aria-label={detailAria} className={cellLinkClass}>
+                    <ObservationRegionReadout
+                      requestedLabel={row.regionLabel}
+                      regionValue={row.regionValue}
+                      captureConditions={row.captureConditions}
+                      copy={geoCopy}
+                      locale={locale}
+                      compact
+                    />
+                  </Link>
+                </td>
+                <td className="p-0 align-top">
+                  <Link href={detailHref} aria-label={detailAria} className={cellLinkClass}>
+                    <StatusBadge status={row.status} locale={locale} />
+                    {retentionDays != null && isObservationScreenshotExpired(row, retentionDays) ? (
+                      <span className="mt-1 block text-[11px] text-ink-muted">{tb.screenshotExpired}</span>
+                    ) : null}
+                    {row.note ? (
+                      <span className="mt-1 block text-[11px] text-ink-muted">
+                        {localizeObservationNote(row.note, locale)}
+                      </span>
+                    ) : null}
+                  </Link>
                 </td>
                 <td className="px-4 py-3 align-top">
                   <div className="flex flex-wrap gap-1">
@@ -201,14 +215,15 @@ export function ObservationsTable({
                 </td>
                 <td className="px-4 py-3 text-right align-top">
                   <Link
-                    href={`/dashboard/observations/${row.id}`}
+                    href={detailHref}
                     className="font-medium text-accent hover:text-accent-hover"
                   >
                     {tb.actionDetail}
                   </Link>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>

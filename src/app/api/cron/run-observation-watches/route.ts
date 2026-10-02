@@ -3,6 +3,9 @@ import { AUDIT_ACTION, appendAuditEventAsService } from "@/lib/audit-log";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { buildCaptureConditionsFromBrowserless } from "@/lib/capture-conditions";
 import { runBrowserlessScreenshotWithProxyRetry } from "@/lib/browserless-screenshot";
+import { runUrlPreviewFetch } from "@/lib/url-preview-fetch";
+import { htmlHeadSignalsHasAny } from "@/lib/url-preview";
+import { shouldNotifyWatchOnMetadata } from "@/lib/observation-html-signals-readout";
 import { getPngDimensions } from "@/lib/png-dimensions";
 import type { Observation } from "@/lib/demo/observations";
 import { computeObservationContentHash } from "@/lib/observation-content-hash";
@@ -16,6 +19,7 @@ import {
   isDailyWatchDueOnCronDay,
   parseWatchFrequency,
   parseWatchNotifyMode,
+  parseWatchNotifyOnMetadata,
   startOfUtcDay,
   type WatchFrequency,
   type WatchNotifyMode,
@@ -158,17 +162,32 @@ export async function POST(req: Request) {
     return email;
   }
 
-  const { data: watches, error } = await svc
+  const watchDueFilter = `next_run_at.is.null,next_run_at.lte.${horizonIso},and(schedule_frequency.eq.daily,or(last_run_at.is.null,last_run_at.lt.${todayStartIso}))`;
+  const watchSelectWithMetadata =
+    "id,user_id,url,region,enabled,last_notified_at,schedule_frequency,repeat_count,notify_mode,notify_on_metadata,snapshot_full_page,next_run_at,last_run_at,webhook_url,plan_id";
+  const watchSelectLegacy =
+    "id,user_id,url,region,enabled,last_notified_at,schedule_frequency,repeat_count,notify_mode,snapshot_full_page,next_run_at,last_run_at,webhook_url,plan_id";
+  let watches: Record<string, unknown>[] | null = null;
+  let { data: watchRowsWithMetadata, error } = await svc
     .from("observation_watches")
-    .select(
-      "id,user_id,url,region,enabled,last_notified_at,schedule_frequency,repeat_count,notify_mode,snapshot_full_page,next_run_at,last_run_at,webhook_url,plan_id",
-    )
+    .select(watchSelectWithMetadata)
     .eq("enabled", true)
-    .or(
-      `next_run_at.is.null,next_run_at.lte.${horizonIso},and(schedule_frequency.eq.daily,or(last_run_at.is.null,last_run_at.lt.${todayStartIso}))`,
-    )
+    .or(watchDueFilter)
     .order("next_run_at", { ascending: true, nullsFirst: true })
     .limit(40);
+  if (error && /notify_on_metadata/i.test(error.message)) {
+    const fallback = await svc
+      .from("observation_watches")
+      .select(watchSelectLegacy)
+      .eq("enabled", true)
+      .or(watchDueFilter)
+      .order("next_run_at", { ascending: true, nullsFirst: true })
+      .limit(40);
+    watches = (fallback.data ?? []) as Record<string, unknown>[];
+    error = fallback.error;
+  } else {
+    watches = (watchRowsWithMetadata ?? []) as Record<string, unknown>[];
+  }
 
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 502 });
@@ -416,6 +435,7 @@ export async function POST(req: Request) {
     const watchId = getString(row, "id");
     const userId = getString(row, "user_id");
     const notifyMode: WatchNotifyMode = parseWatchNotifyMode(getString(row, "notify_mode")) ?? "always";
+    const notifyOnMetadata = parseWatchNotifyOnMetadata(row.notify_on_metadata);
     const fullPage = getBool(row, "snapshot_full_page", false);
     const webhookUrl = normalizeObservationWebhookUrl(getString(row, "webhook_url") || null);
 
@@ -513,8 +533,22 @@ export async function POST(req: Request) {
       blobUrl ? "自動観測（定期）" : "自動観測（スクリーンショットの保存に失敗）",
     );
 
+    let htmlSignals;
+    try {
+      const preview = await runUrlPreviewFetch(url, {
+        screenshotFallback: false,
+        regionValue: region,
+        retryWithoutProxyOnFailure: true,
+      });
+      if (preview.ok && htmlHeadSignalsHasAny(preview.htmlSignals)) {
+        htmlSignals = preview.htmlSignals;
+      }
+    } catch {
+      htmlSignals = undefined;
+    }
+
     const pngDims = await getPngDimensions(shot.png);
-    const captureConditions = buildCaptureConditionsFromBrowserless({
+    let captureConditions = buildCaptureConditionsFromBrowserless({
       capturedAt,
       regionInput: region,
       regionLabel: region,
@@ -538,6 +572,9 @@ export async function POST(req: Request) {
       snapshotContentType: snapshotContentTypeStored,
       snapshotSha256Present: Boolean(snapshotSha256Stored),
     });
+    if (htmlSignals) {
+      captureConditions = { ...captureConditions, html_signals: htmlSignals };
+    }
 
     const obsForHash: Observation = {
       id: obsId,
@@ -682,6 +719,7 @@ export async function POST(req: Request) {
       }
     }
 
+    let emailedThisRun = false;
     if (notifyMode === "always") {
       if (!userEmail) {
         console.warn("[cron] email skipped: user_email_missing", { watchId, userId });
@@ -720,6 +758,7 @@ export async function POST(req: Request) {
         const res = await sendResendEmail({ to: userEmail, subject, text, html });
         if (res.ok) {
           notified += 1;
+          emailedThisRun = true;
           await markWatchNotified(watchId);
         } else {
           console.warn("[cron] email failed", { watchId, userId, error: res.error });
@@ -754,6 +793,55 @@ export async function POST(req: Request) {
         const html = [
           "<p><strong>Screenshot difference detected</strong></p>",
           "<p>前回の Observation とスクリーンショットの内容が異なります。ページ自体が変更されたとは限りません。</p>",
+          `<p><strong>URL</strong><br/>${escapeHtml(url)}</p>`,
+          `<p><strong>Region</strong> / 地域<br/>${escapeHtml(region)}</p>`,
+          observationCompareLinkHtml(compareOpenUrl),
+          observationRecordLinkHtml(openUrl),
+          emailAccountHintHtml(userEmail),
+        ].join("");
+
+        const res = await sendResendEmail({ to: userEmail, subject, text, html });
+        if (res.ok) {
+          notified += 1;
+          emailedThisRun = true;
+          await markWatchNotified(watchId);
+        } else {
+          console.warn("[cron] email failed", { watchId, userId, error: res.error });
+        }
+      }
+    }
+
+    const metadataNotify = shouldNotifyWatchOnMetadata({
+      notifyOnMetadata,
+      alreadyNotifiedThisRun: emailedThisRun,
+      previous: previous?.captureConditions?.html_signals,
+      current: captureConditions.html_signals,
+    });
+    if (metadataNotify.send && compareOpenUrl) {
+      if (!userEmail) {
+        console.warn("[cron] email skipped: user_email_missing", { watchId, userId });
+      } else if (!isResendConfigured()) {
+        console.warn("[cron] email skipped: resend_not_configured", { watchId, userId });
+      } else {
+        const fields = metadataNotify.fields.join(" / ");
+        const subject = "Viewtrace: Metadata difference recorded";
+        const text = [
+          "Metadata difference recorded",
+          "前回の Observation と title / canonical / noindex が異なります。順位やページ全体の診断ではありません。",
+          "",
+          `Changed / 差: ${fields}`,
+          `URL: ${url}`,
+          `Region / 地域: ${region}`,
+          "",
+          `Open compare / 比較を開く: ${compareOpenUrl}`,
+          `Open record / 記録を開く: ${openUrl}`,
+          "",
+          emailAccountHintText(userEmail),
+        ].join("\n");
+        const html = [
+          "<p><strong>Metadata difference recorded</strong></p>",
+          "<p>前回の Observation と title / canonical / noindex が異なります。順位やページ全体の診断ではありません。</p>",
+          `<p><strong>Changed</strong> / 差<br/>${escapeHtml(fields)}</p>`,
           `<p><strong>URL</strong><br/>${escapeHtml(url)}</p>`,
           `<p><strong>Region</strong> / 地域<br/>${escapeHtml(region)}</p>`,
           observationCompareLinkHtml(compareOpenUrl),

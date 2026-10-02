@@ -31,8 +31,6 @@ import {
   listObservationsForUrlIdentity,
 } from "@/lib/demo/user-observations";
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
-import { reconcileObservationContentHashIfNeeded } from "@/lib/observation-content-hash-repair";
-import { contentHashVersionForObservation } from "@/lib/observation-content-hash";
 import { ObservationWatchPanel } from "@/components/dashboard/ObservationWatchPanel";
 import { getPlan } from "@/lib/plans";
 import {
@@ -121,17 +119,13 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
   const verifyToken = await ensureObservationVerifyTokenForUser(supabase, obs.id);
   const verifyUrl = verifyToken ? buildPublicVerifyUrlForObservation(verifyToken) : null;
 
-  const reconciled = await reconcileObservationContentHashIfNeeded(supabase, obs);
-  obs = reconciled.obs;
-  const contentIntegrity = reconciled.integrity;
-
   const plan = getPlan(session.plan);
   const { data: watchRow } =
     plan.autoObservationWatch && obs.regionValue
       ? await supabase
           .from("observation_watches")
           .select(
-            "enabled,schedule_frequency,repeat_count,notify_mode,webhook_url",
+            "enabled,schedule_frequency,repeat_count,notify_mode,notify_on_metadata,webhook_url",
           )
           .eq("user_id", session.userId)
           .eq("url", obs.url)
@@ -152,6 +146,7 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
   );
   const watchNotify: WatchNotifyMode =
     parseWatchNotifyMode(String(watchRow?.notify_mode ?? "")) ?? "change_only";
+  const watchNotifyOnMetadata = Boolean(watchRow?.notify_on_metadata);
 
   const screenshotExpired = isObservationScreenshotExpired(obs, plan.retentionDays);
   const storedVisibleImage = visibleSnapshotImageUrl(obs, plan.retentionDays);
@@ -182,8 +177,6 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
   const compareSiblings = compareRelated.filter(
     (row) => (row.regionValue ?? "") === (obs.regionValue ?? ""),
   );
-
-  const contentHashVersion = contentHashVersionForObservation(obs);
 
   const captureConditionsCopy = observationCaptureConditionsCopyFrom(t);
   const geoCopy = observationGeoCopyFrom(t);
@@ -394,42 +387,6 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
             failedLabel={t.verifyLinkCopyFailed}
           />
         ) : null}
-        <div className="rounded-xl border border-border bg-surface-elevated p-4 sm:col-span-2">
-          <dt className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
-            {t.integrityTitle}
-          </dt>
-          <dd className="mt-1 text-xs leading-relaxed text-ink-muted">{t.integritySubtitle}</dd>
-          <dd className="mt-2 space-y-2 text-sm text-ink">
-            {contentIntegrity === "ok" ? (
-              <>
-                <p>
-                  {t.integrityOk.replace("{version}", String(contentHashVersion))}
-                </p>
-                {obs.contentHash ? (
-                  <p className="break-all font-mono text-xs text-ink-muted">
-                    {obs.contentHash}
-                  </p>
-                ) : null}
-              </>
-            ) : contentIntegrity === "missing" ? (
-              <p className="text-ink-muted">
-                {t.integrityMissing}
-              </p>
-            ) : (
-              <>
-                <p className="font-medium text-emerald-950 dark:text-emerald-400">
-                  {t.integrityMismatch}
-                </p>
-                {obs.contentHash ? (
-                  <p className="break-all font-mono text-xs text-ink-muted">
-                    {t.integrityStoredPrefix}
-                    {obs.contentHash}
-                  </p>
-                ) : null}
-              </>
-            )}
-          </dd>
-        </div>
         <ObservationCaptureConditionsPanel
           conditions={obs.captureConditions}
           copy={captureConditionsCopy}
@@ -450,6 +407,7 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
             initialFrequency={watchFrequency}
             initialRepeat={watchRepeat}
             initialNotify={watchNotify}
+            initialNotifyOnMetadata={watchNotifyOnMetadata}
             copy={{
               title: t.watchTitle,
               intro: t.watchIntro,
@@ -461,6 +419,10 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
               notifyLabel: t.watchNotifyLabel,
               notifyAlways: t.watchNotifyAlways,
               notifyChangeOnly: t.watchNotifyChangeOnly,
+              notifyOnMetadata: t.watchNotifyMetadata,
+              notifyOnMetadataHint: t.watchNotifyMetadataHint,
+              notifyOnMetadataOn: t.watchNotifyMetadataOn,
+              notifyOnMetadataOff: t.watchNotifyMetadataOff,
               monitoringOn: t.watchMonitoringOn,
               monitoringOff: t.watchMonitoringOff,
               monitoringStateLabel: t.watchMonitoringStateLabel,

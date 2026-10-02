@@ -25,6 +25,7 @@ function fieldLabel(
     description: string;
     canonical: string;
     robots: string;
+    noindex: string;
     ogImage: string;
   },
 ): string {
@@ -41,6 +42,8 @@ function fieldLabel(
       return t.canonical;
     case "robots":
       return t.robots;
+    case "noindex":
+      return t.noindex;
     case "ogImage":
       return t.ogImage;
   }

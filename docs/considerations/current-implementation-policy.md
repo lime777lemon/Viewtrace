@@ -4,7 +4,7 @@
 - **記録日:** 2026-10-02
 - **置き換え:** 新機能を全部止める、ではない。Activation 着地の先回り改修と、Verify / SEO Checker / AI / Scout は止める。
 - **一言:** 価値は Observation。流れは Observe → Observe again → Compare → Share。1 Capture = 1 Observation。機能制限より月間 Observation 数で原価を止める。
-- **今やること:** Monitor v1（既存 Watch）。Compare の Screenshot 三値で Changed のときだけ通知。Share Collection はまだ急がない。サイト全体 SEO crawler / Score / AI 診断 / Scout には進まない。
+- **今やること:** Monitor v1（既存 Watch）。Compare の Screenshot 三値で Changed のときだけ通知。保存済み html_signals の表示は常時（選ばせない）。メタ差分メールだけ Watch で選ばせる。Share Collection はまだ急がない。サイト全体 SEO crawler / Score / AI 診断 / Scout には進まない。
 
 各 Phase は「機能が完成したか」ではなく、**次へ進む根拠となる行動データが出たか**で判断する。
 
@@ -78,7 +78,7 @@ Slider は viewport・画像高さ・full-page 条件が一致するときだけ
 1. Time Compare / Region Compare / Public Observation / HTML Signals 差分 — 実装済み
 2. **Multi-region Run** — 実装済み
 3. **Monitor v1** — 定期 Observation + Screenshot 三値（Compare と同一関数）+ Changed 通知 + Compare 導線
-4. HTML Signals が Watch Observation に載ってから Title 等の差分通知
+4. HTML Signals の常時表示（3段 / 検索プレビュー / OG プレビュー / Compare メタ差）と、Watch の任意メタ差分メール — 実装済み
 5. Share Collection — 複数記録を1リンク。単独の売る理由ではなく作業の楽さ
 6. Client / Project grouping、Compare 公開、定期レポート、CSV（Pro 運用）
 7. Time Compare の Slider（条件一致時のみ）
@@ -102,7 +102,7 @@ Activation の登録後着地 UI は、母数が小さいうちは変えない�
 1. Activation の計測（登録 / 確認 / 初回 / 2回目）— 固定。UI 改修しない
 2. Time Compare / Region Compare / Public Observation / HTML 差分 — 実装済み
 3. Multi-region Run — 実装済み
-4. Monitor v1（既存 Watch + Screenshot 三値 + Changed 通知）
+4. Monitor v1（既存 Watch + Screenshot 三値 + Changed 通知 + 任意のメタ差分メール）
 5. Share Collection
 6. Time Compare の Slider（条件一致時のみ）
 7. AI on existing captures（未承認）

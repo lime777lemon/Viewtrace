@@ -65,7 +65,13 @@ export function WatchSettingsReadout({
         </div>
         <div className="grid gap-0.5 sm:grid-cols-[minmax(7.5rem,auto)_1fr] sm:gap-x-3">
           <dt className="text-xs font-medium text-ink-muted">{scheduleCopy.notifyLabel}</dt>
-          <dd className="text-xs leading-relaxed sm:text-sm">{notify}</dd>
+          <dd className="text-xs leading-relaxed sm:text-sm">
+            {notify}
+            <span className="mt-0.5 block text-ink-muted">
+              {scheduleCopy.notifyOnMetadata}:{" "}
+              {values.notifyOnMetadata ? scheduleCopy.notifyOnMetadataOn : scheduleCopy.notifyOnMetadataOff}
+            </span>
+          </dd>
         </div>
         <div className="grid gap-0.5 sm:grid-cols-[minmax(7.5rem,auto)_1fr] sm:gap-x-3">
           <dt className="text-xs font-medium text-ink-muted">{scheduleCopy.estimateLabel}</dt>

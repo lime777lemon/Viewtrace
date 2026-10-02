@@ -46,6 +46,10 @@ export default async function AutoObservationsPage({
     notifyLabel: tDetail.watchNotifyLabel,
     notifyAlways: tDetail.watchNotifyAlways,
     notifyChangeOnly: tDetail.watchNotifyChangeOnly,
+    notifyOnMetadata: tDetail.watchNotifyMetadata,
+    notifyOnMetadataHint: tDetail.watchNotifyMetadataHint,
+    notifyOnMetadataOn: tDetail.watchNotifyMetadataOn,
+    notifyOnMetadataOff: tDetail.watchNotifyMetadataOff,
     monitoringOn: tDetail.watchMonitoringOn,
     monitoringOff: tDetail.watchMonitoringOff,
     monitoringStateLabel: tDetail.watchMonitoringStateLabel,
@@ -84,6 +88,10 @@ export default async function AutoObservationsPage({
     notifyLabel: panelCopy.notifyLabel,
     notifyAlways: panelCopy.notifyAlways,
     notifyChangeOnly: panelCopy.notifyChangeOnly,
+    notifyOnMetadata: panelCopy.notifyOnMetadata,
+    notifyOnMetadataHint: panelCopy.notifyOnMetadataHint,
+    notifyOnMetadataOn: panelCopy.notifyOnMetadataOn,
+    notifyOnMetadataOff: panelCopy.notifyOnMetadataOff,
     monitoringOn: panelCopy.monitoringOn,
     monitoringOff: panelCopy.monitoringOff,
     monitoringStateLabel: panelCopy.monitoringStateLabel,
@@ -117,11 +125,26 @@ export default async function AutoObservationsPage({
 
   const supabase = await createSupabaseServerClient();
 
-  const { data: watchRows } = await supabase
+  const watchListSelect =
+    "id,url,region,enabled,schedule_frequency,repeat_count,notify_mode,notify_on_metadata,webhook_url,updated_at";
+  const watchListSelectLegacy =
+    "id,url,region,enabled,schedule_frequency,repeat_count,notify_mode,webhook_url,updated_at";
+  let watchRows: Record<string, unknown>[] | null = null;
+  const firstWatchList = await supabase
     .from("observation_watches")
-    .select("id,url,region,enabled,schedule_frequency,repeat_count,notify_mode,webhook_url,updated_at")
+    .select(watchListSelect)
     .eq("user_id", session.userId)
     .order("updated_at", { ascending: false });
+  if (firstWatchList.error && /notify_on_metadata/i.test(firstWatchList.error.message)) {
+    const fallback = await supabase
+      .from("observation_watches")
+      .select(watchListSelectLegacy)
+      .eq("user_id", session.userId)
+      .order("updated_at", { ascending: false });
+    watchRows = (fallback.data ?? []) as Record<string, unknown>[];
+  } else {
+    watchRows = (firstWatchList.data ?? []) as Record<string, unknown>[];
+  }
 
   const { data: observationRows } = await supabase
     .from("observations")
@@ -148,6 +171,7 @@ export default async function AutoObservationsPage({
     schedule_frequency: r.schedule_frequency as string | null,
     repeat_count: typeof r.repeat_count === "number" ? r.repeat_count : null,
     notify_mode: r.notify_mode as string | null,
+    notify_on_metadata: Boolean((r as { notify_on_metadata?: unknown }).notify_on_metadata),
     webhook_url: typeof r.webhook_url === "string" ? r.webhook_url : null,
   }));
 

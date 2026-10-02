@@ -20,6 +20,10 @@ export function parseWatchNotifyMode(raw: string): WatchNotifyMode | null {
   return null;
 }
 
+export function parseWatchNotifyOnMetadata(value: unknown): boolean {
+  return value === true || value === "true" || value === "t" || value === 1 || value === "1";
+}
+
 /** UI プレビュー用: 「毎日（…）」→「毎日」、英語は括弧の手前まで。 */
 export function shortenWatchOptionLabelForPreview(label: string): string {
   const full = label.trim();

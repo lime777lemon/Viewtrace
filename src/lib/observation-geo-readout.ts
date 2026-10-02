@@ -56,7 +56,7 @@ function observedFromConditions(
   copy: ObservationGeoReadoutCopy,
   locale: Locale,
 ): string | null {
-  if (!conditions) return null;
+  if (!conditions?.geo) return null;
   const mode = conditions.geo.proxy_mode;
   if (mode === "retry_without_proxy" || mode === "none") {
     return copy.observedNoGeo;
