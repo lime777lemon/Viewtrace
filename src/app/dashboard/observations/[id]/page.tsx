@@ -98,7 +98,7 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
   if (!session) {
     redirect(`/login?next=${encodeURIComponent(`/dashboard/observations/${id}`)}`);
   }
-  let obs = await getObservationMergedForPlan(id, session.plan);
+  const obs = await getObservationMergedForPlan(id, session.plan);
   if (!obs) {
     /**
      * 自動観測メールを「別アカウント」でログイン中の端末で開くと RLS で行が見えず、

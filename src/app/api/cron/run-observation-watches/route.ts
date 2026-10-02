@@ -168,13 +168,14 @@ export async function POST(req: Request) {
   const watchSelectLegacy =
     "id,user_id,url,region,enabled,last_notified_at,schedule_frequency,repeat_count,notify_mode,snapshot_full_page,next_run_at,last_run_at,webhook_url,plan_id";
   let watches: Record<string, unknown>[] | null = null;
-  let { data: watchRowsWithMetadata, error } = await svc
+  const { data: watchRowsWithMetadata, error: watchSelectError } = await svc
     .from("observation_watches")
     .select(watchSelectWithMetadata)
     .eq("enabled", true)
     .or(watchDueFilter)
     .order("next_run_at", { ascending: true, nullsFirst: true })
     .limit(40);
+  let error = watchSelectError;
   if (error && /notify_on_metadata/i.test(error.message)) {
     const fallback = await svc
       .from("observation_watches")
