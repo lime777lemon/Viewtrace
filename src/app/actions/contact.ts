@@ -1,5 +1,6 @@
 "use server";
 
+import { createHash } from "node:crypto";
 import { isValidEmail } from "@/lib/auth/form-helpers";
 import { takeContactRateLimit } from "@/lib/contact/rate-limit";
 import { getContactClientIp } from "@/lib/contact/request-ip";
@@ -38,6 +39,13 @@ function escapeHtml(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
+function contactIdempotencyKey(email: string, topic: string, message: string): string {
+  const digest = createHash("sha256")
+    .update(`${email.toLowerCase()}\n${topic}\n${message}`)
+    .digest("hex");
+  return `contact-form/${digest}`;
+}
+
 export async function contactFormAction(
   _prev: ContactFormState,
   formData: FormData,
@@ -46,6 +54,20 @@ export async function contactFormAction(
   const locale: Locale = localeRaw === "ja" ? "ja" : "en";
   const t = getContactPageCopy(locale);
 
+  try {
+    return await runContactFormAction(formData, locale, t);
+  } catch (err) {
+    // Anything thrown outside sendResendEmail still surfaces as /contact 500.
+    console.error("[contact] unexpected error", err);
+    return { error: t.errSend };
+  }
+}
+
+async function runContactFormAction(
+  formData: FormData,
+  locale: Locale,
+  t: ReturnType<typeof getContactPageCopy>,
+): Promise<ContactFormState> {
   // Honeypot for simple bots
   if (String(formData.get("company_website") ?? "").trim()) {
     return { message: t.success };
@@ -114,26 +136,20 @@ export async function contactFormAction(
     `<p style="white-space:pre-wrap;word-break:break-word;">${escapeHtml(message)}</p>`,
   ].join("");
 
-  try {
-    const res = await sendResendEmail({
-      to: contactEmail,
-      replyTo: email,
-      subject,
-      text,
-      html,
-      tags: [{ name: "source", value: "contact_form" }],
-    });
+  const res = await sendResendEmail({
+    to: contactEmail,
+    replyTo: email,
+    subject,
+    text,
+    html,
+    tags: [{ name: "source", value: "contact_form" }],
+    idempotencyKey: contactIdempotencyKey(email, topic, message),
+  });
 
-    if (!res.ok) {
-      console.warn("[contact] send failed", res.error);
-      return { error: t.errSend };
-    }
-
-    return { message: t.success };
-  } catch (err) {
-    // Defensive: a thrown error here surfaces to the user as a 500
-    // (FUNCTION_INVOCATION_FAILED). Always return a friendly state instead.
-    console.error("[contact] unexpected error", err);
+  if (!res.ok) {
+    console.warn("[contact] send failed", res.error);
     return { error: t.errSend };
   }
+
+  return { message: t.success };
 }
