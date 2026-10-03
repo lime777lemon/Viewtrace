@@ -4,8 +4,6 @@ name: geo-node-us-proof
 
 on:
   workflow_dispatch:
-  push:
-    branches: [proof/us-geo-node]
 
 jobs:
   us-dc-node:
