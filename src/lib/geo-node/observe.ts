@@ -17,6 +17,8 @@ export function parseRequestedGeo(value: string | null | undefined): RequestedGe
   const n = normalizeObservationRegionInput(raw);
   const us = n.match(/^US-([A-Z]{2})$/);
   if (us) return { country: "US", region: us[1] ?? null };
+  const jpPref = n.match(/^JP-(\d{2})$/);
+  if (jpPref) return { country: "JP", region: jpPref[1] ?? null };
   if (/^[A-Z]{2}$/.test(n)) return { country: n, region: null };
   return { country: null, region: null };
 }
@@ -27,6 +29,7 @@ export function formatObservedGeo(country: string | null, region: string | null)
     const code = `US-${region}`;
     if (isValidObservationRegion(code)) return code;
   }
+  if (country === "JP" && region === "13") return "JP-13";
   return country;
 }
 
@@ -37,7 +40,12 @@ export function resolveObservedGeo(input: {
 }): ObservedGeo {
   const country = input.verifiedCountry?.trim().toUpperCase() || null;
   const regionRaw = input.verifiedRegion?.trim().toUpperCase() || null;
-  const region = country === "US" && regionRaw && isValidObservationRegion(`US-${regionRaw}`) ? regionRaw : null;
+  const region =
+    country === "US" && regionRaw && isValidObservationRegion(`US-${regionRaw}`)
+      ? regionRaw
+      : country === "JP" && parseJpRegion(regionRaw)
+        ? "13"
+        : null;
   return {
     country,
     region,
@@ -60,4 +68,17 @@ export function parseUsRegion(value: string | null | undefined): string | null {
   const v = value?.trim().toUpperCase() ?? "";
   if (!v) return null;
   return isValidObservationRegion(`US-${v}`) ? v : null;
+}
+
+export function parseJpRegion(value: string | null | undefined): string | null {
+  const v = value?.trim().toUpperCase() ?? "";
+  if (!v) return null;
+  if (v === "13" || v === "TYO" || v === "TOKYO") return "13";
+  return null;
+}
+
+export function parseDeclaredRegion(country: string, value: string | null | undefined): string | null {
+  if (country === "US") return parseUsRegion(value);
+  if (country === "JP") return parseJpRegion(value);
+  return null;
 }

@@ -25,11 +25,23 @@ export async function lookupIpRegion(ip: string | null | undefined): Promise<IpL
   const json = await fetchJson(`https://ipwho.is/${encodeURIComponent(addr)}`, 4000);
   if (!json || json.success === false) return { country: null, region: null };
   const country = typeof json.country_code === "string" ? json.country_code.trim().toUpperCase() : null;
-  const region = typeof json.region_code === "string" ? json.region_code.trim().toUpperCase() : null;
+  const regionRaw =
+    (typeof json.region_code === "string" && json.region_code.trim()) ||
+    (typeof json.region === "string" && json.region.trim()) ||
+    "";
+  const region = normalizeLookupRegion(country, regionRaw);
   return {
     country: country && /^[A-Z]{2}$/.test(country) ? country : null,
-    region: region && /^[A-Z]{2}$/.test(region) ? region : null,
+    region,
   };
+}
+
+function normalizeLookupRegion(country: string | null, raw: string): string | null {
+  const v = raw.trim().toUpperCase();
+  if (!v) return null;
+  if (country === "JP" && (v === "13" || v === "TYO" || v === "TOKYO")) return "13";
+  if (/^[A-Z]{2}$/.test(v)) return v;
+  return null;
 }
 
 export function verifiedRegionFromLookup(

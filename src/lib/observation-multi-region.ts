@@ -2,7 +2,7 @@
 export const MULTI_REGION_RUN_MAX = 6;
 
 /** プランで選べるときだけ出す推奨セット。 */
-export const MULTI_REGION_SUGGESTED = ["JP", "US-CA", "GB", "AU"] as const;
+export const MULTI_REGION_SUGGESTED = ["JP-13", "JP", "US-CA", "GB", "AU"] as const;
 
 export function clampRegionSelection(
   values: readonly string[],

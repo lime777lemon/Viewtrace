@@ -1,5 +1,5 @@
 import { lookupIpRegion, verifiedRegionFromLookup } from "@/lib/geo-node/ip-lookup";
-import { parseCountryCode, parseIpType, parseUsRegion, resolveObservedGeo } from "@/lib/geo-node/observe";
+import { parseCountryCode, parseDeclaredRegion, parseIpType, resolveObservedGeo } from "@/lib/geo-node/observe";
 import { geoNodeAdmin, parseGeoNodeId, tableMissing } from "@/lib/geo-node/shared";
 
 export const GEO_NODE_ONLINE_MS = 120_000;
@@ -56,7 +56,7 @@ export async function upsertGeoNode(input: {
   const country = parseCountryCode(input.country);
   if (!nodeId || !country) return { error: "invalid_node", status: 400 };
   const ipType = parseIpType(input.ipType) ?? "residential";
-  const region = country === "US" ? parseUsRegion(input.region) : null;
+  const region = parseDeclaredRegion(country, input.region);
   const city = input.city?.trim().slice(0, 64) || null;
   const observed = await verifyEgress(input.ip ?? null, parseCountryCode(input.observedCountry));
 
