@@ -1,138 +1,209 @@
-# 現行の実装方針 — Activation / Observation 本体
+# 現行の実装方針
 
-- **状態:** Activation 計測は固定。Activation UI は母数が小さいうちはいじらない。Observation の価値を強くする新機能は進めてよい。Verify を成長ループの主役にしない。Phase B（AI）以降は未承認。
-- **記録日:** 2026-10-02
-- **置き換え:** 新機能を全部止める、ではない。Activation 着地の先回り改修と、Verify / SEO Checker / AI / Scout は止める。
-- **一言:** 価値は Observation。流れは Observe → Observe again → Compare → Share。1 Capture = 1 Observation。機能制限より月間 Observation 数で原価を止める。
-- **今やること:** Monitor v1（既存 Watch）。Compare の Screenshot 三値で Changed のときだけ通知。保存済み html_signals の表示は常時（選ばせない）。メタ差分メールだけ Watch で選ばせる。Share Collection はまだ急がない。サイト全体 SEO crawler / Score / AI 診断 / Scout には進まない。
+- **状態:** Activation 計測は固定。Activation UI は母数が小さいうちはいじらない。Observation の価値を強くする新機能は進めてよい。Verify を成長ループの主役にしない。事実以上は Observation に混ぜず、別商品として足してよい。
+- **記録日:** 2026-10-04
+- **置き換え:** 新機能を全部止める、ではない。芯は Observation。解釈は上に載せる。
+- **一言:** 価値は Observation。流れは Observe → Observe again → Compare → Share。1 Capture = 1 Observation。本番の撮影出口は Browserless。観測記録は事実だけ。事実以上は **AIサイト分析（読み）** として、既存記録の上に売る。
+- **今やること:** 既存 Observation の事実レイアウト整理（スコアなし）。読みを差し込める空きを残す。その次が Share Collection。AIサイト分析の実装は、そのあと。
 
-各 Phase は「機能が完成したか」ではなく、**次へ進む根拠となる行動データが出たか**で判断する。
+各段階は「機能が完成したか」ではなく、**次へ進む根拠となる行動データが出たか**で判断する。
 
-## KPI（分ける）
+---
 
-**登録数 → メール確認数 → 初回 Observation → 2回目 Observation**
+## 1. 固定（プロダクトの芯）
 
-これで次のどれかが一目で分かる。
+本体は Observation。`URL × 地域 × 時点 → 実際の表示を取得 → 記録`。
 
-- 登録は増えているのに確認されない
-- 確認はされるが初回 Observation が作られない
-- 初回は作られるがリピートされない
+**1 URL × 1 Region × 1 Capture = 1 Observation**
 
-内部アカウントと既知のテストアドレスは「外部」の分母から外す。方法は `ACTIVATION_EXCLUDE_EMAILS`（検証用。管理権限は付かない）、`ADMIN_EMAILS`、`@viewtrace.net`。仕組みを増やさない。リストに無い個人アドレスが1件残ると、n が小さいうちは率を大きく動かす。
-
-確認メールの到達性は、未確認の中に typo・再登録・重複が混ざるうちは調べない。本物と思われる新規が数件〜十数件増え、正常なアドレスでも未確認が続くとき初めて見る。
-
-各ステップの読み方:
-
-- 登録 → 確認 = Auth / メール（入口）
-- 確認 → 初回 Observation = Activation
-- 初回 → 2回目 Observation = Repeat usage
-
-本番の「外部」数字をローカルと揃えるため、`ACTIVATION_EXCLUDE_EMAILS` は Vercel の Production / Preview / Development にも置く。次のデプロイ以降で本番管理画面に乗る。計測コードの追加デプロイがまだなら、変数だけでは反映されない。
-
-`/verify/[token]` は削除しない。成長ループではなく、**Share の公開サーフェス**。名前を変えるのは利用が確認されてからでよい。
-
-プロダクトの流れ:
+プロダクトの流れは一本だけ:
 
 **Observe → Observe again → Compare → Share**
 
-Multi-region は Observe の入口。Monitor / Alert / Collection はその先。
+Time Compare と Region Compare は別軸。Before / After は別ページにしない。
 
-$49 / $99 の差は、既存機能を Starter から取り上げるのではなく、**頻度・履歴・自動化・クライアント運用**で後から足す。
-
-## Time Compare と Region Compare
-
-**Time Compare** — 同じ URL 識別子 + 同じ地域 + 時点 A/B → 時間で何が変わったか
-
-**Region Compare** — 同じ URL 識別子 + 地域 A/B + 最も近い時点 → 地域で何が違ったか
+- **Time Compare** — 同じ URL 識別子 + 同じ地域 + 時点 A/B → 時間で何が変わったか
+- **Region Compare** — 同じ URL 識別子 + 地域 A/B + 最も近い時点 → 地域で何が違ったか
 
 URL 識別子は query を残す（`?campaign=A` と `?campaign=B` は別の着地）。Final URL は識別に使わず、比較フィールド。どちらも既存 Observation のみ。比較の撮影原価は増えない。
 
-Changed / Same / Not comparable は事実表示。Improved / Worse は入れない。**観測できた事実以上を断定しない。**
-
-**Screenshot**
+**Screenshot は三値のみ:**
 
 - Same → 同じ撮影条件で画像指紋が一致
 - Changed → 同じ撮影条件で画像指紋が不一致（= screenshot content differs。Page changed とは言わない）
 - Not comparable → 撮影条件が違うので、画像差について結論を出さない
 
-動的コンテンツ、Cookie banner、時刻、広告、アニメーションでも SHA は変わり得る。Title / Description / Canonical などは画像と独立して比較する。
+動的コンテンツ、Cookie banner、時刻、広告、アニメーションでも SHA は変わり得る。Title / Description / Canonical などは画像と独立して比較する。撮影範囲（Full page / Viewport）や viewport サイズが違うときは Not comparable。SHA 差をページ差と読ませない。Side by side は常に見せる。Monitor / Change Alert もこの三値を再利用する。条件不一致の自動観測を「ページが変わった」と通知しない。
 
-撮影範囲（Full page / Viewport）や viewport サイズが違うときは Not comparable。SHA 差をページ差と読ませない。Side by side は常に見せる。
+既存製品の記録面は observational（納品保証ではない）。
 
-Monitor / Change Alert もこの三値を再利用する。条件不一致の自動観測を「ページが変わった」と通知しない。
+### 二層（事実と商品）
 
-Slider（未実装）も同じ判定を使う。条件一致かつ画像高さが揃うときだけ Slider。条件不一致は Side by side のみ。
+芯は変えない。足すのは層です。
 
-## Before / After（未実装・別ページにしない）
+**① Observation（記録・無料で付く本体）**  
+Requested / Observed / Screenshot 三値 / html_signals / 取得条件。ここには Improved / Worse / スコア / 要対応を書かない。**記録の中では、観測できた事実以上を断定しない。**
 
-Time Compare ですでに左右表示している。追加するなら表示モード:
+**② AIサイト分析（読み・監査・事実以上の商品）**  
+既存 Observation の上にだけ載せる。追加撮影しない。Browserless 経路を変えない。Compare / Share / SHA と同じく Observation 消費は 0。AI 原価は別計測。クレジットパックにはしない。
 
-- Side by side（現行）
-- Slider（同じ位置・同じサイズ）
+監査は入れてよい。単位はサイト全体ではなく、**今ある 1 Observation、またはその Compare**。未撮影の下層は見に行かない。全体巡回は別アクション（17）で、今は作らない。
 
-Slider は viewport・画像高さ・full-page 条件が一致するときだけ有効。条件が違うと視覚比較がズレる。Screenshot の Changed 判定と同じ前提。今は作らない。
+画面上は必ず分ける。日本語は **記録** と **監査（AI）**。
 
-ロードマップ（Observation 軸）:
+- 記録 — 観測できた事実（Requested / Observed / 三値 / html_signals）
+- 監査（AI） — その記録を見て書いた指摘。Observed ではない。納品保証ではない
 
-1. Time Compare / Region Compare / Public Observation / HTML Signals 差分 — 実装済み
-2. **Multi-region Run** — 実装済み
-3. **Monitor v1** — 定期 Observation + Screenshot 三値（Compare と同一関数）+ Changed 通知 + Compare 導線
-4. HTML Signals の常時表示（3段 / 検索プレビュー / OG プレビュー / Compare メタ差）と、Watch の任意メタ差分メール — 実装済み
-5. Share Collection — 複数記録を1リンク。単独の売る理由ではなく作業の楽さ
-6. Client / Project grouping、Compare 公開、定期レポート、CSV（Pro 運用）
-7. Time Compare の Slider（条件一致時のみ）
+入れてよい監査:
 
-今やらない: サイト全体 SEO crawler / broken-link / AI SEO / SEO Score / Scout。Notes/Labels は詳細の注釈として既存。
+- 画面に何が見えるか（ヒーロー、CTA、言語、通貨、Cookie バナー）
+- 地域差・時点差（東京と US でヒーローが違う、Title は変わった）
+- このページについての指摘（CTA が埋もれている、言語が地域と食い違う、title が空、など）
+- 記録の言い換え（三値とメタ差を短くまとめる）
 
-Activation と反復がデータで正当化されてから B（既存画像AI）→ C（無料1回）→ D（Scout）→ E（Apollo/Outreach）
+まだ出さない:
 
-## 新機能の条件
+- 測っていない Performance / SEO / Accessibility の数字
+- Core Web Vitals / ラボ性能（撮っていない値を作らない）
+- 未撮影ページのサイト全体 SEO 監査
+
+Verify / Share に載せるときは、監査を記録の下に置き、AI の推定だと分かるラベルを付ける。成長フォームは足さない。
+
+### KPI（分ける）
+
+**登録数 → メール確認数 → 初回 Observation → 2回目 Observation**
+
+- 登録 → 確認 = Auth / メール（入口）
+- 確認 → 初回 Observation = Activation
+- 初回 → 2回目 Observation = Repeat usage
+
+これで次のどれかが一目で分かる。登録は増えているのに確認されない / 確認はされるが初回 Observation が作られない / 初回は作られるがリピートされない。
+
+内部アカウントと既知のテストアドレスは「外部」の分母から外す。方法は `ACTIVATION_EXCLUDE_EMAILS`（検証用。管理権限は付かない）、`ADMIN_EMAILS`、`@viewtrace.net`。仕組みを増やさない。リストに無い個人アドレスが1件残ると、n が小さいうちは率を大きく動かす。
+
+確認メールの到達性は、未確認の中に typo・再登録・重複が混ざるうちは調べない。本物と思われる新規が数件〜十数件増え、正常なアドレスでも未確認が続くとき初めて見る。
+
+本番の「外部」数字をローカルと揃えるため、`ACTIVATION_EXCLUDE_EMAILS` は Vercel の Production / Preview / Development にも置く。次のデプロイ以降で本番管理画面に乗る。計測コードの追加デプロイがまだなら、変数だけでは反映されない。
+
+Activation **計測**は固定。Activation **UI**は母数が小さいうちはいじらない。
+
+`/verify/[token]` は削除しない。成長ループではなく、**Share の公開サーフェス**。名前を変えるのは利用が確認されてからでよい。Verify → 次の Observation を北星 KPI にしない。Powered by ViewTrace は残す。`verify_events` は公開リンクの利用ログとして残してよい。新規イベントは増やさない。
+
+### 新機能の条件
 
 追加してよいのは、次のいずれかに当てはまるものだけ。
 
 - Observation を作る理由になる
 - 2回目の Observation を作る理由になる
 - 既存 Observation の価値を強くする
+- 既存 Observation の上に、事実と分けて売る解釈になる
 
-Activation の登録後着地 UI は、母数が小さいうちは変えない。サイト全体 SEO crawler / broken-link checker / AI SEO 診断 / SEO Score、HTML body crawl、Vision AI、Scout は今はやらない。html_signals の商品化（メタデータ表示と差分）は既存データのみなので進めてよい。
+$49 / $99 の差は、既存機能を Starter から取り上げるのではなく、**頻度・履歴・自動化・クライアント運用**で後から足す。
 
-## 開発順序
+---
 
-1. Activation の計測（登録 / 確認 / 初回 / 2回目）— 固定。UI 改修しない
-2. Time Compare / Region Compare / Public Observation / HTML 差分 — 実装済み
-3. Multi-region Run — 実装済み
-4. Monitor v1（既存 Watch + Screenshot 三値 + Changed 通知 + 任意のメタ差分メール）
-5. Share Collection
-6. Time Compare の Slider（条件一致時のみ）
-7. AI on existing captures（未承認）
-8. Free one-shot / Scout
+## 2. 実行計画
 
-## いま分かっている2つの問題（別物）
+番号は社内リスト（1–37）と対応する。上から順に進める。下の段階を先に作らない。
 
-### 1. 登録 → メール確認
+### 今やってよい（見た目だけ）
 
-未確認が多い。typo・再登録・重複が混ざる。10/18 未確認でも確認メールに問題があるとは言えない。本物と思われる新規が数件〜十数件増え、正常なアドレスでも未確認が続くとき初めて、到達性・文面・再送・登録後画面を見る。
+既存の事実を読みやすくする。新しい判定・新しい原価・新しい出口は足さない。
 
-### 2. メール確認 → 初回 Observation
+| # | 方針 | 内容 |
+| --- | --- | --- |
+| 36 | 進めてよい | 既存 Observation を、事実ブロックとして整列する。記録面にスコア・Findings・要対応は出さない。Interpreted 用の空きは作ってよい |
+| 37 | 進めてよい | そのレイアウトを AI に組ませる。レイアウト AI ≠ ページ診断 AI |
 
-プロダクト UX として重要。確認後の着地は `/dashboard`（概要・プラン・空の一覧）。初回ユーザーに「次に何をすれば価値を体験できるか」が弱い可能性がある。
+36 / 37 は解釈商品そのものではない。保存済みの title / description / canonical / robots / OG / Requested vs Observed / Screenshot 三値を、人が追いやすい順に並べる。解釈ブロックを後から差し込める形にしておく。
 
-対象がごく少数のうちは、即 UI 改修しない。今後の新規確認済みユーザーで同じ離脱が続くかを先に見る。
+### もうある / 出荷済
 
-検討案（未実装）: 初回ログイン時だけ、URL × 地域 → Observation 作成を主役にする。
+| # | 方針 | 内容 |
+| --- | --- | --- |
+| 1 | 出荷済 | Observation（URL × 地域 × 時点） |
+| 2 | 出荷済 | Observe again → Compare（Time / Region） |
+| 3 | 出荷済 | Screenshot 三値（Same / Changed / Not comparable） |
+| 4 | 出荷済 | html_signals（title / description / canonical / robots / OG）常時表示。選ばせない |
+| 5 | 出荷済 | Watch（Monitor v1）+ 任意のメタ差分メール。Changed のときだけ Screenshot 通知 |
+| 6 | 出荷済 | Multi-region Run |
+| 7 | 出荷済 | Verify / 公開シェア。成長ループにはしない |
+| 8 | 出荷済 | CSV / 証跡 JSON |
+| 9 | 出荷済 | 日本 · 東京（`JP-13`）を地域候補に追加。Requested として出す。Observed は検証できたときだけ東京と書く |
 
-## Observation — 本体
+Compare は一旦完成（Slider 以外）。html_signals の商品化は既存データのみなので、表示の整理は続けてよい。
 
-`URL × 地域 × 時点 → 実際の表示を取得 → 記録`
+### 次に足す（決めてある）
 
-**1 URL × 1 Region × 1 Capture = 1 Observation**
+| # | 方針 | 内容 |
+| --- | --- | --- |
+| 10 | 次 | Share Collection。複数 Observation を1リンク。単独の売る理由ではなく作業の楽さ |
+| 38 | その次（AIサイト分析） | 1 Observation と Compare の監査（AI）。記録と分けて出す。追加撮影なし |
+| 19 | 38 の中身 | Vision AI（既存スクショを AI が読む）。「東京と US でヒーローが違う」は可。「Performance が弱い」は不可 |
+| 11 | その次 | Time Compare の Slider。viewport・画像高さ・full-page が一致するときだけ。条件不一致は Side by side のみ。判定は三値のまま |
+| 12 | その先（Pro 運用） | Client / Project まとめ、Compare 公開、定期レポート。CSV は既にある。レポート本文に Interpreted を載せてよい |
+
+11 は Before / After の別ページではない。Time Compare の表示モードを1つ足すだけ。今は作らない（Share Collection の後）。
+
+### Geo / 出口（実験。本番 Observation は Browserless）
+
+本番ユーザーの撮影経路は変えない。自社 Node は制御プレーンと証明用。`public.observations` に混ぜない。
+
+| # | 方針 | 内容 |
+| --- | --- | --- |
+| 27 | 本番 | Browserless 内蔵 residential。現行の本番出口 |
+| 28 | 予備 | 外部プロキシ（Decodo 等）を Browserless に繋ぐ。必要になるまで使わない |
+| 29 | 実験可 | Cloud Run 等の国レベル datacenter Worker |
+| 30 | 実験・証明済 | 自社 pull Node（`agent.mjs`）。家庭側のポート開放は不要 |
+| 31 | 実験・手元に回線あり | Tokyo Residential Node。同意済み現地回線。本番ルーティングにはまだ繋がない |
+| 32 | 実験・証明済 | US 国レベル datacenter Node。Observed は Iowa datacenter として事実記録 |
+| 33 | 回線が先 | California 等の州 Residential Node。物理 / residential 出口が無い州は候補に出さない |
+| 34 | まだやらない | 自社 50州ネットワーク。州を UI に足すのは各州の出口ができたあと |
+| 35 | 商品化は後 | Tokyo Observation を商品として売る（Proxy ではなく記録を売る）。IP 再販ではない |
+
+Requested と Observed は分けて書く。自己申告の Node 所在地を Observed にしない。US-CA を選んでも国単位で取れたら California と表示しない。見出しは観測事実。区別が必要なときは **Requested / Observed via**。
+
+**State Geo は Starter では保証しない。** 既定は国単位 residential（US-CA は `us`）。州の `proxyState` は 401 のため、Scale と `VIEWTRACE_BROWSERLESS_PROXY_STATE=1` のときだけ州指定。フォールバックは **州 → 国 → proxyなしを直列**（並列に投げない）。成功した経路だけを `geo` に書く。
+
+### 事実以上の商品（Observation の上に載せる）
+
+撮影出口は Browserless のまま。解釈は既存記録だけを読む。
+
+| # | 方針 | 内容 |
+| --- | --- | --- |
+| 38 | 承認・後で実装 | AIサイト分析。1ページ（1 Observation）と Compare の読み |
+| 19 | 承認・38 に使う | Vision AI。既存スクショのみ。追加撮影なし |
+| 12 の読み | 承認・後で実装 | 定期レポート / Share に読みを載せる。記録の下 |
+
+### 記録に混ぜない / 今は本体にしない
+
+| # | 方針 | 理由 |
+| --- | --- | --- |
+| 13 | 記録に混ぜない | 測っていない Performance / SEO / Accessibility の数字。数字を出すなら実測してから |
+| 14 | 監査側に出してよい | この Observation についての指摘。未撮影ページの要対応リストにはしない |
+| 15 | 記録に混ぜない | Core Web Vitals / ラボ性能。現場の Observed ではない |
+| 16 | 今はやらない | 転送量・JS/CSS 内訳。計測項目を増やし、原価設計を再開してしまう |
+| 17 | 後回し | サイト全体 SEO crawler / broken-link。本体が Observation でなくなる |
+| 18 | 記録に混ぜない | AI SEO 診断 / 監査要約。38 とは別物 |
+| 20 | 未承認 | Free AI Visual Checker。無料入口。Verify を集客にしない |
+| 21 | 未承認 | AI Scout。別事業 |
+| 22 | 未承認 | Apollo / Outreach。別事業 |
+| 23 | しない | Verify を KPI の主役にする |
+| 24 | しない | Before / After を別ページにする |
+| 25 | しない | クレジットパック販売。月間 Observation 数で止める。解釈もパック販売にしない |
+| 26 | しない | Tokyo Residential Proxy の再販（IP を売る） |
+
+ゲート: 確認して入った人が Observation を繰り返し使わなければ、無料入口（20）や Scout（21）は作らない。公開リンクから新規 Observation が増えても、Activation の代わりにはしない。38 / 19 は既存 Observation の価値を強くするので、Repeat 待ちの禁止対象ではない。実装順は 36 → 10 → 38/19。
+
+---
+
+## 3. 課金・原価・Watch（固定）
 
 - 手動 1 地域 → 1
 - Multi-region 6 地域 → 6
 - Watch 1 URL × 1 地域 → 1 / 実行
 - Watch 5 URL × 3 地域 → 15 / 実行
-- Compare / Share / SHA 判定 → 0
+- Compare / Share / SHA 判定 / Interpretation（既存記録を読むだけ） → 0
 
 残量が足りなければ開始しない（Multi-region と同じ）。Watch は当該 tick で due な件数を必要数とし、残り < 必要なら **バッチ全体をスキップ**（20 残で 30 必要なら 20 件だけ走らせない）。
 
@@ -173,37 +244,44 @@ Starter / Pro の構成比を入れる（例: Starter 70% / Pro 30% なら損益
 
 今は **500 / 1,500 維持 → residential 実測収集**。計測項目は増やさない。
 
-現行 Browserless Cloud は **Starter 180,000 units / $200**。Billing の **超過上限は $20**（ダッシュボードで設定。環境変数ではない）。州の `proxyState` は 401 のため、既定は **国単位 residential**（US-CA は `us`）。**State Geo は Starter では保証しない。** Scale と `VIEWTRACE_BROWSERLESS_PROXY_STATE=1` のときだけ州指定。住宅プロキシが通ると 1 Observation が 1 unit ではなくなる。
-
-フォールバックは **州 → 国 → proxyなしを直列**（並列に投げない）。成功した経路だけを `geo` に書く。US-CA を選んでも `proxyCountry=us` だけで取れた場合、UI は California と書かない。見出しは観測事実（例: United States）。区別が必要なときは **Requested / Observed via**。
+現行 Browserless Cloud は **Starter 180,000 units / $200**。Billing の **超過上限は $20**（ダッシュボードで設定。環境変数ではない）。住宅プロキシが通ると 1 Observation が 1 unit ではなくなる。
 
 Watch 最短頻度: Starter は 1 日 1 回。Pro は 6 時間ごと（daily repeat 最大 4）。Cron は毎時。作成画面に月間予想消費量とプラン枠を出す。
 
-## 公開リンク（現行 `/verify/[token]`）
+---
+
+## 4. 公開リンク（現行 `/verify/[token]`）
 
 Observation を他人に見せるページ。再検証エンジンではない。**集客機能ではなく納品・共有機能**。代理店がクライアントへ渡す用途に残す。
 
-画面・観測日時・地域・URL / final URL・ページメタデータ・取得条件・共有URLコピー・PDF保存・Powered by ViewTrace を載せる。成長ループのフォームは足さない。Verify → Observation を北星 KPI にしない。
+画面・観測日時・地域・URL / final URL・ページメタデータ・取得条件・共有URLコピー・PDF保存・Powered by ViewTrace を載せる。Interpreted を載せるときは Recorded の下に置き、推論だと分かるラベルを付ける。成長ループのフォームは足さない。
 
 今すぐ削除しない。Powered by ViewTrace も残す。
 
-`verify_events` は公開リンクの利用ログとして残してよい。新規イベントは増やさない。
+---
 
-## Phase B 以降（未承認）
+## 5. いま分かっている2つの問題（別物）
 
-保存済み Screenshot の Analyze with AI。追加撮影なし。Vision。回数制限。
+### 1. 登録 → メール確認
 
-## ゲート
+未確認が多い。typo・再登録・重複が混ざる。10/18 未確認でも確認メールに問題があるとは言えない。本物と思われる新規が数件〜十数件増え、正常なアドレスでも未確認が続くとき初めて、到達性・文面・再送・登録後画面を見る。
 
-確認して入った人が Observation を繰り返し使わなければ、Scout を作らない。
+### 2. メール確認 → 初回 Observation
 
-公開リンクから新規 Observation が増えても、Activation の代わりにはしない。
+プロダクト UX として重要。確認後の着地は `/dashboard`（概要・プラン・空の一覧）。初回ユーザーに「次に何をすれば価値を体験できるか」が弱い可能性がある。
 
-## 今追加してよいテーブル
+対象がごく少数のうちは、即 UI 改修しない。今後の新規確認済みユーザーで同じ離脱が続くかを先に見る。
+
+検討案（未実装）: 初回ログイン時だけ、URL × 地域 → Observation 作成を主役にする。
+
+---
+
+## 6. 今追加してよいテーブル
 
 - 既存の `auth.users` / `observations` で Activation は測れる
 - `verify_events`（公開リンクの利用。新規イベントは増やさない）
-- `ai_analyses`（Phase B 承認後）
+- `geo_nodes` / `geo_node_jobs`（内部実験。RLS で anon / authenticated から隔離。本番 Observation には使わない）
+- `ai_analyses`（38 / 19。Observation 本体ではない。Interpreted として保存）
 
 大きなスキーマは、Activation の検証の後。
 
@@ -212,3 +290,6 @@ Observation を他人に見せるページ。再検証エンジンではない�
 - Observation の取得・保存・ダッシュボード
 - `/verify/[token]` 公開リンク
 - レポートの Powered by CTA
+- Watch / Multi-region / Compare / html_signals / CSV / 証跡 JSON
+- `JP-13`（日本 · 東京）の Requested 候補
+- Geo Node 制御プレーン（実験。本番撮影経路には未接続）

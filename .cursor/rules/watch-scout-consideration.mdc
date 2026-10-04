@@ -1,5 +1,5 @@
 ---
-description: Observe → Observe again → Compare → Share. Multi-region next. Verify is share, not growth.
+description: Observe → Observe again → Compare → Share. Facts in the record. Interpretation is a separate product.
 alwaysApply: true
 ---
 
@@ -11,22 +11,30 @@ alwaysApply: true
 
 **Observe → Observe again → Compare → Share**
 
-Time Compare と Region Compare は別軸。Before/After は別ページにしない。Slider は Time Compare の表示モード（viewport・高さ・full-page が一致するときだけ）。
+価値は Observation。本番の撮影出口は Browserless。記録は事実だけ。事実以上は **AIサイト分析（監査）** として、既存 Observation / Compare の上に載せる。このページの指摘は出してよい。測っていないスコアとサイト全体巡回は出さない。記録と混ぜない。追加撮影しない。Observation 消費は 0。
 
-Screenshot の判定は三値のみ: Same / Changed / Not comparable。Changed は screenshot content differs。Page changed とは言わない。観測できた事実以上を断定しない。Monitor もこの三値を再利用する。
+Time Compare と Region Compare は別軸。Before/After は別ページにしない。Slider は Time Compare の表示モード（viewport・高さ・full-page が一致するときだけ）。今は作らない。
 
-Verify（`/verify/[token]`）は削除しない。成長ループではなく、**納品・共有の公開サーフェス**。Verify → 次の Observation を最重要 KPI にしない。Powered by ViewTrace は残す。
+Screenshot の判定は三値のみ: Same / Changed / Not comparable。Changed は screenshot content differs。Page changed とは言わない。記録の中では観測できた事実以上を断定しない。Monitor もこの三値を再利用する。
 
-次に足す順: **Monitor v1（Watch）** → Share Collection。html_signals の表示は常時（選ばせない）。メタ差分メールだけ Watch で選ばせる。Compare は一旦完成。サイト全体 SEO crawler / Score / AI 診断は後。
+Verify（`/verify/[token]`）は削除しない。成長ループではなく、**納品・共有の公開サーフェス**。Verify → 次の Observation を最重要 KPI にしない。Powered by ViewTrace は残す。読みを載せるなら記録の下。
 
-1 地域 = 1 Observation。複数地域は件数分消費。Compare / Share / SHA は 0。Watch も 1 URL × 1 地域 × 1 実行 = 1。残量不足なら定期実行は部分実行せずスキップ。超過従量はしない。原価設計は一旦止める。Starter 500 / Pro 1500 は仮置き（2000 に戻さない）。国単位 residential 20〜50 件で CSV を渡し、①上限（P75〜P90 の C、100%消費で変動費 25%）と②損益分岐（実利用率の貢献利益で固定費を割る）を分ける。C に $200 を混ぜない。計測項目は増やさない。proxy_bytes の 0 は実測 0、null は未測定。`retry_without_proxy` は C に使わない。超過上限 $20。State Geo は Starter では保証しない。US-CA を選んでも国単位で取れたら California と表示しない。
+**今やること:** 既存 Observation の事実レイアウト整理（記録面はスコアなし）。レイアウト AI ≠ ページ診断 AI。読み用の空きは作ってよい。
+
+次に足す順: **Share Collection** → **AIサイト分析（既存スクショ + html_signals のみ）** → Time Compare Slider（条件一致時のみ）→ Client / Project（Pro 運用）。Watch / html_signals / Multi-region / `JP-13` は出荷済。html_signals は常時表示（選ばせない）。メタ差分メールだけ Watch で選ばせる。
+
+記録に混ぜない: 測っていない Performance / SEO / Accessibility 数字、Core Web Vitals。このページの監査指摘は読み側に出してよい。今やらない: サイト全体 SEO crawler、Free AI Visual Checker、Scout、Apollo、クレジットパック、Tokyo Proxy 再販。Verify を KPI の主役にしない。
+
+自社 pull Node（`agent.mjs`）は実験。州を候補に出すのはその州の residential 出口ができてから。Requested と Observed を混ぜない。US-CA を選んでも国単位で取れたら California と表示しない。
+
+1 地域 = 1 Observation。複数地域は件数分消費。Compare / Share / SHA / Interpretation は 0。Watch も 1 URL × 1 地域 × 1 実行 = 1。残量不足なら定期実行は部分実行せずスキップ。超過従量はしない。原価設計は一旦止める。Starter 500 / Pro 1500 は仮置き（2000 に戻さない）。国単位 residential 20〜50 件で CSV を渡し、①上限（P75〜P90 の C、100%消費で変動費 25%）と②損益分岐（実利用率の貢献利益で固定費を割る）を分ける。C に $200 を混ぜない。計測項目は増やさない。proxy_bytes の 0 は実測 0、null は未測定。`retry_without_proxy` は C に使わない。超過上限 $20。State Geo は Starter では保証しない。
 
 Activation **計測**は固定。Activation **UI**は母数が小さいうちはいじらない。
 
-新機能の条件: Observation を作る理由、2回目を作る理由、または Observation の価値を強くする機能だけ。
+新機能の条件: Observation を作る理由、2回目を作る理由、Observation の価値を強くする機能、または既存 Observation の上に事実と分けて売る解釈。
 
 KPI:
 
 **登録 → メール確認 → 初回 Observation → 2回目 Observation**
 
-Existing product remains observational (not a delivery guarantee).
+Existing product remains observational (not a delivery guarantee). Interpretation is labeled inference, not Observed.
