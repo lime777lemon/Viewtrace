@@ -150,11 +150,13 @@ export async function GET(request: NextRequest) {
     return redirectResponse;
   }
 
-  // サーバーからは URL の #fragment が見えない。クライアント用に内部パスへ渡す。
-  if (!tokenHash || !type) {
-    const rewriteUrl = new URL("/auth/callback/fragment", request.url);
-    rewriteUrl.searchParams.set("next", nextPath);
-    return NextResponse.rewrite(rewriteUrl);
+  // サーバーからは URL の #fragment が見えない。クライアントページへリダイレクトする。
+  // rewrite だと fragment ページの useSearchParams が Suspense 外で 500 になることがある。
+  // token_hash だけあれば type は verifyOtp 側で email に寄せる。
+  if (!tokenHash) {
+    const fragmentUrl = new URL("/auth/callback/fragment", request.url);
+    fragmentUrl.searchParams.set("next", nextPath);
+    return NextResponse.redirect(fragmentUrl);
   }
 
   let redirectResponse = NextResponse.redirect(redirectTarget);
