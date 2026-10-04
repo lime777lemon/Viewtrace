@@ -1,5 +1,3 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { createOpenAI } from "@ai-sdk/openai";
 import { generateText, Output } from "ai";
 import { z } from "zod";
@@ -12,29 +10,11 @@ function stripEnvQuotes(value: string): string {
   return value.trim().replace(/^["']|["']$/g, "");
 }
 
-function readEnvLocalValue(name: string): string | undefined {
-  try {
-    const text = readFileSync(join(process.cwd(), ".env.local"), "utf8");
-    for (const line of text.split(/\r?\n/)) {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith("#")) continue;
-      const eq = trimmed.indexOf("=");
-      if (eq <= 0) continue;
-      if (trimmed.slice(0, eq).trim() !== name) continue;
-      const value = stripEnvQuotes(trimmed.slice(eq + 1));
-      return value || undefined;
-    }
-  } catch {
-    return undefined;
-  }
-  return undefined;
-}
-
 function openAiApiKey(): string | undefined {
   const fromProcess = process.env.OPENAI_API_KEY
     ? stripEnvQuotes(process.env.OPENAI_API_KEY)
     : undefined;
-  return fromProcess || readEnvLocalValue("OPENAI_API_KEY");
+  return fromProcess || undefined;
 }
 
 function resolveAuditModel(): { model: ReturnType<ReturnType<typeof createOpenAI>>; label: string } | null {

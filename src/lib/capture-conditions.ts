@@ -507,6 +507,7 @@ export function parseCaptureConditionsFromDb(
 }
 
 export function formatViewportLabel(conditions: CaptureConditionsV1): string {
+  if (!conditions.viewport) return "—";
   const { width, height, source } = conditions.viewport;
   if (width != null && height != null) return `${width}×${height}`;
   if (source === "browserless_implicit_default") return "Browserless default";
