@@ -2,27 +2,22 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies, headers } from "next/headers";
 import { authCookieContextFromHeaders } from "@/lib/supabase/auth-request-context";
 import { supabaseCookieOptions } from "@/lib/supabase/cookie-options";
-import { normalizeSupabaseUrl } from "@/lib/supabase/url";
+import { missingSupabasePublicEnvMessage, readSupabasePublicEnv } from "@/lib/supabase/public-env";
 
 /**
  * Server Component / Server Action / Route Handler 用。
  * Cookie 経由で Auth セッションをやり取りします。
  */
 export async function createSupabaseServerClient() {
-  const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!rawUrl || !anonKey) {
-    throw new Error(
-      "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY. Copy .env.example to .env.local.",
-    );
+  const env = readSupabasePublicEnv();
+  if (!env) {
+    throw new Error(missingSupabasePublicEnvMessage());
   }
 
-  const url = normalizeSupabaseUrl(rawUrl);
   const cookieStore = await cookies();
   const { host, isHttps } = authCookieContextFromHeaders(await headers());
 
-  return createServerClient(url, anonKey, {
+  return createServerClient(env.url, env.anonKey, {
     cookieOptions: supabaseCookieOptions(host, isHttps),
     cookies: {
       getAll() {

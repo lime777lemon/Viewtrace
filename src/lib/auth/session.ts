@@ -5,6 +5,7 @@ import {
   isStaleRefreshTokenError,
 } from "@/lib/auth/supabase-auth-errors";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { readSupabasePublicEnv } from "@/lib/supabase/public-env";
 import { TRIAL_CONFIG, parsePlanId, type PlanId } from "@/lib/plans";
 
 function authErrorStatus(error: AuthError): number | undefined {
@@ -90,6 +91,10 @@ export type SessionPayload = {
  * トークン更新は middleware（`updateSupabaseSession`）で先に行い、ここでは検証のみ。
  */
 export const getSession = cache(async (): Promise<SessionPayload | null> => {
+  if (!readSupabasePublicEnv()) {
+    console.warn("[Viewtrace auth] getSession → null (Supabase public env missing)");
+    return null;
+  }
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
