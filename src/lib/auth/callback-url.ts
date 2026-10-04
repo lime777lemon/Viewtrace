@@ -104,7 +104,8 @@ function isAllowedRedirectOrigin(origin: string): boolean {
  *
  * リンク完了後はアプリ側で `/auth/email-verified`（「認証成功」画面）へ誘導する（`next` が欠けても callback の既定で同じ）。
  *
- * Site URL 直下に `#access_token=…` だけ付いて戻る場合は、`SupabaseHomeAuthCapture` が fragment 処理へ回す。
+ * Site URL 直下に `#access_token=…` / `?token_hash=` / `?code=` だけ付いて戻る場合は、
+ * `SupabaseHomeAuthCapture` が `/auth/callback`（または fragment）へ回す。
  */
 export async function getAuthEmailRedirectTo(): Promise<string> {
   // 本番では NEXT_PUBLIC_SITE_URL を最優先し、www / プロキシヘッダのブレで

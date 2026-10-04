@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 import { POST_EMAIL_VERIFY_PATH } from "@/lib/auth/email-verified-copy";
 
 /**
- * Supabase の Site URL が `/` のとき、確認メールのリダイレクト先がトップ＋`#access_token=…` になることがある。
- * そのままではランディングが表示されたままなので、既存の fragment ハンドラへ渡す。
+ * Supabase の Site URL が `/` のとき、確認メールのリダイレクト先がトップに落ちることがある。
+ * `#access_token` / `?token_hash=` / `?code=` を既存の callback へ渡す。
  */
 export function SupabaseHomeAuthCapture() {
   const pathname = usePathname();
@@ -27,6 +27,16 @@ export function SupabaseHomeAuthCapture() {
     }
 
     const sp = new URLSearchParams(window.location.search);
+    const tokenHash = sp.get("token_hash") ?? sp.get("token");
+    if (tokenHash) {
+      const next = encodeURIComponent(POST_EMAIL_VERIFY_PATH);
+      const tokenType = sp.get("type") ?? "email";
+      window.location.replace(
+        `${window.location.origin}/auth/callback?token_hash=${encodeURIComponent(tokenHash)}&type=${encodeURIComponent(tokenType)}&next=${next}`,
+      );
+      return;
+    }
+
     const code = sp.get("code");
     const type = sp.get("type");
     // PKCE の確認メールは `/?code=…` だけで `type` が付かないことがある（Site URL が `/` のときなど）

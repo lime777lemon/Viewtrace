@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useEffect, useState } from "react";
+import { Suspense, useMemo, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { POST_EMAIL_VERIFY_PATH } from "@/lib/auth/email-verified-copy";
 import {
@@ -28,11 +28,20 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
   });
 }
 
+function AuthCallbackFragmentFallback() {
+  return (
+    <div className="mx-auto flex min-h-[60vh] max-w-md flex-col justify-center px-4 py-16 text-center">
+      <h1 className="font-display text-xl font-semibold text-ink">認証を完了しています…</h1>
+      <p className="mt-3 text-sm text-ink-muted">この画面は自動的に遷移します。</p>
+    </div>
+  );
+}
+
 /**
  * `#access_token=...` などサーバーに届かない fragment のみここで処理する。
  * 通常の PKCE（?code=）は親の route.ts が処理する。
  */
-export default function AuthCallbackFragmentPage() {
+function AuthCallbackFragmentPage() {
   const sp = useSearchParams();
   const nextPath = useMemo(() => {
     const nextRaw = sp?.get("next")?.trim() ?? POST_EMAIL_VERIFY_PATH;
@@ -133,5 +142,13 @@ export default function AuthCallbackFragmentPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function AuthCallbackFragmentPageWithSuspense() {
+  return (
+    <Suspense fallback={<AuthCallbackFragmentFallback />}>
+      <AuthCallbackFragmentPage />
+    </Suspense>
   );
 }
