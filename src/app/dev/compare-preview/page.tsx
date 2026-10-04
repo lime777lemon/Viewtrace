@@ -2,8 +2,10 @@ import { notFound } from "next/navigation";
 import { ObservationComparePrompt } from "@/components/dashboard/ObservationComparePrompt";
 import { ObservationCompareView } from "@/components/dashboard/ObservationCompareView";
 import { ObservationAiAuditPanel } from "@/components/dashboard/ObservationAiAuditPanel";
+import { ObservationAiAuditReadout } from "@/components/dashboard/ObservationAiAuditReadout";
 import { observationAiAuditCopyFrom } from "@/lib/observation-ai-audit-copy";
 import { buildRecordPageAudit } from "@/lib/observation-ai-audit";
+import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
 import {
   ObservationHtmlHeadSignalsPanel,
   observationHtmlHeadCopyFrom,
@@ -84,6 +86,16 @@ export default async function DevComparePreviewPage({ searchParams }: Props) {
                 copy={aiAuditCopy}
                 previewAudit={buildRecordPageAudit(previewAuditObservation(), locale)}
               />
+              <div className="rounded-2xl border border-dashed border-border bg-surface-elevated px-5 py-5">
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-ink-muted">
+                  PDF preview
+                </p>
+                <ObservationAiAuditReadout
+                  copy={aiAuditCopy}
+                  audit={buildRecordPageAudit(previewAuditObservation(), locale)}
+                  generatedAtLabel={`${formatJaDateTime(compareFixtureTimeRight.capturedAt, locale)} · ${formatUtcLabel(compareFixtureTimeRight.capturedAt)}`}
+                />
+              </div>
             </div>
           </>
         ) : null}

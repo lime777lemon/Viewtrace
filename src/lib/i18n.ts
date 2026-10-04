@@ -802,6 +802,10 @@ export const copy = {
       aiAuditKindPage: "このページ",
       aiAuditSourceRecord: "記録から",
       aiAuditSourceAi: "AI",
+      aiAuditShareDisclaimer:
+        "この記録を見て書いた指摘です。Observed ではありません。納品保証ではありません。",
+      aiAuditGeneratedAt: "監査日時",
+      aiAuditOnPdfHint: "最新の監査は、証跡レポートと印刷用レポートの PDF に記録の下へ載ります。",
       evidenceTitle: "証跡（Evidence）",
       evidenceHint: "記録後は変更できません。URL・地域・取得時刻・スクリーンショット・SHA-256・content_hash が含まれます。",
       captureOutcome: "取得結果",
@@ -2155,6 +2159,11 @@ export const copy = {
       aiAuditKindPage: "This page",
       aiAuditSourceRecord: "From the record",
       aiAuditSourceAi: "AI",
+      aiAuditShareDisclaimer:
+        "Notes written from this record. Not Observed. Not a delivery guarantee.",
+      aiAuditGeneratedAt: "Audited at",
+      aiAuditOnPdfHint:
+        "The latest audit is included below the record on the Evidence Report and printable PDF.",
       evidenceTitle: "Evidence",
       evidenceHint: "Fixed after capture—URL, region, time, screenshot, SHA-256, and content_hash.",
       captureOutcome: "Capture outcome",

@@ -9,6 +9,8 @@ import {
 import { getPlan, parsePlanId } from "@/lib/plans";
 import { sanitizeVerifyTokenParam } from "@/lib/observation-verify-token";
 import type { HtmlHeadSignalsV1 } from "@/lib/url-preview";
+import type { ObservationAiAudit } from "@/lib/observation-ai-audit";
+import { loadObservationAiAuditForPublicShare } from "@/lib/observation-ai-audit-store";
 
 export type PublicVerifyObservation = {
   id: string;
@@ -23,6 +25,7 @@ export type PublicVerifyObservation = {
   screenshotExpired: boolean;
   captureConditions: CaptureConditionsV1 | null;
   htmlSignals?: HtmlHeadSignalsV1;
+  aiAudit: ObservationAiAudit | null;
 };
 
 async function retentionDaysForOwner(
@@ -113,5 +116,8 @@ export async function fetchObservationForPublicVerify(
     screenshotExpired,
     captureConditions,
     htmlSignals: captureConditions?.html_signals,
+    aiAudit: userId
+      ? await loadObservationAiAuditForPublicShare(userId, String(row.id))
+      : null,
   };
 }

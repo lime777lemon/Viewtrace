@@ -1,5 +1,8 @@
 import { ViewtraceLogo } from "@/components/brand/ViewtraceLogo";
+import { ObservationAiAuditReadout } from "@/components/dashboard/ObservationAiAuditReadout";
 import type { ObservationStatus } from "@/lib/demo/observations";
+import type { ObservationAiAuditCopy } from "@/lib/observation-ai-audit-copy";
+import type { ObservationAiAudit } from "@/lib/observation-ai-audit";
 
 export type EvidenceReportCopy = {
   title: string;
@@ -32,6 +35,9 @@ type Props = {
   snapshotSha256?: string;
   contentHash?: string;
   verifyUrl: string;
+  aiAudit?: ObservationAiAudit | null;
+  aiAuditCopy?: ObservationAiAuditCopy;
+  aiAuditGeneratedAtLabel?: string;
 };
 
 export function EvidenceReportSheet({
@@ -45,6 +51,9 @@ export function EvidenceReportSheet({
   snapshotSha256,
   contentHash,
   verifyUrl,
+  aiAudit = null,
+  aiAuditCopy,
+  aiAuditGeneratedAtLabel,
 }: Props) {
   const statusLabel =
     status === "success"
@@ -127,6 +136,16 @@ export function EvidenceReportSheet({
             </div>
           ))}
         </dl>
+
+        {aiAudit && aiAuditCopy && aiAuditGeneratedAtLabel ? (
+          <div className="mt-8 border-t border-border pt-6">
+            <ObservationAiAuditReadout
+              copy={aiAuditCopy}
+              audit={aiAudit}
+              generatedAtLabel={aiAuditGeneratedAtLabel}
+            />
+          </div>
+        ) : null}
 
         <p className="mt-8 border-t border-border pt-6 text-xs leading-relaxed text-ink-muted">
           {copy.disclaimer}

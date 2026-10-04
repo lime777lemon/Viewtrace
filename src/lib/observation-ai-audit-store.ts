@@ -5,6 +5,7 @@ import {
   parseObservationAiAudit,
   type ObservationAiAudit,
 } from "@/lib/observation-ai-audit";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function loadObservationAiAudit(
   supabase: SupabaseClient,
@@ -28,6 +29,16 @@ export async function loadObservationAiAudit(
   }
   if (!data) return null;
   return parseObservationAiAudit(data);
+}
+
+/** Public verify / PDF share: owner’s latest page audit for this Observation. */
+export async function loadObservationAiAuditForPublicShare(
+  userId: string,
+  observationId: string,
+): Promise<ObservationAiAudit | null> {
+  const admin = createSupabaseAdminClient();
+  if (!admin || !userId) return null;
+  return loadObservationAiAudit(admin, userId, observationId);
 }
 
 export async function saveObservationAiAudit(

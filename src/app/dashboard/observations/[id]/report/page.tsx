@@ -13,8 +13,12 @@ import {
   observationHtmlHeadCopyFrom,
 } from "@/components/dashboard/ObservationHtmlHeadSignalsPanel";
 import { ObservationNotVisible } from "@/components/dashboard/ObservationNotVisible";
+import { ObservationAiAuditReadout } from "@/components/dashboard/ObservationAiAuditReadout";
 import { PrintReportButton } from "@/components/dashboard/PrintReportButton";
 import { getSession } from "@/lib/auth/session";
+import { observationAiAuditCopyFrom } from "@/lib/observation-ai-audit-copy";
+import { loadObservationAiAudit } from "@/lib/observation-ai-audit-store";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getObservationMergedForPlan } from "@/lib/demo/user-observations";
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
 import { copy } from "@/lib/i18n";
@@ -103,6 +107,9 @@ export default async function ObservationReportPage({ params }: Props) {
   const geoCopy = observationGeoCopyFrom(td);
 
   const htmlHeadSignalsCopy = observationHtmlHeadCopyFrom(td);
+  const supabase = await createSupabaseServerClient();
+  const aiAudit = await loadObservationAiAudit(supabase, session.userId, obs.id);
+  const aiAuditCopy = observationAiAuditCopyFrom(td);
 
   return (
     <>
@@ -275,6 +282,16 @@ export default async function ObservationReportPage({ params }: Props) {
                 </li>
               ))}
             </ol>
+          </section>
+        ) : null}
+
+        {aiAudit ? (
+          <section className="border-t border-border pt-6">
+            <ObservationAiAuditReadout
+              copy={aiAuditCopy}
+              audit={aiAudit}
+              generatedAtLabel={`${formatJaDateTime(aiAudit.createdAt, locale)} · ${formatUtcLabel(aiAudit.createdAt)}`}
+            />
           </section>
         ) : null}
 
