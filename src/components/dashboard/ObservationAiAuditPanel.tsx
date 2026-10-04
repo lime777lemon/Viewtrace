@@ -85,6 +85,7 @@ export function ObservationAiAuditPanel({
               ))}
             </ul>
           ) : null}
+          <p className="text-xs leading-relaxed text-ink-muted">{copy.onPdfHint}</p>
         </div>
       ) : (
         <>

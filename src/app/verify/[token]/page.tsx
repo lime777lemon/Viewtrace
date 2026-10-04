@@ -12,6 +12,8 @@ import {
   ObservationHtmlHeadSignalsPanel,
   observationHtmlHeadCopyFrom,
 } from "@/components/dashboard/ObservationHtmlHeadSignalsPanel";
+import { ObservationAiAuditReadout } from "@/components/dashboard/ObservationAiAuditReadout";
+import { observationAiAuditCopyFrom } from "@/lib/observation-ai-audit-copy";
 import { PublicShareActions } from "@/components/verify/PublicShareActions";
 import { PublicVerifySnapshot } from "@/components/verify/PublicVerifySnapshot";
 import { VerifyViewBeacon } from "@/components/verify/VerifyViewBeacon";
@@ -67,6 +69,7 @@ export default async function PublicVerifyPage({ params }: Props) {
   const geoCopy = observationGeoCopyFrom(td);
 
   const htmlHeadSignalsCopy = observationHtmlHeadCopyFrom(td);
+  const aiAuditCopy = observationAiAuditCopyFrom(td);
   const showHtmlSignals = Boolean(obs.htmlSignals && htmlHeadSignalsHasAny(obs.htmlSignals));
 
   return (
@@ -191,6 +194,16 @@ export default async function PublicVerifyPage({ params }: Props) {
             locale={locale}
           />
         </div>
+
+        {obs.aiAudit ? (
+          <div className="mt-6 rounded-2xl border border-dashed border-border bg-surface-elevated px-5 py-5 sm:px-6">
+            <ObservationAiAuditReadout
+              copy={aiAuditCopy}
+              audit={obs.aiAudit}
+              generatedAtLabel={`${formatJaDateTime(obs.aiAudit.createdAt, locale)} · ${formatUtcLabel(obs.aiAudit.createdAt)}`}
+            />
+          </div>
+        ) : null}
 
         <p className="mt-6 text-xs leading-relaxed text-ink-muted">{t.disclaimer}</p>
         <p className="no-print mt-3">

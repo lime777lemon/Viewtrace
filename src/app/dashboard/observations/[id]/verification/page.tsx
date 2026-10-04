@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { EvidenceReportSheet } from "@/components/dashboard/EvidenceReportSheet";
+import { observationAiAuditCopyFrom } from "@/lib/observation-ai-audit-copy";
+import { loadObservationAiAudit } from "@/lib/observation-ai-audit-store";
 import { ObservationNotVisible } from "@/components/dashboard/ObservationNotVisible";
 import { PrintReportButton } from "@/components/dashboard/PrintReportButton";
 import { getSession } from "@/lib/auth/session";
@@ -61,6 +63,8 @@ export default async function ObservationVerificationReportPage({ params }: Prop
   }
 
   const supabase = await createSupabaseServerClient();
+  const aiAudit = await loadObservationAiAudit(supabase, session.userId, obs.id);
+  const aiAuditCopy = observationAiAuditCopyFrom(td);
   const verifyToken = await ensureObservationVerifyTokenForUser(supabase, obs.id);
   const verifyUrl = verifyToken ? buildPublicVerifyUrlForObservation(verifyToken) : "—";
 
@@ -136,6 +140,13 @@ export default async function ObservationVerificationReportPage({ params }: Prop
         snapshotSha256={obs.snapshotSha256}
         contentHash={obs.contentHash}
         verifyUrl={verifyUrl}
+        aiAudit={aiAudit}
+        aiAuditCopy={aiAuditCopy}
+        aiAuditGeneratedAtLabel={
+          aiAudit
+            ? `${formatJaDateTime(aiAudit.createdAt, locale)} · ${formatUtcLabel(aiAudit.createdAt)}`
+            : undefined
+        }
       />
     </>
   );

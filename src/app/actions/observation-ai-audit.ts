@@ -14,6 +14,7 @@ import { saveObservationAiAudit } from "@/lib/observation-ai-audit-store";
 import { getObservationMergedForPlan } from "@/lib/demo/user-observations";
 import { sanitizeObservationRouteId } from "@/lib/observation-route-id";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 
 export type GenerateObservationAiAuditResult =
   | { ok: true; audit: ObservationAiAudit }
@@ -48,6 +49,10 @@ export async function generateObservationAiAuditAction(
     observationId,
     audit,
   });
+
+  revalidatePath(`/dashboard/observations/${observationId}`);
+  revalidatePath(`/dashboard/observations/${observationId}/report`);
+  revalidatePath(`/dashboard/observations/${observationId}/verification`);
 
   return { ok: true, audit };
 }

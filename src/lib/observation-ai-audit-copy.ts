@@ -16,6 +16,9 @@ export type ObservationAiAuditCopy = {
   kindPage: string;
   sourceRecord: string;
   sourceAi: string;
+  shareDisclaimer: string;
+  generatedAt: string;
+  onPdfHint: string;
 };
 
 export function observationAiAuditCopyFrom(t: {
@@ -36,6 +39,9 @@ export function observationAiAuditCopyFrom(t: {
   aiAuditKindPage: string;
   aiAuditSourceRecord: string;
   aiAuditSourceAi: string;
+  aiAuditShareDisclaimer: string;
+  aiAuditGeneratedAt: string;
+  aiAuditOnPdfHint: string;
 }): ObservationAiAuditCopy {
   return {
     title: t.aiAuditTitle,
@@ -55,5 +61,8 @@ export function observationAiAuditCopyFrom(t: {
     kindPage: t.aiAuditKindPage,
     sourceRecord: t.aiAuditSourceRecord,
     sourceAi: t.aiAuditSourceAi,
+    shareDisclaimer: t.aiAuditShareDisclaimer,
+    generatedAt: t.aiAuditGeneratedAt,
+    onPdfHint: t.aiAuditOnPdfHint,
   };
 }
