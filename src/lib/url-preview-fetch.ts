@@ -29,7 +29,7 @@ export type UrlPreviewFetchOptions = {
    * 遅延・外部 API 依存があるため、SSR では false を推奨。
    */
   screenshotFallback?: boolean;
-  /** true のとき Microlink のフルページキャプチャ（Pro 向け・遅くなりがち） */
+  /** true のとき Microlink のフルページキャプチャ（有料プラン。遅くなりがち） */
   fullPageScreenshot?: boolean;
   /** 例: `US-CA`。設定された地理プロキシを使って取得する */
   regionValue?: string;

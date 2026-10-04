@@ -16,7 +16,7 @@ export type PlanDefinition = {
   csvExport: boolean;
   allUsStates: boolean;
   /**
-   * 技術仕様: キャプチャをフルページ相当まで広げるか（Pro のみ true）。
+   * 技術仕様: キャプチャをフルページまで広げるか（Starter / Pro は true。trial は false）。
    * 料金表・設定画面の文言は `getSnapshotCapabilityCopy` / i18n のマーケ表記と併用する。
    */
   snapshotFullPage: boolean;
@@ -65,7 +65,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     audienceLabel: "試す・軽い検証用途向け",
     csvExport: false,
     allUsStates: false,
-    snapshotFullPage: false,
+    snapshotFullPage: true,
     autoObservationWatch: true,
     watchMaxDailyRepeats: 1,
   },

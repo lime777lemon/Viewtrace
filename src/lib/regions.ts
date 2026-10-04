@@ -15,6 +15,7 @@ const MAJOR_COUNTRY_EN: Record<string, string> = {
 /** LP・UI で英語表示する際のラベル（米国州は既に英語） */
 export function getRegionLabelForLocale(option: RegionOption, locale: Locale): string {
   if (locale === "ja") return option.label;
+  if (option.value === "JP-13") return "Japan · Tokyo";
   if (option.value.startsWith("US-")) return option.label;
   return MAJOR_COUNTRY_EN[option.value] ?? option.label;
 }
@@ -25,6 +26,7 @@ const MAJOR_COUNTRIES: RegionOption[] = [
   { value: "DE", label: "ドイツ" },
   { value: "FR", label: "フランス" },
   { value: "JP", label: "日本" },
+  { value: "JP-13", label: "日本 · 東京" },
   { value: "AU", label: "オーストラリア" },
   { value: "CA", label: "カナダ" },
 ];
@@ -120,6 +122,8 @@ export function normalizeObservationRegionInput(value: string): string {
     .replace(/[\u200B-\u200D\uFEFF]/g, "");
   const us = t.match(/^us-([a-z]{2})$/i);
   if (us) return `US-${us[1].toUpperCase()}`;
+  const jpPref = t.match(/^jp-(\d{2})$/i);
+  if (jpPref) return `JP-${jpPref[1]}`;
   if (/^[a-z]{2}$/i.test(t) && t.length === 2) return t.toUpperCase();
   return t;
 }
@@ -156,6 +160,10 @@ export function resolveBrowserlessResidentialTarget(regionValue: string): {
       country: "us",
       state: name.toLowerCase().replace(/\s+/g, "_"),
     };
+  }
+
+  if (rv === "JP-13") {
+    return { country: "jp" };
   }
 
   if (/^[A-Z]{2}$/.test(rv)) {

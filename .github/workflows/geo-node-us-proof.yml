@@ -1,0 +1,48 @@
+# One-shot proof: same agent.mjs on a US-egress runner.
+# Does not replace production Browserless Observations.
+name: geo-node-us-proof
+
+on:
+  workflow_dispatch:
+
+jobs:
+  us-dc-node:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.ms-playwright
+    defaults:
+      run:
+        working-directory: workers/geo-node
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify datacenter egress is US
+        working-directory: .
+        run: |
+          node -e '
+          fetch("https://cloudflare.com/cdn-cgi/trace").then(r=>r.text()).then(t=>{
+            const loc = (t.match(/^loc=([A-Z]{2})$/m)||[])[1] || "";
+            const ip = (t.match(/^ip=(.+)$/m)||[])[1] || "";
+            console.log("egress_loc="+loc);
+            if (loc !== "US") {
+              console.error("not_us_egress");
+              process.exit(1);
+            }
+          })
+          '
+      - name: Install Playwright Chromium
+        run: |
+          npm install
+          npx playwright install --with-deps chromium
+      - name: Poll as us-dc-001
+        env:
+          VIEWTRACE_GEO_NODE_ID: us-dc-001
+          VIEWTRACE_GEO_NODE_COUNTRY: US
+          VIEWTRACE_GEO_NODE_IP_TYPE: datacenter
+          VIEWTRACE_GEO_NODE_POLL_URL: ${{ secrets.GEO_NODE_PROOF_POLL_URL }}
+          VIEWTRACE_GEO_NODE_SECRET: ${{ secrets.GEO_NODE_PROOF_SECRET }}
+          VIEWTRACE_GEO_NODE_POLL_MS: "3000"
+        run: node agent.mjs poll

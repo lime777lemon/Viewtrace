@@ -19,6 +19,9 @@ import { ObservationCaptureTierBanner } from "@/components/dashboard/Observation
 import { ObservationDetailSnapshotSection } from "@/components/dashboard/ObservationDetailSnapshotSection";
 import { ObservationDigitalSeal } from "@/components/dashboard/ObservationDigitalSeal";
 import { ObservationEvidenceJsonDownload } from "@/components/dashboard/ObservationEvidenceJsonDownload";
+import { ObservationAiAuditPanel } from "@/components/dashboard/ObservationAiAuditPanel";
+import { observationAiAuditCopyFrom } from "@/lib/observation-ai-audit-copy";
+import { loadObservationAiAudit } from "@/lib/observation-ai-audit-store";
 import { ObservationLpVerdictCard } from "@/components/dashboard/ObservationLpVerdictCard";
 import { ObservationNotVisible } from "@/components/dashboard/ObservationNotVisible";
 import { ObservationLivePageComparePanel } from "@/components/dashboard/ObservationLivePageComparePanel";
@@ -182,6 +185,13 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
   const geoCopy = observationGeoCopyFrom(t);
 
   const htmlHeadSignalsCopy = observationHtmlHeadCopyFrom(t);
+  const aiAuditCopy = observationAiAuditCopyFrom(t);
+  const existingAudit = await loadObservationAiAudit(supabase, session.userId, obs.id);
+  const pack = buildObservationEvidencePack({
+    obs,
+    verifyUrl,
+    hideSnapshotImage: screenshotExpired,
+  });
 
   const comparePrevious = previousRaw
     ? {
@@ -249,135 +259,138 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
         locale={locale}
       />
 
-      {(() => {
-        const pack = buildObservationEvidencePack({
-          obs,
-          verifyUrl,
-          hideSnapshotImage: screenshotExpired,
-        });
-        return (
-          <>
-            <ObservationLpVerdictCard
-              copy={{
-                title: t.lpVerdictTitle,
-                hint: t.lpVerdictHint,
-                codeLpRendered: t.lpVerdictRendered,
-                codeLpNoSnapshot: t.lpVerdictNoSnapshot,
-                codeLpCaptureFailed: t.lpVerdictFailed,
-                codeLpPending: t.lpVerdictPending,
-                snapshotLabel: t.lpVerdictSnapshot,
-                snapshotYes: t.lpVerdictSnapshotYes,
-                snapshotNo: t.lpVerdictSnapshotNo,
-                httpStatus: t.lpVerdictHttp,
-                captureScope: t.lpVerdictScope,
-                scopeFullPage: t.captureScopeFullPage,
-                scopeViewport: t.captureScopeViewport,
-                scopeUnknown: "—",
-              }}
-              code={pack.verdict.code}
-              snapshotPresent={pack.verdict.snapshotPresent}
-              httpStatus={pack.verdict.httpStatus}
-              captureScope={pack.verdict.captureScope}
-            />
-            <div className="rounded-xl border border-border bg-surface-elevated p-4">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
-                {t.evidenceJsonTitle}
-              </h2>
-              <p className="mt-1 text-xs leading-relaxed text-ink-muted">{t.evidenceJsonHint}</p>
-              <div className="mt-3">
-                <ObservationEvidenceJsonDownload
-                  fileName={`viewtrace-${obs.id}.json`}
-                  json={pack}
-                  downloadLabel={t.evidenceJsonDownload}
-                  copyLabel={t.evidenceJsonCopy}
-                  copiedLabel={t.evidenceJsonCopied}
-                />
-              </div>
+      <section className="space-y-6" aria-labelledby="observation-record-heading">
+        <div className="space-y-1">
+          <h2 id="observation-record-heading" className="font-display text-lg font-semibold text-ink">
+            {t.recordSectionTitle}
+          </h2>
+          <p className="text-sm text-ink-muted">{t.recordSectionHint}</p>
+        </div>
+
+        <dl className="grid gap-4 sm:grid-cols-2">
+          <div className="rounded-xl border border-border bg-surface-elevated p-4">
+            <dt className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
+              {t.capturedAt}
+            </dt>
+            <dd className="mt-1 text-sm text-ink">{formatJaDateTime(obs.capturedAt, locale)}</dd>
+            <dd className="mt-0.5 text-xs text-ink-muted">
+              {formatUtcLabel(obs.capturedAt)}
+            </dd>
+          </div>
+          <div className="rounded-xl border border-border bg-surface-elevated p-4">
+            <dt className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
+              {t.region}
+            </dt>
+            <dd className="mt-1 text-sm text-ink">
+              <ObservationRegionReadout
+                requestedLabel={obs.regionLabel}
+                regionValue={obs.regionValue}
+                captureConditions={obs.captureConditions}
+                copy={geoCopy}
+                locale={locale}
+              />
+            </dd>
+          </div>
+          {displayTitle ? (
+            <div className="rounded-xl border border-border bg-surface-elevated p-4 sm:col-span-2">
+              <dt className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
+                {t.pageTitleCaptured}
+              </dt>
+              <dd className="mt-1 text-sm text-ink">{displayTitle}</dd>
             </div>
-          </>
-        );
-      })()}
-
-      <div className="space-y-1">
-        <h2 className="font-display text-lg font-semibold text-ink">{t.evidenceTitle}</h2>
-        <p className="text-sm text-ink-muted">{t.evidenceHint}</p>
-      </div>
-
-      <ObservationSnapshotBinaryPanel
-        observationId={obs.id}
-        locale={locale}
-        snapshotSha256={obs.snapshotSha256}
-        snapshotPhash={obs.snapshotPhash}
-        snapshotBytes={obs.snapshotBytes}
-        snapshotContentType={obs.snapshotContentType}
-        snapshotImageUrl={storedVisibleImage}
-        verifyUrl={verifyUrl}
-      />
-
-      <ObservationLivePageComparePanel
-        observationId={obs.id}
-        locale={locale}
-        regionLabel={obs.regionLabel}
-        canCompare={
-          obs.status === "success" &&
-          Boolean(storedVisibleImage) &&
-          Boolean(obs.regionValue?.trim()) &&
-          Boolean(obs.url?.trim())
-        }
-      />
-
-      <ObservationDigitalSeal obs={obs} locale={locale} />
-
-      <dl className="grid gap-4 sm:grid-cols-2">
-        <div className="rounded-xl border border-border bg-surface-elevated p-4">
-          <dt className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
-            {t.capturedAt}
-          </dt>
-          <dd className="mt-1 text-sm text-ink">{formatJaDateTime(obs.capturedAt, locale)}</dd>
-          <dd className="mt-0.5 text-xs text-ink-muted">
-            {formatUtcLabel(obs.capturedAt)}
-          </dd>
-        </div>
-        <div className="rounded-xl border border-border bg-surface-elevated p-4">
-          <dt className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
-            {t.region}
-          </dt>
-          <dd className="mt-1 text-sm text-ink">
-            <ObservationRegionReadout
-              requestedLabel={obs.regionLabel}
-              regionValue={obs.regionValue}
-              captureConditions={obs.captureConditions}
-              copy={geoCopy}
-              locale={locale}
-            />
-          </dd>
-        </div>
-        {displayTitle ? (
+          ) : null}
           <div className="rounded-xl border border-border bg-surface-elevated p-4 sm:col-span-2">
             <dt className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
-              {t.pageTitleCaptured}
+              {t.url}
             </dt>
-            <dd className="mt-1 text-sm text-ink">{displayTitle}</dd>
+            <dd className="mt-1 break-all font-mono text-sm text-ink">{obs.url}</dd>
           </div>
-        ) : null}
-        <div className="rounded-xl border border-border bg-surface-elevated p-4 sm:col-span-2">
-          <dt className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
-            {t.url}
-          </dt>
-          <dd className="mt-1 break-all font-mono text-sm text-ink">{obs.url}</dd>
+          <div className="rounded-xl border border-border bg-surface-elevated p-4 sm:col-span-2">
+            <dt className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
+              {t.captureOutcome}
+            </dt>
+            <dd className="mt-1 text-sm text-ink">
+              {obs.status === "success"
+                ? t.statusSuccess
+                : obs.status === "failure"
+                  ? t.statusFailure
+                  : t.statusPending}
+            </dd>
+          </div>
+          <ObservationCaptureConditionsPanel
+            conditions={obs.captureConditions}
+            copy={captureConditionsCopy}
+            locale={locale}
+          />
+          <ObservationHtmlHeadSignalsPanel
+            signals={obs.captureConditions?.html_signals}
+            copy={htmlHeadSignalsCopy}
+            requestedUrl={obs.url}
+          />
+        </dl>
+
+        <ObservationLpVerdictCard
+          copy={{
+            title: t.lpVerdictTitle,
+            hint: t.lpVerdictHint,
+            codeLpRendered: t.lpVerdictRendered,
+            codeLpNoSnapshot: t.lpVerdictNoSnapshot,
+            codeLpCaptureFailed: t.lpVerdictFailed,
+            codeLpPending: t.lpVerdictPending,
+            snapshotLabel: t.lpVerdictSnapshot,
+            snapshotYes: t.lpVerdictSnapshotYes,
+            snapshotNo: t.lpVerdictSnapshotNo,
+            httpStatus: t.lpVerdictHttp,
+            captureScope: t.lpVerdictScope,
+            scopeFullPage: t.captureScopeFullPage,
+            scopeViewport: t.captureScopeViewport,
+            scopeUnknown: "—",
+          }}
+          code={pack.verdict.code}
+          snapshotPresent={pack.verdict.snapshotPresent}
+          httpStatus={pack.verdict.httpStatus}
+          captureScope={pack.verdict.captureScope}
+        />
+
+        <div className="space-y-1">
+          <h3 className="font-display text-lg font-semibold text-ink">{t.evidenceTitle}</h3>
+          <p className="text-sm text-ink-muted">{t.evidenceHint}</p>
         </div>
-        <div className="rounded-xl border border-border bg-surface-elevated p-4 sm:col-span-2">
-          <dt className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
-            {t.captureOutcome}
-          </dt>
-          <dd className="mt-1 text-sm text-ink">
-            {obs.status === "success"
-              ? t.statusSuccess
-              : obs.status === "failure"
-                ? t.statusFailure
-                : t.statusPending}
-          </dd>
-        </div>
+
+        <ObservationSnapshotBinaryPanel
+          observationId={obs.id}
+          locale={locale}
+          snapshotSha256={obs.snapshotSha256}
+          snapshotPhash={obs.snapshotPhash}
+          snapshotBytes={obs.snapshotBytes}
+          snapshotContentType={obs.snapshotContentType}
+          snapshotImageUrl={storedVisibleImage}
+          verifyUrl={verifyUrl}
+        />
+
+        <ObservationDetailSnapshotSection
+          obs={obs}
+          displayTitle={displayTitle}
+          displayImageUrl={displayImageUrl}
+          resolvedCanonical={resolvedCanonical}
+          locale={locale}
+          comparePrevious={comparePrevious}
+          screenshotExpired={screenshotExpired}
+        />
+      </section>
+
+      <ObservationAiAuditPanel
+        copy={aiAuditCopy}
+        observationId={obs.id}
+        locale={locale}
+        initialAudit={existingAudit}
+      />
+
+      <section className="space-y-6" aria-labelledby="observation-share-heading">
+        <h2 id="observation-share-heading" className="sr-only">
+          {t.verifyLinkTitle}
+        </h2>
+
         {verifyUrl ? (
           <ObservationPublicVerifyLink
             verifyUrl={verifyUrl}
@@ -387,90 +400,103 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
             failedLabel={t.verifyLinkCopyFailed}
           />
         ) : null}
-        <ObservationCaptureConditionsPanel
-          conditions={obs.captureConditions}
-          copy={captureConditionsCopy}
+
+        <div className="rounded-xl border border-border bg-surface-elevated p-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
+            {t.evidenceJsonTitle}
+          </h3>
+          <p className="mt-1 text-xs leading-relaxed text-ink-muted">{t.evidenceJsonHint}</p>
+          <div className="mt-3">
+            <ObservationEvidenceJsonDownload
+              fileName={`viewtrace-${obs.id}.json`}
+              json={pack}
+              downloadLabel={t.evidenceJsonDownload}
+              copyLabel={t.evidenceJsonCopy}
+              copiedLabel={t.evidenceJsonCopied}
+            />
+          </div>
+        </div>
+
+        <ObservationLivePageComparePanel
+          observationId={obs.id}
           locale={locale}
+          regionLabel={obs.regionLabel}
+          canCompare={
+            obs.status === "success" &&
+            Boolean(storedVisibleImage) &&
+            Boolean(obs.regionValue?.trim()) &&
+            Boolean(obs.url?.trim())
+          }
         />
-        <ObservationHtmlHeadSignalsPanel
-          signals={obs.captureConditions?.html_signals}
-          copy={htmlHeadSignalsCopy}
-          requestedUrl={obs.url}
-        />
+
+        <ObservationDigitalSeal obs={obs} locale={locale} />
+
         {plan.autoObservationWatch && obs.regionValue ? (
-          <ObservationWatchPanel
-            url={obs.url}
-            regionValue={obs.regionValue}
-            regionLabel={obs.regionLabel}
-            observationId={obs.id}
-            initialEnabled={watchEnabled}
-            initialFrequency={watchFrequency}
-            initialRepeat={watchRepeat}
-            initialNotify={watchNotify}
-            initialNotifyOnMetadata={watchNotifyOnMetadata}
-            copy={{
-              title: t.watchTitle,
-              intro: t.watchIntro,
-              frequencyLabel: t.watchFrequencyLabel,
-              frequencyDaily: t.watchFrequencyDaily,
-              frequencyWeekly: t.watchFrequencyWeekly,
-              frequencyMonthly: t.watchFrequencyMonthly,
-              repeatLabel: t.watchRepeatLabel,
-              notifyLabel: t.watchNotifyLabel,
-              notifyAlways: t.watchNotifyAlways,
-              notifyChangeOnly: t.watchNotifyChangeOnly,
-              notifyOnMetadata: t.watchNotifyMetadata,
-              notifyOnMetadataHint: t.watchNotifyMetadataHint,
-              notifyOnMetadataOn: t.watchNotifyMetadataOn,
-              notifyOnMetadataOff: t.watchNotifyMetadataOff,
-              monitoringOn: t.watchMonitoringOn,
-              monitoringOff: t.watchMonitoringOff,
-              monitoringStateLabel: t.watchMonitoringStateLabel,
-              estimateLabel: t.watchEstimateLabel,
-              estimateValue: t.watchEstimateValue,
-              planIncludes: t.watchPlanIncludes,
-              unitHint: t.watchUnitHint,
-              save: t.watchSave,
-              webhookLabel: t.watchWebhookLabel,
-              webhookHint: t.watchWebhookHint,
-              webhookPlaceholder: t.watchWebhookPlaceholder,
-              webhookSample: t.watchWebhookSample,
-              shareButton: t.watchShareButton,
-              shareCopied: t.watchShareCopied,
-              shareFailed: t.watchShareFailed,
-              csvExportButton: t.watchCsvExportButton,
-              csvExportPending: t.watchCsvExportPending,
-              csvAuditCheckbox: csvExportCopy.auditCheckbox,
-              csvModeStandard: csvExportCopy.modeStandard,
-              csvModeAudit: csvExportCopy.modeAudit,
-            }}
-            initialWebhookUrl={watchWebhookUrl || null}
-            showShare={plan.autoObservationWatch}
-            showCsvExport={plan.csvExport}
-            monthlyLimit={plan.monthlyObservations}
-            maxDailyRepeats={plan.watchMaxDailyRepeats}
-          />
+          <dl className="grid gap-4 sm:grid-cols-2">
+            <ObservationWatchPanel
+              url={obs.url}
+              regionValue={obs.regionValue}
+              regionLabel={obs.regionLabel}
+              observationId={obs.id}
+              initialEnabled={watchEnabled}
+              initialFrequency={watchFrequency}
+              initialRepeat={watchRepeat}
+              initialNotify={watchNotify}
+              initialNotifyOnMetadata={watchNotifyOnMetadata}
+              copy={{
+                title: t.watchTitle,
+                intro: t.watchIntro,
+                frequencyLabel: t.watchFrequencyLabel,
+                frequencyDaily: t.watchFrequencyDaily,
+                frequencyWeekly: t.watchFrequencyWeekly,
+                frequencyMonthly: t.watchFrequencyMonthly,
+                repeatLabel: t.watchRepeatLabel,
+                notifyLabel: t.watchNotifyLabel,
+                notifyAlways: t.watchNotifyAlways,
+                notifyChangeOnly: t.watchNotifyChangeOnly,
+                notifyOnMetadata: t.watchNotifyMetadata,
+                notifyOnMetadataHint: t.watchNotifyMetadataHint,
+                notifyOnMetadataOn: t.watchNotifyMetadataOn,
+                notifyOnMetadataOff: t.watchNotifyMetadataOff,
+                monitoringOn: t.watchMonitoringOn,
+                monitoringOff: t.watchMonitoringOff,
+                monitoringStateLabel: t.watchMonitoringStateLabel,
+                estimateLabel: t.watchEstimateLabel,
+                estimateValue: t.watchEstimateValue,
+                planIncludes: t.watchPlanIncludes,
+                unitHint: t.watchUnitHint,
+                save: t.watchSave,
+                webhookLabel: t.watchWebhookLabel,
+                webhookHint: t.watchWebhookHint,
+                webhookPlaceholder: t.watchWebhookPlaceholder,
+                webhookSample: t.watchWebhookSample,
+                shareButton: t.watchShareButton,
+                shareCopied: t.watchShareCopied,
+                shareFailed: t.watchShareFailed,
+                csvExportButton: t.watchCsvExportButton,
+                csvExportPending: t.watchCsvExportPending,
+                csvAuditCheckbox: csvExportCopy.auditCheckbox,
+                csvModeStandard: csvExportCopy.modeStandard,
+                csvModeAudit: csvExportCopy.modeAudit,
+              }}
+              initialWebhookUrl={watchWebhookUrl || null}
+              showShare={plan.autoObservationWatch}
+              showCsvExport={plan.csvExport}
+              monthlyLimit={plan.monthlyObservations}
+              maxDailyRepeats={plan.watchMaxDailyRepeats}
+            />
+          </dl>
         ) : null}
-      </dl>
 
-      <ObservationAnnotationPanel
-        observationId={obs.id}
-        locale={locale}
-        initialNote={obs.note ?? ""}
-        initialTags={obs.tags ?? []}
-        initialFolder={obs.folder ?? ""}
-        initialReviewStatus={obs.reviewStatus}
-      />
-
-      <ObservationDetailSnapshotSection
-        obs={obs}
-        displayTitle={displayTitle}
-        displayImageUrl={displayImageUrl}
-        resolvedCanonical={resolvedCanonical}
-        locale={locale}
-        comparePrevious={comparePrevious}
-        screenshotExpired={screenshotExpired}
-      />
+        <ObservationAnnotationPanel
+          observationId={obs.id}
+          locale={locale}
+          initialNote={obs.note ?? ""}
+          initialTags={obs.tags ?? []}
+          initialFolder={obs.folder ?? ""}
+          initialReviewStatus={obs.reviewStatus}
+        />
+      </section>
     </div>
   );
 }

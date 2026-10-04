@@ -42,7 +42,7 @@ export async function POST(req: Request) {
 
   const ratio = await computeSnapshotDiffRatio(currentUrl, previousUrl);
   if (ratio === null) {
-    return NextResponse.json({ ok: false, error: "diff_failed" }, { status: 502 });
+    return NextResponse.json({ ok: false, error: "diff_unavailable" }, { status: 200 });
   }
 
   return NextResponse.json({

@@ -123,7 +123,7 @@ type Props = {
 };
 
 function engineLabel(
-  name: CaptureConditionsV1["engine"]["name"],
+  name: CaptureConditionsV1["engine"]["name"] | undefined,
   copy: ObservationCaptureConditionsCopy,
 ): string {
   const map = {
@@ -132,7 +132,7 @@ function engineLabel(
     direct_fetch: copy.engineDirectFetch,
     form_upload: copy.engineFormUpload,
   } as const;
-  return map[name];
+  return (name && map[name]) || "—";
 }
 
 function proxyModeLabel(mode: CaptureConditionsV1["geo"]["proxy_mode"], copy: ObservationCaptureConditionsCopy) {
@@ -175,11 +175,11 @@ export function ObservationCaptureConditionsPanel({ conditions, copy, locale }: 
     : copy.captureScopeViewport;
 
   const imageSize =
-    conditions.result.image_width_px != null && conditions.result.image_height_px != null
+    conditions.result?.image_width_px != null && conditions.result?.image_height_px != null
       ? `${conditions.result.image_width_px}×${conditions.result.image_height_px}`
       : "—";
 
-  const countryState = [conditions.geo.country, conditions.geo.state].filter(Boolean).join(" / ") || "—";
+  const countryState = [conditions.geo?.country, conditions.geo?.state].filter(Boolean).join(" / ") || "—";
   const cost = conditions.cost_signals;
 
   return (
@@ -189,7 +189,7 @@ export function ObservationCaptureConditionsPanel({ conditions, copy, locale }: 
         <div>
           <dt className="text-xs text-ink-muted">{copy.browser}</dt>
           <dd className="mt-0.5 text-sm text-ink">
-            {conditions.browser.family} · {conditions.browser.channel}
+            {conditions.browser?.family ?? "—"} · {conditions.browser?.channel ?? "—"}
           </dd>
         </div>
         <div>
@@ -198,7 +198,7 @@ export function ObservationCaptureConditionsPanel({ conditions, copy, locale }: 
         </div>
         <div className="sm:col-span-2">
           <dt className="text-xs text-ink-muted">{copy.userAgent}</dt>
-          <dd className="mt-0.5 break-all font-mono text-xs text-ink">{conditions.browser.user_agent}</dd>
+          <dd className="mt-0.5 break-all font-mono text-xs text-ink">{conditions.browser?.user_agent ?? "—"}</dd>
         </div>
         <div>
           <dt className="text-xs text-ink-muted">{copy.country}</dt>
@@ -210,21 +210,23 @@ export function ObservationCaptureConditionsPanel({ conditions, copy, locale }: 
         </div>
         <div>
           <dt className="text-xs text-ink-muted">{copy.proxyMode}</dt>
-          <dd className="mt-0.5 text-sm text-ink">{proxyModeLabel(conditions.geo.proxy_mode, copy)}</dd>
+          <dd className="mt-0.5 text-sm text-ink">
+            {conditions.geo ? proxyModeLabel(conditions.geo.proxy_mode, copy) : "—"}
+          </dd>
         </div>
         <div>
           <dt className="text-xs text-ink-muted">{copy.proxyProvider}</dt>
-          <dd className="mt-0.5 text-sm text-ink">{conditions.geo.proxy_provider ?? "—"}</dd>
+          <dd className="mt-0.5 text-sm text-ink">{conditions.geo?.proxy_provider ?? "—"}</dd>
         </div>
         <div>
           <dt className="text-xs text-ink-muted">{copy.engine}</dt>
-          <dd className="mt-0.5 text-sm text-ink">{engineLabel(conditions.engine.name, copy)}</dd>
+          <dd className="mt-0.5 text-sm text-ink">{engineLabel(conditions.engine?.name, copy)}</dd>
         </div>
         <div>
           <dt className="text-xs text-ink-muted">{copy.imageSize}</dt>
           <dd className="mt-0.5 text-sm text-ink">{imageSize}</dd>
         </div>
-        {conditions.engine.browserless ? (
+        {conditions.engine?.browserless ? (
           <>
             <div>
               <dt className="text-xs text-ink-muted">{copy.browserlessHost}</dt>

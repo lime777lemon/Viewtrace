@@ -65,7 +65,10 @@ export async function computeSnapshotDiffRatioBetweenBuffers(
 export async function computeSnapshotDiffRatio(aUrl: string, bUrl: string): Promise<number | null> {
   try {
     const [aBuf, bBuf] = await Promise.all([fetchImageBuffer(aUrl), fetchImageBuffer(bUrl)]);
-    if (!aBuf || !bBuf) return null;
+    if (!aBuf || !bBuf) {
+      console.warn("[snapshot-diff] fetch failed", { aOk: Boolean(aBuf), bOk: Boolean(bBuf) });
+      return null;
+    }
     return computeSnapshotDiffRatioBetweenBuffers(aBuf, bBuf);
   } catch {
     return null;

@@ -4,7 +4,7 @@ import { ProxyAgent } from "undici";
 function parseRegion(regionValue: string): { country: string; state: string | null } {
   const v = regionValue.trim();
   if (!v) return { country: "", state: null };
-  const m = v.match(/^([A-Z]{2})(?:-([A-Z]{2}))?$/i);
+  const m = v.match(/^([A-Z]{2})(?:-([A-Z]{2}|\d{2}))?$/i);
   if (!m) return { country: v, state: null };
   return { country: m[1]!.toUpperCase(), state: m[2] ? m[2].toUpperCase() : null };
 }
