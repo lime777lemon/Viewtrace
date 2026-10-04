@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 
 const COPY = {
   requestedObserved: "Requested: {requested} / Observed via: {observed}",
-  observedNoGeo: "No geo proxy",
 };
 
 function countryCodeDisplayName(code) {
@@ -11,13 +10,28 @@ function countryCodeDisplayName(code) {
   return map[key] ?? String(code).trim().toUpperCase();
 }
 
+function normalizeObservationRegionInput(value) {
+  return String(value ?? "")
+    .trim()
+    .toUpperCase();
+}
+
+function countryLabelFromRegionInput(regionInput) {
+  const n = normalizeObservationRegionInput(regionInput);
+  if (!n) return null;
+  if (/^US-[A-Z]{2}$/.test(n) || n === "US") return countryCodeDisplayName("us");
+  if (/^JP-\d{2}$/.test(n) || n === "JP") return countryCodeDisplayName("jp");
+  if (/^[A-Z]{2}$/.test(n)) return countryCodeDisplayName(n);
+  return null;
+}
+
 function observedFromConditions(conditions) {
   if (!conditions) return null;
   const mode = conditions.geo.proxy_mode;
-  if (mode === "retry_without_proxy" || mode === "none") return COPY.observedNoGeo;
+  if (mode === "retry_without_proxy" || mode === "none") return null;
   const country = conditions.geo.country?.trim();
   const state = conditions.geo.state?.trim();
-  if (!country) return COPY.observedNoGeo;
+  if (!country) return null;
   const countryLabel = countryCodeDisplayName(country);
   if (state) return `${countryLabel} · ${state}`;
   return countryLabel;
@@ -25,23 +39,26 @@ function observedFromConditions(conditions) {
 
 function observationGeoReadout({ requestedLabel, captureConditions }) {
   const observedLabel = observedFromConditions(captureConditions);
-  if (!observedLabel || !captureConditions) {
+  if (!captureConditions) {
     return { headline: requestedLabel, distinguish: false, detailLine: null };
   }
   const requestedUsState = /^US-/i.test(captureConditions.region_input);
-  const distinguish =
-    captureConditions.geo.proxy_mode === "retry_without_proxy" ||
-    (requestedUsState && !captureConditions.geo.state);
-  if (!distinguish) {
+  const distinguish = Boolean(observedLabel && requestedUsState && !captureConditions.geo.state);
+  if (distinguish && observedLabel) {
+    return {
+      headline: observedLabel,
+      distinguish: true,
+      detailLine: COPY.requestedObserved
+        .replace("{requested}", requestedLabel)
+        .replace("{observed}", observedLabel),
+    };
+  }
+  if (observedLabel) {
     return { headline: requestedLabel, distinguish: false, detailLine: null };
   }
-  return {
-    headline: observedLabel,
-    distinguish: true,
-    detailLine: COPY.requestedObserved
-      .replace("{requested}", requestedLabel)
-      .replace("{observed}", observedLabel),
-  };
+  const headline =
+    countryLabelFromRegionInput(captureConditions.region_input) ?? requestedLabel;
+  return { headline, distinguish: false, detailLine: null };
 }
 
 const countryOnlyUsCa = observationGeoReadout({
@@ -76,9 +93,10 @@ const retry = observationGeoReadout({
     geo: { country: null, state: null, proxy_mode: "retry_without_proxy" },
   },
 });
-assert.equal(retry.distinguish, true);
-assert.equal(retry.headline, "No geo proxy");
+assert.equal(retry.distinguish, false);
+assert.equal(retry.headline, "United States");
 assert.equal(retry.headline.includes("California"), false);
+assert.equal(retry.headline.includes("geo proxy"), false);
 
 const japan = observationGeoReadout({
   requestedLabel: "Japan",
