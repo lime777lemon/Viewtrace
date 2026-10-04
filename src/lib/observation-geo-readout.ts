@@ -1,5 +1,6 @@
 import type { CaptureConditionsV1 } from "@/lib/capture-conditions";
 import type { Locale } from "@/lib/i18n";
+import { normalizeObservationRegionInput } from "@/lib/regions";
 
 const COUNTRY_EN: Record<string, string> = {
   us: "United States",
@@ -23,16 +24,13 @@ const COUNTRY_JA: Record<string, string> = {
 
 export type ObservationGeoReadoutCopy = {
   requestedObserved: string;
-  observedNoGeo: string;
 };
 
 export function observationGeoCopyFrom(t: {
   geoRequestedObserved: string;
-  geoObservedNoGeo: string;
 }): ObservationGeoReadoutCopy {
   return {
     requestedObserved: t.geoRequestedObserved,
-    observedNoGeo: t.geoObservedNoGeo,
   };
 }
 
@@ -51,19 +49,25 @@ export function countryCodeDisplayName(code: string, locale: Locale): string {
   return map[key] ?? code.trim().toUpperCase();
 }
 
+function countryLabelFromRegionInput(regionInput: string, locale: Locale): string | null {
+  const n = normalizeObservationRegionInput(regionInput);
+  if (!n) return null;
+  if (/^US-[A-Z]{2}$/.test(n) || n === "US") return countryCodeDisplayName("us", locale);
+  if (/^JP-\d{2}$/.test(n) || n === "JP") return countryCodeDisplayName("jp", locale);
+  if (/^[A-Z]{2}$/.test(n)) return countryCodeDisplayName(n, locale);
+  return null;
+}
+
 function observedFromConditions(
   conditions: CaptureConditionsV1 | null | undefined,
-  copy: ObservationGeoReadoutCopy,
   locale: Locale,
 ): string | null {
   if (!conditions?.geo) return null;
   const mode = conditions.geo.proxy_mode;
-  if (mode === "retry_without_proxy" || mode === "none") {
-    return copy.observedNoGeo;
-  }
+  if (mode === "retry_without_proxy" || mode === "none") return null;
   const country = conditions.geo.country?.trim();
   const state = conditions.geo.state?.trim();
-  if (!country) return copy.observedNoGeo;
+  if (!country) return null;
   const countryLabel = countryCodeDisplayName(country, locale);
   if (state) return `${countryLabel} · ${state}`;
   return countryLabel;
@@ -77,8 +81,8 @@ export function observationGeoReadout(input: {
   locale: Locale;
 }): ObservationGeoReadout {
   const requestedLabel = input.requestedLabel.trim() || input.regionValue?.trim() || "—";
-  const observedLabel = observedFromConditions(input.captureConditions, input.copy, input.locale);
-  if (!observedLabel || !input.captureConditions) {
+  const observedLabel = observedFromConditions(input.captureConditions, input.locale);
+  if (!input.captureConditions) {
     return {
       requestedLabel,
       observedLabel: requestedLabel,
@@ -89,11 +93,21 @@ export function observationGeoReadout(input: {
   }
 
   const requestedUsState = /^US-/i.test(input.captureConditions.region_input);
-  const distinguish =
-    input.captureConditions.geo.proxy_mode === "retry_without_proxy" ||
-    (requestedUsState && !input.captureConditions.geo.state);
+  const distinguish = Boolean(observedLabel && requestedUsState && !input.captureConditions.geo.state);
 
-  if (!distinguish) {
+  if (distinguish && observedLabel) {
+    return {
+      requestedLabel,
+      observedLabel,
+      headline: observedLabel,
+      distinguish: true,
+      detailLine: input.copy.requestedObserved
+        .replace("{requested}", requestedLabel)
+        .replace("{observed}", observedLabel),
+    };
+  }
+
+  if (observedLabel) {
     return {
       requestedLabel,
       observedLabel,
@@ -103,13 +117,16 @@ export function observationGeoReadout(input: {
     };
   }
 
+  const headline =
+    countryLabelFromRegionInput(input.captureConditions.region_input, input.locale) ??
+    countryLabelFromRegionInput(input.regionValue ?? "", input.locale) ??
+    requestedLabel;
+
   return {
     requestedLabel,
-    observedLabel,
-    headline: observedLabel,
-    distinguish: true,
-    detailLine: input.copy.requestedObserved
-      .replace("{requested}", requestedLabel)
-      .replace("{observed}", observedLabel),
+    observedLabel: headline,
+    headline,
+    distinguish: false,
+    detailLine: null,
   };
 }
