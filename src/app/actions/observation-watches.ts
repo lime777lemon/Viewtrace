@@ -94,7 +94,7 @@ export async function saveObservationWatchAction(formData: FormData): Promise<vo
   if (!user?.id) redirectToLogin();
 
   const nowIso = new Date().toISOString();
-  const snapshotFullPage = session.plan === "pro";
+  const snapshotFullPage = getPlan(session.plan).snapshotFullPage;
 
   // next_run_at は cron が初回実行で更新する。ここに含めると、未マイグレーション／古い
   // PostgREST スキーマキャッシュで PGRST204 になり得るため送らない（null の行は cron が拾う）。

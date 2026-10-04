@@ -1,9 +1,49 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { createOpenAI } from "@ai-sdk/openai";
 import { generateText, Output } from "ai";
 import { z } from "zod";
 import type { Locale } from "@/lib/i18n";
 import type { AiAuditNote } from "@/lib/observation-ai-audit";
 
-const DEFAULT_MODEL = "openai/gpt-4o-mini";
+const DEFAULT_MODEL_ID = "gpt-4o-mini";
+
+function stripEnvQuotes(value: string): string {
+  return value.trim().replace(/^["']|["']$/g, "");
+}
+
+function readEnvLocalValue(name: string): string | undefined {
+  try {
+    const text = readFileSync(join(process.cwd(), ".env.local"), "utf8");
+    for (const line of text.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const eq = trimmed.indexOf("=");
+      if (eq <= 0) continue;
+      if (trimmed.slice(0, eq).trim() !== name) continue;
+      const value = stripEnvQuotes(trimmed.slice(eq + 1));
+      return value || undefined;
+    }
+  } catch {
+    return undefined;
+  }
+  return undefined;
+}
+
+function openAiApiKey(): string | undefined {
+  const fromProcess = process.env.OPENAI_API_KEY
+    ? stripEnvQuotes(process.env.OPENAI_API_KEY)
+    : undefined;
+  return fromProcess || readEnvLocalValue("OPENAI_API_KEY");
+}
+
+function resolveAuditModel(): { model: ReturnType<ReturnType<typeof createOpenAI>>; label: string } | null {
+  const apiKey = openAiApiKey();
+  if (!apiKey) return null;
+  const raw = process.env.VIEWTRACE_AI_AUDIT_MODEL?.trim() || DEFAULT_MODEL_ID;
+  const id = raw.replace(/^openai\//, "");
+  return { model: createOpenAI({ apiKey })(id), label: `openai/${id}` };
+}
 
 const auditSchema = z.object({
   summary: z.string().max(500),
@@ -19,11 +59,7 @@ const auditSchema = z.object({
 
 export function isAiAuditLlmConfigured(): boolean {
   if (process.env.VIEWTRACE_AI_AUDIT === "0") return false;
-  return Boolean(
-    process.env.AI_GATEWAY_API_KEY ||
-      process.env.VERCEL_OIDC_TOKEN ||
-      process.env.OPENAI_API_KEY,
-  );
+  return Boolean(openAiApiKey());
 }
 
 export async function tryLlmPageAudit(input: {
@@ -31,9 +67,14 @@ export async function tryLlmPageAudit(input: {
   image?: { bytes: Uint8Array; mediaType: string };
   locale: Locale;
 }): Promise<{ summary: string; notes: AiAuditNote[]; model: string } | null> {
-  if (!isAiAuditLlmConfigured()) return null;
+  if (process.env.VIEWTRACE_AI_AUDIT === "0") return null;
 
-  const model = process.env.VIEWTRACE_AI_AUDIT_MODEL?.trim() || DEFAULT_MODEL;
+  const resolved = resolveAuditModel();
+  if (!resolved) {
+    console.warn("[observation-ai-audit] OPENAI_API_KEY missing; skipped LLM");
+    return null;
+  }
+  const { model, label } = resolved;
   const ja = input.locale === "ja";
   const system = ja
     ? [
@@ -79,7 +120,7 @@ export async function tryLlmPageAudit(input: {
     return {
       summary: output.summary,
       notes: output.notes,
-      model,
+      model: label,
     };
   } catch (error) {
     console.warn(

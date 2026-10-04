@@ -131,6 +131,15 @@ export async function uploadObservationSnapshotPng(
   }
 }
 
+function isVercelBlobUrl(url: string): boolean {
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    return host === "blob.vercel-storage.com" || host.endsWith(".blob.vercel-storage.com");
+  } catch {
+    return false;
+  }
+}
+
 /** Best-effort Blob delete. Missing objects count as success so purge can be marked. */
 export async function deleteObservationSnapshotByUrl(
   url: string,
@@ -142,6 +151,10 @@ export async function deleteObservationSnapshotByUrl(
   }
   const trimmed = url.trim();
   if (!trimmed || !/^https?:\/\//i.test(trimmed)) {
+    return { ok: true };
+  }
+  // Microlink / OG 等は当ストアのオブジェクトではない。del すると malformed になり、印も付かない。
+  if (!isVercelBlobUrl(trimmed)) {
     return { ok: true };
   }
   try {
