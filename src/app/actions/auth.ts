@@ -9,6 +9,7 @@ import type { LoginLocale } from "@/lib/auth/login-copy";
 import { loginPageCopy } from "@/lib/auth/login-copy";
 import { TRIAL_CONFIG } from "@/lib/plans";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { readSupabasePublicEnv } from "@/lib/supabase/public-env";
 import { insertTrialSignupRow } from "@/lib/auth/trial-signup-server";
 import { getSession } from "@/lib/auth/session";
 import { parsePlanId } from "@/lib/plans";
@@ -22,6 +23,15 @@ import { pwnedPasswordCount, pwnedPasswordErrorMessage } from "@/lib/auth/pwned-
 
 export type AuthFormState = { error?: string; message?: string } | null;
 
+function missingAuthConfigError(locale: LoginLocale): AuthFormState {
+  return {
+    error:
+      locale === "ja"
+        ? "この環境ではログインできません。Preview に NEXT_PUBLIC_SUPABASE_URL と NEXT_PUBLIC_SUPABASE_ANON_KEY を追加してください。"
+        : "Sign-in is unavailable in this environment. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to Preview.",
+  };
+}
+
 /**
  * ログイン（Server Action）。
  */
@@ -31,6 +41,10 @@ export async function authFormAction(
 ): Promise<AuthFormState> {
   const localeRaw = String(formData.get("_locale") ?? "en");
   const locale: LoginLocale = localeRaw === "ja" ? "ja" : "en";
+
+  if (!readSupabasePublicEnv()) {
+    return missingAuthConfigError(locale);
+  }
 
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
@@ -97,6 +111,10 @@ export async function signupFormAction(
   const localeRaw = String(formData.get("_locale") ?? "en");
   const locale: LoginLocale = localeRaw === "ja" ? "ja" : "en";
   const t = loginPageCopy[locale].form;
+
+  if (!readSupabasePublicEnv()) {
+    return missingAuthConfigError(locale);
+  }
 
   const email = String(formData.get("email") ?? "").trim();
   const fullName = String(formData.get("fullName") ?? "").trim().slice(0, 200);
