@@ -31,6 +31,7 @@ export const metadata: Metadata = {
     "ViewTrace checks client landing pages from the regions where your ads actually run—then keeps timestamped proof of exactly what rendered.",
   keywords: [...siteSeoKeywordPhrases, "Viewtrace"],
   applicationName: "Viewtrace",
+  authors: [{ name: "The Establish LLC", url: "/humans.txt" }],
   alternates: {
     canonical: "/",
   },
