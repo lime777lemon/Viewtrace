@@ -17,6 +17,16 @@ const nextConfig: NextConfig = {
         destination: "/.well-known/security.txt",
         permanent: true,
       },
+      {
+        source: "/sitemap.html",
+        destination: "/site-map",
+        permanent: true,
+      },
+      {
+        source: "/sitemap",
+        destination: "/sitemap.xml",
+        permanent: true,
+      },
     ];
   },
 };
