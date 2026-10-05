@@ -13,6 +13,16 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       {
+        source: "/contactus",
+        destination: "/contact",
+        permanent: true,
+      },
+      {
+        source: "/contact-us",
+        destination: "/contact",
+        permanent: true,
+      },
+      {
         source: "/security.txt",
         destination: "/.well-known/security.txt",
         permanent: true,
