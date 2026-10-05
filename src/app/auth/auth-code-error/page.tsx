@@ -111,12 +111,20 @@ export default async function AuthCodeErrorPage({
           ください。
         </p>
       </div>
-      <Link
-        href="/login?mode=signin"
-        className="mt-8 inline-flex justify-center rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent-hover"
-      >
-        ログインへ
-      </Link>
+      <div className="mt-8 flex flex-col items-center gap-3">
+        <Link
+          href="/login?mode=signup"
+          className="inline-flex justify-center rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent-hover"
+        >
+          無料で始める
+        </Link>
+        <Link
+          href="/login?mode=signin"
+          className="text-sm font-semibold text-accent hover:text-accent-hover"
+        >
+          ログインへ
+        </Link>
+      </div>
     </div>
   );
 }
