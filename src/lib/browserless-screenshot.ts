@@ -214,7 +214,7 @@ export async function runBrowserlessScreenshot(params: {
    * - `userAgent.userAgent`: v2 では object 必須。既定の `HeadlessChrome/...` を上書き
    * - `setExtraHTTPHeaders.Accept-Language`: 日本語サイトが地域フィルタで弾くのを回避
    * - `gotoOptions.waitUntil`: ボット保護の challenge 解決やリダイレクト後の本体描画を待つ
-   * - `options.fullPage`: Starter / Pro は全画面キャプチャ
+   * - `options.fullPage`: trial / Starter / Pro は全画面キャプチャ
    */
   const payload: Record<string, unknown> = {
     url: target,
