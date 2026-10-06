@@ -1,12 +1,15 @@
 "use client";
 
-import { useActionState, useEffect, useId, useRef, useState } from "react";
+import { startTransition, useActionState, useEffect, useId, useRef, useState } from "react";
 import { authFormAction, signupFormAction } from "@/app/actions/auth";
 import { trackSignupConversion } from "@/lib/analytics/track";
 import { loginPageCopy } from "@/lib/auth/login-copy";
 import type { LoginLocale } from "@/lib/auth/login-copy";
 
 type Mode = "signin" | "signup";
+
+const FIELD_CLASS =
+  "mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm outline-none ring-accent/25 placeholder:text-ink-muted/60 focus:border-accent/40 focus:ring-2";
 
 export function LoginForm({
   nextPath,
@@ -54,7 +57,7 @@ export function LoginForm({
       <div className="flex rounded-xl border border-border p-1 text-sm font-medium">
         <button
           type="button"
-          onClick={() => setMode("signup")}
+          onClick={() => startTransition(() => setMode("signup"))}
           className={`flex-1 rounded-lg py-2 transition ${
             mode === "signup"
               ? "bg-accent text-white shadow-sm"
@@ -65,7 +68,7 @@ export function LoginForm({
         </button>
         <button
           type="button"
-          onClick={() => setMode("signin")}
+          onClick={() => startTransition(() => setMode("signin"))}
           className={`flex-1 rounded-lg py-2 transition ${
             mode === "signin"
               ? "bg-accent text-white shadow-sm"
@@ -87,7 +90,10 @@ export function LoginForm({
           autoComplete="email"
           required
           placeholder={t.emailPlaceholder}
-          className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm outline-none ring-accent/25 transition placeholder:text-ink-muted/60 focus:border-accent/40 focus:ring-2"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          className={FIELD_CLASS}
         />
       </div>
       {mode === "signup" ? (
@@ -104,7 +110,7 @@ export function LoginForm({
               required
               maxLength={200}
               placeholder={t.fullNamePlaceholder}
-              className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm outline-none ring-accent/25 transition placeholder:text-ink-muted/60 focus:border-accent/40 focus:ring-2"
+              className={FIELD_CLASS}
             />
           </div>
           <div>
@@ -118,7 +124,7 @@ export function LoginForm({
               autoComplete="organization"
               maxLength={200}
               placeholder={t.companyPlaceholder}
-              className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm outline-none ring-accent/25 transition placeholder:text-ink-muted/60 focus:border-accent/40 focus:ring-2"
+              className={FIELD_CLASS}
             />
           </div>
           <div>
@@ -132,7 +138,7 @@ export function LoginForm({
               autoComplete="tel"
               maxLength={40}
               placeholder={t.phonePlaceholder}
-              className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm outline-none ring-accent/25 transition placeholder:text-ink-muted/60 focus:border-accent/40 focus:ring-2"
+              className={FIELD_CLASS}
             />
           </div>
         </>
@@ -158,7 +164,10 @@ export function LoginForm({
           required
           minLength={mode === "signup" ? 8 : undefined}
           placeholder={mode === "signup" ? t.passwordPlaceholderSignup : t.passwordPlaceholderSignin}
-          className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm outline-none ring-accent/25 transition placeholder:text-ink-muted/60 focus:border-accent/40 focus:ring-2"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          className={FIELD_CLASS}
         />
       </div>
       {mode === "signup" ? (
@@ -177,7 +186,10 @@ export function LoginForm({
             required
             minLength={8}
             placeholder={t.confirmPasswordPlaceholder}
-            className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm outline-none ring-accent/25 transition placeholder:text-ink-muted/60 focus:border-accent/40 focus:ring-2"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            className={FIELD_CLASS}
           />
         </div>
       ) : null}
