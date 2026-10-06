@@ -5,7 +5,23 @@ import { isSuspiciousRequestUrl } from "@/lib/ops/suspicious-request";
 import { hasSupabaseAuthSessionCookie } from "@/lib/supabase/auth-session-cookie";
 import { updateSupabaseSession } from "@/lib/supabase/update-session";
 
+const PAGE_SAFE_METHODS = new Set(["GET", "HEAD"]);
+
 export async function middleware(request: NextRequest, event: NextFetchEvent) {
+  const pathname = request.nextUrl.pathname;
+  // トップは静的ランディングのみ。スキャナの POST / を関数まで通さず 405 にする。
+  // Next.js Server Action（Next-Action）だけは例外。
+  if (
+    pathname === "/" &&
+    !PAGE_SAFE_METHODS.has(request.method) &&
+    !request.headers.get("next-action")
+  ) {
+    return new NextResponse(null, {
+      status: 405,
+      headers: { Allow: "GET, HEAD" },
+    });
+  }
+
   const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -25,7 +41,6 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
     }
   }
 
-  const pathname = request.nextUrl.pathname;
   const search = request.nextUrl.search;
 
   if (
