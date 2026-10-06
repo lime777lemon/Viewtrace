@@ -9,6 +9,10 @@ const PAGE_SAFE_METHODS = new Set(["GET", "HEAD"]);
 
 export async function middleware(request: NextRequest, event: NextFetchEvent) {
   const pathname = request.nextUrl.pathname;
+  // 秘密ファイル・スキャナ経路は受け口を作らず、関数まで通さず 404。
+  if (isSuspiciousRequestUrl(pathname, "")) {
+    return new NextResponse(null, { status: 404 });
+  }
   // トップは静的ランディングのみ。スキャナの POST / を関数まで通さず 405 にする。
   // Next.js Server Action（Next-Action）だけは例外。
   if (
