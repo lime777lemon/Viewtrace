@@ -104,6 +104,7 @@ export default async function SettingsPage() {
                   <li>{labels?.coverageLabel ?? plan.coverageLabel}</li>
                   <li>{t.csvNotAvailable}</li>
                   <li>{t.snapshotsAvailable}</li>
+                  <li>{t.snapshotTechnicalTrial}</li>
                 </ul>
               </>
             )}

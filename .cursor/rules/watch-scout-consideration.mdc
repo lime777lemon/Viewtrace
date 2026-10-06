@@ -27,7 +27,7 @@ Verify（`/verify/[token]`）は削除しない。成長ループではなく、
 
 自社 pull Node（`agent.mjs`）は実験。州を候補に出すのはその州の residential 出口ができてから。Requested と Observed を混ぜない。US-CA を選んでも国単位で取れたら California と表示しない。
 
-1 地域 = 1 Observation。複数地域は件数分消費。Compare / Share / SHA / Interpretation は 0。Watch も 1 URL × 1 地域 × 1 実行 = 1。残量不足なら定期実行は部分実行せずスキップ。超過従量はしない。原価設計は一旦止める。Starter 500 / Pro 1500 は仮置き（2000 に戻さない）。Starter / Pro ともフルページ（trial は viewport）。$49 / $99 の差は件数・保存・地域・Watch 頻度・CSV。粗利は PNG ではなく Residential 転送 MB / Observation の中央値と P90。国単位 residential 20〜50 件で CSV を渡し、①上限（P75〜P90 の C、100%消費で変動費 25%）と②損益分岐（実利用率の貢献利益で固定費を割る）を分ける。C に $200 を混ぜない。計測項目は増やさない。proxy_bytes の 0 は実測 0、null は未測定。`retry_without_proxy` は C に使わない。超過上限 $20。State Geo は Starter では保証しない。
+1 地域 = 1 Observation。複数地域は件数分消費。Compare / Share / SHA / Interpretation は 0。Watch も 1 URL × 1 地域 × 1 実行 = 1。残量不足なら定期実行は部分実行せずスキップ。超過従量はしない。原価設計は一旦止める。Starter 500 / Pro 1500 は仮置き（2000 に戻さない）。trial / Starter / Pro ともフルページ。$49 / $99 の差は件数・保存・地域・Watch 頻度・CSV。粗利は PNG ではなく Residential 転送 MB / Observation の中央値と P90。国単位 residential 20〜50 件で CSV を渡し、①上限（P75〜P90 の C、100%消費で変動費 25%）と②損益分岐（実利用率の貢献利益で固定費を割る）を分ける。C に $200 を混ぜない。計測項目は増やさない。proxy_bytes の 0 は実測 0、null は未測定。`retry_without_proxy` は C に使わない。超過上限 $20。State Geo は Starter では保証しない。
 
 Activation **計測**は固定。Activation **UI**は母数が小さいうちはいじらない。
 

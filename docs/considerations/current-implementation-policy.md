@@ -98,7 +98,7 @@ Activation **計測**は固定。Activation **UI**は母数が小さいうちは
 - 既存 Observation の価値を強くする
 - 既存 Observation の上に、事実と分けて売る解釈になる
 
-$49 / $99 の差は、既存機能を Starter から取り上げるのではなく、**件数・保存期間・地域・Watch 頻度・CSV / クライアント運用**で付ける。撮影範囲は Starter / Pro ともフルページ。trial（freeplan）は viewport のまま。粗利監視は PNG 容量ではなく **Residential 転送 MB / Observation の中央値と P90**。500 回が変動費の防波堤。
+$49 / $99 の差は、既存機能を Starter から取り上げるのではなく、**件数・保存期間・地域・Watch 頻度・CSV / クライアント運用**で付ける。撮影範囲は trial / Starter / Pro ともフルページ。粗利監視は PNG 容量ではなく **Residential 転送 MB / Observation の中央値と P90**。500 回が変動費の防波堤。
 
 ---
 
@@ -209,7 +209,7 @@ Requested と Observed は分けて書く。自己申告の Node 所在地を Ob
 
 月間上限に達したら自動停止。超過従量課金はしない。文言は “You've reached your monthly Observation limit. Upgrade to continue.”
 
-Starter $49 → **500 仮置き維持**。Pro $99 → **1,500 仮置き維持（確定しない）**。**2,000 には戻さない。** 有料プランの撮影はフルページ。上限の変更より先に、residential が通った Observation の **proxy MB → units → $/Observation** を実測する（PNG MB ではない）。`retry_without_proxy` の平均 units は将来原価に使わない（Geo 正常時を過小評価する）。
+Starter $49 → **500 仮置き維持**。Pro $99 → **1,500 仮置き維持（確定しない）**。**2,000 には戻さない。** 撮影は trial も含めフルページ。上限の変更より先に、residential が通った Observation の **proxy MB → units → $/Observation** を実測する（PNG MB ではない）。`retry_without_proxy` の平均 units は将来原価に使わない（Geo 正常時を過小評価する）。
 
 分布は Observation 単位の `cost_signals` から出す。**C = 1 件の成功 Observation を完成させるための全 billed attempts の総原価**（失敗した州/国試行も含む。各 /screenshot 呼び出しは別セッション）。`duration_ms` / `estimated_time_units` は最終成功だけでなく合計。`attempts_log` に試行ごとの duration / units / proxy_bytes を残す。
 
