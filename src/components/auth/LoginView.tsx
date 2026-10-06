@@ -1,8 +1,6 @@
-"use client";
-
 import Link from "next/link";
-import { useState } from "react";
 import { LoginForm } from "@/components/auth/LoginForm";
+import { LoginLocaleToggle } from "@/components/auth/LoginLocaleToggle";
 import { ViewtraceLogo } from "@/components/brand/ViewtraceLogo";
 import type { LoginLocale } from "@/lib/auth/login-copy";
 import { loginPageCopy } from "@/lib/auth/login-copy";
@@ -20,8 +18,7 @@ export function LoginView({
   verified: boolean;
   initialLocale?: LoginLocale;
 }) {
-  const [locale, setLocale] = useState<LoginLocale>(initialLocale);
-  const t = loginPageCopy[locale];
+  const t = loginPageCopy[initialLocale];
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-surface text-ink">
@@ -40,34 +37,7 @@ export function LoginView({
             <ViewtraceLogo className="h-8 w-auto sm:h-9" />
           </Link>
           <div className="flex flex-wrap items-center gap-3 text-sm sm:gap-4">
-            <div
-              className="flex items-center rounded-full border border-border bg-surface p-0.5 text-xs"
-              role="group"
-              aria-label={t.langAria}
-            >
-              <button
-                type="button"
-                onClick={() => setLocale("en")}
-                className={`rounded-full px-3 py-1.5 font-medium transition ${
-                  locale === "en"
-                    ? "bg-accent text-white"
-                    : "text-ink-muted hover:text-ink"
-                }`}
-              >
-                {t.english}
-              </button>
-              <button
-                type="button"
-                onClick={() => setLocale("ja")}
-                className={`rounded-full px-3 py-1.5 font-medium transition ${
-                  locale === "ja"
-                    ? "bg-accent text-white"
-                    : "text-ink-muted hover:text-ink"
-                }`}
-              >
-                {t.japanese}
-              </button>
-            </div>
+            <LoginLocaleToggle locale={initialLocale} />
             <Link
               href="/contact"
               className="hidden font-medium text-ink-muted transition hover:text-ink sm:inline"
@@ -92,41 +62,39 @@ export function LoginView({
               <h1 className="mt-2 text-sm font-normal text-ink-muted">{t.cardSubtitle}</h1>
             </div>
 
-            <>
-                <div className="mt-6 rounded-xl border border-border bg-surface p-4 text-left text-sm text-ink-muted">
-                  <p className="font-medium text-ink">{t.emailSignInTitle}</p>
-                  <p className="mt-2 leading-relaxed">
-                    {t.signInHelpPart1}
-                    <strong className="font-semibold text-ink">{t.getStarted}</strong>
-                    {t.signInHelpPart2}
-                    <strong className="font-semibold text-ink">{t.signIn}</strong>
-                    {t.signInHelpPart3}
-                    <strong className="font-semibold text-ink">{t.signInHelpStrong}</strong>
-                    {t.signInHelpPart4}
-                  </p>
-                  {verified ? (
-                    <p className="mt-3 rounded-lg border border-emerald-200/80 bg-emerald-50/90 px-3 py-2 text-xs leading-relaxed text-emerald-950">
-                      {t.verifiedNote}
-                    </p>
-                  ) : null}
-                  <p className="mt-2">
-                    {t.needHelpPrefix}
-                    <Link
-                      href="/contact"
-                      className="font-medium text-accent underline underline-offset-2"
-                    >
-                      {t.contactLinkLabel}
-                    </Link>
-                    {t.needHelpSuffix}
-                  </p>
-                </div>
+            <div className="mt-6 rounded-xl border border-border bg-surface p-4 text-left text-sm text-ink-muted">
+              <p className="font-medium text-ink">{t.emailSignInTitle}</p>
+              <p className="mt-2 leading-relaxed">
+                {t.signInHelpPart1}
+                <strong className="font-semibold text-ink">{t.getStarted}</strong>
+                {t.signInHelpPart2}
+                <strong className="font-semibold text-ink">{t.signIn}</strong>
+                {t.signInHelpPart3}
+                <strong className="font-semibold text-ink">{t.signInHelpStrong}</strong>
+                {t.signInHelpPart4}
+              </p>
+              {verified ? (
+                <p className="mt-3 rounded-lg border border-emerald-200/80 bg-emerald-50/90 px-3 py-2 text-xs leading-relaxed text-emerald-950">
+                  {t.verifiedNote}
+                </p>
+              ) : null}
+              <p className="mt-2">
+                {t.needHelpPrefix}
+                <Link
+                  href="/contact"
+                  className="font-medium text-accent underline underline-offset-2"
+                >
+                  {t.contactLinkLabel}
+                </Link>
+                {t.needHelpSuffix}
+              </p>
+            </div>
 
-                <LoginForm
-                  nextPath={nextPath}
-                  initialMode={initialMode}
-                  locale={locale}
-                />
-            </>
+            <LoginForm
+              nextPath={nextPath}
+              initialMode={initialMode}
+              locale={initialLocale}
+            />
 
             <div className="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-1 border-t border-border pt-6 text-center text-xs text-ink-muted">
               <Link href="/terms" className="hover:text-ink">
