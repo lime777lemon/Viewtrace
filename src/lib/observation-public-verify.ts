@@ -12,6 +12,9 @@ import type { HtmlHeadSignalsV1 } from "@/lib/url-preview";
 import type { ObservationAiAudit } from "@/lib/observation-ai-audit";
 import { loadObservationAiAuditForPublicShare } from "@/lib/observation-ai-audit-store";
 
+export const PUBLIC_OBSERVATION_ROW_SELECT =
+  "id,user_id,url,region,region_label,status,captured_at,snapshot_image_url,snapshot_sha256,snapshot_phash,content_hash,snapshot_purged_at,capture_conditions" as const;
+
 export type PublicVerifyObservation = {
   id: string;
   url: string;
@@ -21,6 +24,8 @@ export type PublicVerifyObservation = {
   status: ObservationStatus;
   snapshotImageUrl?: string;
   snapshotSha256?: string;
+  snapshotPhash?: string;
+  snapshotPurgedAt?: string;
   contentHash?: string;
   screenshotExpired: boolean;
   captureConditions: CaptureConditionsV1 | null;
@@ -28,7 +33,74 @@ export type PublicVerifyObservation = {
   aiAudit: ObservationAiAudit | null;
 };
 
-async function retentionDaysForOwner(
+export function mapObservationRowToPublicVerify(
+  row: Record<string, unknown>,
+  retentionDays: number,
+): Omit<PublicVerifyObservation, "aiAudit"> & { ownerUserId: string } {
+  const statusRaw = typeof row.status === "string" ? row.status : "pending";
+  const status: ObservationStatus =
+    statusRaw === "success" || statusRaw === "failure" || statusRaw === "pending"
+      ? statusRaw
+      : "pending";
+
+  const snapshotSha256 =
+    typeof row.snapshot_sha256 === "string" && row.snapshot_sha256.length === 64
+      ? row.snapshot_sha256.toLowerCase()
+      : undefined;
+
+  const snapshotPhash =
+    typeof row.snapshot_phash === "string" && row.snapshot_phash.trim()
+      ? row.snapshot_phash.trim().toLowerCase()
+      : undefined;
+
+  const contentHash =
+    typeof row.content_hash === "string" && row.content_hash.length === 64
+      ? row.content_hash.toLowerCase()
+      : undefined;
+
+  const capturedAt = typeof row.captured_at === "string" ? row.captured_at : "";
+  const storedUrl =
+    typeof row.snapshot_image_url === "string" && /^https?:\/\//i.test(row.snapshot_image_url)
+      ? row.snapshot_image_url
+      : undefined;
+  const snapshotPurgedAt =
+    typeof row.snapshot_purged_at === "string" ? row.snapshot_purged_at : undefined;
+
+  const ownerUserId = typeof row.user_id === "string" ? row.user_id : "";
+  const screenshotExpired = isObservationScreenshotExpired(
+    { capturedAt, snapshotPurgedAt },
+    retentionDays,
+  );
+  const snapshotImageUrl = visibleSnapshotImageUrl(
+    { capturedAt, snapshotImageUrl: storedUrl, snapshotPurgedAt },
+    retentionDays,
+  );
+
+  const captureConditions = parseCaptureConditionsFromDb(row.capture_conditions);
+
+  return {
+    ownerUserId,
+    id: String(row.id),
+    url: typeof row.url === "string" ? row.url : "",
+    capturedAt,
+    regionLabel:
+      typeof row.region_label === "string" && row.region_label.trim()
+        ? row.region_label.trim()
+        : "—",
+    regionValue: typeof row.region === "string" && row.region.trim() ? row.region.trim() : undefined,
+    status,
+    snapshotImageUrl,
+    snapshotSha256,
+    snapshotPhash,
+    snapshotPurgedAt,
+    contentHash,
+    screenshotExpired,
+    captureConditions,
+    htmlSignals: captureConditions?.html_signals,
+  };
+}
+
+export async function retentionDaysForOwner(
   admin: NonNullable<ReturnType<typeof createSupabaseAdminClient>>,
   userId: string,
 ): Promise<number> {
@@ -55,69 +127,27 @@ export async function fetchObservationForPublicVerify(
 
   const { data: row, error } = await admin
     .from("observations")
-    .select(
-      "id,user_id,url,region,region_label,status,captured_at,snapshot_image_url,snapshot_sha256,content_hash,snapshot_purged_at,capture_conditions",
-    )
+    .select(PUBLIC_OBSERVATION_ROW_SELECT)
     .eq("verify_token", token)
     .maybeSingle();
 
   if (error || !row) return null;
 
-  const statusRaw = typeof row.status === "string" ? row.status : "pending";
-  const status: ObservationStatus =
-    statusRaw === "success" || statusRaw === "failure" || statusRaw === "pending"
-      ? statusRaw
-      : "pending";
+  const ownerId =
+    typeof (row as { user_id?: unknown }).user_id === "string"
+      ? String((row as { user_id: string }).user_id)
+      : "";
+  const retentionDays = ownerId
+    ? await retentionDaysForOwner(admin, ownerId)
+    : getPlan("starter").retentionDays;
 
-  const snapshotSha256 =
-    typeof row.snapshot_sha256 === "string" && row.snapshot_sha256.length === 64
-      ? row.snapshot_sha256.toLowerCase()
-      : undefined;
+  const mapped = mapObservationRowToPublicVerify(row as Record<string, unknown>, retentionDays);
 
-  const contentHash =
-    typeof row.content_hash === "string" && row.content_hash.length === 64
-      ? row.content_hash.toLowerCase()
-      : undefined;
-
-  const capturedAt = typeof row.captured_at === "string" ? row.captured_at : "";
-  const storedUrl =
-    typeof row.snapshot_image_url === "string" && /^https?:\/\//i.test(row.snapshot_image_url)
-      ? row.snapshot_image_url
-      : undefined;
-  const snapshotPurgedAt =
-    typeof row.snapshot_purged_at === "string" ? row.snapshot_purged_at : undefined;
-
-  const userId = typeof row.user_id === "string" ? row.user_id : "";
-  const retentionDays = userId ? await retentionDaysForOwner(admin, userId) : getPlan("starter").retentionDays;
-  const screenshotExpired = isObservationScreenshotExpired(
-    { capturedAt, snapshotPurgedAt },
-    retentionDays,
-  );
-  const snapshotImageUrl = visibleSnapshotImageUrl(
-    { capturedAt, snapshotImageUrl: storedUrl, snapshotPurgedAt },
-    retentionDays,
-  );
-
-  const captureConditions = parseCaptureConditionsFromDb(row.capture_conditions);
-
+  const { ownerUserId, ...publicRow } = mapped;
   return {
-    id: String(row.id),
-    url: typeof row.url === "string" ? row.url : "",
-    capturedAt,
-    regionLabel:
-      typeof row.region_label === "string" && row.region_label.trim()
-        ? row.region_label.trim()
-        : "—",
-    regionValue: typeof row.region === "string" && row.region.trim() ? row.region.trim() : undefined,
-    status,
-    snapshotImageUrl,
-    snapshotSha256,
-    contentHash,
-    screenshotExpired,
-    captureConditions,
-    htmlSignals: captureConditions?.html_signals,
-    aiAudit: userId
-      ? await loadObservationAiAuditForPublicShare(userId, String(row.id))
+    ...publicRow,
+    aiAudit: ownerUserId
+      ? await loadObservationAiAuditForPublicShare(ownerUserId, mapped.id)
       : null,
   };
 }

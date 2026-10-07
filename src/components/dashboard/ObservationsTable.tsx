@@ -12,6 +12,7 @@ import { normalizeObservationTags } from "@/lib/observation-tags";
 import { ObservationRegionReadout } from "@/components/dashboard/ObservationRegionReadout";
 import { observationGeoCopyFrom } from "@/lib/observation-geo-readout";
 import { isObservationScreenshotExpired } from "@/lib/observation-screenshot-retention";
+import { isObservationUuid } from "@/lib/observation-route-id";
 
 function StatusBadge({
   status,
@@ -104,6 +105,8 @@ export function ObservationsTable({
   tagging = false,
   onTagClick,
   retentionDays,
+  selectedIds,
+  onToggleSelect,
 }: {
   rows: Observation[];
   emptyMessage?: string;
@@ -111,6 +114,8 @@ export function ObservationsTable({
   tagging?: boolean;
   onTagClick?: (tag: string) => void;
   retentionDays?: number;
+  selectedIds?: ReadonlySet<string>;
+  onToggleSelect?: (id: string, selected: boolean) => void;
 }) {
   const tb = copy[locale].observationsTable;
   const geoCopy = observationGeoCopyFrom(copy[locale].observationDetail);
@@ -128,6 +133,7 @@ export function ObservationsTable({
         <table className="w-full min-w-160 text-left text-sm">
           <thead className="border-b border-border bg-surface text-xs font-semibold uppercase tracking-wide text-ink-muted">
             <tr>
+              {onToggleSelect ? <th className="w-10 px-3 py-3">{tb.colSelect}</th> : null}
               <th className="px-4 py-3">{tb.colCaptured}</th>
               <th className="px-4 py-3">{tb.colUrl}</th>
               <th className="px-4 py-3">{tb.colRegion}</th>
@@ -145,6 +151,19 @@ export function ObservationsTable({
                 "block h-full px-4 py-3 no-underline outline-offset-[-2px] hover:bg-accent-soft/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent";
               return (
               <tr key={row.id} className="hover:bg-surface/80">
+                {onToggleSelect ? (
+                  <td className="px-3 py-3 align-top">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds?.has(row.id) ?? false}
+                      disabled={!isObservationUuid(row.id)}
+                      title={isObservationUuid(row.id) ? undefined : copy[locale].observationsListPage.shareCollectionDemoSkip}
+                      onChange={(e) => onToggleSelect(row.id, e.target.checked)}
+                      className="mt-1 h-4 w-4 accent-accent"
+                      aria-label={copy[locale].observationsListPage.shareCollectionSelectRow}
+                    />
+                  </td>
+                ) : null}
                 <td className="p-0 align-top text-ink-muted">
                   <Link href={detailHref} aria-label={detailAria} className={cellLinkClass}>
                     <span className="text-ink">{capturedLabel}</span>
