@@ -163,7 +163,7 @@ Compare は一旦完成（Slider 以外）。html_signals の商品化は既存�
 
 Requested と Observed は分けて書く。自己申告の Node 所在地を Observed にしない。US-CA を選んでも国単位で取れたら California と表示しない。見出しは観測事実。区別が必要なときは **Requested / Observed via**。
 
-**State Geo は Starter では保証しない。** 既定は国単位 residential（US-CA は `us`）。州の `proxyState` は 401 のため、Scale と `VIEWTRACE_BROWSERLESS_PROXY_STATE=1` のときだけ州指定。フォールバックは **州 → 国 → proxyなしを直列**（並列に投げない）。成功した経路だけを `geo` に書く。
+**State Geo は Starter では保証しない。** US 州を選んだ Observation は `proxyState` を先に付ける。拒否・失敗したら国単位へ落とす。フォールバックは **州 → 国 → proxyなしを直列**（並列に投げない）。成功した経路だけを `geo` に書く。US-CA を選んでも国単位で取れたら California と表示しない。無効化は `VIEWTRACE_BROWSERLESS_PROXY_STATE=0`。
 
 ### 事実以上の商品（Observation の上に載せる）
 
