@@ -20,10 +20,10 @@ export default async function DashboardRegionSearchPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-8">
       <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight text-[var(--color-ink)]">
+        <h1 className="font-display text-2xl font-semibold tracking-tight text-ink">
           {labels.title}
         </h1>
-        <p className="mt-2 text-sm leading-relaxed text-[var(--color-ink-muted)]">{labels.dashboardIntro}</p>
+        <p className="mt-2 text-sm leading-relaxed text-ink-muted">{labels.dashboardIntro}</p>
       </div>
       <RegionSearchPanel
         locale={locale}
