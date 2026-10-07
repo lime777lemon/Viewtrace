@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { PendingSubmitButton } from "@/components/ui/PendingSubmitButton";
 import { recordWebVerifiedObservationAction } from "@/app/actions/observations";
 import type { Locale } from "@/lib/i18n";
@@ -81,7 +81,8 @@ export function RegionSearchPanel({
 
   const [planTab, setPlanTab] = useState<PlanId>(() => lockedPlanId ?? defaultPlanId ?? "pro");
   const [region, setRegion] = useState("");
-  const [query, setQuery] = useState("");
+  const queryRef = useRef<HTMLInputElement>(null);
+  const [submittedQuery, setSubmittedQuery] = useState("");
   const [previewOn, setPreviewOn] = useState(false);
   const [livePreview, setLivePreview] = useState<LivePreviewState>({ status: "idle" });
 
@@ -108,7 +109,8 @@ export function RegionSearchPanel({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setPreviewOn(true);
-    const q = query.trim();
+    const q = queryRef.current?.value.trim() ?? "";
+    setSubmittedQuery(q);
     if (!q) {
       setLivePreview({ status: "idle" });
       return;
@@ -243,13 +245,13 @@ export function RegionSearchPanel({
             </label>
             <input
               id={queryFieldId}
+              ref={queryRef}
               name={mode === "dashboard" ? "url" : undefined}
               type={mode === "dashboard" ? "text" : "search"}
               required={mode === "dashboard"}
               enterKeyHint={mode === "dashboard" ? "go" : "search"}
               autoComplete="off"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              defaultValue=""
               placeholder={labels.queryPlaceholder}
               className="mt-2 w-full rounded-xl border border-border bg-surface-elevated px-4 py-3 text-sm text-ink outline-none ring-accent/25 placeholder:text-ink-muted/65 focus:border-accent/40 focus:ring-2"
             />
@@ -295,10 +297,10 @@ export function RegionSearchPanel({
               </span>
             </div>
             <p className="mt-3 break-all text-sm font-medium text-ink">
-              {query.trim() ? query.trim() : labels.mockEmptyQuery}
+              {submittedQuery ? submittedQuery : labels.mockEmptyQuery}
             </p>
 
-            {query.trim() ? (
+            {submittedQuery ? (
               <div className="mt-4 border-t border-border pt-4">
                 {livePreview.status === "loading" ? (
                   <p className="text-sm text-ink-muted">{labels.previewLoading}</p>

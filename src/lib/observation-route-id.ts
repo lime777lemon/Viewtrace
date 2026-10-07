@@ -9,6 +9,10 @@ const INVISIBLE_AND_FORMATTING_CHARS =
 /**
  * メールクライアント（特にモバイル）が URL にゼロ幅文字や末尾ゴミを付ける場合の対策。
  */
+export function isObservationUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.trim());
+}
+
 export function sanitizeObservationRouteId(raw: unknown): string {
   if (typeof raw !== "string") return "";
   let s = raw.trim();

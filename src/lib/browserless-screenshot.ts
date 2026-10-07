@@ -27,13 +27,14 @@ export function isBrowserlessResidentialEnabled(): boolean {
 }
 
 /**
- * US 州の `proxyState` は Browserless Scale（500k+）向け。
- * 現行 Starter 180k は 401 "State level proxying not allowed" になるので既定オフ。
- * Scale に上げたあと `VIEWTRACE_BROWSERLESS_PROXY_STATE=1` で有効化。
+ * US 州を選んだら `proxyState` を先に付ける。
+ * Browserless が州を拒否したときだけ国単位へ落とす（Observed は成功した経路だけ）。
+ * 無効化は `VIEWTRACE_BROWSERLESS_PROXY_STATE=0`。
  */
 export function isBrowserlessProxyStateEnabled(): boolean {
   const raw = process.env.VIEWTRACE_BROWSERLESS_PROXY_STATE?.trim().toLowerCase();
-  return raw === "1" || raw === "true" || raw === "on";
+  if (raw === "0" || raw === "false" || raw === "off") return false;
+  return true;
 }
 
 export function buildBrowserlessResidentialSearchParams(
@@ -139,7 +140,7 @@ export async function runBrowserlessScreenshot(params: {
   region?: string;
   fullPage: boolean;
   disableProxy?: boolean;
-  /** US 州を proxyState で指定するか。未指定ならプラン既定（Starter では false）。 */
+  /** US 州を proxyState で指定するか。未指定なら、州を選んだ Observation では true。 */
   residentialState?: boolean;
 }): Promise<BrowserlessScreenshotResult> {
   const endpoint = browserlessScreenshotEndpointWithToken();
@@ -354,8 +355,8 @@ function isStateProxyDenied(shot: BrowserlessScreenshotResult): boolean {
 
 /**
  * 1 本ずつ試す（並列に投げない）。
- * 1. 州（opt-in かつ US-*）
- * 2. 国（Starter 180k の既定。US-CA は us のみ）
+ * 1. 州（US-* を選んだとき。成功したら Observed に州を書く）
+ * 2. 国（州が拒否・失敗したときのフォールバック。Observed は国単位）
  * 3. プロキシなし
  */
 export async function runBrowserlessScreenshotWithProxyRetry(params: {

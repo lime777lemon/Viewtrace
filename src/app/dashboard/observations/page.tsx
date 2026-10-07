@@ -7,6 +7,8 @@ import { getMergedObservationsForPlan, readUserObservations } from "@/lib/demo/u
 import { copy } from "@/lib/i18n";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { getPlan } from "@/lib/plans";
+import { listShareCollectionsForUser } from "@/lib/observation-share-collection";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { shouldHideNewObservationForTrial } from "@/lib/trial-observation-access";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -18,17 +20,22 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ObservationsListPage() {
-  const locale = await getRequestLocale();
+  const [locale, session] = await Promise.all([getRequestLocale(), getSession()]);
   const t = copy[locale].observationsListPage;
   const csvLabels = copy[locale].observationsCsvExport;
-  const session = await getSession();
   const plan = session ? getPlan(session.plan) : null;
   const showCsv = plan?.csvExport ?? false;
 
   const planId = session?.plan ?? "freeplan";
-  const rows = await getMergedObservationsForPlan(planId);
-
-  const userObsForTrial = session ? await readUserObservations() : [];
+  const [rows, userObsForTrial, shareCollections] = await Promise.all([
+    getMergedObservationsForPlan(planId),
+    session ? readUserObservations() : Promise.resolve([]),
+    session
+      ? createSupabaseServerClient().then((supabase) =>
+          listShareCollectionsForUser(supabase, session.userId),
+        )
+      : Promise.resolve([]),
+  ]);
   const hideNewObservationButton = session
     ? shouldHideNewObservationForTrial(session, userObsForTrial)
     : false;
@@ -75,7 +82,12 @@ export default async function ObservationsListPage() {
         </div>
       </div>
 
-      <ObservationsLibrary rows={rows} locale={locale} retentionDays={plan?.retentionDays} />
+      <ObservationsLibrary
+        rows={rows}
+        locale={locale}
+        retentionDays={plan?.retentionDays}
+        shareCollections={shareCollections}
+      />
     </div>
   );
 }

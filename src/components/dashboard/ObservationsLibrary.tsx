@@ -9,20 +9,25 @@ import {
   uniqueObservationTags,
 } from "@/lib/observation-tags";
 import { ObservationsTable } from "@/components/dashboard/ObservationsTable";
+import { ShareCollectionPanel } from "@/components/dashboard/ShareCollectionPanel";
+import type { OwnerShareCollectionSummary } from "@/lib/observation-share-collection-shared";
 
 export function ObservationsLibrary({
   rows,
   locale,
   retentionDays,
+  shareCollections = [],
 }: {
   rows: Observation[];
   locale: Locale;
   retentionDays?: number;
+  shareCollections?: OwnerShareCollectionSummary[];
 }) {
   const t = copy[locale].observationsListPage;
   const tb = copy[locale].observationsTable;
   const [query, setQuery] = useState("");
   const [tagFilter, setTagFilter] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const availableTags = useMemo(() => uniqueObservationTags(rows), [rows]);
   const filtered = useMemo(
@@ -32,8 +37,24 @@ export function ObservationsLibrary({
 
   const hasActiveFilter = query.trim().length > 0 || tagFilter !== null;
 
+  function toggleSelect(id: string, selected: boolean) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (selected) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }
+
   if (rows.length === 0) {
-    return <ObservationsTable rows={rows} locale={locale} retentionDays={retentionDays} />;
+    return (
+      <div className="space-y-4">
+        {shareCollections.length > 0 ? (
+          <ShareCollectionPanel selectedIds={[]} locale={locale} existing={shareCollections} />
+        ) : null}
+        <ObservationsTable rows={rows} locale={locale} retentionDays={retentionDays} />
+      </div>
+    );
   }
 
   return (
@@ -99,6 +120,12 @@ export function ObservationsLibrary({
         </p>
       </div>
 
+      <ShareCollectionPanel
+        selectedIds={[...selectedIds]}
+        locale={locale}
+        existing={shareCollections}
+      />
+
       <ObservationsTable
         rows={filtered}
         locale={locale}
@@ -106,6 +133,8 @@ export function ObservationsLibrary({
         tagging
         onTagClick={setTagFilter}
         retentionDays={retentionDays}
+        selectedIds={selectedIds}
+        onToggleSelect={toggleSelect}
       />
     </div>
   );
