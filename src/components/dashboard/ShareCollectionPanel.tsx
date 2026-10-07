@@ -15,7 +15,7 @@ import {
   SHARE_COLLECTION_MAX_ITEMS,
   SHARE_COLLECTION_MIN_ITEMS,
   type OwnerShareCollectionSummary,
-} from "@/lib/observation-share-collection";
+} from "@/lib/observation-share-collection-shared";
 
 export function ShareCollectionPanel({
   selectedIds,

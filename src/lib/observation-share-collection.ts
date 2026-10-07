@@ -18,10 +18,19 @@ import {
 import { getAppOriginForEmailLinks } from "@/lib/site";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import {
+  SHARE_COLLECTION_MAX_ITEMS,
+  SHARE_COLLECTION_MAX_PER_USER,
+  SHARE_COLLECTION_MIN_ITEMS,
+  type OwnerShareCollectionSummary,
+} from "@/lib/observation-share-collection-shared";
 
-export const SHARE_COLLECTION_MIN_ITEMS = 2;
-export const SHARE_COLLECTION_MAX_ITEMS = 20;
-export const SHARE_COLLECTION_MAX_PER_USER = 50;
+export {
+  SHARE_COLLECTION_MAX_ITEMS,
+  SHARE_COLLECTION_MAX_PER_USER,
+  SHARE_COLLECTION_MIN_ITEMS,
+  type OwnerShareCollectionSummary,
+} from "@/lib/observation-share-collection-shared";
 
 export type PublicShareCollectionItem = PublicVerifyObservation & {
   screenshotCompare: ObservationCompareField | null;
@@ -31,13 +40,6 @@ export type PublicShareCollection = {
   token: string;
   createdAt: string;
   items: PublicShareCollectionItem[];
-};
-
-export type OwnerShareCollectionSummary = {
-  id: string;
-  token: string;
-  createdAt: string;
-  itemCount: number;
 };
 
 export function buildPublicShareCollectionUrl(token: string): string {

@@ -10,7 +10,7 @@ import {
 } from "@/lib/observation-tags";
 import { ObservationsTable } from "@/components/dashboard/ObservationsTable";
 import { ShareCollectionPanel } from "@/components/dashboard/ShareCollectionPanel";
-import type { OwnerShareCollectionSummary } from "@/lib/observation-share-collection";
+import type { OwnerShareCollectionSummary } from "@/lib/observation-share-collection-shared";
 
 export function ObservationsLibrary({
   rows,
