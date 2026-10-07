@@ -6,7 +6,7 @@ import { getSession } from "@/lib/auth/session";
 import { copy } from "@/lib/i18n";
 
 export const metadata: Metadata = {
-  title: "地域・URLで条件を組み立てる | Viewtrace",
+  title: "地域・URLで条件を組み立てる",
   robots: { index: false, follow: false },
 };
 
