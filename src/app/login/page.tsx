@@ -17,7 +17,15 @@ export const metadata: Metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; mode?: string; verified?: string }>;
+  searchParams: Promise<{
+    next?: string;
+    mode?: string;
+    verified?: string;
+    signup?: string;
+    signupError?: string;
+    authError?: string;
+    authMessage?: string;
+  }>;
 }) {
   const sp = await searchParams;
   const nextParam = sp.next?.trim() ?? "";
@@ -57,6 +65,10 @@ export default async function LoginPage({
       initialMode={initialMode}
       verified={verified}
       initialLocale={locale}
+      signupError={sp.signupError?.trim().slice(0, 300) || undefined}
+      signupDone={sp.signup === "1"}
+      authError={sp.authError?.trim().slice(0, 300) || undefined}
+      authMessage={sp.authMessage?.trim().slice(0, 300) || undefined}
     />
   );
 }

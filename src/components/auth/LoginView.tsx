@@ -12,11 +12,19 @@ export function LoginView({
   initialMode,
   verified,
   initialLocale = "en",
+  signupError,
+  signupDone,
+  authError,
+  authMessage,
 }: {
   nextPath?: string;
   initialMode: Mode;
   verified: boolean;
   initialLocale?: LoginLocale;
+  signupError?: string;
+  signupDone?: boolean;
+  authError?: string;
+  authMessage?: string;
 }) {
   const t = loginPageCopy[initialLocale];
 
@@ -94,6 +102,10 @@ export function LoginView({
               nextPath={nextPath}
               initialMode={initialMode}
               locale={initialLocale}
+              signupError={signupError}
+              signupDone={signupDone}
+              authError={authError}
+              authMessage={authMessage}
             />
 
             <div className="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-1 border-t border-border pt-6 text-center text-xs text-ink-muted">

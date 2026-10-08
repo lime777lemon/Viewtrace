@@ -1,250 +1,173 @@
-"use client";
-
-import { startTransition, useActionState, useEffect, useId, useRef, useState } from "react";
-import { authFormAction, signupFormAction } from "@/app/actions/auth";
-import { trackSignupConversion } from "@/lib/analytics/track";
+import type { ReactNode } from "react";
+import { authFormSubmit, signupFormSubmit } from "@/app/actions/auth";
+import { LOGIN_FIELD_CLASS } from "@/components/auth/login-field-class";
+import { LoginModeTabs } from "@/components/auth/LoginModeTabs";
+import { LoginPasswordFields } from "@/components/auth/LoginPasswordFields";
+import { LoginSignupTracker } from "@/components/auth/LoginSignupTracker";
+import { LoginSubmitButton } from "@/components/auth/LoginSubmitButton";
 import { loginPageCopy } from "@/lib/auth/login-copy";
-import type { LoginLocale } from "@/lib/auth/login-copy";
+import type { LoginFormStrings, LoginLocale } from "@/lib/auth/login-copy";
 
 type Mode = "signin" | "signup";
 
-const FIELD_CLASS =
-  "mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm outline-none ring-accent/25 placeholder:text-ink-muted/60 focus:border-accent/40 focus:ring-2";
+function LoginEmailField({
+  id,
+  t,
+}: {
+  id: string;
+  t: LoginFormStrings;
+}) {
+  return (
+    <div>
+      <label htmlFor={id} className="block text-sm font-medium text-ink">
+        {t.email}
+      </label>
+      <input
+        id={id}
+        name="email"
+        type="email"
+        autoComplete="email"
+        required
+        placeholder={t.emailPlaceholder}
+        autoCapitalize="none"
+        autoCorrect="off"
+        spellCheck={false}
+        className={LOGIN_FIELD_CLASS}
+      />
+    </div>
+  );
+}
+
+function FormAlert({
+  tone,
+  children,
+}: {
+  tone: "error" | "success";
+  children: ReactNode;
+}) {
+  return (
+    <p
+      role={tone === "error" ? "alert" : "status"}
+      className={
+        tone === "error"
+          ? "rounded-xl border border-red-200/80 bg-red-50 px-3 py-2.5 text-sm text-red-900"
+          : "whitespace-pre-line rounded-xl border border-emerald-200/80 bg-emerald-50 px-3 py-2.5 text-sm leading-relaxed text-emerald-900"
+      }
+    >
+      {children}
+    </p>
+  );
+}
 
 export function LoginForm({
   nextPath,
   initialMode = "signup",
   locale,
+  signupError,
+  signupDone,
+  authError,
+  authMessage,
 }: {
   nextPath?: string;
   initialMode?: Mode;
   locale: LoginLocale;
+  signupError?: string;
+  signupDone?: boolean;
+  authError?: string;
+  authMessage?: string;
 }) {
   const t = loginPageCopy[locale].form;
-  const [signInState, signInAction, signInPending] = useActionState(authFormAction, null);
-  const [signupState, signupAction, signupPending] = useActionState(signupFormAction, null);
-  const [showPassword, setShowPassword] = useState(false);
-  const [mode, setMode] = useState<Mode>(initialMode);
-
-  useEffect(() => {
-    setMode(initialMode);
-  }, [initialMode]);
-
-  const signupTrackedRef = useRef(false);
-  useEffect(() => {
-    if (signupState?.message && !signupTrackedRef.current) {
-      signupTrackedRef.current = true;
-      trackSignupConversion();
-    }
-  }, [signupState?.message]);
-
-  const passwordId = useId();
-  const passwordConfirmId = useId();
-  const fullNameId = useId();
-  const companyNameId = useId();
-  const phoneId = useId();
   const safeNext =
     nextPath?.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "";
 
   return (
-    <form
-      action={mode === "signin" ? signInAction : signupAction}
-      className="mt-8 space-y-5"
-    >
-      <input type="hidden" name="_locale" value={locale} />
-      {safeNext ? <input type="hidden" name="next" value={safeNext} /> : null}
+    <div className="mt-8 space-y-5">
+      <LoginModeTabs
+        initialMode={initialMode}
+        signupLabel={t.getStartedTab}
+        signinLabel={t.signInTab}
+      />
 
-      <div className="flex rounded-xl border border-border p-1 text-sm font-medium">
-        <button
-          type="button"
-          onClick={() => startTransition(() => setMode("signup"))}
-          className={`flex-1 rounded-lg py-2 transition ${
-            mode === "signup"
-              ? "bg-accent text-white shadow-sm"
-              : "text-ink-muted hover:text-ink"
-          }`}
-        >
-          {t.getStartedTab}
-        </button>
-        <button
-          type="button"
-          onClick={() => startTransition(() => setMode("signin"))}
-          className={`flex-1 rounded-lg py-2 transition ${
-            mode === "signin"
-              ? "bg-accent text-white shadow-sm"
-              : "text-ink-muted hover:text-ink"
-          }`}
-        >
-          {t.signInTab}
-        </button>
-      </div>
-
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium text-ink">
-          {t.email}
-        </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          required
-          placeholder={t.emailPlaceholder}
-          autoCapitalize="none"
-          autoCorrect="off"
-          spellCheck={false}
-          className={FIELD_CLASS}
-        />
-      </div>
-      {mode === "signup" ? (
-        <>
-          <div>
-            <label htmlFor={fullNameId} className="block text-sm font-medium text-ink">
-              {t.fullName}
-            </label>
-            <input
-              id={fullNameId}
-              name="fullName"
-              type="text"
-              autoComplete="name"
-              required
-              maxLength={200}
-              placeholder={t.fullNamePlaceholder}
-              className={FIELD_CLASS}
-            />
-          </div>
-          <div>
-            <label htmlFor={companyNameId} className="block text-sm font-medium text-ink">
-              {t.company}
-            </label>
-            <input
-              id={companyNameId}
-              name="companyName"
-              type="text"
-              autoComplete="organization"
-              maxLength={200}
-              placeholder={t.companyPlaceholder}
-              className={FIELD_CLASS}
-            />
-          </div>
-          <div>
-            <label htmlFor={phoneId} className="block text-sm font-medium text-ink">
-              {t.phone}
-            </label>
-            <input
-              id={phoneId}
-              name="phone"
-              type="tel"
-              autoComplete="tel"
-              maxLength={40}
-              placeholder={t.phonePlaceholder}
-              className={FIELD_CLASS}
-            />
-          </div>
-        </>
-      ) : null}
-      <div>
-        <div className="flex items-center justify-between gap-2">
-          <label htmlFor={passwordId} className="block text-sm font-medium text-ink">
-            {t.password}
-          </label>
-          <button
-            type="button"
-            onClick={() => setShowPassword((v) => !v)}
-            className="text-xs font-medium text-accent hover:text-accent-hover"
-          >
-            {showPassword ? t.hidePassword : t.showPassword}
-          </button>
-        </div>
-        <input
-          id={passwordId}
-          name="password"
-          type={showPassword ? "text" : "password"}
-          autoComplete={mode === "signup" ? "new-password" : "current-password"}
-          required
-          minLength={mode === "signup" ? 8 : undefined}
-          placeholder={mode === "signup" ? t.passwordPlaceholderSignup : t.passwordPlaceholderSignin}
-          autoCapitalize="none"
-          autoCorrect="off"
-          spellCheck={false}
-          className={FIELD_CLASS}
-        />
-      </div>
-      {mode === "signup" ? (
+      <form
+        id="login-signup-form"
+        hidden={initialMode !== "signup"}
+        action={signupFormSubmit}
+        className="space-y-5"
+      >
+        <input type="hidden" name="_locale" value={locale} />
+        {safeNext ? <input type="hidden" name="next" value={safeNext} /> : null}
+        <LoginEmailField id="email" t={t} />
         <div>
-          <label
-            htmlFor={passwordConfirmId}
-            className="block text-sm font-medium text-ink"
-          >
-            {t.confirmPassword}
+          <label htmlFor="fullName" className="block text-sm font-medium text-ink">
+            {t.fullName}
           </label>
           <input
-            id={passwordConfirmId}
-            name="passwordConfirm"
-            type={showPassword ? "text" : "password"}
-            autoComplete="new-password"
+            id="fullName"
+            name="fullName"
+            type="text"
+            autoComplete="name"
             required
-            minLength={8}
-            placeholder={t.confirmPasswordPlaceholder}
-            autoCapitalize="none"
-            autoCorrect="off"
-            spellCheck={false}
-            className={FIELD_CLASS}
+            maxLength={200}
+            placeholder={t.fullNamePlaceholder}
+            className={LOGIN_FIELD_CLASS}
           />
         </div>
-      ) : null}
-      {mode === "signin" && signInState?.error ? (
-        <p
-          role="alert"
-          className="rounded-xl border border-red-200/80 bg-red-50 px-3 py-2.5 text-sm text-red-900"
-        >
-          {signInState.error}
-        </p>
-      ) : null}
-      {mode === "signin" && signInState?.message ? (
-        <p
-          role="status"
-          className="whitespace-pre-line rounded-xl border border-emerald-200/80 bg-emerald-50 px-3 py-2.5 text-sm leading-relaxed text-emerald-900"
-        >
-          {signInState.message}
-        </p>
-      ) : null}
-      {mode === "signup" && signupState?.error ? (
-        <p
-          role="alert"
-          className="rounded-xl border border-red-200/80 bg-red-50 px-3 py-2.5 text-sm text-red-900"
-        >
-          {signupState.error}
-        </p>
-      ) : null}
-      {mode === "signup" && signupState?.message ? (
-        <p
-          role="status"
-          className="whitespace-pre-line rounded-xl border border-emerald-200/80 bg-emerald-50 px-3 py-2.5 text-sm leading-relaxed text-emerald-900"
-        >
-          {/* サーバー返却値ではなく現在ロケールの文言を表示（言語切替後も追従させる） */}
-          {t.signupSuccessMessage}
-        </p>
-      ) : null}
-      {mode === "signup" && !signupState?.message ? (
-        <p className="text-center text-xs font-medium text-ink-muted">{t.signupReassure}</p>
-      ) : null}
-      <button
-        type="submit"
-        disabled={mode === "signin" ? signInPending : signupPending}
-        className="w-full rounded-full bg-accent py-3.5 text-sm font-semibold text-white shadow-md shadow-accent/20 transition hover:bg-accent-hover disabled:opacity-60"
+        <div>
+          <label htmlFor="companyName" className="block text-sm font-medium text-ink">
+            {t.company}
+          </label>
+          <input
+            id="companyName"
+            name="companyName"
+            type="text"
+            autoComplete="organization"
+            maxLength={200}
+            placeholder={t.companyPlaceholder}
+            className={LOGIN_FIELD_CLASS}
+          />
+        </div>
+        <div>
+          <label htmlFor="phone" className="block text-sm font-medium text-ink">
+            {t.phone}
+          </label>
+          <input
+            id="phone"
+            name="phone"
+            type="tel"
+            autoComplete="tel"
+            maxLength={40}
+            placeholder={t.phonePlaceholder}
+            className={LOGIN_FIELD_CLASS}
+          />
+        </div>
+        <LoginPasswordFields mode="signup" t={t} />
+        {signupError ? <FormAlert tone="error">{signupError}</FormAlert> : null}
+        {signupDone ? <FormAlert tone="success">{t.signupSuccessMessage}</FormAlert> : null}
+        {!signupDone ? (
+          <p className="text-center text-xs font-medium text-ink-muted">{t.signupReassure}</p>
+        ) : null}
+        <LoginSubmitButton idle={t.getStartedSubmit} pending={t.creatingAccount} />
+        {!signupDone ? (
+          <p className="text-center text-xs leading-relaxed text-ink-muted">{t.signupEmailStepNote}</p>
+        ) : null}
+      </form>
+
+      <form
+        id="login-signin-form"
+        hidden={initialMode !== "signin"}
+        action={authFormSubmit}
+        className="space-y-5"
       >
-        {mode === "signin"
-          ? signInPending
-            ? t.signingIn
-            : t.signInSubmit
-          : signupPending
-            ? t.creatingAccount
-            : t.getStartedSubmit}
-      </button>
-      {mode === "signup" && !signupState?.message ? (
-        <p className="text-center text-xs leading-relaxed text-ink-muted">{t.signupEmailStepNote}</p>
-      ) : null}
-    </form>
+        <input type="hidden" name="_locale" value={locale} />
+        {safeNext ? <input type="hidden" name="next" value={safeNext} /> : null}
+        <LoginEmailField id="email-signin" t={t} />
+        <LoginPasswordFields mode="signin" t={t} />
+        {authError ? <FormAlert tone="error">{authError}</FormAlert> : null}
+        {authMessage ? <FormAlert tone="success">{authMessage}</FormAlert> : null}
+        <LoginSubmitButton idle={t.signInSubmit} pending={t.signingIn} />
+      </form>
+
+      {signupDone ? <LoginSignupTracker /> : null}
+    </div>
   );
 }

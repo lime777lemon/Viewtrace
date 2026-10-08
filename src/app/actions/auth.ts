@@ -211,6 +211,39 @@ export async function signupFormAction(
   return { message: t.signupSuccessMessage };
 }
 
+function loginFlashRedirect(
+  formData: FormData,
+  mode: "signin" | "signup",
+  state: AuthFormState,
+): never {
+  const q = new URLSearchParams();
+  q.set("mode", mode);
+  const nextRaw = String(formData.get("next") ?? "").trim();
+  if (nextRaw.startsWith("/") && !nextRaw.startsWith("//")) {
+    q.set("next", nextRaw);
+  }
+  if (state?.error) {
+    q.set(mode === "signin" ? "authError" : "signupError", state.error.slice(0, 300));
+  } else if (state?.message && mode === "signup") {
+    q.set("signup", "1");
+  } else if (state?.message) {
+    q.set("authMessage", state.message.slice(0, 300));
+  }
+  redirect(`/login?${q.toString()}`);
+}
+
+/** Native <form action> wrapper so the login email field can stay a server input. */
+export async function authFormSubmit(formData: FormData): Promise<void> {
+  const state = await authFormAction(null, formData);
+  loginFlashRedirect(formData, "signin", state);
+}
+
+/** Native <form action> wrapper so the login email field can stay a server input. */
+export async function signupFormSubmit(formData: FormData): Promise<void> {
+  const state = await signupFormAction(null, formData);
+  loginFlashRedirect(formData, "signup", state);
+}
+
 export async function logoutAction(): Promise<void> {
   const supabase = await createSupabaseServerClient();
   const {
