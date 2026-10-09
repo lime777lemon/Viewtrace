@@ -8,13 +8,16 @@ import {
   buildCaptureConditionsFromDirectFetch,
   buildCaptureConditionsFromFormUpload,
   buildCaptureConditionsFromMicrolink,
+  buildCaptureConditionsFromPlaywrightWorker,
   type CaptureConditionsV1,
 } from "@/lib/capture-conditions";
 import {
   isBrowserlessConfigured,
-  runBrowserlessScreenshotWithProxyRetry,
   type BrowserlessScreenshotResult,
 } from "@/lib/browserless-screenshot";
+import { isPlaywrightWorkerCaptureEnabled } from "@/lib/observation-capture-backend";
+import { runObservationPrimaryScreenshot } from "@/lib/observation-primary-capture";
+import type { ObservationWorkerCaptureResult } from "@/lib/observation-worker-capture";
 import { getPngDimensions } from "@/lib/png-dimensions";
 import type { Observation } from "@/lib/demo/observations";
 import {
@@ -149,11 +152,13 @@ async function recordOneObservation(input: {
   const capturedAt = new Date().toISOString();
 
   const plan = getPlan(session.plan);
+  const workerOn = isPlaywrightWorkerCaptureEnabled();
   const browserlessOn = isBrowserlessConfigured();
+  const primaryCaptureOn = workerOn || browserlessOn;
 
   const preview = await runUrlPreviewFetch(url, {
-    screenshotFallback: !browserlessOn,
-    fullPageScreenshot: browserlessOn ? false : plan.snapshotFullPage,
+    screenshotFallback: !primaryCaptureOn,
+    fullPageScreenshot: primaryCaptureOn ? false : plan.snapshotFullPage,
     regionValue,
     retryWithoutProxyOnFailure: true,
   });
@@ -168,19 +173,28 @@ async function recordOneObservation(input: {
 
   let browserlessShotOk = false;
   let lastBrowserlessShot: Extract<BrowserlessScreenshotResult, { ok: true }> | null = null;
+  let lastWorkerShot: Extract<ObservationWorkerCaptureResult, { ok: true }> | null = null;
   let usedMicrolink = false;
-  if (browserlessOn) {
-    const shot = await runBrowserlessScreenshotWithProxyRetry({
+  if (primaryCaptureOn) {
+    const primary = await runObservationPrimaryScreenshot({
       url,
       region: regionValue,
       fullPage: plan.snapshotFullPage,
     });
-    if (shot.ok) {
+    const shotOk =
+      (primary.engine === "playwright_worker" && primary.result.ok) ||
+      (primary.engine === "browserless" && primary.result.ok);
+    if (shotOk && primary.result.ok) {
       browserlessShotOk = true;
-      lastBrowserlessShot = shot;
+      if (primary.engine === "playwright_worker") {
+        lastWorkerShot = primary.result;
+      } else if (primary.engine === "browserless") {
+        lastBrowserlessShot = primary.result;
+      }
+      const png = primary.result.png;
       // Keep text/UI readable: Starter is slightly more compressed, Pro keeps higher quality.
       const webpQuality = session.plan === "pro" ? 86 : 78;
-      blobUploadResult = await uploadObservationSnapshotPng(id, shot.png, {
+      blobUploadResult = await uploadObservationSnapshotPng(id, png, {
         format: "webp",
         webpQuality,
         includePerceptualHash: session.plan === "pro",
@@ -229,7 +243,7 @@ async function recordOneObservation(input: {
     if (browserlessShotOk) {
       return observationEventJa.captureNoUrlSaveFailed;
     }
-    if (browserlessOn && !browserlessShotOk) {
+    if (primaryCaptureOn && !browserlessShotOk) {
       return observationEventJa.captureNoUrlScreenshotFailed;
     }
     if (!preview.ok) {
@@ -262,7 +276,30 @@ async function recordOneObservation(input: {
   })();
 
   let captureConditions: CaptureConditionsV1;
-  if (lastBrowserlessShot) {
+  if (lastWorkerShot) {
+    const dims = await getPngDimensions(lastWorkerShot.png);
+    const webpQuality = session.plan === "pro" ? 86 : 78;
+    captureConditions = buildCaptureConditionsFromPlaywrightWorker({
+      capturedAt,
+      regionInput: regionValue,
+      regionLabel,
+      fullPageRequested: plan.snapshotFullPage,
+      observedCountry: lastWorkerShot.observed.country,
+      observedState: lastWorkerShot.observed.region,
+      viaResidentialProxy: lastWorkerShot.viaResidentialProxy,
+      durationMs: lastWorkerShot.durationMs,
+      storageFormat: "webp",
+      webpQuality,
+      imageWidthPx: dims?.width ?? null,
+      imageHeightPx: dims?.height ?? null,
+      snapshotBytes: snapshotBytes ?? null,
+      snapshotContentType: snapshotContentType ?? null,
+      snapshotSha256Present: Boolean(snapshotBinarySha256),
+    });
+    if (lastWorkerShot.htmlSignals) {
+      captureConditions = { ...captureConditions, html_signals: lastWorkerShot.htmlSignals };
+    }
+  } else if (lastBrowserlessShot) {
     const dims = await getPngDimensions(lastBrowserlessShot.png);
     const webpQuality = session.plan === "pro" ? 86 : 78;
     captureConditions = buildCaptureConditionsFromBrowserless({
@@ -316,7 +353,11 @@ async function recordOneObservation(input: {
     });
   }
 
-  if (preview.ok && htmlHeadSignalsHasAny(preview.htmlSignals)) {
+  if (
+    !captureConditions.html_signals &&
+    preview.ok &&
+    htmlHeadSignalsHasAny(preview.htmlSignals)
+  ) {
     captureConditions = { ...captureConditions, html_signals: preview.htmlSignals };
   }
 

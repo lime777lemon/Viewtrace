@@ -17,6 +17,7 @@ export type ObservationCaptureConditionsCopy = {
   proxyProvider: string;
   engine: string;
   engineBrowserless: string;
+  enginePlaywrightWorker: string;
   engineMicrolink: string;
   engineDirectFetch: string;
   engineFormUpload: string;
@@ -27,6 +28,7 @@ export type ObservationCaptureConditionsCopy = {
   proxyModeNone: string;
   proxyModeResidential: string;
   proxyModeExternal: string;
+  proxyModeExternalResidential: string;
   proxyModeRetryWithout: string;
   costTitle: string;
   costDuration: string;
@@ -55,6 +57,7 @@ export function observationCaptureConditionsCopyFrom(t: {
   captureProxyProvider: string;
   captureEngine: string;
   captureEngineBrowserless: string;
+  captureEnginePlaywrightWorker: string;
   captureEngineMicrolink: string;
   captureEngineDirectFetch: string;
   captureEngineFormUpload: string;
@@ -65,6 +68,7 @@ export function observationCaptureConditionsCopyFrom(t: {
   captureProxyNone: string;
   captureProxyResidential: string;
   captureProxyExternal: string;
+  captureProxyExternalResidential: string;
   captureProxyRetryWithout: string;
   captureCostTitle: string;
   captureCostDuration: string;
@@ -92,6 +96,7 @@ export function observationCaptureConditionsCopyFrom(t: {
     proxyProvider: t.captureProxyProvider,
     engine: t.captureEngine,
     engineBrowserless: t.captureEngineBrowserless,
+    enginePlaywrightWorker: t.captureEnginePlaywrightWorker,
     engineMicrolink: t.captureEngineMicrolink,
     engineDirectFetch: t.captureEngineDirectFetch,
     engineFormUpload: t.captureEngineFormUpload,
@@ -102,6 +107,7 @@ export function observationCaptureConditionsCopyFrom(t: {
     proxyModeNone: t.captureProxyNone,
     proxyModeResidential: t.captureProxyResidential,
     proxyModeExternal: t.captureProxyExternal,
+    proxyModeExternalResidential: t.captureProxyExternalResidential,
     proxyModeRetryWithout: t.captureProxyRetryWithout,
     costTitle: t.captureCostTitle,
     costDuration: t.captureCostDuration,
@@ -128,6 +134,7 @@ function engineLabel(
 ): string {
   const map = {
     browserless: copy.engineBrowserless,
+    playwright_worker: copy.enginePlaywrightWorker,
     microlink: copy.engineMicrolink,
     direct_fetch: copy.engineDirectFetch,
     form_upload: copy.engineFormUpload,
@@ -140,6 +147,7 @@ function proxyModeLabel(mode: CaptureConditionsV1["geo"]["proxy_mode"], copy: Ob
     none: copy.proxyModeNone,
     browserless_residential: copy.proxyModeResidential,
     external_proxy: copy.proxyModeExternal,
+    external_residential: copy.proxyModeExternalResidential,
     retry_without_proxy: copy.proxyModeRetryWithout,
   } as const;
   return map[mode];

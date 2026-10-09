@@ -147,7 +147,12 @@ Compare は一旦完成（Slider 以外）。html_signals の商品化は既存�
 
 ### Geo / 出口（実験。本番 Observation は Browserless）
 
-本番ユーザーの撮影経路は変えない。自社 Node は制御プレーンと証明用。`public.observations` に混ぜない。
+本番ユーザーの撮影経路は変えない。将来の自社基盤は **Playwright Worker + 外部 Residential IP**。Browserless を前提にした設計にはしないが、**フラグを切るまで本番出口は Browserless**。顧客に SOCKS / IP は売らない。IP pool は Observation 内部だけで使う。
+
+自社で持つもの: Observation Worker、Playwright / Chromium、キュー、タイムアウト、隔離、MB 計測（未測定は null）、Requested の選択、出口 IP の独立検証、スクショ / html_signals 保存。  
+外部から買うもの: Residential IP / 帯域。住宅回線の供給網そのものは別事業なので今はやらない。
+
+切替は `VIEWTRACE_CAPTURE_BACKEND=playwright_worker`（Worker URL と secret も必須）。未設定時は Browserless。Browserless への静かなフォールバックはしない。
 
 | # | 方針 | 内容 |
 | --- | --- | --- |
@@ -160,6 +165,7 @@ Compare は一旦完成（Slider 以外）。html_signals の商品化は既存�
 | 33 | 回線が先 | California 等の州 Residential Node。物理 / residential 出口が無い州は候補に出さない |
 | 34 | まだやらない | 自社 50州ネットワーク。州を UI に足すのは各州の出口ができたあと |
 | 35 | 商品化は後 | Tokyo Observation を商品として売る（Proxy ではなく記録を売る）。IP 再販ではない |
+| 39 | 実験・未接続 | 自社 Observation Worker（`workers/observation-worker`）。Playwright + 外部 residential。Requested と Observed を分ける。本番は 27 のまま |
 
 Requested と Observed は分けて書く。自己申告の Node 所在地を Observed にしない。US-CA を選んでも国単位で取れたら California と表示しない。見出しは観測事実。区別が必要なときは **Requested / Observed via**。
 
