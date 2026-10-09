@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { AUDIT_ACTION, appendAuditEventAsService } from "@/lib/audit-log";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { buildCaptureConditionsFromBrowserless } from "@/lib/capture-conditions";
-import { runBrowserlessScreenshotWithProxyRetry } from "@/lib/browserless-screenshot";
+import {
+  buildCaptureConditionsFromBrowserless,
+  buildCaptureConditionsFromPlaywrightWorker,
+} from "@/lib/capture-conditions";
+import { runObservationPrimaryScreenshot } from "@/lib/observation-primary-capture";
 import { runUrlPreviewFetch } from "@/lib/url-preview-fetch";
 import { htmlHeadSignalsHasAny } from "@/lib/url-preview";
 import { shouldNotifyWatchOnMetadata } from "@/lib/observation-html-signals-readout";
@@ -470,12 +473,14 @@ export async function POST(req: Request) {
 
     const userEmail = await getUserEmail(userId);
 
-    const shot = await runBrowserlessScreenshotWithProxyRetry({ url, region, fullPage });
+    const primary = await runObservationPrimaryScreenshot({ url, region, fullPage });
+    const shot = primary.result;
 
     const nextRun = computeNextRunAfter(new Date(), freq, repeatCount, plan.watchMaxDailyRepeats).toISOString();
 
     if (!shot.ok) {
-      console.warn("[cron] screenshot failed", { watchId, url, region, error: shot.error, detail: shot.detail });
+      const failDetail = "detail" in shot && typeof shot.detail === "string" ? shot.detail : undefined;
+      console.warn("[cron] screenshot failed", { watchId, url, region, error: shot.error, detail: failDetail });
       const failedAt = new Date().toISOString();
       await svc
         .from("observation_watches")
@@ -492,7 +497,7 @@ export async function POST(req: Request) {
           region,
           watchId,
           error: shot.error,
-          detail: shot.detail?.slice(0, 300),
+          detail: failDetail?.slice(0, 300),
         },
       });
 
@@ -504,9 +509,9 @@ export async function POST(req: Request) {
         stage: "screenshot",
         errorCode: shot.error,
         errorDetail:
-          typeof shot.detail === "string"
+          "detail" in shot && typeof shot.detail === "string"
             ? shot.detail
-            : shot.upstreamStatus
+            : "upstreamStatus" in shot && shot.upstreamStatus
               ? `upstream HTTP ${shot.upstreamStatus}`
               : undefined,
       });
@@ -549,31 +554,69 @@ export async function POST(req: Request) {
     }
 
     const pngDims = await getPngDimensions(shot.png);
-    let captureConditions = buildCaptureConditionsFromBrowserless({
-      capturedAt,
-      regionInput: region,
-      regionLabel: region,
-      fullPageRequested: fullPage,
-      viaResidential: shot.viaResidential ?? false,
-      viaExternalProxy: shot.viaExternalProxy ?? false,
-      usedRetryWithoutProxy: shot.usedRetryWithoutProxy ?? false,
-      residentialStateApplied: shot.residentialStateApplied ?? false,
-      durationMs: shot.durationMs ?? null,
-      estimatedTimeUnits: shot.estimatedTimeUnits ?? null,
-      proxyBytes: shot.proxyBytes ?? null,
-      proxyBytesMeasuredAttempts: shot.proxyBytesMeasuredAttempts ?? null,
-      fallback: shot.usedRetryWithoutProxy ?? false,
-      attempts: shot.attempts ?? null,
-      attemptsLog: shot.attemptsLog ?? null,
-      storageFormat: "webp",
-      webpQuality: 86,
-      imageWidthPx: pngDims?.width ?? null,
-      imageHeightPx: pngDims?.height ?? null,
-      snapshotBytes: snapshotBytesStored,
-      snapshotContentType: snapshotContentTypeStored,
-      snapshotSha256Present: Boolean(snapshotSha256Stored),
-    });
-    if (htmlSignals) {
+    let captureConditions =
+      primary.engine === "playwright_worker" && primary.result.ok
+        ? buildCaptureConditionsFromPlaywrightWorker({
+            capturedAt,
+            regionInput: region,
+            regionLabel: region,
+            fullPageRequested: fullPage,
+            observedCountry: primary.result.observed.country,
+            observedState: primary.result.observed.region,
+            viaResidentialProxy: primary.result.viaResidentialProxy,
+            durationMs: primary.result.durationMs,
+            storageFormat: "webp",
+            webpQuality: 86,
+            imageWidthPx: pngDims?.width ?? null,
+            imageHeightPx: pngDims?.height ?? null,
+            snapshotBytes: snapshotBytesStored,
+            snapshotContentType: snapshotContentTypeStored,
+            snapshotSha256Present: Boolean(snapshotSha256Stored),
+          })
+        : primary.engine === "browserless" && primary.result.ok
+          ? buildCaptureConditionsFromBrowserless({
+              capturedAt,
+              regionInput: region,
+              regionLabel: region,
+              fullPageRequested: fullPage,
+              viaResidential: primary.result.viaResidential ?? false,
+              viaExternalProxy: primary.result.viaExternalProxy ?? false,
+              usedRetryWithoutProxy: primary.result.usedRetryWithoutProxy ?? false,
+              residentialStateApplied: primary.result.residentialStateApplied ?? false,
+              durationMs: primary.result.durationMs ?? null,
+              estimatedTimeUnits: primary.result.estimatedTimeUnits ?? null,
+              proxyBytes: primary.result.proxyBytes ?? null,
+              proxyBytesMeasuredAttempts: primary.result.proxyBytesMeasuredAttempts ?? null,
+              fallback: primary.result.usedRetryWithoutProxy ?? false,
+              attempts: primary.result.attempts ?? null,
+              attemptsLog: primary.result.attemptsLog ?? null,
+              storageFormat: "webp",
+              webpQuality: 86,
+              imageWidthPx: pngDims?.width ?? null,
+              imageHeightPx: pngDims?.height ?? null,
+              snapshotBytes: snapshotBytesStored,
+              snapshotContentType: snapshotContentTypeStored,
+              snapshotSha256Present: Boolean(snapshotSha256Stored),
+            })
+          : buildCaptureConditionsFromBrowserless({
+              capturedAt,
+              regionInput: region,
+              regionLabel: region,
+              fullPageRequested: fullPage,
+              viaResidential: false,
+              viaExternalProxy: false,
+              usedRetryWithoutProxy: false,
+              storageFormat: "webp",
+              webpQuality: 86,
+              imageWidthPx: pngDims?.width ?? null,
+              imageHeightPx: pngDims?.height ?? null,
+              snapshotBytes: snapshotBytesStored,
+              snapshotContentType: snapshotContentTypeStored,
+              snapshotSha256Present: Boolean(snapshotSha256Stored),
+            });
+    if (primary.engine === "playwright_worker" && primary.result.ok && primary.result.htmlSignals) {
+      captureConditions = { ...captureConditions, html_signals: primary.result.htmlSignals };
+    } else if (htmlSignals) {
       captureConditions = { ...captureConditions, html_signals: htmlSignals };
     }
 

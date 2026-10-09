@@ -23,12 +23,19 @@ export type CaptureProxyMode =
   | "none"
   | "browserless_residential"
   | "external_proxy"
+  | "external_residential"
   | "retry_without_proxy";
 
-export type CaptureEngineName = "browserless" | "microlink" | "direct_fetch" | "form_upload";
+export type CaptureEngineName =
+  | "browserless"
+  | "playwright_worker"
+  | "microlink"
+  | "direct_fetch"
+  | "form_upload";
 
 export type CaptureViewportSource =
   | "browserless_implicit_default"
+  | "playwright_worker_1280x800"
   | "microlink_default"
   | "not_applicable";
 
@@ -67,6 +74,12 @@ export type CaptureConditionsV1 = {
       upstream_image_format: "png";
       storage_format: "webp" | "png";
       webp_quality: number | null;
+    };
+    playwright_worker?: {
+      wait_until: "networkidle";
+      goto_timeout_ms: number;
+      viewport_width: number;
+      viewport_height: number;
     };
     microlink?: { full_page: boolean };
     direct_fetch?: { via_proxy: boolean; http_status: number | null };
@@ -317,6 +330,75 @@ export function buildCaptureConditionsFromBrowserless(
     },
     meta: optionalMeta(),
     cost_signals: buildCostSignals(input),
+  };
+}
+
+/**
+ * geo.country / geo.state は独立検証した Observed だけ。Requested の州は入れない。
+ */
+export function buildCaptureConditionsFromPlaywrightWorker(input: {
+  capturedAt: string;
+  regionInput: string;
+  regionLabel: string;
+  fullPageRequested: boolean;
+  observedCountry: string | null;
+  observedState: string | null;
+  viaResidentialProxy: boolean;
+  durationMs: number | null;
+  storageFormat: "webp" | "png";
+  webpQuality: number | null;
+  imageWidthPx: number | null;
+  imageHeightPx: number | null;
+  snapshotBytes: number | null;
+  snapshotContentType: string | null;
+  snapshotSha256Present: boolean;
+}): CaptureConditionsV1 {
+  return {
+    schema_version: CAPTURE_CONDITIONS_SCHEMA_VERSION,
+    captured_at: input.capturedAt,
+    region_input: input.regionInput,
+    region_label: input.regionLabel,
+    full_page_requested: input.fullPageRequested,
+    browser: browserBase(),
+    viewport: {
+      width: 1280,
+      height: 800,
+      device_scale_factor: 1,
+      source: "playwright_worker_1280x800",
+    },
+    geo: {
+      country: input.observedCountry,
+      state: input.observedState,
+      proxy_mode: input.viaResidentialProxy ? "external_residential" : "none",
+      proxy_provider: input.viaResidentialProxy ? "custom" : null,
+      proxy_sticky: null,
+    },
+    engine: {
+      name: "playwright_worker",
+      playwright_worker: {
+        wait_until: "networkidle",
+        goto_timeout_ms: 30_000,
+        viewport_width: 1280,
+        viewport_height: 800,
+      },
+    },
+    result: {
+      image_width_px: input.imageWidthPx,
+      image_height_px: input.imageHeightPx,
+      snapshot_bytes: input.snapshotBytes,
+      snapshot_content_type: input.snapshotContentType,
+      snapshot_sha256_present: input.snapshotSha256Present,
+    },
+    meta: optionalMeta(),
+    cost_signals: {
+      duration_ms: nonNegativeNumberOrNull(input.durationMs),
+      estimated_time_units: null,
+      proxy_bytes: null,
+      proxy_bytes_measured_attempts: 0,
+      fallback: false,
+      screenshot_bytes: nonNegativeNumberOrNull(input.snapshotBytes),
+      attempts: 1,
+    },
   };
 }
 

@@ -242,6 +242,7 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                 >
                   {t.hero.trial}
                 </Link>
+                <p className="mt-3 text-sm text-ink-muted">{t.hero.trialNote}</p>
               </div>
               <p className="mt-5 max-w-2xl text-sm text-ink-muted">
                 {t.hero.disclaimer}

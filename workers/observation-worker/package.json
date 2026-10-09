@@ -1,0 +1,14 @@
+{
+  "name": "viewtrace-observation-worker",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "once": "node cli.mjs",
+    "install-browser": "playwright install chromium"
+  },
+  "dependencies": {
+    "playwright": "^1.56.1"
+  }
+}
