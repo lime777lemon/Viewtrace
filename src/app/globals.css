@@ -1,9 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-noto-sans-jp), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-sora), var(--font-noto-sans-jp), ui-sans-serif, system-ui,
-    sans-serif;
+  --font-sans: "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Sora", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
 
   --color-ink: #0c1222;
   --color-ink-muted: #3d4a63;
@@ -21,7 +20,7 @@ html {
 }
 
 body {
-  @apply bg-[var(--color-surface)] text-[var(--color-ink)] antialiased;
+  @apply bg-surface text-ink antialiased;
 }
 
 ::selection {
@@ -30,16 +29,16 @@ body {
 }
 
 .prose-custom h2 {
-  @apply font-display text-xl font-semibold text-[var(--color-ink)] pt-2;
+  @apply font-display pt-2 text-xl font-semibold text-ink;
 }
 
 .prose-custom h3 {
-  @apply text-base font-semibold text-[var(--color-ink)] pt-1;
+  @apply pt-1 text-base font-semibold text-ink;
 }
 
 .prose-custom p,
 .prose-custom li {
-  @apply text-[15px] leading-relaxed text-[var(--color-ink-muted)];
+  @apply text-[15px] leading-relaxed text-ink-muted;
 }
 
 .prose-custom ul {
@@ -51,21 +50,21 @@ body {
 }
 
 .prose-custom strong {
-  @apply font-semibold text-[var(--color-ink)];
+  @apply font-semibold text-ink;
 }
 
 .prose-custom a {
-  @apply font-medium text-[var(--color-accent)] underline underline-offset-2 hover:text-[var(--color-accent-hover)];
+  @apply font-medium text-accent underline underline-offset-2 hover:text-accent-hover;
 }
 
 .prose-custom .callout {
-  @apply rounded-xl border border-[var(--color-warn)]/35 bg-[var(--color-warn)]/10 p-4 text-[var(--color-ink)];
+  @apply rounded-xl border border-warn/35 bg-warn/10 p-4 text-ink;
 }
 
 .prose-custom .callout p {
-  @apply text-[var(--color-ink)] text-sm leading-relaxed;
+  @apply text-sm leading-relaxed text-ink;
 }
 
 .prose-custom .muted-box {
-  @apply rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4;
+  @apply rounded-xl border border-border bg-surface-elevated p-4;
 }

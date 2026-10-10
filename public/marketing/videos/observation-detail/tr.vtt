@@ -1,0 +1,69 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:04.851
+Bu sayfa bir Observation’dır —
+bir URL, bir bölge ve bir anın kaydı.
+
+00:00:04.851 --> 00:00:08.921
+Observation details başlıktır.
+Back to list tabloya döner.
+
+00:00:08.921 --> 00:00:13.367
+Captured ve Region bu çalıştırmanın olgularıdır.
+Requested ve Observed ayrı kalır.
+
+00:00:13.367 --> 00:00:15.608
+URL, yakalanan adrestir.
+
+00:00:15.608 --> 00:00:21.369
+Status yakalama sonucudur:
+Success, Failure veya Pending — sayfa hükmü değildir.
+
+00:00:21.369 --> 00:00:24.516
+Ekran görüntüsü, o bölgeden
+yakalama anında görünen şeydir.
+
+00:00:24.516 --> 00:00:28.636
+Bu bir kayıttır; teslimat vaadi
+veya reklam etiketi doğrulaması değildir.
+
+00:00:28.636 --> 00:00:34.557
+Aynı yakalama title, description,
+canonical, robots ve Open Graph’ı da saklar.
+
+00:00:34.557 --> 00:00:40.882
+Page Signals, saklanan html_signals’tan
+gerekçeli bir göstergedir. Observed değildir.
+
+00:00:40.882 --> 00:00:45.386
+Compare ve Share mevcut kayıtları kullanır.
+Yeni bir yakalamayı başlatmaz.
+
+00:00:45.386 --> 00:00:49.601
+Mühür Record ID’yi
+ve Server record time’ı gösterir.
+
+00:00:49.601 --> 00:00:53.441
+Image check fingerprint ve Page data check code
+bu kayıtta kalır.
+
+00:00:53.441 --> 00:00:59.087
+Visual similarity yalnızca referanstır.
+Mühür üçüncü taraf doğrulama veya resmi kanıt değildir.
+
+00:00:59.087 --> 00:01:03.132
+Starter ve Pro’da Monitoring, bu URL ve bölgeyi
+takvime göre yeniden yakalar.
+
+00:01:03.132 --> 00:01:06.740
+Her zamanlanmış çalıştırma, aylık haktan
+bir Observation kullanır.
+
+00:01:06.740 --> 00:01:11.545
+Share ve CSV mevcut kayıtları dışa aktarır.
+Yeni bir yakalamayı başlatmaz.
+
+00:01:11.545 --> 00:01:17.817
+Ekran görüntüleri planın saklama süresi sonunda silinir.
+URL, bölge ve zaman meta verileri kalır.
+

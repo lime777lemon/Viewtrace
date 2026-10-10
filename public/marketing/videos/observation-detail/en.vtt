@@ -1,0 +1,69 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:04.851
+This page is one Observation —
+a record of a URL, a region, and a time.
+
+00:00:04.851 --> 00:00:08.921
+Observation details is the title.
+Back to list returns to the table.
+
+00:00:08.921 --> 00:00:13.367
+Captured and Region are facts from this run.
+Requested and Observed stay separate.
+
+00:00:13.367 --> 00:00:15.608
+The URL is the address that was captured.
+
+00:00:15.608 --> 00:00:21.369
+Status is the capture outcome:
+Success, Failure, or Pending — not a page verdict.
+
+00:00:21.369 --> 00:00:24.516
+The screenshot is what rendered
+at capture time from that region.
+
+00:00:24.516 --> 00:00:28.636
+This is a record, not a delivery promise
+and not ad-tag verification.
+
+00:00:28.636 --> 00:00:34.557
+The same capture also stores title,
+description, canonical, robots, and Open Graph.
+
+00:00:34.557 --> 00:00:40.882
+Page Signals is an indicative score from
+stored html_signals, always with reasons. It is not Observed.
+
+00:00:40.882 --> 00:00:45.386
+Compare and Share use records you already have.
+They do not start a new capture.
+
+00:00:45.386 --> 00:00:49.601
+The confirmation record seal shows
+the record ID and the server record time.
+
+00:00:49.601 --> 00:00:53.441
+Image check fingerprint and page data
+check code stay on this record.
+
+00:00:53.441 --> 00:00:59.087
+Visual similarity is a reference only.
+The seal is not third-party verification or formal proof.
+
+00:00:59.087 --> 00:01:03.132
+Monitoring on Starter and Pro recaptures
+this URL and region on a schedule.
+
+00:01:03.132 --> 00:01:06.740
+Each scheduled run uses one Observation
+from the monthly allowance.
+
+00:01:06.740 --> 00:01:11.545
+Share and CSV export existing records.
+They do not start a new capture.
+
+00:01:11.545 --> 00:01:17.817
+Screenshots are removed after the plan window.
+URL, region, and time metadata remain.
+

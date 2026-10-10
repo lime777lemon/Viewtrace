@@ -1,0 +1,69 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:04.851
+Esta página é uma Observation —
+um registro de URL, região e momento.
+
+00:00:04.851 --> 00:00:08.921
+Observation details é o título.
+Back to list volta à tabela.
+
+00:00:08.921 --> 00:00:13.367
+Captured e Region são fatos desta tomada.
+Requested e Observed permanecem separados.
+
+00:00:13.367 --> 00:00:15.608
+A URL é o endereço que foi capturado.
+
+00:00:15.608 --> 00:00:21.369
+Status é o resultado da captura:
+Success, Failure ou Pending — não um veredito.
+
+00:00:21.369 --> 00:00:24.516
+A captura de tela é o que foi renderizado
+no momento da captura nessa região.
+
+00:00:24.516 --> 00:00:28.636
+É um registro, não uma promessa de entrega
+nem verificação de tags de anúncio.
+
+00:00:28.636 --> 00:00:34.557
+A mesma captura também guarda
+title, description, canonical, robots e Open Graph.
+
+00:00:34.557 --> 00:00:40.882
+Page Signals é um indicador dos html_signals
+armazenados, sempre com motivos. Não é Observed.
+
+00:00:40.882 --> 00:00:45.386
+Compare e Share usam registros que você já tem.
+Não iniciam uma captura nova.
+
+00:00:45.386 --> 00:00:49.601
+O selo mostra o Record ID
+e o Server record time.
+
+00:00:49.601 --> 00:00:53.441
+Image check fingerprint e Page data check code
+permanecem neste registro.
+
+00:00:53.441 --> 00:00:59.087
+Visual similarity é só referência.
+O selo não é verificação de terceiros nem prova formal.
+
+00:00:59.087 --> 00:01:03.132
+Monitoring em Starter e Pro recaptura
+esta URL e região segundo um calendário.
+
+00:01:03.132 --> 00:01:06.740
+Cada execução agendada usa uma Observation
+da cota mensal.
+
+00:01:06.740 --> 00:01:11.545
+Share e CSV exportam registros existentes.
+Não iniciam uma captura nova.
+
+00:01:11.545 --> 00:01:17.817
+As capturas são excluídas após a retenção do plano.
+Permanecem os metadados de URL, região e hora.
+

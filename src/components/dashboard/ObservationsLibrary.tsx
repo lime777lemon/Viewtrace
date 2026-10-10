@@ -48,7 +48,7 @@ export function ObservationsLibrary({
 
   if (rows.length === 0) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4" data-tour="recordsScreen">
         {shareCollections.length > 0 ? (
           <ShareCollectionPanel selectedIds={[]} locale={locale} existing={shareCollections} />
         ) : null}
@@ -58,7 +58,7 @@ export function ObservationsLibrary({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-tour="recordsScreen">
       <div className="rounded-xl border border-border bg-surface-elevated p-4 sm:p-5">
         <label className="block">
           <span className="text-xs font-semibold uppercase tracking-wider text-ink-muted">

@@ -68,7 +68,7 @@ export function AdminSqlEditor() {
           onChange={(e) => setQuery(e.target.value)}
           rows={10}
           spellCheck={false}
-          className="mt-2 w-full resize-y rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 font-mono text-sm text-[var(--color-ink)] outline-none ring-[var(--color-accent)]/25 transition focus:border-[var(--color-accent)]/40 focus:ring-2"
+          className="mt-2 w-full resize-y rounded-xl border border-[var(--color-border)] bg-surface px-4 py-3 font-mono text-sm text-[var(--color-ink)] outline-none ring-[var(--color-accent)]/25 transition focus:border-[var(--color-accent)]/40 focus:ring-2"
         />
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
           <button
@@ -100,7 +100,7 @@ export function AdminSqlEditor() {
               {result.truncated ? "（省略あり）" : ""} · rowCount: {result.rowCount}
             </p>
           </div>
-          <div className="mt-3 overflow-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]">
+          <div className="mt-3 overflow-auto rounded-xl border border-[var(--color-border)] bg-surface">
             <table className="min-w-full text-left text-xs">
               <thead className="sticky top-0 bg-[var(--color-surface-elevated)]">
                 <tr>

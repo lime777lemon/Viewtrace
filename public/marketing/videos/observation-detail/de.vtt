@@ -1,0 +1,69 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:04.851
+Diese Seite ist eine Observation —
+ein Datensatz zu URL, Region und Zeitpunkt.
+
+00:00:04.851 --> 00:00:08.921
+Observation details ist der Titel.
+Back to list führt zur Tabelle zurück.
+
+00:00:08.921 --> 00:00:13.367
+Captured und Region sind Fakten dieses Laufs.
+Requested und Observed bleiben getrennt.
+
+00:00:13.367 --> 00:00:15.608
+Die URL ist die erfasste Adresse.
+
+00:00:15.608 --> 00:00:21.369
+Status ist das Ergebnis der Erfassung:
+Success, Failure oder Pending — kein Seitenurteil.
+
+00:00:21.369 --> 00:00:24.516
+Der Screenshot ist das, was zum
+Erfassungszeitpunkt aus dieser Region gerendert wurde.
+
+00:00:24.516 --> 00:00:28.636
+Das ist ein Datensatz, kein Lieferversprechen
+und keine Anzeigen-Tag-Prüfung.
+
+00:00:28.636 --> 00:00:34.557
+Dieselbe Erfassung speichert auch
+title, description, canonical, robots und Open Graph.
+
+00:00:34.557 --> 00:00:40.882
+Page Signals ist ein Richtwert aus gespeicherten
+html_signals, immer mit Gründen. Es ist nicht Observed.
+
+00:00:40.882 --> 00:00:45.386
+Compare und Share nutzen vorhandene Datensätze.
+Sie starten keine neue Erfassung.
+
+00:00:45.386 --> 00:00:49.601
+Das Siegel zeigt die Record ID
+und die Server record time.
+
+00:00:49.601 --> 00:00:53.441
+Image check fingerprint und Page data check code
+bleiben auf diesem Datensatz.
+
+00:00:53.441 --> 00:00:59.087
+Visual similarity ist nur eine Referenz.
+Das Siegel ist keine Drittprüfung und kein formaler Beweis.
+
+00:00:59.087 --> 00:01:03.132
+Monitoring auf Starter und Pro erfasst diese URL
+und Region erneut nach Zeitplan.
+
+00:01:03.132 --> 00:01:06.740
+Jeder geplante Lauf nutzt eine Observation
+aus dem monatlichen Kontingent.
+
+00:01:06.740 --> 00:01:11.545
+Share und CSV exportieren vorhandene Datensätze.
+Sie starten keine neue Erfassung.
+
+00:01:11.545 --> 00:01:17.817
+Screenshots werden nach der Aufbewahrungsfrist gelöscht.
+URL-, Regions- und Zeitmetadaten bleiben.
+

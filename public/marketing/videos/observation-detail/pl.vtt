@@ -1,0 +1,69 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:04.851
+Ta strona to jedna Observation —
+rekord URL, regionu i momentu.
+
+00:00:04.851 --> 00:00:08.921
+Observation details to tytuł.
+Back to list wraca do tabeli.
+
+00:00:08.921 --> 00:00:13.367
+Captured i Region to fakty z tego uruchomienia.
+Requested i Observed pozostają rozdzielone.
+
+00:00:13.367 --> 00:00:15.608
+URL to adres, który został zarejestrowany.
+
+00:00:15.608 --> 00:00:21.369
+Status to wynik rejestracji:
+Success, Failure lub Pending — nie werdykt.
+
+00:00:21.369 --> 00:00:24.516
+Screenshot to to, co zostało wyrenderowane
+w chwili rejestracji z tego regionu.
+
+00:00:24.516 --> 00:00:28.636
+To jest rekord, nie obietnica dostawy
+i nie weryfikacja tagów reklamowych.
+
+00:00:28.636 --> 00:00:34.557
+Ta sama rejestracja zapisuje też
+title, description, canonical, robots i Open Graph.
+
+00:00:34.557 --> 00:00:40.882
+Page Signals to wskaźnik z zapisanych
+html_signals, zawsze z uzasadnieniem. To nie jest Observed.
+
+00:00:40.882 --> 00:00:45.386
+Compare i Share używają rekordów, które już masz.
+Nie rozpoczynają nowej rejestracji.
+
+00:00:45.386 --> 00:00:49.601
+Pieczęć pokazuje Record ID
+oraz Server record time.
+
+00:00:49.601 --> 00:00:53.441
+Image check fingerprint i Page data check code
+pozostają na tym rekordzie.
+
+00:00:53.441 --> 00:00:59.087
+Visual similarity to tylko odniesienie.
+Pieczęć nie jest weryfikacją zewnętrzną ani formalnym dowodem.
+
+00:00:59.087 --> 00:01:03.132
+Monitoring na Starter i Pro ponownie rejestruje
+ten URL i region według harmonogramu.
+
+00:01:03.132 --> 00:01:06.740
+Każde zaplanowane uruchomienie zużywa jedną Observation
+z miesięcznego limitu.
+
+00:01:06.740 --> 00:01:11.545
+Share i CSV eksportują istniejące rekordy.
+Nie rozpoczynają nowej rejestracji.
+
+00:01:11.545 --> 00:01:17.817
+Screenshoty są usuwane po okresie przechowywania planu.
+Metadane URL, regionu i czasu pozostają.
+

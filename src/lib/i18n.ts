@@ -603,6 +603,63 @@ export const copy = {
         auditLog: "監査ログ",
         purchases: "購入履歴",
         settings: "設定",
+        help: "ヘルプ",
+      },
+      help: {
+        panelTitle: "ヘルプ",
+        tourTitle: "プロダクトツアー",
+        tourIntro:
+          "流れは Observe → Observe again → Compare → Share です。記録は URL × 地域 × 時点の事実です。",
+        startTour: "ツアーを開始",
+        close: "閉じる",
+        next: "次へ",
+        back: "戻る",
+        done: "完了",
+        stepOf: "{current} / {total}",
+        contact: "問い合わせ",
+        recordsVideoTitle: "オブザベーション一覧の説明",
+        recordsVideoAria: "オブザベーション一覧の解説動画",
+        recordsVideoCaptionHint: "再生中の CC から字幕の言語を選べます。音声は英語です。",
+        recordVideoTitle: "結果画面の見方",
+        recordVideoAria: "オブザベーション詳細の解説動画",
+        steps: {
+          loop: {
+            title: "記録の流れ",
+            body: "Viewtrace は Observation が本体です。URL と地域を選び、その時点の表示を記録します。比較と共有は既存の記録の上で行います。",
+          },
+          observe: {
+            title: "観測する",
+            body: "「地域で試す」または新規オブザベーションで URL と地域を指定します。1 地域 = 1 Observation です。",
+          },
+          observeAgain: {
+            title: "もう一度観測する",
+            body: "同じ URL と地域でもう一度実行すると、時点の違う 2 件目が残ります。Time Compare に使えます。",
+          },
+          records: {
+            title: "オブザベーション一覧",
+            body: "このページでは URL・地域・タグで記録を探せます。タグはその URL の記録すべてに保存されます。スクリーンショットはプランの保存期間後に削除され、メタデータは残ります。",
+          },
+          recordsScreen: {
+            title: "この画面の見方",
+            body: "検索は URL・ページ名・地域・タグです。下のチップでタグを絞ります。Share Collection は既存の記録を選んで 1 リンクにします。新しい撮影はありません。表は取得時刻・URL・地域・ステータス・タグ・詳細です。",
+          },
+          recordDetail: {
+            title: "詳細で結果を見る",
+            body: "行の「詳細」を押すと、その Observation の結果が開きます。取得時点のスクリーンショットと記録を確認できます。",
+          },
+          recordScreen: {
+            title: "この結果画面の見方",
+            body: "1 件の Observation は URL × 地域 × 時点の記録です。Requested と Observed は分けます。スクリーンショットは取得時点の表示です。Page Signals は html_signals の参考スコアで、Observed ではありません。確認記録シールは参照用であり、第三者検証や証明の代替ではありません。自動観測は Starter / Pro で、1 実行 = 1 Observation です。Compare / Share / CSV は既存記録だけを使います。",
+          },
+          compare: {
+            title: "比較する",
+            body: "Time Compare と Region Compare は別軸です。Screenshot は Same / Changed / Not comparable だけです。Changed は画像の差であり、ページが変わったとは言いません。",
+          },
+          share: {
+            title: "共有する",
+            body: "記録を選んで Share Collection を作ると、既存 Observation を 1 本の公開リンクで渡せます。追加の撮影はありません。",
+          },
+        },
       },
       productLabel: "プロダクト",
       backToMarketing: "マーケサイトへ",
@@ -2031,6 +2088,63 @@ export const copy = {
         auditLog: "Audit log",
         purchases: "Purchase history",
         settings: "Settings",
+        help: "Help",
+      },
+      help: {
+        panelTitle: "Help",
+        tourTitle: "Product tour",
+        tourIntro:
+          "The loop is Observe → Observe again → Compare → Share. A record is the fact of a URL × region × time.",
+        startTour: "Start tour",
+        close: "Close",
+        next: "Next",
+        back: "Back",
+        done: "Done",
+        stepOf: "{current} / {total}",
+        contact: "Contact",
+        recordsVideoTitle: "Observations list walkthrough",
+        recordsVideoAria: "Video walkthrough of the Observations list",
+        recordsVideoCaptionHint: "Use CC on the player to pick a subtitle language. Audio is English.",
+        recordVideoTitle: "How to read this result",
+        recordVideoAria: "Video walkthrough of Observation details",
+        steps: {
+          loop: {
+            title: "The recording loop",
+            body: "Observation is the product. Choose a URL and region, then keep what rendered at that time. Compare and Share run on records you already have.",
+          },
+          observe: {
+            title: "Observe",
+            body: "Use Try by region or New observation. Pick a URL and region. One region = one Observation.",
+          },
+          observeAgain: {
+            title: "Observe again",
+            body: "Run the same URL and region again to keep a second timestamp. That pair is what Time Compare uses.",
+          },
+          records: {
+            title: "Observations list",
+            body: "Search this page by URL, region, or tag. A tag is saved on every record of that URL. Screenshots are removed after the plan window; metadata remains.",
+          },
+          recordsScreen: {
+            title: "How to read this screen",
+            body: "Search is URL, page title, region, or tag. Chips filter by tag. Share Collection turns selected existing records into one link—no new capture. The table shows capture time, URL, region, status, tags, and Details.",
+          },
+          recordDetail: {
+            title: "Open the result with Details",
+            body: "Press Details on a row to open that Observation. You will see the screenshot and record from capture time.",
+          },
+          recordScreen: {
+            title: "How to read this result",
+            body: "One Observation is the record of a URL × region × time. Requested and Observed stay separate. The screenshot is what rendered at capture time. Page Signals is an indicative html_signals score — not Observed. The confirmation record seal is a reference record, not third-party verification. Monitoring on Starter / Pro uses one Observation per scheduled run. Compare, Share, and CSV use existing records only.",
+          },
+          compare: {
+            title: "Compare",
+            body: "Time Compare and Region Compare are separate axes. Screenshots are only Same / Changed / Not comparable. Changed means the screenshot content differs—not that the page changed.",
+          },
+          share: {
+            title: "Share",
+            body: "Select records and create a Share Collection to deliver existing Observations on one public link. No extra capture.",
+          },
+        },
       },
       productLabel: "Product",
       backToMarketing: "Back to site",

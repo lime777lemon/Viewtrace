@@ -1,0 +1,69 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:04.851
+Questa pagina è una Observation —
+un record di URL, regione e momento.
+
+00:00:04.851 --> 00:00:08.921
+Observation details è il titolo.
+Back to list torna alla tabella.
+
+00:00:08.921 --> 00:00:13.367
+Captured e Region sono fatti di questa presa.
+Requested e Observed restano separati.
+
+00:00:13.367 --> 00:00:15.608
+L’URL è l’indirizzo che è stato catturato.
+
+00:00:15.608 --> 00:00:21.369
+Status è l’esito della cattura:
+Success, Failure o Pending — non un verdetto.
+
+00:00:21.369 --> 00:00:24.516
+Lo screenshot è ciò che è stato renderizzato
+al momento della cattura da quella regione.
+
+00:00:24.516 --> 00:00:28.636
+È un record, non una promessa di consegna
+né una verifica dei tag pubblicitari.
+
+00:00:28.636 --> 00:00:34.557
+La stessa cattura memorizza anche
+title, description, canonical, robots e Open Graph.
+
+00:00:34.557 --> 00:00:40.882
+Page Signals è un indicatore dagli html_signals
+memorizzati, sempre con motivi. Non è Observed.
+
+00:00:40.882 --> 00:00:45.386
+Compare e Share usano record che hai già.
+Non avviano una nuova cattura.
+
+00:00:45.386 --> 00:00:49.601
+Il sigillo mostra il Record ID
+e il Server record time.
+
+00:00:49.601 --> 00:00:53.441
+Image check fingerprint e Page data check code
+restano su questo record.
+
+00:00:53.441 --> 00:00:59.087
+Visual similarity è solo un riferimento.
+Il sigillo non è verifica di terzi né prova formale.
+
+00:00:59.087 --> 00:01:03.132
+Monitoring su Starter e Pro cattura di nuovo
+questa URL e regione secondo un calendario.
+
+00:01:03.132 --> 00:01:06.740
+Ogni esecuzione pianificata usa una Observation
+del contingente mensile.
+
+00:01:06.740 --> 00:01:11.545
+Share e CSV esportano record esistenti.
+Non avviano una nuova cattura.
+
+00:01:11.545 --> 00:01:17.817
+Gli screenshot vengono eliminati dopo la conservazione del piano.
+I metadati di URL, regione e orario restano.
+

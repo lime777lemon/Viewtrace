@@ -57,16 +57,16 @@ export function BillingActions({ locale, hasCustomer, hasSubscription }: Props) 
   }
 
   return (
-    <div className="mt-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
-      <p className="text-sm font-medium text-[var(--color-ink)]">{t.title}</p>
-      <p className="mt-1 text-xs text-[var(--color-ink-muted)]">{t.subtitle}</p>
+    <div className="mt-6 rounded-xl border border-border bg-surface p-4">
+      <p className="text-sm font-medium text-ink">{t.title}</p>
+      <p className="mt-1 text-xs text-ink-muted">{t.subtitle}</p>
 
       <div className="mt-3 flex flex-wrap gap-2">
         <button
           type="button"
           onClick={openPortal}
           disabled={!hasCustomer || loading !== null}
-          className="inline-flex rounded-full border border-[var(--color-border)] px-4 py-2 text-xs font-semibold text-[var(--color-ink)] hover:border-[var(--color-accent)]/40 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex rounded-full border border-border px-4 py-2 text-xs font-semibold text-ink hover:border-accent/40 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading === "portal" ? t.openPortalLoading : t.openPortal}
         </button>
@@ -82,12 +82,12 @@ export function BillingActions({ locale, hasCustomer, hasSubscription }: Props) 
       </div>
 
       {!hasCustomer ? (
-        <p className="mt-2 text-xs text-[var(--color-ink-muted)]">{t.missingCustomer}</p>
+        <p className="mt-2 text-xs text-ink-muted">{t.missingCustomer}</p>
       ) : null}
       {!hasSubscription ? (
-        <p className="mt-2 text-xs text-[var(--color-ink-muted)]">{t.missingSubscription}</p>
+        <p className="mt-2 text-xs text-ink-muted">{t.missingSubscription}</p>
       ) : null}
-      {message ? <p className="mt-2 text-xs text-[var(--color-ink-muted)]">{message}</p> : null}
+      {message ? <p className="mt-2 text-xs text-ink-muted">{message}</p> : null}
     </div>
   );
 }

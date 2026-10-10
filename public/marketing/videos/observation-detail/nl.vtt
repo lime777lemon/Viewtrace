@@ -1,0 +1,69 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:04.851
+Deze pagina is één Observation —
+een record van URL, regio en tijdstip.
+
+00:00:04.851 --> 00:00:08.921
+Observation details is de titel.
+Back to list gaat terug naar de tabel.
+
+00:00:08.921 --> 00:00:13.367
+Captured en Region zijn feiten van deze run.
+Requested en Observed blijven gescheiden.
+
+00:00:13.367 --> 00:00:15.608
+De URL is het adres dat is vastgelegd.
+
+00:00:15.608 --> 00:00:21.369
+Status is de uitkomst van de vastlegging:
+Success, Failure of Pending — geen oordeel.
+
+00:00:21.369 --> 00:00:24.516
+De screenshot is wat op het moment van vastlegging
+vanuit die regio is weergegeven.
+
+00:00:24.516 --> 00:00:28.636
+Dit is een record, geen leveringsbelofte
+en geen controle van advertentietags.
+
+00:00:28.636 --> 00:00:34.557
+Dezelfde vastlegging slaat ook
+title, description, canonical, robots en Open Graph op.
+
+00:00:34.557 --> 00:00:40.882
+Page Signals is een indicatie uit opgeslagen
+html_signals, altijd met redenen. Het is geen Observed.
+
+00:00:40.882 --> 00:00:45.386
+Compare en Share gebruiken records die je al hebt.
+Ze starten geen nieuwe vastlegging.
+
+00:00:45.386 --> 00:00:49.601
+Het zegel toont de Record ID
+en de Server record time.
+
+00:00:49.601 --> 00:00:53.441
+Image check fingerprint en Page data check code
+blijven op dit record.
+
+00:00:53.441 --> 00:00:59.087
+Visual similarity is alleen een referentie.
+Het zegel is geen verificatie door derden of formeel bewijs.
+
+00:00:59.087 --> 00:01:03.132
+Monitoring op Starter en Pro legt deze URL
+en regio opnieuw vast volgens een schema.
+
+00:01:03.132 --> 00:01:06.740
+Elke geplande run gebruikt één Observation
+van het maandelijkse tegoed.
+
+00:01:06.740 --> 00:01:11.545
+Share en CSV exporteren bestaande records.
+Ze starten geen nieuwe vastlegging.
+
+00:01:11.545 --> 00:01:17.817
+Screenshots worden verwijderd na de bewaartermijn van het plan.
+URL-, regio- en tijdmetadata blijven.
+

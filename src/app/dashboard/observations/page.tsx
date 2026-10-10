@@ -43,8 +43,10 @@ export default async function ObservationsListPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-        <div className="min-w-0 flex-1">
-          <h1 className="font-display text-2xl font-semibold tracking-tight">{t.title}</h1>
+        <div className="min-w-0 flex-1" data-tour="records">
+          <h1 className="font-display text-2xl font-semibold tracking-tight">
+            {t.title}
+          </h1>
           <p className="mt-1 max-w-2xl text-sm leading-relaxed text-ink-muted">
             {t.subtitle}
             {plan ? t.planSuffix.replace("{plan}", plan.name) : ""}
@@ -74,6 +76,7 @@ export default async function ObservationsListPage() {
           {hideNewObservationButton ? null : (
             <Link
               href="/dashboard/observations/new"
+              data-tour="observeAgain"
               className="inline-flex h-11 shrink-0 items-center justify-center self-stretch rounded-full bg-accent px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-accent-hover sm:self-center"
             >
               {t.newObservation}
