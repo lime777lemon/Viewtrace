@@ -18,10 +18,10 @@ export function LoginModeTabs({
   function select(next: Mode) {
     startTransition(() => {
       setMode(next);
-      const signup = document.getElementById("login-signup-form");
-      const signin = document.getElementById("login-signin-form");
-      if (signup instanceof HTMLFormElement) signup.hidden = next !== "signup";
-      if (signin instanceof HTMLFormElement) signin.hidden = next !== "signin";
+      const signup = document.getElementById("login-signup-panel");
+      const signin = document.getElementById("login-signin-panel");
+      if (signup instanceof HTMLElement) signup.hidden = next !== "signup";
+      if (signin instanceof HTMLElement) signin.hidden = next !== "signin";
     });
   }
 
