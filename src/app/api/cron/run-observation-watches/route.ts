@@ -32,6 +32,10 @@ import {
   screenshotCompareField,
   shouldNotifyWatchOnScreenshot,
 } from "@/lib/observation-compare";
+import {
+  pageSignalsScoreDelta,
+  pageSignalsWatchEmailLines,
+} from "@/lib/observation-page-signals";
 import { findPreviousObservationForCompare } from "@/lib/observation-previous";
 import {
   normalizeObservationWebhookUrl,
@@ -741,6 +745,10 @@ export async function POST(req: Request) {
     const compareOpenUrl = previous
       ? buildObservationCompareOpenUrl(getAppOriginForEmailLinks(), previous.id, obsId)
       : null;
+    const pageSignalsDelta = previous
+      ? pageSignalsScoreDelta(previous.captureConditions?.html_signals, captureConditions.html_signals)
+      : null;
+    const pageSignalsEmail = pageSignalsDelta ? pageSignalsWatchEmailLines(pageSignalsDelta) : null;
 
     if (webhookUrl) {
       const posted = await postObservationWebhook(webhookUrl, {
@@ -778,6 +786,7 @@ export async function POST(req: Request) {
           `URL: ${url}`,
           `Region / 地域: ${region}`,
           blobUrl ? `Snapshot / スナップショット: ${blobUrl}` : "Snapshot: not stored (check dashboard).",
+          pageSignalsEmail ? pageSignalsEmail.text : "",
           "",
           `Open record / 記録を開く: ${openUrl}`,
           compareOpenUrl ? `Open compare / 比較を開く: ${compareOpenUrl}` : "",
@@ -794,6 +803,7 @@ export async function POST(req: Request) {
           blobUrl
             ? `<p><a href="${escapeHtml(blobUrl)}">Snapshot link</a></p>`
             : "<p>Snapshot was not stored to Blob; open the dashboard for details.</p>",
+          pageSignalsEmail ? pageSignalsEmail.html : "",
           observationRecordLinkHtml(openUrl),
           compareOpenUrl ? observationCompareLinkHtml(compareOpenUrl) : "",
           emailAccountHintHtml(userEmail),
@@ -828,6 +838,7 @@ export async function POST(req: Request) {
           "",
           `URL: ${url}`,
           `Region / 地域: ${region}`,
+          pageSignalsEmail ? pageSignalsEmail.text : "",
           "",
           `Open compare / 比較を開く: ${compareOpenUrl}`,
           `Open record / 記録を開く: ${openUrl}`,
@@ -839,6 +850,7 @@ export async function POST(req: Request) {
           "<p>前回の Observation とスクリーンショットの内容が異なります。ページ自体が変更されたとは限りません。</p>",
           `<p><strong>URL</strong><br/>${escapeHtml(url)}</p>`,
           `<p><strong>Region</strong> / 地域<br/>${escapeHtml(region)}</p>`,
+          pageSignalsEmail ? pageSignalsEmail.html : "",
           observationCompareLinkHtml(compareOpenUrl),
           observationRecordLinkHtml(openUrl),
           emailAccountHintHtml(userEmail),
@@ -876,6 +888,7 @@ export async function POST(req: Request) {
           `Changed / 差: ${fields}`,
           `URL: ${url}`,
           `Region / 地域: ${region}`,
+          pageSignalsEmail ? pageSignalsEmail.text : "",
           "",
           `Open compare / 比較を開く: ${compareOpenUrl}`,
           `Open record / 記録を開く: ${openUrl}`,
@@ -888,6 +901,7 @@ export async function POST(req: Request) {
           `<p><strong>Changed</strong> / 差<br/>${escapeHtml(fields)}</p>`,
           `<p><strong>URL</strong><br/>${escapeHtml(url)}</p>`,
           `<p><strong>Region</strong> / 地域<br/>${escapeHtml(region)}</p>`,
+          pageSignalsEmail ? pageSignalsEmail.html : "",
           observationCompareLinkHtml(compareOpenUrl),
           observationRecordLinkHtml(openUrl),
           emailAccountHintHtml(userEmail),

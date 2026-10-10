@@ -21,7 +21,7 @@ Verify（`/verify/[token]`）は削除しない。成長ループではなく、
 
 **今やること:** 既存 Observation の事実レイアウト整理。記録面に Performance / SEO / Accessibility スコアは出さない。Page Signals は html_signals だけの参考指標（根拠必須）。レイアウト AI ≠ ページ診断 AI。読み用の空きは作ってよい。
 
-次に足す順: **Share Collection** → **AIサイト分析（既存スクショ + html_signals のみ）** → Time Compare Slider（条件一致時のみ）→ Client / Project（Pro 運用）。Watch / html_signals / Multi-region / `JP-13` は出荷済。html_signals は常時表示（選ばせない）。メタ差分メールだけ Watch で選ばせる。
+次に足す順: **Share Collection** → **AIサイト分析（既存スクショ + html_signals のみ）** → Client / Project（Pro 運用）。Watch / html_signals / Multi-region / `JP-13` / Share Collection / Page Signals / Time Compare Slider（条件一致時）は出荷済。html_signals は常時表示（選ばせない）。メタ差分メールだけ Watch で選ばせる。Watch メールの Page Signals は既存通知への添え書きのみ。
 
 記録に混ぜない: 測っていない Performance / SEO / Accessibility 数字、Core Web Vitals。Page Signals は参考スコアとして記録の下に出してよい（html_signals 減点、根拠必須、SEO とは書かない）。このページの監査指摘は読み側に出してよい。今やらない: サイト全体 SEO crawler、Free AI Visual Checker、Scout、Apollo、クレジットパック、Tokyo Proxy 再販。Verify を KPI の主役にしない。
 

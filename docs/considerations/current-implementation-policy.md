@@ -141,10 +141,10 @@ Compare は一旦完成（Slider 以外）。html_signals の商品化は既存�
 | 10 | 次 | Share Collection。複数 Observation を1リンク。単独の売る理由ではなく作業の楽さ |
 | 38 | その次（AIサイト分析） | 1 Observation と Compare の監査（AI）。記録と分けて出す。追加撮影なし |
 | 19 | 38 の中身 | Vision AI（既存スクショを AI が読む）。「東京と US でヒーローが違う」は可。「Performance が弱い」は不可 |
-| 11 | その次 | Time Compare の Slider。viewport・画像高さ・full-page が一致するときだけ。条件不一致は Side by side のみ。判定は三値のまま |
+| 11 | 出荷（条件一致時） | Time Compare の Slider。viewport・画像高さ・full-page が一致するときだけ。条件不一致は Side by side のみ。判定は三値のまま |
 | 12 | その先（Pro 運用） | Client / Project まとめ、Compare 公開、定期レポート。CSV は既にある。レポート本文に Interpreted を載せてよい |
 
-11 は Before / After の別ページではない。Time Compare の表示モードを1つ足すだけ。今は作らない（Share Collection の後）。
+11 は Before / After の別ページではない。Time Compare の表示モードを1つ足すだけ。条件不一致は Slider を出さない。
 
 ### Geo / 出口（実験。本番 Observation は Browserless）
 
@@ -181,7 +181,7 @@ Requested と Observed は分けて書く。自己申告の Node 所在地を Ob
 | 38 | 承認・後で実装 | AIサイト分析。1ページ（1 Observation）と Compare の読み |
 | 19 | 承認・38 に使う | Vision AI。既存スクショのみ。追加撮影なし |
 | 12 の読み | 承認・後で実装 | 定期レポート / Share に読みを載せる。記録の下 |
-| 40 | 承認 | Page Signals。html_signals だけの減点参考値。記録の下。根拠必須 |
+| 40 | 承認 | Page Signals。html_signals だけの減点参考値。記録の下。根拠必須。Watch メールには既存通知へ `92 → 61` を添えるだけ（新通知は増やさない） |
 
 ### 記録に混ぜない / 今は本体にしない
 

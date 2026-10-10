@@ -1060,6 +1060,10 @@ export const copy = {
       regionTitle: "Region Compare",
       regionSubtitle: "同じ URL・違う地域で、近い時点の記録を並べます。追加の撮影はありません。",
       factHint: "Changed / Same / Not comparable は記録上の事実です。良い・悪い、ページ全体が変わった、とは判定しません。",
+      sliderTitle: "Slider",
+      sliderHint:
+        "撮影範囲・ビューポート・画像の高さが揃っているときだけ使えます。ドラッグは表示モードです。ページが変わった、とは判定しません。",
+      sliderRange: "左右の表示位置",
       factColumn: "記録",
       notComparable: "Not comparable",
       screenshotChangedHint:
@@ -2489,6 +2493,10 @@ export const copy = {
       regionSubtitle: "Same URL, different regions, closest capture times. No extra capture.",
       factHint:
         "Changed / Same / Not comparable is a recorded fact—not better or worse, and not “the page changed.”",
+      sliderTitle: "Slider",
+      sliderHint:
+        "Only when capture scope, viewport, and image height match. A display mode—not a page-changed verdict.",
+      sliderRange: "Reveal position",
       factColumn: "Recorded",
       notComparable: "Not comparable",
       screenshotChangedHint:
