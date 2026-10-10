@@ -14,6 +14,10 @@ import {
 } from "@/components/dashboard/ObservationHtmlHeadSignalsPanel";
 import { ObservationNotVisible } from "@/components/dashboard/ObservationNotVisible";
 import { ObservationAiAuditReadout } from "@/components/dashboard/ObservationAiAuditReadout";
+import {
+  ObservationPageSignalsPanel,
+  observationPageSignalsCopyFrom,
+} from "@/components/dashboard/ObservationPageSignalsPanel";
 import { PrintReportButton } from "@/components/dashboard/PrintReportButton";
 import { getSession } from "@/lib/auth/session";
 import { observationAiAuditCopyFrom } from "@/lib/observation-ai-audit-copy";
@@ -107,6 +111,7 @@ export default async function ObservationReportPage({ params }: Props) {
   const geoCopy = observationGeoCopyFrom(td);
 
   const htmlHeadSignalsCopy = observationHtmlHeadCopyFrom(td);
+  const pageSignalsCopy = observationPageSignalsCopyFrom(td);
   const supabase = await createSupabaseServerClient();
   const aiAudit = await loadObservationAiAudit(supabase, session.userId, obs.id);
   const aiAuditCopy = observationAiAuditCopyFrom(td);
@@ -183,6 +188,12 @@ export default async function ObservationReportPage({ params }: Props) {
                 signals={obs.captureConditions.html_signals}
                 copy={htmlHeadSignalsCopy}
                 requestedUrl={obs.url}
+              />
+            </div>
+            <div className="mt-4">
+              <ObservationPageSignalsPanel
+                signals={obs.captureConditions.html_signals}
+                copy={pageSignalsCopy}
               />
             </div>
           </section>

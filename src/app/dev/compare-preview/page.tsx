@@ -10,6 +10,10 @@ import {
   ObservationHtmlHeadSignalsPanel,
   observationHtmlHeadCopyFrom,
 } from "@/components/dashboard/ObservationHtmlHeadSignalsPanel";
+import {
+  ObservationPageSignalsPanel,
+  observationPageSignalsCopyFrom,
+} from "@/components/dashboard/ObservationPageSignalsPanel";
 import { copy } from "@/lib/i18n";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { compareObservations, orderObservationsByCapturedAt } from "@/lib/observation-compare";
@@ -50,6 +54,7 @@ export default async function DevComparePreviewPage({ searchParams }: Props) {
   const locale = await getRequestLocale();
   const t = copy[locale].observationCompare;
   const htmlCopy = observationHtmlHeadCopyFrom(copy[locale].observationDetail);
+  const pageSignalsCopy = observationPageSignalsCopyFrom(copy[locale].observationDetail);
   const aiAuditCopy = observationAiAuditCopyFrom(copy[locale].observationDetail);
   const fixture = (await searchParams).fixture?.trim() ?? "time";
 
@@ -81,6 +86,10 @@ export default async function DevComparePreviewPage({ searchParams }: Props) {
                 signals={compareFixtureTimeRight.captureConditions?.html_signals}
                 copy={htmlCopy}
                 requestedUrl={compareFixtureTimeRight.url}
+              />
+              <ObservationPageSignalsPanel
+                signals={previewAuditObservation().captureConditions?.html_signals}
+                copy={pageSignalsCopy}
               />
               <ObservationAiAuditPanel
                 copy={aiAuditCopy}

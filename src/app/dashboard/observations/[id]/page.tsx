@@ -20,6 +20,10 @@ import { ObservationDetailSnapshotSection } from "@/components/dashboard/Observa
 import { ObservationDigitalSeal } from "@/components/dashboard/ObservationDigitalSeal";
 import { ObservationEvidenceJsonDownload } from "@/components/dashboard/ObservationEvidenceJsonDownload";
 import { ObservationAiAuditPanel } from "@/components/dashboard/ObservationAiAuditPanel";
+import {
+  ObservationPageSignalsPanel,
+  observationPageSignalsCopyFrom,
+} from "@/components/dashboard/ObservationPageSignalsPanel";
 import { observationAiAuditCopyFrom } from "@/lib/observation-ai-audit-copy";
 import { loadObservationAiAudit } from "@/lib/observation-ai-audit-store";
 import { ObservationLpVerdictCard } from "@/components/dashboard/ObservationLpVerdictCard";
@@ -185,6 +189,7 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
   const geoCopy = observationGeoCopyFrom(t);
 
   const htmlHeadSignalsCopy = observationHtmlHeadCopyFrom(t);
+  const pageSignalsCopy = observationPageSignalsCopyFrom(t);
   const aiAuditCopy = observationAiAuditCopyFrom(t);
   const existingAudit = await loadObservationAiAudit(supabase, session.userId, obs.id);
   const pack = buildObservationEvidencePack({
@@ -378,6 +383,11 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
           screenshotExpired={screenshotExpired}
         />
       </section>
+
+      <ObservationPageSignalsPanel
+        signals={obs.captureConditions?.html_signals}
+        copy={pageSignalsCopy}
+      />
 
       <ObservationAiAuditPanel
         copy={aiAuditCopy}
