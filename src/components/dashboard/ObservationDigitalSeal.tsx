@@ -15,7 +15,7 @@ export function ObservationDigitalSeal({ obs, locale }: Props) {
     hex && hex.length > n * 2 ? `${hex.slice(0, n)}…${hex.slice(-n)}` : hex ?? "—";
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border-4 border-double border-accent/50 bg-linear-to-br from-surface-elevated to-surface px-6 py-6 shadow-sm sm:col-span-2">
+    <div data-tour="recordScreen" className="relative overflow-hidden rounded-2xl border-4 border-double border-accent/50 bg-linear-to-br from-surface-elevated to-surface px-6 py-6 shadow-sm sm:col-span-2">
       <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-accent/10" />
       <p className="text-center text-[10px] font-bold uppercase tracking-[0.2em] text-accent">
         {t.brand}

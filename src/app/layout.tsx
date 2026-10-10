@@ -1,25 +1,10 @@
 import type { Metadata } from "next";
-import { Noto_Sans_JP, Sora } from "next/font/google";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { siteSeoKeywordPhrases } from "@/lib/seo/site-keywords";
 import { siteOrigin } from "@/lib/site";
 import "./globals.css";
-
-const notoSansJp = Noto_Sans_JP({
-  subsets: ["latin"],
-  variable: "--font-noto-sans-jp",
-  display: "swap",
-  weight: ["400", "500", "600", "700"],
-});
-
-const sora = Sora({
-  subsets: ["latin"],
-  variable: "--font-sora",
-  display: "swap",
-  weight: ["500", "600", "700"],
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin),
@@ -103,7 +88,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${notoSansJp.variable} ${sora.variable}`}>
+    <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=Sora:wght@500;600;700&display=swap"
+        />
+      </head>
       <body className="font-sans">
         <script
           type="application/ld+json"

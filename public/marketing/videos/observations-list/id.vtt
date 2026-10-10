@@ -1,0 +1,39 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:02.053
+Halaman ini adalah daftar Observations.
+
+00:00:02.053 --> 00:00:06.503
+Pencarian menemukan catatan menurut URL,
+judul halaman, wilayah, atau tag.
+
+00:00:06.503 --> 00:00:10.334
+Chip tag memfilter daftar:
+satu tag, semua, atau tanpa tag.
+
+00:00:10.334 --> 00:00:12.897
+Tag disimpan pada setiap catatan URL itu.
+
+00:00:12.897 --> 00:00:15.739
+Share Collection memungkinkan memilih
+Observations yang sudah ada.
+
+00:00:15.739 --> 00:00:18.052
+Catatan terpilih menjadi satu tautan berbagi.
+
+00:00:18.052 --> 00:00:20.454
+Share Collection tidak memulai pengambilan baru.
+
+00:00:20.454 --> 00:00:26.340
+Tabel menampilkan waktu pengambilan, URL,
+wilayah, status, tag, dan Detail.
+
+00:00:26.340 --> 00:00:29.926
+Tekan Detail untuk membuka screenshot
+dan catatan Observation itu.
+
+00:00:29.926 --> 00:00:33.074
+Screenshot dihapus setelah masa retensi paket.
+
+00:00:33.074 --> 00:00:36.027
+Metadata URL, wilayah, dan waktu tetap ada.

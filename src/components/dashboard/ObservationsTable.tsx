@@ -235,6 +235,7 @@ export function ObservationsTable({
                 <td className="px-4 py-3 text-right align-top">
                   <Link
                     href={detailHref}
+                    data-tour="recordDetail"
                     className="font-medium text-accent hover:text-accent-hover"
                   >
                     {tb.actionDetail}

@@ -1,0 +1,69 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:04.851
+Halaman ini satu Observation —
+catatan URL, wilayah, dan waktu.
+
+00:00:04.851 --> 00:00:08.921
+Observation details adalah judulnya.
+Back to list kembali ke tabel.
+
+00:00:08.921 --> 00:00:13.367
+Captured dan Region fakta dari pengambilan ini.
+Requested dan Observed tetap terpisah.
+
+00:00:13.367 --> 00:00:15.608
+URL adalah alamat yang diambil.
+
+00:00:15.608 --> 00:00:21.369
+Status hasil pengambilan: Success, Failure, atau Pending.
+Bukan vonis halaman.
+
+00:00:21.369 --> 00:00:24.516
+Screenshot adalah yang dirender
+saat pengambilan dari wilayah itu.
+
+00:00:24.516 --> 00:00:28.636
+Ini catatan, bukan jaminan pengiriman
+dan bukan verifikasi tag iklan.
+
+00:00:28.636 --> 00:00:34.557
+Pengambilan yang sama juga menyimpan title, description,
+canonical, robots, dan Open Graph.
+
+00:00:34.557 --> 00:00:40.882
+Page Signals indikator dari html_signals tersimpan, selalu dengan alasan.
+Bukan Observed.
+
+00:00:40.882 --> 00:00:45.386
+Compare dan Share memakai catatan yang sudah ada.
+Tidak memulai pengambilan baru.
+
+00:00:45.386 --> 00:00:49.601
+Confirmation record seal menampilkan record ID
+dan server record time.
+
+00:00:49.601 --> 00:00:53.441
+Image check fingerprint dan page data check code
+tetap pada catatan ini.
+
+00:00:53.441 --> 00:00:59.087
+Visual similarity hanya referensi.
+Segel bukan verifikasi pihak ketiga atau bukti formal.
+
+00:00:59.087 --> 00:01:03.132
+Monitoring di Starter dan Pro mengambil ulang
+URL dan wilayah ini sesuai jadwal.
+
+00:01:03.132 --> 00:01:06.740
+Setiap jadwal memakai satu Observation
+dari kuota bulanan.
+
+00:01:06.740 --> 00:01:11.545
+Share dan CSV mengekspor catatan yang ada.
+Tidak memulai pengambilan baru.
+
+00:01:11.545 --> 00:01:17.817
+Screenshot dihapus setelah masa retensi paket.
+Metadata URL, wilayah, dan waktu tetap ada.
+

@@ -50,19 +50,20 @@ export function DashboardShell({
   const t = copy[locale].dashboard;
   const plan = getPlan(planId);
   const nav = [
-    { href: "/dashboard/region-search", label: t.nav.regionSearch },
-    { href: "/dashboard/observations", label: t.nav.observations },
+    { href: "/dashboard/region-search", label: t.nav.regionSearch, tour: "observe" as const },
+    { href: "/dashboard/observations", label: t.nav.observations, tour: "records" as const },
     ...(plan.autoObservationWatch
-      ? [{ href: "/dashboard/auto-observations" as const, label: t.nav.autoObservations }]
+      ? [{ href: "/dashboard/auto-observations" as const, label: t.nav.autoObservations, tour: undefined }]
       : []),
-    { href: "/dashboard", label: t.nav.overview },
-    { href: "/dashboard/audit", label: t.nav.auditLog },
-    { href: "/dashboard/purchases", label: t.nav.purchases },
-    { href: "/dashboard/settings", label: t.nav.settings },
+    { href: "/dashboard", label: t.nav.overview, tour: "loop" as const },
+    { href: "/dashboard/audit", label: t.nav.auditLog, tour: undefined },
+    { href: "/dashboard/purchases", label: t.nav.purchases, tour: undefined },
+    { href: "/dashboard/settings", label: t.nav.settings, tour: undefined },
+    { href: "/dashboard/help", label: t.nav.help, tour: undefined },
     ...(isAdmin
-      ? [{ href: "/dashboard/admin/verify-funnel" as const, label: t.nav.verifyFunnel }]
+      ? [{ href: "/dashboard/admin/verify-funnel" as const, label: t.nav.verifyFunnel, tour: undefined }]
       : []),
-  ] as const;
+  ];
 
   function setLocale(next: Locale) {
     if (next === locale) return;
@@ -91,6 +92,7 @@ export function DashboardShell({
                 <Link
                   key={item.href}
                   href={item.href}
+                  data-tour={item.tour}
                   className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
                     active
                       ? "bg-accent-soft text-ink"
@@ -164,6 +166,7 @@ export function DashboardShell({
                   <Link
                     key={item.href}
                     href={item.href}
+                    data-tour={item.tour}
                     className={`shrink-0 cursor-pointer rounded-full px-3 py-1.5 text-xs font-semibold transition active:translate-y-px ${
                       active
                         ? "bg-ink text-white shadow-sm hover:bg-ink/90 hover:shadow"

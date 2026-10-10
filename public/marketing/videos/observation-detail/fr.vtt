@@ -1,0 +1,69 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:04.851
+Cette page est une Observation —
+un enregistrement d’URL, de région et d’instant.
+
+00:00:04.851 --> 00:00:08.921
+Observation details est le titre.
+Back to list ramène au tableau.
+
+00:00:08.921 --> 00:00:13.367
+Captured et Region sont des faits de cette prise.
+Requested et Observed restent distincts.
+
+00:00:13.367 --> 00:00:15.608
+L’URL est l’adresse qui a été capturée.
+
+00:00:15.608 --> 00:00:21.369
+Status est le résultat de la capture :
+Success, Failure ou Pending — pas un verdict.
+
+00:00:21.369 --> 00:00:24.516
+La capture d’écran est ce qui s’est affiché
+au moment de la capture depuis cette région.
+
+00:00:24.516 --> 00:00:28.636
+C’est un enregistrement, pas une promesse de livraison
+ni une vérification de balises publicitaires.
+
+00:00:28.636 --> 00:00:34.557
+La même capture enregistre aussi
+title, description, canonical, robots et Open Graph.
+
+00:00:34.557 --> 00:00:40.882
+Page Signals est un indicateur issu des html_signals
+enregistrés, toujours avec motifs. Ce n’est pas Observed.
+
+00:00:40.882 --> 00:00:45.386
+Compare et Share utilisent des enregistrements déjà là.
+Ils ne lancent pas de nouvelle capture.
+
+00:00:45.386 --> 00:00:49.601
+Le sceau affiche le Record ID
+et le Server record time.
+
+00:00:49.601 --> 00:00:53.441
+Image check fingerprint et Page data check code
+restent sur cet enregistrement.
+
+00:00:53.441 --> 00:00:59.087
+Visual similarity est une référence seulement.
+Le sceau n’est pas une vérification tierce ni une preuve formelle.
+
+00:00:59.087 --> 00:01:03.132
+Monitoring sur Starter et Pro capture à nouveau
+cette URL et cette région selon un calendrier.
+
+00:01:03.132 --> 00:01:06.740
+Chaque exécution planifiée utilise une Observation
+du quota mensuel.
+
+00:01:06.740 --> 00:01:11.545
+Share et CSV exportent des enregistrements existants.
+Ils ne lancent pas de nouvelle capture.
+
+00:01:11.545 --> 00:01:17.817
+Les captures sont supprimées après la conservation du forfait.
+Les métadonnées URL, région et heure restent.
+

@@ -1,0 +1,69 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:04.851
+Trang này là một Observation —
+bản ghi URL, khu vực và thời điểm.
+
+00:00:04.851 --> 00:00:08.921
+Observation details là tiêu đề.
+Back to list quay lại bảng.
+
+00:00:08.921 --> 00:00:13.367
+Captured và Region là sự thật từ lần chụp này.
+Requested và Observed được giữ tách biệt.
+
+00:00:13.367 --> 00:00:15.608
+URL là địa chỉ đã được chụp.
+
+00:00:15.608 --> 00:00:21.369
+Status là kết quả chụp: Success, Failure hoặc Pending.
+Không phải phán quyết về trang.
+
+00:00:21.369 --> 00:00:24.516
+Ảnh chụp màn hình là thứ đã render
+lúc chụp từ khu vực đó.
+
+00:00:24.516 --> 00:00:28.636
+Đây là bản ghi, không phải cam kết bàn giao
+và không phải xác minh thẻ quảng cáo.
+
+00:00:28.636 --> 00:00:34.557
+Cùng lần chụp còn lưu title, description,
+canonical, robots và Open Graph.
+
+00:00:34.557 --> 00:00:40.882
+Page Signals là chỉ số tham khảo từ html_signals đã lưu, luôn kèm lý do.
+Không phải Observed.
+
+00:00:40.882 --> 00:00:45.386
+Compare và Share dùng các bản ghi bạn đã có.
+Không bắt đầu lần chụp mới.
+
+00:00:45.386 --> 00:00:49.601
+Confirmation record seal hiển thị record ID
+và server record time.
+
+00:00:49.601 --> 00:00:53.441
+Image check fingerprint và page data check code
+vẫn ở trên bản ghi này.
+
+00:00:53.441 --> 00:00:59.087
+Visual similarity chỉ mang tính tham khảo.
+Con dấu không phải xác minh bên thứ ba hay bằng chứng chính thức.
+
+00:00:59.087 --> 00:01:03.132
+Monitoring trên Starter và Pro chụp lại
+URL và khu vực này theo lịch.
+
+00:01:03.132 --> 00:01:06.740
+Mỗi lần chạy theo lịch dùng một Observation
+từ hạn mức hàng tháng.
+
+00:01:06.740 --> 00:01:11.545
+Share và CSV xuất các bản ghi sẵn có.
+Không bắt đầu lần chụp mới.
+
+00:01:11.545 --> 00:01:17.817
+Ảnh chụp màn hình bị xóa sau thời hạn lưu của gói.
+Siêu dữ liệu URL, khu vực và thời gian vẫn còn.
+

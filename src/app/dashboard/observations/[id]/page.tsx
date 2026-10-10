@@ -264,7 +264,7 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
         locale={locale}
       />
 
-      <section className="space-y-6" aria-labelledby="observation-record-heading">
+      <section className="space-y-6" aria-labelledby="observation-record-heading" data-tour="recordScreen">
         <div className="space-y-1">
           <h2 id="observation-record-heading" className="font-display text-lg font-semibold text-ink">
             {t.recordSectionTitle}

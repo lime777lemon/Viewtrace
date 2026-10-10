@@ -87,7 +87,10 @@ export function ShareCollectionPanel({
   }
 
   return (
-    <div className="space-y-4 rounded-xl border border-border bg-surface-elevated p-4 sm:p-5">
+    <div
+      data-tour="share"
+      className="space-y-4 rounded-xl border border-border bg-surface-elevated p-4 sm:p-5"
+    >
       <div>
         <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
           {t.shareCollectionTitle}

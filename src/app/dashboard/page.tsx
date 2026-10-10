@@ -49,7 +49,9 @@ export default async function DashboardHomePage() {
   return (
     <div className="mx-auto max-w-5xl space-y-10">
       <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight">{t.title}</h1>
+        <h1 data-tour="loop" className="font-display text-2xl font-semibold tracking-tight">
+          {t.title}
+        </h1>
         <p className="mt-1 text-sm text-ink-muted">
           {t.subtitle
             .replace("{plan}", plan.name)
@@ -142,6 +144,7 @@ export default async function DashboardHomePage() {
           {hideNewObservationButton ? null : (
             <Link
               href="/dashboard/observations/new"
+              data-tour="observeAgain"
               className="inline-flex rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover"
             >
               {t.newObservation}

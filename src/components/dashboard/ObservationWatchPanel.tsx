@@ -66,7 +66,7 @@ export function ObservationWatchPanel({
   const scheduleCopy: WatchScheduleFieldsCopy = copy;
 
   return (
-    <div className="rounded-xl border border-border bg-surface-elevated p-4 sm:col-span-2">
+    <div data-tour="recordScreen" className="rounded-xl border border-border bg-surface-elevated p-4 sm:col-span-2">
       <dt className="text-xs font-semibold uppercase tracking-wider text-ink-muted">{copy.title}</dt>
       <dd className="mt-2 space-y-4 text-sm text-ink">
         <p className="text-ink-muted">{copy.intro.replace("{region}", regionLabel)}</p>

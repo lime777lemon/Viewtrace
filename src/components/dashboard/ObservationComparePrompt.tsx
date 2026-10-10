@@ -28,7 +28,7 @@ export function ObservationComparePrompt({
   const canRepeat = Boolean(observation.url?.trim() && observation.regionValue?.trim());
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div data-tour="compare" className="grid gap-4 lg:grid-cols-2">
       <section className="rounded-2xl border border-border bg-surface-elevated p-5 sm:p-6">
         <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">{t.timeAxis}</p>
         <h2 className="mt-1 font-display text-lg font-semibold tracking-tight text-ink">{t.promptTitle}</h2>
@@ -48,6 +48,7 @@ export function ObservationComparePrompt({
             {canRepeat ? (
               <Link
                 href={newObservationHrefForRepeat(observation)}
+                data-tour="observeAgain"
                 className="mt-4 inline-flex rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover"
               >
                 {t.promptCta}
