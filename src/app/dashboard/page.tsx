@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { DashboardOnboardingChecklist } from "@/components/dashboard/DashboardOnboardingChecklist";
 import { ObservationsTable } from "@/components/dashboard/ObservationsTable";
 import { getSession } from "@/lib/auth/session";
 import { getMergedObservationsForPlan, readUserObservations } from "@/lib/demo/user-observations";
@@ -129,6 +130,8 @@ export default async function DashboardHomePage() {
           </p>
         </div>
       </div>
+
+      {userObsForTrial.length === 0 ? <DashboardOnboardingChecklist /> : null}
 
       <section className="space-y-4">
         <div className="flex flex-wrap items-end justify-between gap-3">

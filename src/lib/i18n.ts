@@ -660,6 +660,42 @@ export const copy = {
             body: "記録を選んで Share Collection を作ると、既存 Observation を 1 本の公開リンクで渡せます。追加の撮影はありません。",
           },
         },
+        replayOnboarding: "登録直後の使い方を見る",
+        replayOnboardingHint: "登録したての方向けの短い案内です。動画は自動再生しません。",
+      },
+      onboarding: {
+        kicker: "Getting started",
+        title: "How to start",
+        intro:
+          "The loop is Observe → Observe again → Compare → Share. Start by picking a URL and region, then keep one Observation.",
+        steps: {
+          observe: {
+            title: "Observe",
+            body: "Use Try by region. Pick a URL and region. One region = one Observation.",
+          },
+          observeAgain: {
+            title: "Observe again",
+            body: "Run the same URL and region again to keep a second timestamp.",
+          },
+          compare: {
+            title: "Compare",
+            body: "Time Compare and Region Compare are separate axes. Screenshots are only Same / Changed / Not comparable. Changed means the screenshot content differs—not that the page changed.",
+          },
+          share: {
+            title: "Share",
+            body: "Select existing records and share them on one link. No extra capture.",
+          },
+        },
+        costNote: "A capture uses one monthly Observation. Compare and Share use none.",
+        primaryCta: "Create your first Observation",
+        skip: "Later",
+        helpLink: "Full tour and videos in Help",
+        checklistTitle: "First step",
+        checklistBody:
+          "You do not have an Observation yet. Pick a URL and region to record what rendered at that time.",
+        checklistCta: "Try by region",
+        regionHint: "This is the first step. Pick a URL and region to record.",
+        dialogAria: "How to start",
       },
       productLabel: "プロダクト",
       backToMarketing: "マーケサイトへ",
@@ -2145,6 +2181,42 @@ export const copy = {
             body: "Select records and create a Share Collection to deliver existing Observations on one public link. No extra capture.",
           },
         },
+        replayOnboarding: "Replay first-run guide",
+        replayOnboardingHint: "A short guide for new accounts. Videos do not autoplay.",
+      },
+      onboarding: {
+        kicker: "Getting started",
+        title: "How to start",
+        intro:
+          "The loop is Observe → Observe again → Compare → Share. Start by picking a URL and region, then keep one Observation.",
+        steps: {
+          observe: {
+            title: "Observe",
+            body: "Use Try by region. Pick a URL and region. One region = one Observation.",
+          },
+          observeAgain: {
+            title: "Observe again",
+            body: "Run the same URL and region again to keep a second timestamp.",
+          },
+          compare: {
+            title: "Compare",
+            body: "Time Compare and Region Compare are separate axes. Screenshots are only Same / Changed / Not comparable. Changed means the screenshot content differs—not that the page changed.",
+          },
+          share: {
+            title: "Share",
+            body: "Select existing records and share them on one link. No extra capture.",
+          },
+        },
+        costNote: "A capture uses one monthly Observation. Compare and Share use none.",
+        primaryCta: "Create your first Observation",
+        skip: "Later",
+        helpLink: "Full tour and videos in Help",
+        checklistTitle: "First step",
+        checklistBody:
+          "You do not have an Observation yet. Pick a URL and region to record what rendered at that time.",
+        checklistCta: "Try by region",
+        regionHint: "This is the first step. Pick a URL and region to record.",
+        dialogAria: "How to start",
       },
       productLabel: "Product",
       backToMarketing: "Back to site",
