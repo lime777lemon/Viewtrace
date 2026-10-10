@@ -1,42 +1,14 @@
 import type { ReactNode } from "react";
 import { authFormSubmit, signupFormSubmit } from "@/app/actions/auth";
-import { LOGIN_FIELD_CLASS } from "@/components/auth/login-field-class";
 import { LoginModeTabs } from "@/components/auth/LoginModeTabs";
+import { LoginNativeField } from "@/components/auth/LoginNativeField";
 import { LoginPasswordFields } from "@/components/auth/LoginPasswordFields";
 import { LoginSignupTracker } from "@/components/auth/LoginSignupTracker";
 import { LoginSubmitButton } from "@/components/auth/LoginSubmitButton";
 import { loginPageCopy } from "@/lib/auth/login-copy";
-import type { LoginFormStrings, LoginLocale } from "@/lib/auth/login-copy";
+import type { LoginLocale } from "@/lib/auth/login-copy";
 
 type Mode = "signin" | "signup";
-
-function LoginEmailField({
-  id,
-  t,
-}: {
-  id: string;
-  t: LoginFormStrings;
-}) {
-  return (
-    <div>
-      <label htmlFor={id} className="block text-sm font-medium text-ink">
-        {t.email}
-      </label>
-      <input
-        id={id}
-        name="email"
-        type="email"
-        autoComplete="email"
-        required
-        placeholder={t.emailPlaceholder}
-        autoCapitalize="none"
-        autoCorrect="off"
-        spellCheck={false}
-        className={LOGIN_FIELD_CLASS}
-      />
-    </div>
-  );
-}
 
 function FormAlert({
   tone,
@@ -88,84 +60,96 @@ export function LoginForm({
         signinLabel={t.signInTab}
       />
 
-      <form
-        id="login-signup-form"
+      <div
+        id="login-signup-panel"
         hidden={initialMode !== "signup"}
-        action={signupFormSubmit}
         className="space-y-5"
       >
-        <input type="hidden" name="_locale" value={locale} />
-        {safeNext ? <input type="hidden" name="next" value={safeNext} /> : null}
-        <LoginEmailField id="email" t={t} />
-        <div>
-          <label htmlFor="fullName" className="block text-sm font-medium text-ink">
-            {t.fullName}
-          </label>
-          <input
-            id="fullName"
-            name="fullName"
-            type="text"
-            autoComplete="name"
-            required
-            maxLength={200}
-            placeholder={t.fullNamePlaceholder}
-            className={LOGIN_FIELD_CLASS}
-          />
-        </div>
-        <div>
-          <label htmlFor="companyName" className="block text-sm font-medium text-ink">
-            {t.company}
-          </label>
-          <input
-            id="companyName"
-            name="companyName"
-            type="text"
-            autoComplete="organization"
-            maxLength={200}
-            placeholder={t.companyPlaceholder}
-            className={LOGIN_FIELD_CLASS}
-          />
-        </div>
-        <div>
-          <label htmlFor="phone" className="block text-sm font-medium text-ink">
-            {t.phone}
-          </label>
-          <input
-            id="phone"
-            name="phone"
-            type="tel"
-            autoComplete="tel"
-            maxLength={40}
-            placeholder={t.phonePlaceholder}
-            className={LOGIN_FIELD_CLASS}
-          />
-        </div>
-        <LoginPasswordFields mode="signup" t={t} />
+        <LoginNativeField
+          id="email"
+          name="email"
+          form="login-signup-form"
+          label={t.email}
+          placeholder={t.emailPlaceholder}
+          type="email"
+          autoComplete="email"
+          required
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+        />
+        <LoginNativeField
+          id="fullName"
+          name="fullName"
+          form="login-signup-form"
+          label={t.fullName}
+          placeholder={t.fullNamePlaceholder}
+          autoComplete="name"
+          required
+          maxLength={200}
+        />
+        <LoginNativeField
+          id="companyName"
+          name="companyName"
+          form="login-signup-form"
+          label={t.company}
+          placeholder={t.companyPlaceholder}
+          autoComplete="organization"
+          maxLength={200}
+        />
+        <LoginNativeField
+          id="phone"
+          name="phone"
+          form="login-signup-form"
+          label={t.phone}
+          placeholder={t.phonePlaceholder}
+          type="tel"
+          autoComplete="tel"
+          maxLength={40}
+        />
+        <LoginPasswordFields mode="signup" t={t} form="login-signup-form" />
         {signupError ? <FormAlert tone="error">{signupError}</FormAlert> : null}
         {signupDone ? <FormAlert tone="success">{t.signupSuccessMessage}</FormAlert> : null}
         {!signupDone ? (
           <p className="text-center text-xs font-medium text-ink-muted">{t.signupReassure}</p>
         ) : null}
-        <LoginSubmitButton idle={t.getStartedSubmit} pending={t.creatingAccount} />
+        <form id="login-signup-form" action={signupFormSubmit}>
+          <input type="hidden" name="_locale" value={locale} />
+          {safeNext ? <input type="hidden" name="next" value={safeNext} /> : null}
+          <LoginSubmitButton idle={t.getStartedSubmit} pending={t.creatingAccount} />
+        </form>
         {!signupDone ? (
           <p className="text-center text-xs leading-relaxed text-ink-muted">{t.signupEmailStepNote}</p>
         ) : null}
-      </form>
+      </div>
 
-      <form
-        id="login-signin-form"
+      <div
+        id="login-signin-panel"
         hidden={initialMode !== "signin"}
-        action={authFormSubmit}
         className="space-y-5"
       >
-        <input type="hidden" name="_locale" value={locale} />
-        {safeNext ? <input type="hidden" name="next" value={safeNext} /> : null}
-        <LoginEmailField id="email-signin" t={t} />
-        <LoginPasswordFields mode="signin" t={t} />
+        <LoginNativeField
+          id="email-signin"
+          name="email"
+          form="login-signin-form"
+          label={t.email}
+          placeholder={t.emailPlaceholder}
+          type="email"
+          autoComplete="email"
+          required
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+        />
+        <LoginPasswordFields mode="signin" t={t} form="login-signin-form" />
         {authError ? <FormAlert tone="error">{authError}</FormAlert> : null}
         {authMessage ? <FormAlert tone="success">{authMessage}</FormAlert> : null}
-        <LoginSubmitButton idle={t.signInSubmit} pending={t.signingIn} />
-      </form>
+        <form id="login-signin-form" action={authFormSubmit}>
+          <input type="hidden" name="_locale" value={locale} />
+          {safeNext ? <input type="hidden" name="next" value={safeNext} /> : null}
+          <LoginSubmitButton idle={t.signInSubmit} pending={t.signingIn} />
+        </form>
+      </div>
 
       {signupDone ? <LoginSignupTracker /> : null}
     </div>

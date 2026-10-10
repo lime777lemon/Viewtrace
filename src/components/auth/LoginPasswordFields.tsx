@@ -1,19 +1,19 @@
-"use client";
-
-import { useId, useState } from "react";
 import { LOGIN_FIELD_CLASS } from "@/components/auth/login-field-class";
+import { LoginPasswordVisibilityToggle } from "@/components/auth/LoginPasswordVisibilityToggle";
 import type { LoginFormStrings } from "@/lib/auth/login-copy";
 
 export function LoginPasswordFields({
   mode,
   t,
+  form,
 }: {
   mode: "signin" | "signup";
   t: LoginFormStrings;
+  form: string;
 }) {
-  const [showPassword, setShowPassword] = useState(false);
-  const passwordId = useId();
-  const passwordConfirmId = useId();
+  const passwordId = mode === "signup" ? "signup-password" : "signin-password";
+  const confirmId = "signup-password-confirm";
+  const toggleIds = mode === "signup" ? [passwordId, confirmId] : [passwordId];
 
   return (
     <>
@@ -22,18 +22,17 @@ export function LoginPasswordFields({
           <label htmlFor={passwordId} className="block text-sm font-medium text-ink">
             {t.password}
           </label>
-          <button
-            type="button"
-            onClick={() => setShowPassword((v) => !v)}
-            className="text-xs font-medium text-accent hover:text-accent-hover"
-          >
-            {showPassword ? t.hidePassword : t.showPassword}
-          </button>
+          <LoginPasswordVisibilityToggle
+            inputIds={toggleIds}
+            showLabel={t.showPassword}
+            hideLabel={t.hidePassword}
+          />
         </div>
         <input
           id={passwordId}
           name="password"
-          type={showPassword ? "text" : "password"}
+          form={form}
+          type="password"
           autoComplete={mode === "signup" ? "new-password" : "current-password"}
           required
           minLength={mode === "signup" ? 8 : undefined}
@@ -41,18 +40,20 @@ export function LoginPasswordFields({
           autoCapitalize="none"
           autoCorrect="off"
           spellCheck={false}
+          defaultValue=""
           className={LOGIN_FIELD_CLASS}
         />
       </div>
       {mode === "signup" ? (
         <div>
-          <label htmlFor={passwordConfirmId} className="block text-sm font-medium text-ink">
+          <label htmlFor={confirmId} className="block text-sm font-medium text-ink">
             {t.confirmPassword}
           </label>
           <input
-            id={passwordConfirmId}
+            id={confirmId}
             name="passwordConfirm"
-            type={showPassword ? "text" : "password"}
+            form={form}
+            type="password"
             autoComplete="new-password"
             required
             minLength={8}
@@ -60,6 +61,7 @@ export function LoginPasswordFields({
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}
+            defaultValue=""
             className={LOGIN_FIELD_CLASS}
           />
         </div>
