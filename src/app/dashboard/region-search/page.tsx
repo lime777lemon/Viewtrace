@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { redirect } from "next/navigation";
-import { RegionSearchPanel } from "@/components/RegionSearchPanel";
+import { DashboardRegionSearchForm } from "@/components/DashboardRegionSearchForm";
 import { getSession } from "@/lib/auth/session";
 import { copy } from "@/lib/i18n";
 
@@ -25,13 +25,7 @@ export default async function DashboardRegionSearchPage() {
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-ink-muted">{labels.dashboardIntro}</p>
       </div>
-      <RegionSearchPanel
-        locale={locale}
-        labels={labels}
-        mode="dashboard"
-        defaultPlanId={session.plan}
-        lockedPlanId={session.plan}
-      />
+      <DashboardRegionSearchForm locale={locale} labels={labels} planId={session.plan} />
     </div>
   );
 }

@@ -1,55 +1,21 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { PendingSubmitButton } from "@/components/ui/PendingSubmitButton";
 import { recordWebVerifiedObservationAction } from "@/app/actions/observations";
+import {
+  REGION_SEARCH_FIELD_CLASS,
+  type RegionSearchLabels,
+} from "@/components/RegionSearchQueryField";
+
+export type { RegionSearchLabels };
 import type { Locale } from "@/lib/i18n";
 import type { PlanId } from "@/lib/plans";
 import { getRegionLabelForLocale, getRegionOptions } from "@/lib/regions";
 import { normalizeUserUrlInput } from "@/lib/url-preview";
-
-export type RegionSearchLabels = {
-  title: string;
-  subtitle: string;
-  planLabel: string;
-  planStarter: string;
-  planPro: string;
-  planStarterHint: string;
-  planProHint: string;
-  regionLabel: string;
-  regionAria: string;
-  queryLabel: string;
-  queryPlaceholder: string;
-  submit: string;
-  hint: string;
-  mockTitle: string;
-  mockSnapshot: string;
-  mockEmptyQuery: string;
-  dashboardHint: string;
-  dashboardCta: string;
-  dashboardSubmit: string;
-  dashboardSubmitPending: string;
-  dashboardQueryLabel: string;
-  dashboardRegionLabel: string;
-  dashboardRegionAria: string;
-  previewLiveNote: string;
-  previewLiveNoteMarketing: string;
-  previewDirectAccess: string;
-  previewSampleNote: string;
-  previewRegionCtaTitle: string;
-  previewRegionCtaButton: string;
-  regionMarketingHint: string;
-  previewLoading: string;
-  previewError: string;
-  previewOpenLive: string;
-  previewNotUrl: string;
-  recordAsObservation: string;
-  recordAsObservationHint: string;
-  recordAsObservationLogin: string;
-  recordAsObservationLoginSuffix: string;
-};
 
 type LivePreviewState =
   | { status: "idle" }
@@ -62,6 +28,8 @@ type RegionSearchPanelProps = {
   locale: Locale;
   labels: RegionSearchLabels;
   mode: "marketing" | "dashboard";
+  /** Server-rendered URL field. Keep it out of this client island for INP. */
+  queryField: ReactNode;
   /** ダッシュボード: 契約プランを初期タブに */
   defaultPlanId?: PlanId;
   /** 設定時はカバレッジを契約プランに固定（記録と整合） */
@@ -72,16 +40,15 @@ export function RegionSearchPanel({
   locale,
   labels,
   mode,
+  queryField,
   defaultPlanId,
   lockedPlanId,
 }: RegionSearchPanelProps) {
   const uid = useId();
   const regionFieldId = `${uid}-region`;
-  const queryFieldId = `${uid}-query`;
 
   const [planTab, setPlanTab] = useState<PlanId>(() => lockedPlanId ?? defaultPlanId ?? "pro");
   const [region, setRegion] = useState("");
-  const queryRef = useRef<HTMLInputElement>(null);
   const [submittedQuery, setSubmittedQuery] = useState("");
   const [previewOn, setPreviewOn] = useState(false);
   const [livePreview, setLivePreview] = useState<LivePreviewState>({ status: "idle" });
@@ -106,10 +73,10 @@ export function RegionSearchPanel({
 
   const selectedLabel = options.find((o) => o.value === region)?.label ?? region;
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setPreviewOn(true);
-    const q = queryRef.current?.value.trim() ?? "";
+    const q = String(new FormData(e.currentTarget).get("query") ?? "").trim();
     setSubmittedQuery(q);
     if (!q) {
       setLivePreview({ status: "idle" });
@@ -225,7 +192,7 @@ export function RegionSearchPanel({
               aria-label={mode === "dashboard" ? labels.dashboardRegionAria : labels.regionAria}
               value={region}
               onChange={(e) => setRegion(e.target.value)}
-              className="mt-2 w-full rounded-xl border border-border bg-surface-elevated px-4 py-3 text-sm text-ink outline-none ring-accent/25 focus:border-accent/40 focus:ring-2"
+              className={REGION_SEARCH_FIELD_CLASS}
             >
               {options.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -239,23 +206,7 @@ export function RegionSearchPanel({
               </p>
             ) : null}
           </div>
-          <div>
-            <label htmlFor={queryFieldId} className="block text-sm font-medium text-ink">
-              {mode === "dashboard" ? labels.dashboardQueryLabel : labels.queryLabel}
-            </label>
-            <input
-              id={queryFieldId}
-              ref={queryRef}
-              name={mode === "dashboard" ? "url" : undefined}
-              type={mode === "dashboard" ? "text" : "search"}
-              required={mode === "dashboard"}
-              enterKeyHint={mode === "dashboard" ? "go" : "search"}
-              autoComplete="off"
-              defaultValue=""
-              placeholder={labels.queryPlaceholder}
-              className="mt-2 w-full rounded-xl border border-border bg-surface-elevated px-4 py-3 text-sm text-ink outline-none ring-accent/25 placeholder:text-ink-muted/65 focus:border-accent/40 focus:ring-2"
-            />
-          </div>
+          {queryField}
         </div>
 
         <div className="mt-8 flex flex-wrap items-center gap-3">
