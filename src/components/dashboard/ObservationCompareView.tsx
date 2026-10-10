@@ -4,12 +4,16 @@ import { formatJaDate } from "@/lib/format";
 import type { Locale } from "@/lib/i18n";
 import { copy } from "@/lib/i18n";
 import { observationGeoCopyFrom, observationGeoReadout } from "@/lib/observation-geo-readout";
-import type { ObservationCompareField } from "@/lib/observation-compare";
+import {
+  screenshotSliderEligible,
+  type ObservationCompareField,
+} from "@/lib/observation-compare";
 import { visibleSnapshotImageUrl } from "@/lib/observation-screenshot-retention";
 import {
   ObservationPageSignalsCompare,
   observationPageSignalsCopyFrom,
 } from "@/components/dashboard/ObservationPageSignalsPanel";
+import { ObservationCompareSlider } from "@/components/dashboard/ObservationCompareSlider";
 
 type Props = {
   left: Observation;
@@ -205,6 +209,9 @@ export function ObservationCompareView({
   const changedCount = fields.filter((row) => row.verdict === "changed").length;
   const headingTitle = mode === "region" ? t.regionTitle : t.timeTitle;
   const headingSubtitle = mode === "region" ? t.regionSubtitle : t.timeSubtitle;
+  const leftImage = visibleSnapshotImageUrl(left, retentionDays);
+  const rightImage = visibleSnapshotImageUrl(right, retentionDays);
+  const showSlider = mode === "time" && screenshotSliderEligible(left, right) && Boolean(leftImage && rightImage);
 
   return (
     <div className="space-y-8">
@@ -272,6 +279,18 @@ export function ObservationCompareView({
         right={right.captureConditions?.html_signals}
         copy={observationPageSignalsCopyFrom(copy[locale].observationDetail)}
       />
+
+      {showSlider && leftImage && rightImage ? (
+        <ObservationCompareSlider
+          leftSrc={leftImage}
+          rightSrc={rightImage}
+          leftLabel={heading(left, locale)}
+          rightLabel={heading(right, locale)}
+          title={t.sliderTitle}
+          hint={t.sliderHint}
+          rangeLabel={t.sliderRange}
+        />
+      ) : null}
 
       <div className="grid items-start gap-4 md:grid-cols-2">
         <div className="space-y-2">

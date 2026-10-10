@@ -38,6 +38,13 @@ export const compareFixtureTimeLeft: Observation = {
     {
       full_page_requested: false,
       viewport: { width: 1280, height: 720, device_scale_factor: 1, source: "browserless_implicit_default" },
+      result: {
+        image_width_px: 1200,
+        image_height_px: 900,
+        snapshot_bytes: null,
+        snapshot_content_type: "image/webp",
+        snapshot_sha256_present: true,
+      },
       geo: {
         country: "jp",
         state: "13",
@@ -75,6 +82,13 @@ export const compareFixtureTimeRight: Observation = {
     {
       full_page_requested: false,
       viewport: { width: 1280, height: 720, device_scale_factor: 1, source: "browserless_implicit_default" },
+      result: {
+        image_width_px: 1200,
+        image_height_px: 900,
+        snapshot_bytes: null,
+        snapshot_content_type: "image/webp",
+        snapshot_sha256_present: true,
+      },
       geo: {
         country: "jp",
         state: "13",

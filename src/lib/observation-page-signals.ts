@@ -112,3 +112,24 @@ export function scorePageSignals(
   const score = Math.max(0, PAGE_SIGNALS_MAX - deducted);
   return { score, band: pageSignalsBand(score), reasons };
 }
+
+export function pageSignalsScoreDelta(
+  previous: HtmlHeadSignalsV1 | null | undefined,
+  current: HtmlHeadSignalsV1 | null | undefined,
+): { from: number; to: number } | null {
+  const left = scorePageSignals(previous);
+  const right = scorePageSignals(current);
+  if (!left || !right) return null;
+  return { from: left.score, to: right.score };
+}
+
+/** Watch メール用。新しい通知は起こさない。既存メールに載せる一行。 */
+export function pageSignalsWatchEmailLines(delta: { from: number; to: number }): {
+  text: string;
+  html: string;
+} {
+  return {
+    text: `Page Signals (indicative / 参考): ${delta.from} → ${delta.to}\nNot a performance or SEO audit.`,
+    html: `<p><strong>Page Signals</strong> (indicative / 参考)<br/>${delta.from} → ${delta.to}<br/><span>Not a performance or SEO audit. Performance / SEO の監査ではありません。</span></p>`,
+  };
+}

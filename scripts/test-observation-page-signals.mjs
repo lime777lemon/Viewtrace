@@ -124,4 +124,7 @@ const stacked = scorePageSignals({
 assert.equal(stacked.score, 40);
 assert.equal(stacked.band, "attention");
 
+assert.equal(full.score, 100);
+assert.equal(noindex.score, 75);
+
 console.log("ok");
