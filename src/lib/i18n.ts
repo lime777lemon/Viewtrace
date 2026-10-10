@@ -84,8 +84,7 @@ export const copy = {
       mockEmptyQuery: "（URL を入力するとここにプレビューが表示されます）",
       dashboardIntro:
         "URL と地域を選ぶと、指定した地域から着地ページを取得して記録します。",
-      dashboardHint:
-        "プレビューではありません。実行するとオブザベーション 1 回分を消費します。",
+      dashboardHint: "実行するとオブザベーション 1 回分を消費します。",
       dashboardCta: "新規オブザベーションへ →",
       dashboardSubmit: "観測を実行",
       dashboardSubmitPending: "処理中…",
@@ -1510,8 +1509,7 @@ export const copy = {
       mockEmptyQuery: "(Enter a URL to show a preview here)",
       dashboardIntro:
         "Choose a URL and region to capture the landing page from that market and save the record.",
-      dashboardHint:
-        "This is not a preview. Running it uses one observation from your monthly allowance.",
+      dashboardHint: "Running it uses one observation from your monthly allowance.",
       dashboardCta: "New observation →",
       dashboardSubmit: "Run observation",
       dashboardSubmitPending: "Processing…",
