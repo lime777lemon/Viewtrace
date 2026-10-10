@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ViewtraceLogo } from "@/components/brand/ViewtraceLogo";
+import { DashboardOnboardingWelcome } from "@/components/dashboard/DashboardOnboardingWelcome";
+import { DashboardProductTour } from "@/components/dashboard/DashboardProductTour";
 import { LogoutButton } from "@/components/dashboard/LogoutButton";
 import type { Locale } from "@/lib/i18n";
 import { copy } from "@/lib/i18n";
@@ -29,6 +31,9 @@ type DashboardShellProps = {
   trialLimitReached?: boolean;
   trialObservationsUsed?: number;
   trialObservationsLimit?: number;
+  userId: string;
+  observationCount: number;
+  latestObservationId?: string | null;
   children: React.ReactNode;
 };
 
@@ -43,6 +48,9 @@ export function DashboardShell({
   trialLimitReached = false,
   trialObservationsUsed = 0,
   trialObservationsLimit = 20,
+  userId,
+  observationCount,
+  latestObservationId = null,
   children,
 }: DashboardShellProps) {
   const currentPath = usePathname() ?? "";
@@ -260,6 +268,12 @@ export function DashboardShell({
           <div className="flex-1 px-4 py-6 sm:px-6 sm:py-8">{children}</div>
         </div>
       </div>
+      <DashboardOnboardingWelcome userId={userId} observationCount={observationCount} />
+      <DashboardProductTour
+        userId={userId}
+        observationCount={observationCount}
+        latestObservationId={latestObservationId}
+      />
     </div>
   );
 }

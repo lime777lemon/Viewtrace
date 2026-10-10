@@ -46,6 +46,9 @@ export default async function DashboardLayout({
       trialLimitReached={trialLimitReached}
       trialObservationsUsed={trialUsed}
       trialObservationsLimit={TRIAL_CONFIG.freeObservations}
+      userId={session.userId}
+      observationCount={userObservations.length}
+      latestObservationId={userObservations[0]?.id ?? null}
     >
       {children}
     </DashboardShell>
