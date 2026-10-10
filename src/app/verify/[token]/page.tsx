@@ -13,6 +13,10 @@ import {
   observationHtmlHeadCopyFrom,
 } from "@/components/dashboard/ObservationHtmlHeadSignalsPanel";
 import { ObservationAiAuditReadout } from "@/components/dashboard/ObservationAiAuditReadout";
+import {
+  ObservationPageSignalsPanel,
+  observationPageSignalsCopyFrom,
+} from "@/components/dashboard/ObservationPageSignalsPanel";
 import { observationAiAuditCopyFrom } from "@/lib/observation-ai-audit-copy";
 import { PublicShareActions } from "@/components/verify/PublicShareActions";
 import { PublicVerifySnapshot } from "@/components/verify/PublicVerifySnapshot";
@@ -69,6 +73,7 @@ export default async function PublicVerifyPage({ params }: Props) {
   const geoCopy = observationGeoCopyFrom(td);
 
   const htmlHeadSignalsCopy = observationHtmlHeadCopyFrom(td);
+  const pageSignalsCopy = observationPageSignalsCopyFrom(td);
   const aiAuditCopy = observationAiAuditCopyFrom(td);
   const showHtmlSignals = Boolean(obs.htmlSignals && htmlHeadSignalsHasAny(obs.htmlSignals));
 
@@ -186,6 +191,10 @@ export default async function PublicVerifyPage({ params }: Props) {
             />
           </div>
         ) : null}
+
+        <div className="mt-6 empty:hidden">
+          <ObservationPageSignalsPanel signals={obs.htmlSignals} copy={pageSignalsCopy} />
+        </div>
 
         <div className="mt-6">
           <ObservationCaptureConditionsPanel

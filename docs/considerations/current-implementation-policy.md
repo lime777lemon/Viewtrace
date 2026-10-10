@@ -112,7 +112,8 @@ $49 / $99 の差は、既存機能を Starter から取り上げるのではな�
 
 | # | 方針 | 内容 |
 | --- | --- | --- |
-| 36 | 進めてよい | 既存 Observation を、事実ブロックとして整列する。記録面にスコア・Findings・要対応は出さない。Interpreted 用の空きは作ってよい |
+| 36 | 進めてよい | 既存 Observation を、事実ブロックとして整列する。記録面に Performance / SEO / Accessibility スコアは出さない。Page Signals は記録の下の参考指標 |
+| 40 | 承認 | Page Signals。html_signals だけの減点（重大 -25 / 重要 -10 / 軽微 -3）。Observed ではない。根拠を必ず出す。SEO / Performance / A11y とは書かない |
 | 37 | 進めてよい | そのレイアウトを AI に組ませる。レイアウト AI ≠ ページ診断 AI |
 
 36 / 37 は解釈商品そのものではない。保存済みの title / description / canonical / robots / OG / Requested vs Observed / Screenshot 三値を、人が追いやすい順に並べる。解釈ブロックを後から差し込める形にしておく。
@@ -180,6 +181,7 @@ Requested と Observed は分けて書く。自己申告の Node 所在地を Ob
 | 38 | 承認・後で実装 | AIサイト分析。1ページ（1 Observation）と Compare の読み |
 | 19 | 承認・38 に使う | Vision AI。既存スクショのみ。追加撮影なし |
 | 12 の読み | 承認・後で実装 | 定期レポート / Share に読みを載せる。記録の下 |
+| 40 | 承認 | Page Signals。html_signals だけの減点参考値。記録の下。根拠必須 |
 
 ### 記録に混ぜない / 今は本体にしない
 

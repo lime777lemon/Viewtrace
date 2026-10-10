@@ -6,6 +6,10 @@ import { copy } from "@/lib/i18n";
 import { observationGeoCopyFrom, observationGeoReadout } from "@/lib/observation-geo-readout";
 import type { ObservationCompareField } from "@/lib/observation-compare";
 import { visibleSnapshotImageUrl } from "@/lib/observation-screenshot-retention";
+import {
+  ObservationPageSignalsCompare,
+  observationPageSignalsCopyFrom,
+} from "@/components/dashboard/ObservationPageSignalsPanel";
 
 type Props = {
   left: Observation;
@@ -262,6 +266,12 @@ export function ObservationCompareView({
         {heading(left, locale)} <span className="text-ink-muted">{t.vs}</span> {heading(right, locale)}
       </p>
       <p className="break-all font-mono text-xs text-ink-muted">{left.url}</p>
+
+      <ObservationPageSignalsCompare
+        left={left.captureConditions?.html_signals}
+        right={right.captureConditions?.html_signals}
+        copy={observationPageSignalsCopyFrom(copy[locale].observationDetail)}
+      />
 
       <div className="grid items-start gap-4 md:grid-cols-2">
         <div className="space-y-2">
