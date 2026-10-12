@@ -727,6 +727,7 @@ export const copy = {
       saveRow: "この行を保存",
       delete: "削除",
       deleteConfirm: "この自動観測を削除しますか？",
+      deleteCancel: "キャンセル",
       linkObservations: "オブザベーション一覧へ",
       invalidQuery: "URL または地域の指定が無効でした。https の URL と、一覧から選べる地域を指定してください。",
       invalidUrlQuery:
@@ -2248,6 +2249,7 @@ export const copy = {
       saveRow: "Save this row",
       delete: "Delete",
       deleteConfirm: "Delete this auto observation?",
+      deleteCancel: "Cancel",
       linkObservations: "Go to observations list",
       invalidQuery: "Invalid URL or region. Use an https URL and a region from the list.",
       invalidUrlQuery:

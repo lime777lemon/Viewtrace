@@ -84,7 +84,7 @@ export function DashboardShell({
   return (
     <div className="min-h-screen bg-surface text-ink">
       <div className="flex min-h-screen">
-        <aside className="hidden w-56 shrink-0 flex-col border-r border-border bg-surface-elevated md:flex">
+        <aside className="sticky top-0 hidden h-dvh w-56 shrink-0 flex-col self-start overflow-hidden border-r border-border bg-surface-elevated md:flex">
           <div className="border-b border-border px-4 py-4">
             <Link href="/dashboard" className="inline-flex items-center transition hover:opacity-90">
               <ViewtraceLogo className="h-9 w-auto" />
@@ -93,7 +93,7 @@ export function DashboardShell({
               {t.productLabel}
             </p>
           </div>
-          <nav className="flex flex-1 flex-col gap-0.5 p-3">
+          <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-3">
             {nav.map((item) => {
               const active = isNavActive(item.href, currentPath);
               return (
