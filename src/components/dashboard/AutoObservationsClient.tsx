@@ -4,7 +4,8 @@ import Link from "next/link";
 import { PendingSubmitButton } from "@/components/ui/PendingSubmitButton";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { recordWebVerifiedObservationAction } from "@/app/actions/observations";
-import { saveObservationWatchAction, deleteObservationWatchAction } from "@/app/actions/observation-watches";
+import { saveObservationWatchAction } from "@/app/actions/observation-watches";
+import { AutoObservationDeleteForm } from "@/components/dashboard/AutoObservationDeleteForm";
 import { WatchScheduleFields, type WatchScheduleFieldsCopy, type WatchScheduleValues } from "@/components/dashboard/WatchScheduleFields";
 import { WatchWebhookField } from "@/components/dashboard/WatchWebhookField";
 import { ObservationRecordShareButton } from "@/components/dashboard/ObservationRecordShareButton";
@@ -47,6 +48,7 @@ export type AutoObservationsCopy = {
   saveRow: string;
   delete: string;
   deleteConfirm: string;
+  deleteCancel: string;
   linkObservations: string;
   invalidQuery: string;
   invalidUrlQuery: string;
@@ -333,18 +335,12 @@ export function AutoObservationsClient({
                         {regionLabel} · {rowValues.enabled ? scheduleCopy.monitoringOn : scheduleCopy.monitoringOff}
                       </p>
                     </div>
-                    <form action={deleteObservationWatchAction} className="shrink-0">
-                      <input type="hidden" name="watch_id" value={w.id} />
-                      <button
-                        type="submit"
-                        className="cursor-pointer rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-ink transition hover:border-ink-muted/50 hover:bg-surface hover:shadow-sm active:translate-y-px"
-                        onClick={(e) => {
-                          if (!window.confirm(copy.deleteConfirm)) e.preventDefault();
-                        }}
-                      >
-                        {copy.delete}
-                      </button>
-                    </form>
+                    <AutoObservationDeleteForm
+                      watchId={w.id}
+                      label={copy.delete}
+                      confirmLabel={copy.deleteConfirm}
+                      cancelLabel={copy.deleteCancel}
+                    />
                   </div>
                   <div className="mt-4">
                     <WatchSettingsReadout
