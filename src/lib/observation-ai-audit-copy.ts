@@ -1,3 +1,5 @@
+import type { AiAuditEvidenceId, AiAuditImpact } from "@/lib/observation-ai-audit";
+
 export type ObservationAiAuditCopy = {
   title: string;
   badge: string;
@@ -19,6 +21,26 @@ export type ObservationAiAuditCopy = {
   shareDisclaimer: string;
   generatedAt: string;
   onPdfHint: string;
+  whatChanged: string;
+  impact: string;
+  impactHigh: string;
+  impactMedium: string;
+  impactLow: string;
+  evidence: string;
+  recommendedCheck: string;
+  evidenceScreenshot: string;
+  evidenceDetectedFacts: string;
+  evidenceTitle: string;
+  evidenceDescription: string;
+  evidenceCanonical: string;
+  evidenceNoindex: string;
+  evidenceRobots: string;
+  evidenceOg: string;
+  evidenceHttp: string;
+  evidenceHtmlLang: string;
+  evidenceGeo: string;
+  evidenceFinalUrl: string;
+  mixHint: string;
 };
 
 export function observationAiAuditCopyFrom(t: {
@@ -42,6 +64,26 @@ export function observationAiAuditCopyFrom(t: {
   aiAuditShareDisclaimer: string;
   aiAuditGeneratedAt: string;
   aiAuditOnPdfHint: string;
+  aiAuditWhatChanged: string;
+  aiAuditImpact: string;
+  aiAuditImpactHigh: string;
+  aiAuditImpactMedium: string;
+  aiAuditImpactLow: string;
+  aiAuditEvidence: string;
+  aiAuditRecommendedCheck: string;
+  aiAuditEvidenceScreenshot: string;
+  aiAuditEvidenceDetectedFacts: string;
+  aiAuditEvidenceTitle: string;
+  aiAuditEvidenceDescription: string;
+  aiAuditEvidenceCanonical: string;
+  aiAuditEvidenceNoindex: string;
+  aiAuditEvidenceRobots: string;
+  aiAuditEvidenceOg: string;
+  aiAuditEvidenceHttp: string;
+  aiAuditEvidenceHtmlLang: string;
+  aiAuditEvidenceGeo: string;
+  aiAuditEvidenceFinalUrl: string;
+  aiAuditMixHint: string;
 }): ObservationAiAuditCopy {
   return {
     title: t.aiAuditTitle,
@@ -64,5 +106,80 @@ export function observationAiAuditCopyFrom(t: {
     shareDisclaimer: t.aiAuditShareDisclaimer,
     generatedAt: t.aiAuditGeneratedAt,
     onPdfHint: t.aiAuditOnPdfHint,
+    whatChanged: t.aiAuditWhatChanged,
+    impact: t.aiAuditImpact,
+    impactHigh: t.aiAuditImpactHigh,
+    impactMedium: t.aiAuditImpactMedium,
+    impactLow: t.aiAuditImpactLow,
+    evidence: t.aiAuditEvidence,
+    recommendedCheck: t.aiAuditRecommendedCheck,
+    evidenceScreenshot: t.aiAuditEvidenceScreenshot,
+    evidenceDetectedFacts: t.aiAuditEvidenceDetectedFacts,
+    evidenceTitle: t.aiAuditEvidenceTitle,
+    evidenceDescription: t.aiAuditEvidenceDescription,
+    evidenceCanonical: t.aiAuditEvidenceCanonical,
+    evidenceNoindex: t.aiAuditEvidenceNoindex,
+    evidenceRobots: t.aiAuditEvidenceRobots,
+    evidenceOg: t.aiAuditEvidenceOg,
+    evidenceHttp: t.aiAuditEvidenceHttp,
+    evidenceHtmlLang: t.aiAuditEvidenceHtmlLang,
+    evidenceGeo: t.aiAuditEvidenceGeo,
+    evidenceFinalUrl: t.aiAuditEvidenceFinalUrl,
+    mixHint: t.aiAuditMixHint,
   };
+}
+
+export function aiAuditImpactLabel(
+  copy: Pick<ObservationAiAuditCopy, "impactHigh" | "impactMedium" | "impactLow">,
+  impact: AiAuditImpact,
+): string {
+  if (impact === "high") return copy.impactHigh;
+  if (impact === "medium") return copy.impactMedium;
+  return copy.impactLow;
+}
+
+export function aiAuditEvidenceLabel(
+  copy: Pick<
+    ObservationAiAuditCopy,
+    | "evidenceScreenshot"
+    | "evidenceDetectedFacts"
+    | "evidenceTitle"
+    | "evidenceDescription"
+    | "evidenceCanonical"
+    | "evidenceNoindex"
+    | "evidenceRobots"
+    | "evidenceOg"
+    | "evidenceHttp"
+    | "evidenceHtmlLang"
+    | "evidenceGeo"
+    | "evidenceFinalUrl"
+  >,
+  evidence: AiAuditEvidenceId,
+): string {
+  switch (evidence) {
+    case "screenshot":
+      return copy.evidenceScreenshot;
+    case "detected_facts":
+      return copy.evidenceDetectedFacts;
+    case "title":
+      return copy.evidenceTitle;
+    case "description":
+      return copy.evidenceDescription;
+    case "canonical":
+      return copy.evidenceCanonical;
+    case "noindex":
+      return copy.evidenceNoindex;
+    case "robots":
+      return copy.evidenceRobots;
+    case "og":
+      return copy.evidenceOg;
+    case "http_status":
+      return copy.evidenceHttp;
+    case "html_lang":
+      return copy.evidenceHtmlLang;
+    case "geo":
+      return copy.evidenceGeo;
+    case "final_url":
+      return copy.evidenceFinalUrl;
+  }
 }

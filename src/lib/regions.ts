@@ -141,29 +141,104 @@ export function isValidObservationRegion(value: string): boolean {
 
 const US_STATE_ABBR_TO_NAME: Record<string, string> = Object.fromEntries(US_STATES);
 
+/** REST `/screenshot` は proxyState が通らないことがある。拒否時の proxyCity（小文字・空白なし）。 */
+const US_STATE_PROXY_CITY: Record<string, string> = {
+  AL: "birmingham",
+  AK: "anchorage",
+  AZ: "phoenix",
+  AR: "littlerock",
+  CA: "losangeles",
+  CO: "denver",
+  CT: "hartford",
+  DE: "wilmington",
+  FL: "miami",
+  GA: "atlanta",
+  HI: "honolulu",
+  ID: "boise",
+  IL: "chicago",
+  IN: "indianapolis",
+  IA: "desmoines",
+  KS: "wichita",
+  KY: "louisville",
+  LA: "neworleans",
+  ME: "bangor",
+  MD: "baltimore",
+  MA: "boston",
+  MI: "detroit",
+  MN: "minneapolis",
+  MS: "jackson",
+  MO: "kansascity",
+  MT: "billings",
+  NE: "omaha",
+  NV: "lasvegas",
+  NH: "manchester",
+  NJ: "newark",
+  NM: "albuquerque",
+  NY: "newyork",
+  NC: "charlotte",
+  ND: "fargo",
+  OH: "columbus",
+  OK: "oklahomacity",
+  OR: "portland",
+  PA: "philadelphia",
+  RI: "providence",
+  SC: "columbia",
+  SD: "siouxfalls",
+  TN: "nashville",
+  TX: "houston",
+  UT: "saltlakecity",
+  VT: "burlington",
+  VA: "richmond",
+  WA: "seattle",
+  WV: "huntington",
+  WI: "milwaukee",
+  WY: "cheyenne",
+};
+
+export function usStateDisplayName(codeOrName: string): string | null {
+  const raw = codeOrName.trim();
+  if (!raw) return null;
+  const abbr = raw.toUpperCase();
+  if (US_STATE_ABBR_TO_NAME[abbr]) return US_STATE_ABBR_TO_NAME[abbr];
+  const compact = raw.toLowerCase().replace(/[\s_-]+/g, "");
+  for (const [, name] of US_STATES) {
+    if (name.toLowerCase().replace(/\s+/g, "") === compact) return name;
+  }
+  return null;
+}
+
 /**
  * Browserless 内蔵 residential プロキシ向けの国・州ターゲット。
- * @see https://docs.browserless.io/rest-apis/proxies — proxy=residential, proxyCountry, proxyState
+ * REST `/screenshot` は proxyCountry + proxyCity（Scale）。成功したら Observed に stateCode を書く。
+ * @see https://docs.browserless.io/rest-apis/proxies
  */
 export function resolveBrowserlessResidentialTarget(regionValue: string): {
   country: string;
+  /** Browserless proxyState 用（california） */
   state?: string;
+  /** Observed に書く USPS（FL） */
+  stateCode?: string;
+  /** REST proxyCity 用（miami） */
+  city?: string;
 } | null {
   const rv = normalizeObservationRegionInput(regionValue);
   if (!rv) return null;
 
   const us = rv.match(/^US-([A-Z]{2})$/);
   if (us) {
-    const name = US_STATE_ABBR_TO_NAME[us[1]!];
+    const code = us[1]!;
+    const name = US_STATE_ABBR_TO_NAME[code];
     if (!name) return null;
     return {
       country: "us",
       state: name.toLowerCase().replace(/\s+/g, "_"),
+      stateCode: code,
+      city: US_STATE_PROXY_CITY[code],
     };
   }
 
   if (rv === "JP-13") {
-    return { country: "jp" };
+    return { country: "jp", city: "tokyo" };
   }
 
   if (/^[A-Z]{2}$/.test(rv)) {

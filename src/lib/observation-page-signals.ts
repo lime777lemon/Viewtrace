@@ -33,6 +33,24 @@ export type PageSignalReason = {
   httpStatus?: number | null;
 };
 
+export type PageSignalReasonMessages = Record<PageSignalReasonId, string>;
+export type PageSignalSeverityLabels = Record<PageSignalSeverity, string>;
+
+export function formatPageSignalReason(
+  reason: PageSignalReason,
+  messages: Partial<PageSignalReasonMessages> | null | undefined,
+): string {
+  const template = messages?.[reason.id] ?? reason.id;
+  return template.replace("{status}", String(reason.httpStatus ?? "—"));
+}
+
+export function formatPageSignalSeverity(
+  severity: PageSignalSeverity,
+  labels: Partial<PageSignalSeverityLabels> | null | undefined,
+): string {
+  return labels?.[severity] ?? severity;
+}
+
 export type PageSignalsScore = {
   score: number;
   band: PageSignalBand;
@@ -59,6 +77,25 @@ export function pageSignalsBand(score: number): PageSignalBand {
   if (score >= 85) return "good";
   if (score >= 60) return "review";
   return "attention";
+}
+
+/** 保存済み reason_id から減点の重みを戻す。html_signals 本体は見ない。 */
+export function pageSignalReasonFromId(
+  id: PageSignalReasonId,
+  httpStatus?: number | null,
+): PageSignalReason {
+  if (id === "http_error") return critical("http_error", { httpStatus });
+  if (id === "noindex" || id === "canonical_mismatch") return critical(id);
+  if (
+    id === "title_missing" ||
+    id === "description_missing" ||
+    id === "canonical_missing" ||
+    id === "robots_missing" ||
+    id === "og_missing"
+  ) {
+    return important(id);
+  }
+  return minor(id);
 }
 
 /**
@@ -113,6 +150,28 @@ export function scorePageSignals(
   return { score, band: pageSignalsBand(score), reasons };
 }
 
+export type PageSignalsPieSliceKey = "remaining" | "critical" | "important" | "minor";
+
+export type PageSignalsPieSlice = {
+  key: PageSignalsPieSliceKey;
+  value: number;
+};
+
+/** 円グラフ用。残点と減点の内訳。測っていない Performance / SEO は入れない。 */
+export function pageSignalsPieSlices(result: PageSignalsScore): PageSignalsPieSlice[] {
+  const bySeverity = { critical: 0, important: 0, minor: 0 };
+  for (const reason of result.reasons) {
+    bySeverity[reason.severity] += reason.points;
+  }
+  const slices: PageSignalsPieSlice[] = [
+    { key: "remaining", value: result.score },
+    { key: "critical", value: bySeverity.critical },
+    { key: "important", value: bySeverity.important },
+    { key: "minor", value: bySeverity.minor },
+  ];
+  return slices.filter((row) => row.value > 0);
+}
+
 export function pageSignalsScoreDelta(
   previous: HtmlHeadSignalsV1 | null | undefined,
   current: HtmlHeadSignalsV1 | null | undefined,
@@ -129,7 +188,7 @@ export function pageSignalsWatchEmailLines(delta: { from: number; to: number }):
   html: string;
 } {
   return {
-    text: `Page Signals (indicative / 参考): ${delta.from} → ${delta.to}\nNot a performance or SEO audit.`,
-    html: `<p><strong>Page Signals</strong> (indicative / 参考)<br/>${delta.from} → ${delta.to}<br/><span>Not a performance or SEO audit. Performance / SEO の監査ではありません。</span></p>`,
+    text: `Site score (html_signals): ${delta.from} → ${delta.to}`,
+    html: `<p><strong>サイト採点</strong>（この記録の html_signals）<br/>${delta.from} → ${delta.to}</p>`,
   };
 }

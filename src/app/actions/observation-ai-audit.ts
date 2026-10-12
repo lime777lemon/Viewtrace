@@ -11,7 +11,8 @@ import {
 import { loadAuditScreenshot } from "@/lib/observation-ai-audit-image";
 import { tryLlmPageAudit } from "@/lib/observation-ai-audit-llm";
 import { saveObservationAiAudit } from "@/lib/observation-ai-audit-store";
-import { getObservationMergedForPlan } from "@/lib/demo/user-observations";
+import { getObservationMergedForPlan, listObservationsForUrlIdentity } from "@/lib/demo/user-observations";
+import { previousObservationForCompare } from "@/lib/observation-compare";
 import { sanitizeObservationRouteId } from "@/lib/observation-route-id";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
@@ -34,10 +35,15 @@ export async function generateObservationAiAuditAction(
   const obs = await getObservationMergedForPlan(observationId, session.plan);
   if (!obs) return { ok: false, error: "not_found" };
 
-  const record = buildRecordPageAudit(obs, locale);
+  const related = obs.url ? await listObservationsForUrlIdentity(obs.url) : [obs];
+  const siblings = related.filter(
+    (row) => (row.regionValue ?? "") === (obs.regionValue ?? ""),
+  );
+  const previous = previousObservationForCompare(obs, siblings);
+  const record = buildRecordPageAudit(obs, locale, previous);
   const image = await loadAuditScreenshot(obs.snapshotImageUrl);
   const llm = await tryLlmPageAudit({
-    facts: observationAuditFacts(obs),
+    facts: observationAuditFacts(obs, previous),
     image,
     locale,
   });

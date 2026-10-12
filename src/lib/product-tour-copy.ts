@@ -74,7 +74,7 @@ const en: ProductTourCopy = {
     },
     recordScreen: {
       title: "How to read this result",
-      body: "One Observation is the record of a URL × region × time. Requested and Observed stay separate. The screenshot is what rendered at capture time. Page Signals is an indicative html_signals score — not Observed. The confirmation record seal is a reference record, not third-party verification. Monitoring on Starter / Pro uses one Observation per scheduled run. Compare, Share, and CSV use existing records only.",
+      body: "One Observation is the record of a URL × region × time. Requested and Observed stay separate. The screenshot is what rendered at capture time. Site score is the html_signals score of this record. The confirmation record seal is a reference record, not third-party verification. Monitoring on Starter / Pro uses one Observation per scheduled run. Compare, Share, and CSV use existing records only.",
     },
     compare: {
       title: "Compare",
@@ -132,7 +132,7 @@ export const productTourCopy: Record<OnboardingLang, ProductTourCopy> = {
       },
       recordScreen: {
         title: "この結果画面の見方",
-        body: "1 件の Observation は URL × 地域 × 時点の記録です。Requested と Observed は分けます。スクリーンショットは取得時点の表示です。Page Signals は html_signals の参考スコアで、Observed ではありません。確認記録シールは参照用であり、第三者検証や証明の代替ではありません。自動観測は Starter / Pro で、1 実行 = 1 Observation です。Compare / Share / CSV は既存記録だけを使います。",
+        body: "1 件の Observation は URL × 地域 × 時点の記録です。Requested と Observed は分けます。スクリーンショットは取得時点の表示です。サイト採点は、この記録の html_signals を減点した点数です。確認記録シールは参照用であり、第三者検証や証明の代替ではありません。自動観測は Starter / Pro で、1 実行 = 1 Observation です。Compare / Share / CSV は既存記録だけを使います。",
       },
       compare: {
         title: "比較する",

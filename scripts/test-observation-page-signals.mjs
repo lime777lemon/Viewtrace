@@ -127,4 +127,30 @@ assert.equal(stacked.band, "attention");
 assert.equal(full.score, 100);
 assert.equal(noindex.score, 75);
 
+function pageSignalReasonFromId(id, httpStatus) {
+  if (id === "http_error") return { id, severity: "critical", points: CRITICAL, httpStatus };
+  if (id === "noindex" || id === "canonical_mismatch") return { id, severity: "critical", points: CRITICAL };
+  if (
+    id === "title_missing" ||
+    id === "description_missing" ||
+    id === "canonical_missing" ||
+    id === "robots_missing" ||
+    id === "og_missing"
+  ) {
+    return { id, severity: "important", points: IMPORTANT };
+  }
+  return { id, severity: "minor", points: MINOR };
+}
+
+assert.equal(pageSignalReasonFromId("description_missing").points, 10);
+assert.equal(pageSignalReasonFromId("twitter_missing").points, 3);
+assert.equal(pageSignalReasonFromId("noindex").severity, "critical");
+assert.equal(
+  100 -
+    ["title_missing", "description_missing", "canonical_missing", "robots_missing", "og_missing", "twitter_missing"]
+      .map((id) => pageSignalReasonFromId(id).points)
+      .reduce((sum, n) => sum + n, 0),
+  47,
+);
+
 console.log("ok");

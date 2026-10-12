@@ -1,18 +1,8 @@
+import { ObservationAiAuditFindings } from "@/components/dashboard/ObservationAiAuditFindings";
 import type { ObservationAiAuditCopy } from "@/lib/observation-ai-audit-copy";
-import type { AiAuditNoteKind, ObservationAiAudit } from "@/lib/observation-ai-audit";
+import type { ObservationAiAudit } from "@/lib/observation-ai-audit";
 
-type ReadoutCopy = Pick<
-  ObservationAiAuditCopy,
-  | "title"
-  | "badge"
-  | "kindVisible"
-  | "kindRegionTime"
-  | "kindPage"
-  | "sourceRecord"
-  | "sourceAi"
-  | "shareDisclaimer"
-  | "generatedAt"
->;
+type ReadoutCopy = ObservationAiAuditCopy;
 
 export function ObservationAiAuditReadout({
   copy,
@@ -23,12 +13,6 @@ export function ObservationAiAuditReadout({
   audit: ObservationAiAudit;
   generatedAtLabel: string;
 }) {
-  const kindLabel = (kind: AiAuditNoteKind): string => {
-    if (kind === "visible") return copy.kindVisible;
-    if (kind === "region_time") return copy.kindRegionTime;
-    return copy.kindPage;
-  };
-
   return (
     <section aria-labelledby="observation-ai-audit-readout-heading">
       <div className="flex flex-wrap items-center gap-2">
@@ -51,19 +35,9 @@ export function ObservationAiAuditReadout({
       </p>
       <p className="mt-3 text-sm text-ink">{audit.summary}</p>
       {audit.notes.length ? (
-        <ul className="mt-3 space-y-2">
-          {audit.notes.map((note) => (
-            <li
-              key={`${note.kind}:${note.text}`}
-              className="rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink"
-            >
-              <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
-                {kindLabel(note.kind)}
-              </p>
-              <p className="mt-1">{note.text}</p>
-            </li>
-          ))}
-        </ul>
+        <div className="mt-3">
+          <ObservationAiAuditFindings copy={copy} notes={audit.notes} />
+        </div>
       ) : null}
     </section>
   );

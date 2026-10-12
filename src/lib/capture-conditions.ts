@@ -5,6 +5,8 @@ import {
 import { resolveGeoProxyUrl } from "@/lib/geo/proxy";
 import { resolveBrowserlessResidentialTarget } from "@/lib/regions";
 import type { HtmlHeadSignalsV1 } from "@/lib/url-preview";
+import type { LabCwvV1 } from "@/lib/observation-lab-cwv";
+import type { SubpageScoresV1 } from "@/lib/observation-subpages";
 import {
   nonNegativeNumberOrNull,
   summarizeCaptureCostAttempts,
@@ -100,6 +102,18 @@ export type CaptureConditionsV1 = {
   html_signals?: HtmlHeadSignalsV1;
   /** Observation 原価の実測用。content_hash には含めない。 */
   cost_signals?: CaptureCostSignalsV1;
+  /**
+   * ラボ Core Web Vitals（任意・Lighthouse）。記録の Observed には混ぜない。
+   * content_hash には含めない。
+   */
+  lab_cwv?: LabCwvV1;
+  /** ラボ CWV を押した時刻。月間オプション枠の集計用。content_hash には含めない。 */
+  lab_cwv_run_times?: string[];
+  /**
+   * 同じホストの下層 html_signals 採点（任意・スクショなし）。
+   * 記録の Observed には混ぜない。content_hash には含めない。
+   */
+  subpage_scores?: SubpageScoresV1;
 };
 
 export type { CaptureCostAttemptStage, CaptureCostAttemptV1 };
@@ -168,7 +182,7 @@ function browserlessImplicitViewport() {
 function resolveGeoFromRegion(regionInput: string): { country: string | null; state: string | null } {
   const target = resolveBrowserlessResidentialTarget(regionInput);
   if (!target) return { country: null, state: null };
-  return { country: target.country, state: target.state ?? null };
+  return { country: target.country, state: target.stateCode ?? target.state ?? null };
 }
 
 function inferProxyProviderFromUrl(proxyUrl: string | null): "bright_data" | "custom" | null {
@@ -189,7 +203,7 @@ export function resolveCaptureProxyMode(input: {
   viaExternalProxy: boolean;
   usedRetryWithoutProxy: boolean;
   regionInput: string;
-  /** false のとき geo.state は出さない（国単位 residential。観測事実以上を書かない） */
+  /** false のとき geo.state は出さない（国単位。proxyCity / proxyState が通ったときだけ true） */
   residentialStateApplied?: boolean;
 }): {
   proxy_mode: CaptureProxyMode;
@@ -559,7 +573,7 @@ export function buildCaptureConditionsFromDirectFetch(input: {
   };
 }
 
-/** html_signals / cost_signals / meta / result は含めない（証跡の撮影条件だけ）。 */
+/** html_signals / cost_signals / lab_cwv / subpage_scores / meta / result は含めない（証跡の撮影条件だけ）。 */
 export function captureConditionsForContentHash(
   conditions: CaptureConditionsV1,
 ): ContentHashCaptureConditions {

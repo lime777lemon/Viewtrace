@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ObservationAnnotationPanel } from "@/components/dashboard/ObservationAnnotationPanel";
 import { ObservationComparePrompt } from "@/components/dashboard/ObservationComparePrompt";
-import { ObservationMetadataChanges } from "@/components/dashboard/ObservationMetadataChanges";
+import { ObservationDetectedFacts } from "@/components/dashboard/ObservationDetectedFacts";
+import { ObservationEvidenceHashes } from "@/components/dashboard/ObservationEvidenceHashes";
 import { ObservationPublicVerifyLink } from "@/components/dashboard/ObservationPublicVerifyLink";
 import {
   ObservationCaptureConditionsPanel,
@@ -24,7 +25,10 @@ import {
   ObservationPageSignalsPanel,
   observationPageSignalsCopyFrom,
 } from "@/components/dashboard/ObservationPageSignalsPanel";
+import { ObservationOptionalMetricsPanel } from "@/components/dashboard/ObservationOptionalMetricsPanel";
+import { observationOptionalMetricsCopyFrom } from "@/lib/observation-optional-metrics-copy";
 import { observationAiAuditCopyFrom } from "@/lib/observation-ai-audit-copy";
+import { auditEvidenceDomId } from "@/lib/observation-ai-audit";
 import { loadObservationAiAudit } from "@/lib/observation-ai-audit-store";
 import { ObservationLpVerdictCard } from "@/components/dashboard/ObservationLpVerdictCard";
 import { ObservationNotVisible } from "@/components/dashboard/ObservationNotVisible";
@@ -40,6 +44,17 @@ import {
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
 import { ObservationWatchPanel } from "@/components/dashboard/ObservationWatchPanel";
 import { getPlan } from "@/lib/plans";
+import { isBrowserlessConfigured } from "@/lib/browserless-screenshot";
+import { isCruxConfigured } from "@/lib/crux";
+import {
+  countFieldCwvRunsThisUtcMonth,
+  countLabCwvRunsThisUtcMonth,
+  countSyntheticInteractionRunsThisUtcMonth,
+  loadObservationFieldCwv,
+  loadObservationLabCwv,
+  loadObservationSubpageScores,
+  loadObservationSyntheticInteraction,
+} from "@/lib/observation-optional-metrics-store";
 import {
   clampRepeatCount,
   parseWatchFrequency,
@@ -60,6 +75,8 @@ import {
   isObservationScreenshotExpired,
   visibleSnapshotImageUrl,
 } from "@/lib/observation-screenshot-retention";
+
+export const maxDuration = 120;
 
 type PageProps = { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string }> };
 
@@ -190,7 +207,18 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
 
   const htmlHeadSignalsCopy = observationHtmlHeadCopyFrom(t);
   const pageSignalsCopy = observationPageSignalsCopyFrom(t);
+  const optionalMetricsCopy = observationOptionalMetricsCopyFrom(t);
   const aiAuditCopy = observationAiAuditCopyFrom(t);
+  const labCwvUsed = (await countLabCwvRunsThisUtcMonth(supabase, session.userId)) ?? 0;
+  const fieldCwvUsed = (await countFieldCwvRunsThisUtcMonth(supabase, session.userId)) ?? 0;
+  const syntheticUsed = (await countSyntheticInteractionRunsThisUtcMonth(supabase, session.userId)) ?? 0;
+  const storedLabCwv = await loadObservationLabCwv(supabase, session.userId, obs.id);
+  const storedFieldCwv = await loadObservationFieldCwv(supabase, session.userId, obs.id);
+  const storedSynthetic = await loadObservationSyntheticInteraction(supabase, session.userId, obs.id);
+  const storedSubpages = await loadObservationSubpageScores(supabase, session.userId, obs.id);
+  const optionalLabCwv = storedLabCwv?.result ?? null;
+  const optionalFieldCwv = storedFieldCwv?.result ?? null;
+  const optionalSynthetic = storedSynthetic?.result ?? null;
   const existingAudit = await loadObservationAiAudit(supabase, session.userId, obs.id);
   const pack = buildObservationEvidencePack({
     obs,
@@ -258,12 +286,6 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
         locale={locale}
       />
 
-      <ObservationMetadataChanges
-        current={obs}
-        timeSiblings={compareSiblings}
-        locale={locale}
-      />
-
       <section className="space-y-6" aria-labelledby="observation-record-heading" data-tour="recordScreen">
         <div className="space-y-1">
           <h2 id="observation-record-heading" className="font-display text-lg font-semibold text-ink">
@@ -282,7 +304,10 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
               {formatUtcLabel(obs.capturedAt)}
             </dd>
           </div>
-          <div className="rounded-xl border border-border bg-surface-elevated p-4">
+          <div
+            id={auditEvidenceDomId("geo")}
+            className="scroll-mt-28 rounded-xl border border-border bg-surface-elevated p-4"
+          >
             <dt className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
               {t.region}
             </dt>
@@ -322,16 +347,6 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
                   : t.statusPending}
             </dd>
           </div>
-          <ObservationCaptureConditionsPanel
-            conditions={obs.captureConditions}
-            copy={captureConditionsCopy}
-            locale={locale}
-          />
-          <ObservationHtmlHeadSignalsPanel
-            signals={obs.captureConditions?.html_signals}
-            copy={htmlHeadSignalsCopy}
-            requestedUrl={obs.url}
-          />
         </dl>
 
         <ObservationLpVerdictCard
@@ -357,6 +372,36 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
           captureScope={pack.verdict.captureScope}
         />
 
+        <ObservationDetailSnapshotSection
+          obs={obs}
+          displayTitle={displayTitle}
+          displayImageUrl={displayImageUrl}
+          resolvedCanonical={resolvedCanonical}
+          locale={locale}
+          comparePrevious={comparePrevious}
+          screenshotExpired={screenshotExpired}
+        />
+
+        <ObservationDetectedFacts
+          current={obs}
+          timeSiblings={compareSiblings}
+          locale={locale}
+        />
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <ObservationHtmlHeadSignalsPanel
+            signals={obs.captureConditions?.html_signals}
+            copy={htmlHeadSignalsCopy}
+            requestedUrl={obs.url}
+          />
+          <ObservationEvidenceHashes obs={obs} locale={locale} />
+          <ObservationCaptureConditionsPanel
+            conditions={obs.captureConditions}
+            copy={captureConditionsCopy}
+            locale={locale}
+          />
+        </div>
+
         <div className="space-y-1">
           <h3 className="font-display text-lg font-semibold text-ink">{t.evidenceTitle}</h3>
           <p className="text-sm text-ink-muted">{t.evidenceHint}</p>
@@ -371,22 +416,38 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
           snapshotContentType={obs.snapshotContentType}
           snapshotImageUrl={storedVisibleImage}
           verifyUrl={verifyUrl}
-        />
-
-        <ObservationDetailSnapshotSection
-          obs={obs}
-          displayTitle={displayTitle}
-          displayImageUrl={displayImageUrl}
-          resolvedCanonical={resolvedCanonical}
-          locale={locale}
-          comparePrevious={comparePrevious}
-          screenshotExpired={screenshotExpired}
+          showImage={false}
         />
       </section>
 
       <ObservationPageSignalsPanel
         signals={obs.captureConditions?.html_signals}
         copy={pageSignalsCopy}
+        history={compareSiblings.map((row) => ({
+          id: row.id,
+          capturedAt: row.capturedAt,
+          signals: row.captureConditions?.html_signals,
+        }))}
+        currentId={obs.id}
+        locale={locale}
+      />
+
+      <ObservationOptionalMetricsPanel
+        copy={optionalMetricsCopy}
+        observationId={obs.id}
+        initialLabCwv={optionalLabCwv}
+        initialFieldCwv={optionalFieldCwv}
+        initialSynthetic={optionalSynthetic}
+        initialSubpages={storedSubpages}
+        labCwvUsed={labCwvUsed}
+        labCwvLimit={plan.labCwvMonthly}
+        fieldCwvUsed={fieldCwvUsed}
+        fieldCwvLimit={plan.fieldCwvMonthly}
+        syntheticUsed={syntheticUsed}
+        syntheticLimit={plan.syntheticInteractionMonthly}
+        subpageMaxLinks={plan.subpageMaxLinks}
+        browserlessConfigured={isBrowserlessConfigured()}
+        cruxConfigured={isCruxConfigured()}
       />
 
       <ObservationAiAuditPanel

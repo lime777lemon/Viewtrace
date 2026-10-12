@@ -1,6 +1,6 @@
 import type { CaptureConditionsV1 } from "@/lib/capture-conditions";
 import type { Locale } from "@/lib/i18n";
-import { normalizeObservationRegionInput } from "@/lib/regions";
+import { normalizeObservationRegionInput, usStateDisplayName } from "@/lib/regions";
 
 const COUNTRY_EN: Record<string, string> = {
   us: "United States",

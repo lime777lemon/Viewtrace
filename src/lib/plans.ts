@@ -27,6 +27,23 @@ export type PlanDefinition = {
    * Pro は 4（6時間ごと）。実測原価 C が出るまで増やさない。
    */
   watchMaxDailyRepeats: number;
+  /**
+   * ラボ Core Web Vitals（Browserless Lighthouse）の月間回数。
+   * $49 / $99 の中のオプション。自動では走らせない。クレジットパックにしない。
+   */
+  labCwvMonthly: number;
+  /** 下層採点（スクショなし）で見る同じホストの最大件数。 */
+  subpageMaxLinks: number;
+  /**
+   * フィールド CWV（CrUX）の月間回数。撮影なし。$49 / $99 の中のオプション。
+   * Watch では自動実行しない。
+   */
+  fieldCwvMonthly: number;
+  /**
+   * 合成操作テスト（Browserless で安全なクリック 1〜3）。Field INP ではない。
+   * ラボと同じ Browserless 原価帯。Watch では自動実行しない。
+   */
+  syntheticInteractionMonthly: number;
 };
 
 /** 無料トライアル（LP・請求設計と一致） */
@@ -52,6 +69,10 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     snapshotFullPage: true,
     autoObservationWatch: false,
     watchMaxDailyRepeats: 1,
+    labCwvMonthly: 2,
+    subpageMaxLinks: 3,
+    fieldCwvMonthly: 10,
+    syntheticInteractionMonthly: 2,
   },
   starter: {
     id: "starter",
@@ -68,6 +89,10 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     snapshotFullPage: true,
     autoObservationWatch: true,
     watchMaxDailyRepeats: 1,
+    labCwvMonthly: 10,
+    subpageMaxLinks: 5,
+    fieldCwvMonthly: 50,
+    syntheticInteractionMonthly: 10,
   },
   pro: {
     id: "pro",
@@ -85,6 +110,10 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     snapshotFullPage: true,
     autoObservationWatch: true,
     watchMaxDailyRepeats: 4,
+    labCwvMonthly: 30,
+    subpageMaxLinks: 10,
+    fieldCwvMonthly: 150,
+    syntheticInteractionMonthly: 30,
   },
 };
 
