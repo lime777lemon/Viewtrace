@@ -1,4 +1,4 @@
-export type CaptureCostAttemptStage = "state" | "country" | "no_proxy" | "direct";
+export type CaptureCostAttemptStage = "state" | "city" | "country" | "no_proxy" | "direct";
 
 /** 1 Browserless 呼び出し。失敗試行も含む。content_hash には入れない。 */
 export type CaptureCostAttemptV1 = {

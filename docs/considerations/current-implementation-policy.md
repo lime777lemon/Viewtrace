@@ -1,10 +1,10 @@
 # 現行の実装方針
 
 - **状態:** Activation 計測は固定。Activation UI は母数が小さいうちはいじらない。Observation の価値を強くする新機能は進めてよい。Verify を成長ループの主役にしない。事実以上は Observation に混ぜず、別商品として足してよい。
-- **記録日:** 2026-10-04
-- **置き換え:** 新機能を全部止める、ではない。芯は Observation。解釈は上に載せる。
-- **一言:** 価値は Observation。流れは Observe → Observe again → Compare → Share。1 Capture = 1 Observation。本番の撮影出口は Browserless。観測記録は事実だけ。事実以上は **AIサイト分析（読み）** として、既存記録の上に売る。
-- **今やること:** 既存 Observation の事実レイアウト整理（スコアなし）。読みを差し込める空きを残す。その次が Share Collection。AIサイト分析の実装は、そのあと。
+- **記録日:** 2026-10-12
+- **置き換え:** 新機能を全部止める、ではない。芯は Observation。解釈は上に載せる。普通の AI Website Audit には寄せない。
+- **一言:** 価値は Observation。流れは Observe → Observe again → Compare → Share。1 Capture = 1 Observation。本番の撮影出口は Browserless。観測記録は事実だけ。事実以上は **AI Change Audit（読み）** として、既存記録の上に売る。高くするのは「AI を使ったから」ではなく、証拠の上で担当者が判断できるところまで書いたとき。
+- **今やること:** 既存 Observation の事実レイアウト整理（36）。同じ記録面に既存ハッシュを載せる（41）。Changed の下に既にあるメタ差を事実で並べる（42）。その空きに Change Audit（38）を後から差し込む。Share Collection は出荷済。
 
 各段階は「機能が完成したか」ではなく、**次へ進む根拠となる行動データが出たか**で判断する。
 
@@ -44,30 +44,37 @@ URL 識別子は query を残す（`?campaign=A` と `?campaign=B` は別の着�
 **① Observation（記録・無料で付く本体）**  
 Requested / Observed / Screenshot 三値 / html_signals / 取得条件。ここには Improved / Worse / スコア / 要対応を書かない。**記録の中では、観測できた事実以上を断定しない。**
 
-**② AIサイト分析（読み・監査・事実以上の商品）**  
-既存 Observation の上にだけ載せる。追加撮影しない。Browserless 経路を変えない。Compare / Share / SHA と同じく Observation 消費は 0。AI 原価は別計測。クレジットパックにはしない。
+**② AI Change Audit（読み・監査・事実以上の商品）**  
+既存 Observation / Compare の上にだけ載せる。追加撮影しない。Browserless 経路を変えない。Compare / Share / SHA と同じく Observation 消費は 0。AI 原価は別計測。クレジットパックにはしない。
 
-監査は入れてよい。単位はサイト全体ではなく、**今ある 1 Observation、またはその Compare**。未撮影の下層は見に行かない。全体巡回は別アクション（17）で、今は作らない。
+普通の **AI Website Audit**（SEO / Performance / A11y / サイト採点）にはしない。Semrush / Ahrefs / $5〜$50 級の監査 SaaS と同じ土俵に乗らない。楔は **いつ・どの地域で・スクショとメタのどれが違い・それがなぜ重要か**。商品名は **AI Change Audit**（1 件を読む監査は残してよいが、先に出すのは変化側）。
 
-画面上は必ず分ける。日本語は **記録** と **監査（AI）**。
+監査は入れてよい。単位はサイト全体ではなく、**今ある 1 Observation、またはその Compare**。サイト全体巡回は別アクション（17）で、今は作らない。下層は **スクショなし・同じホスト最大 N件・プラン内オプション** だけ。記録の Observed には混ぜない。
 
-- 記録 — 観測できた事実（Requested / Observed / 三値 / html_signals）
+画面上は必ず分ける。日本語は **記録** と **監査（AI）**。順は **記録 → 検出した事実 → 監査（AI）**。
+
+- 記録 — 観測できた事実（Requested / Observed / Screenshot 三値 / html_signals / ハッシュ）
+- 検出した事実 — SHA ではなく、title / canonical / robots / OG などの差。Changed の下。Page changed とは書かない
 - 監査（AI） — その記録を見て書いた指摘。Observed ではない。納品保証ではない
 
 入れてよい監査:
 
-- 画面に何が見えるか（ヒーロー、CTA、言語、通貨、Cookie バナー）
-- 地域差・時点差（東京と US でヒーローが違う、Title は変わった）
-- このページについての指摘（CTA が埋もれている、言語が地域と食い違う、title が空、など）
-- 記録の言い換え（三値とメタ差を短くまとめる）
+- What changed（スクショ上で何が見える差か。ヒーロー・CTA・言語・通貨。推定とラベルする）
+- Potential impact（High 等。スコア 72/100 は出さない。根拠になった信号へ戻れる）
+- Why this matters / Recommended check（確認してよいことまで。Google Ads 等の利用を断定しない）
+- 地域差・時点差の言い換え（東京と US でヒーローが違う、Title は X → Y）
 
 まだ出さない:
 
-- 測っていない Performance / SEO / Accessibility の数字
-- Core Web Vitals / ラボ性能（撮っていない値を作らない）
-- 未撮影ページのサイト全体 SEO 監査
+- 測っていない Performance / SEO / Accessibility の数字（測ったラボ CWV と CrUX フィールドは記録の下のオプションに出す。混ぜない）
+- ラボ INP（Lighthouse には操作が無いのでフィールドデータなし。失敗ではない）
+- 未撮影ページのサイト全体 SEO 監査・全件クロール
+- AI Score / UX Score / AI Readiness などの総合点
+- Page changed（三値の Changed は screenshot content differs のまま）
 
-Verify / Share に載せるときは、監査を記録の下に置き、AI の推定だと分かるラベルを付ける。成長フォームは足さない。
+画素差の百分率は、撮影条件が揃ったときだけ事実として出してよい。ページが N% 変わった、とは書かない。
+
+Verify / Share に載せるときは、監査を記録の下に置き、AI の推定だと分かるラベルを付ける。成長フォームは足さない。Watch の毎回・全件には自動で走らせない。Changed のとき、利用者が押した件数だけ。
 
 ### KPI（分ける）
 
@@ -98,7 +105,7 @@ Activation **計測**は固定。Activation **UI**は母数が小さいうちは
 - 既存 Observation の価値を強くする
 - 既存 Observation の上に、事実と分けて売る解釈になる
 
-$49 / $99 の差は、既存機能を Starter から取り上げるのではなく、**件数・保存期間・地域・Watch 頻度・CSV / クライアント運用**で付ける。撮影範囲は trial / Starter / Pro ともフルページ。粗利監視は PNG 容量ではなく **Residential 転送 MB / Observation の中央値と P90**。500 回が変動費の防波堤。
+$49 / $99 の差は、既存の記録機能を Starter から取り上げるのではなく、**件数・保存期間・地域・Watch 頻度・CSV / クライアント運用**で付ける。Change Audit は **AI を使ったから値上げ**しない。証拠の上で判断できる監査まで作るなら、Pro に月あたり一定回数を載せて検証する（クレジットパックにはしない）。Starter でも検出した事実（メタ差）は出す。今は $49 / $99 を動かさない。Agency 利用が取れ、「Compare を毎回目視しなくて済んだ」が確認できてから **Agency $149〜$199** を試す余地がある。撮影範囲は trial / Starter / Pro ともフルページ。粗利監視は PNG 容量ではなく **Residential 転送 MB / Observation の中央値と P90**。500 回が変動費の防波堤。
 
 ---
 
@@ -112,11 +119,13 @@ $49 / $99 の差は、既存機能を Starter から取り上げるのではな�
 
 | # | 方針 | 内容 |
 | --- | --- | --- |
-| 36 | 進めてよい | 既存 Observation を、事実ブロックとして整列する。記録面に Performance / SEO / Accessibility スコアは出さない。Page Signals は記録の下の参考指標 |
-| 40 | 承認 | Page Signals。html_signals だけの減点（重大 -25 / 重要 -10 / 軽微 -3）。Observed ではない。根拠を必ず出す。SEO / Performance / A11y とは書かない |
-| 37 | 進めてよい | そのレイアウトを AI に組ませる。レイアウト AI ≠ ページ診断 AI |
+| 36 | 今やる | 既存 Observation を、事実ブロックとして整列する。記録面に Performance / SEO / Accessibility スコアは出さない。Page Signals は記録の下の参考指標 |
+| 41 | 36 の隣 | 既存の `snapshot_sha256` / `content_hash` / 記録 ID / 確認記録シールを、記録面に統合して見せる。Python 必須ではない。SHA は「同じか違うか」まで。何が変わったかは 42 |
+| 42 | 36 の次 | Compare の Changed の下に、既にある title / canonical / robots / OG などの差を事実で並べる。三値は壊さない |
+| 40 | 承認・出荷済 | Page Signals。html_signals だけの減点（重大 -25 / 重要 -10 / 軽微 -3）。Observed ではない。根拠を必ず出す。SEO / Performance / A11y とは書かない |
+| 37 | 36 のあとでよい | そのレイアウトを AI に組ませる。レイアウト AI ≠ ページ診断 AI。41 / 42 を待つ必要はないが、37 を 41 より先にしなくてよい |
 
-36 / 37 は解釈商品そのものではない。保存済みの title / description / canonical / robots / OG / Requested vs Observed / Screenshot 三値を、人が追いやすい順に並べる。解釈ブロックを後から差し込める形にしておく。
+36 / 37 / 41 / 42 は解釈商品そのものではない。保存済みの title / description / canonical / robots / OG / Requested vs Observed / Screenshot 三値 / ハッシュを、人が追いやすい順に並べる。解釈ブロック（38）を後から差し込める形にしておく。
 
 ### もうある / 出荷済
 
@@ -131,20 +140,22 @@ $49 / $99 の差は、既存機能を Starter から取り上げるのではな�
 | 7 | 出荷済 | Verify / 公開シェア。成長ループにはしない |
 | 8 | 出荷済 | CSV / 証跡 JSON |
 | 9 | 出荷済 | 日本 · 東京（`JP-13`）を地域候補に追加。Requested として出す。Observed は検証できたときだけ東京と書く |
+| 10 | 出荷済 | Share Collection。複数 Observation を1リンク |
+| 11 | 出荷済（条件一致時） | Time Compare の Slider。viewport・画像高さ・full-page が一致するときだけ。条件不一致は Side by side のみ。判定は三値のまま |
+| 40 | 出荷済 | Page Signals（html_signals 減点の参考値） |
 
-Compare は一旦完成（Slider 以外）。html_signals の商品化は既存データのみなので、表示の整理は続けてよい。
+html_signals の商品化は既存データのみなので、表示の整理は続けてよい。11 は Before / After の別ページではない。
 
 ### 次に足す（決めてある）
 
 | # | 方針 | 内容 |
 | --- | --- | --- |
-| 10 | 次 | Share Collection。複数 Observation を1リンク。単独の売る理由ではなく作業の楽さ |
-| 38 | その次（AIサイト分析） | 1 Observation と Compare の監査（AI）。記録と分けて出す。追加撮影なし |
-| 19 | 38 の中身 | Vision AI（既存スクショを AI が読む）。「東京と US でヒーローが違う」は可。「Performance が弱い」は不可 |
-| 11 | 出荷（条件一致時） | Time Compare の Slider。viewport・画像高さ・full-page が一致するときだけ。条件不一致は Side by side のみ。判定は三値のまま |
-| 12 | その先（Pro 運用） | Client / Project まとめ、Compare 公開、定期レポート。CSV は既にある。レポート本文に Interpreted を載せてよい |
+| 36 → 41 → 42 | 今 | 事実レイアウト、既存ハッシュの見せ方、Changed の下のメタ差 |
+| 38 | 実装（構造） | Compare（先）と 1 Observation の監査。What changed / Impact / Evidence / Recommended check。追加撮影なし。希望した件数だけ。月あたり一定回数は Pro で検証 |
+| 19 | 38 の中身 | Vision AI（既存スクショを AI が読む）。「東京と US でヒーローが違う」は可。「Performance が弱い」は不可。推定とラベルする |
+| 12 | 38 のあと（Pro / Agency 運用） | Client / Project まとめ、Compare 公開、定期レポート。CSV は既にある。レポート本文に Interpreted を載せてよい。Agency $149〜$199 は価値確認後 |
 
-11 は Before / After の別ページではない。Time Compare の表示モードを1つ足すだけ。条件不一致は Slider を出さない。
+実装順は **36 → 41 → 42 →（37 がまだ必要なら）→ 38 / 19 → 12**。10 は出荷済なので間に入れない。
 
 ### Geo / 出口（実験。本番 Observation は Browserless）
 
@@ -170,7 +181,7 @@ Compare は一旦完成（Slider 以外）。html_signals の商品化は既存�
 
 Requested と Observed は分けて書く。自己申告の Node 所在地を Observed にしない。US-CA を選んでも国単位で取れたら California と表示しない。見出しは観測事実。区別が必要なときは **Requested / Observed via**。
 
-**State Geo は Starter では保証しない。** US 州を選んだ Observation は `proxyState` を先に付ける。拒否・失敗したら国単位へ落とす。フォールバックは **州 → 国 → proxyなしを直列**（並列に投げない）。成功した経路だけを `geo` に書く。US-CA を選んでも国単位で取れたら California と表示しない。無効化は `VIEWTRACE_BROWSERLESS_PROXY_STATE=0`。
+**State Geo は Starter では保証しない。** US 州を選んだ Observation は、REST `/screenshot` で同じ州の代表都市 `proxyCity` を先に付ける（Scale 未満は 401 になり得る）。失敗したら国単位。都市マップが無いときだけ `proxyState` を試す。フォールバックは **都市 → 州 → 国 → proxyなしを直列**（並列に投げない）。成功した経路だけを `geo` に書く。US-CA を選んでも国単位で取れたら California と表示しない。無効化は `VIEWTRACE_BROWSERLESS_PROXY_STATE=0`。
 
 ### 事実以上の商品（Observation の上に載せる）
 
@@ -178,19 +189,39 @@ Requested と Observed は分けて書く。自己申告の Node 所在地を Ob
 
 | # | 方針 | 内容 |
 | --- | --- | --- |
-| 38 | 承認・後で実装 | AIサイト分析。1ページ（1 Observation）と Compare の読み |
+| 38 | 実装（構造） | AI Change Audit。What changed / Potential impact / Recommended check。Impact は根拠信号へ戻る。点数・円グラフなし。Compare があるとき先に読む。記録の下。Observed ではない |
 | 19 | 承認・38 に使う | Vision AI。既存スクショのみ。追加撮影なし |
-| 12 の読み | 承認・後で実装 | 定期レポート / Share に読みを載せる。記録の下 |
-| 40 | 承認 | Page Signals。html_signals だけの減点参考値。記録の下。根拠必須。Watch メールには既存通知へ `92 → 61` を添えるだけ（新通知は増やさない） |
+| 12 の読み | 承認・38 のあと | 定期レポート / Share に読みを載せる。記録の下 |
+| 40 | 承認・出荷済 | Page Signals。html_signals だけの減点参考値。記録の下。根拠必須。Watch メールには既存通知へ `92 → 61` を添えるだけ（新通知は増やさない） |
+| 15 オプション | 実装 | ラボ CWV。記録の下。押した件数だけ。プラン内回数。LCP / CLS / TBT。ラボ INP は出さない |
+| 15b オプション | 完成 | フィールド CWV（CrUX）。ラボと別セクション。INP / LCP / CLS。URL → Origin → no_data。no_data も正常。CrUX の代替測定は作らない |
+| 15d オプション | 実装 | 合成操作テスト。安全なクリック 1〜3。Field INP と呼ばない。任意 URL。Watch では自動実行しない |
+| 15c | 後回し。優先しない | ViewTrace RUM。自サイトに script を置いた実ユーザー。第三者サイトには置けない。今は上げない |
+| 17 一部 | 実装 | 下層 html_signals 採点。スクショなし。同じホスト最大 N |
+
+操作応答は層を混ぜない。
+
+| 層 | 指標 | 実ユーザー | 対象 | 今 |
+| --- | --- | --- | --- | --- |
+| ラボ（Lighthouse） | LCP / CLS / TBT / FCP。INP は出ない | いいえ | 任意 URL | 実装済 |
+| 合成操作 | Click response。**INP と呼ばない** | いいえ | 任意 URL | 実装済。安全な 1〜3 クリック |
+| フィールド（CrUX） | INP / LCP / CLS | はい | CrUX 掲載時 | **完成**。no_data は正常 |
+| ViewTrace RUM | 実ユーザー INP | はい | **自サイトだけ** | 作らない。優先しない |
+
+第三者は、CrUX に載っていれば Field、無ければ Field なし。合成は補完であり Field INP ではない。RUM script は置けない。CrUX に数字を出させる機能は足さない。
+
 ### 記録に混ぜない / 今は本体にしない
 
 | # | 方針 | 理由 |
 | --- | --- | --- |
 | 13 | 記録に混ぜない | 測っていない Performance / SEO / Accessibility の数字。数字を出すなら実測してから |
 | 14 | 監査側に出してよい | この Observation についての指摘。未撮影ページの要対応リストにはしない |
-| 15 | 記録に混ぜない | Core Web Vitals / ラボ性能。現場の Observed ではない |
+| 15 | 記録に混ぜない。プラン内オプション | ラボ Core Web Vitals（Browserless `/performance`）。Observed ではない。毎回は走らせない。Starter 月 10 / Pro 月 30 / trial 月 2。$49 / $99 は動かさない。クレジットパックにしない。Watch では自動実行しない |
+| 15b | 記録に混ぜない。プラン内オプション。**完成** | フィールド CWV（CrUX API）。ラボと混ぜない。Lab LCP ≠ Field LCP。URL 単位 → Origin 単位 → no_data。no_data も正常な保存結果。再取得は手動の補助（数分では変わらない）。ラボ実行で既に保存済みなら CrUX を取り直さない。毎回の Observation には自動で載せない（枠は trial 10 / Starter 50 / Pro 150）。撮影・AI なし。Watch では自動実行しない。CrUX の代替測定は作らない |
+| 15d | 記録に混ぜない。プラン内オプション | 合成操作テスト（Browserless で安全なクリック 1〜3）。任意 URL。Field INP と呼ばない。表示は Interaction latency / Synthetic。購入・送信・削除・ログアウトは押さない。trial 月 2 / Starter 月 10 / Pro 月 30。Watch では自動実行しない。毎回の Observation には載せない |
+| 15c | 後回し。優先しない | ViewTrace RUM（自サイトへ `rum.js` を置く実ユーザー INP）。CrUX の穴埋めではない。第三者サイトには設置できない。本体は Agency Monitor / 外部 Observation なので今は上げない。合成操作を Field INP と呼ばない |
 | 16 | 今はやらない | 転送量・JS/CSS 内訳。計測項目を増やし、原価設計を再開してしまう |
-| 17 | 後回し | サイト全体 SEO crawler / broken-link。本体が Observation でなくなる |
+| 17 | 後回し（全体）/ 一部オプション | サイト全体 SEO crawler は作らない。下層はスクショなし・同じホスト最大 trial 3 / Starter 5 / Pro 10。html_signals 採点のみ。Observation は消費しない |
 | 18 | 記録に混ぜない | AI SEO 診断 / 監査要約。38 とは別物 |
 | 20 | 未承認 | Free AI Visual Checker。無料入口。Verify を集客にしない |
 | 21 | 未承認 | AI Scout。別事業 |
@@ -200,7 +231,7 @@ Requested と Observed は分けて書く。自己申告の Node 所在地を Ob
 | 25 | しない | クレジットパック販売。月間 Observation 数で止める。解釈もパック販売にしない |
 | 26 | しない | Tokyo Residential Proxy の再販（IP を売る） |
 
-ゲート: 確認して入った人が Observation を繰り返し使わなければ、無料入口（20）や Scout（21）は作らない。公開リンクから新規 Observation が増えても、Activation の代わりにはしない。38 / 19 は既存 Observation の価値を強くするので、Repeat 待ちの禁止対象ではない。実装順は 36 → 10 → 38/19。
+ゲート: 確認して入った人が Observation を繰り返し使わなければ、無料入口（20）や Scout（21）は作らない。公開リンクから新規 Observation が増えても、Activation の代わりにはしない。38 / 19 は既存 Observation の価値を強くするので、Repeat 待ちの禁止対象ではない。実装順は **36 → 41 → 42 → 38/19**。10 は出荷済。
 
 ---
 
@@ -300,3 +331,28 @@ Observation を他人に見せるページ。再検証エンジンではない�
 - Watch / Multi-region / Compare / html_signals / CSV / 証跡 JSON
 - `JP-13`（日本 · 東京）の Requested 候補
 - Geo Node 制御プレーン（実験。本番撮影経路には未接続）
+- Share Collection / Time Compare Slider（条件一致時）/ Page Signals / 確認後の Product tour
+
+---
+
+## 7. 41–51 と実行基盤（採用）
+
+Mac は開発機。Linux は将来の worker 実行基盤。Python は **撮影後の抽出**。本番の撮影出口を Linux Playwright に移す話とは別。切替は `VIEWTRACE_CAPTURE_BACKEND=playwright_worker` のみ。
+
+Linux / Python が効く場所は **A**（hash / parse / diff / classify / 統計）。**B**（heartbeat / HTTP health）と **C**（Browserless 撮影）は混ぜない。41 / 42 の第一歩はいまの Node。Python は 43 / 44 / 48 で HTML を切るとき。全文 HTML は今保存していない。
+
+採用条件は一本: **追加 Observation が 0 か。記録と解釈が分かれているか。根拠なしのスコアを出さないか。**
+
+| # | 状態 | 内容 |
+| --- | --- | --- |
+| 41 | Next（36 の隣） | Evidence hash の表示統合。既存 SHA / content_hash / 記録 ID / 確認記録シール |
+| 42 | Next（36 の次） | Change classification。三値は壊さない。Changed の下に何が変わったかを事実で並べる |
+| 47 | Later（条件つき） | Redirect chain。`final_url` はある。同じ撮影でホップが取れるときだけ。追加撮影になるならやらない |
+| 43 | Later（条件つき） | DOM structure。HTML か構造スナップショットを撮影時に保存しているときだけ。全文 HTML は前提にしない |
+| 44 | Later（条件つき） | Third-party。「存在した / 消えた」まで。GTM が動いたとは言わない |
+| 48 | Later（条件つき） | Content fingerprint。`content_hash` はある。本文正規化は HTML 保存が先 |
+| 49 | Later | Magnitude。三値の代わりにしない。Minor / Major は根拠必須 |
+| 50 | Later | Anomaly。10 件未満では出さない。Activation UI もいじらない |
+| 51 | Experimental（内部） | Capture diagnostics。顧客画面ではなく原価用。C に $200 を混ぜない。`proxy_bytes` の 0/null は既存方針 |
+| 45 | Rejected（今は） | Heartbeat。Observation 商品の外。36 / 42 / 38 より先にしない |
+| 46 | Rejected（今は） | HTTP health。Watch の添え書き以上にしない。Uptime 商品にしない |

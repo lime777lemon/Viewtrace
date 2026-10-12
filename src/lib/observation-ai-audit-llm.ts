@@ -2,7 +2,10 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { generateText, Output } from "ai";
 import { z } from "zod";
 import type { Locale } from "@/lib/i18n";
-import type { AiAuditNote } from "@/lib/observation-ai-audit";
+import {
+  AI_AUDIT_EVIDENCE_IDS,
+  type AiAuditNote,
+} from "@/lib/observation-ai-audit";
 
 const DEFAULT_MODEL_ID = "gpt-4o-mini";
 
@@ -32,6 +35,9 @@ const auditSchema = z.object({
       z.object({
         kind: z.enum(["visible", "region_time", "page"]),
         text: z.string().min(1).max(400),
+        impact: z.enum(["high", "medium", "low"]),
+        evidence: z.enum(AI_AUDIT_EVIDENCE_IDS),
+        check: z.string().min(1).max(400),
       }),
     )
     .max(12),
@@ -58,18 +64,21 @@ export async function tryLlmPageAudit(input: {
   const ja = input.locale === "ja";
   const system = ja
     ? [
-        "あなたは ViewTrace の監査です。今ある 1 Observation だけを読む。",
-        "観測事実（Observed）を名乗らない。スコア、Core Web Vitals、Performance / SEO 数字、要対応の優先度は出さない。",
-        "見ていない下層ページやサイト全体は書かない。",
-        "画面に見えたことは kind=visible。指定と実際の地域の差は kind=region_time。メタや取得の指摘は kind=page。",
+        "あなたは ViewTrace の AI Change Audit です。今ある 1 Observation と、あれば直前 Compare だけを読む。",
+        "観測事実（Observed）を名乗らない。スコア、円グラフ、Core Web Vitals、Performance / SEO 数字、要対応の優先度は出さない。",
+        "見ていない下層ページやサイト全体は書かない。Page changed とは書かない。",
+        "各指摘は text（What changed）/ impact（high|medium|low。点数ではない）/ evidence（allowed_evidence から1つ）/ check（確認してよいこと）を必ず付ける。",
+        "画面に見えた差は kind=visible、evidence=screenshot。地域の指定と取得の差は kind=region_time、evidence=geo。",
+        "requested_region の US-XX を Observed の州として書かない。observed_state があるときだけ州を書く。",
         "日本語で短く書く。",
       ].join("\n")
     : [
-        "You are ViewTrace page audit. Read only this one Observation.",
-        "Do not claim to be Observed. Do not invent scores, Core Web Vitals, Performance/SEO numbers, or priority rankings.",
-        "Do not mention pages that were not captured. No site-wide crawl.",
-        "Use kind=visible for what is on the screenshot, kind=region_time for requested vs observed region, kind=page for metadata/capture notes.",
-        "Write short English.",
+        "You are ViewTrace AI Change Audit. Read only this Observation and its previous Compare if present.",
+        "Do not claim to be Observed. Do not invent scores, pie charts, Core Web Vitals, Performance/SEO numbers, or priority rankings.",
+        "Do not mention pages that were not captured. Do not say Page changed.",
+        "Each note needs text (What changed), impact (high|medium|low, not a score), evidence (one of allowed_evidence), and check (what to verify).",
+        "Visible screenshot differences: kind=visible, evidence=screenshot. Requested vs observed region: kind=region_time, evidence=geo.",
+        "Never copy requested US-XX into Observed. Name a state only when observed_state is present.",
       ].join("\n");
 
   const userText = `${ja ? "記録の事実" : "Recorded facts"}:\n${JSON.stringify(input.facts)}`;

@@ -15,6 +15,8 @@ type Props = {
   snapshotContentType?: string;
   snapshotImageUrl?: string;
   verifyUrl?: string | null;
+  /** 詳細のスクリーンショット節と二重にしないとき false。 */
+  showImage?: boolean;
 };
 
 export function ObservationSnapshotBinaryPanel({
@@ -26,6 +28,7 @@ export function ObservationSnapshotBinaryPanel({
   snapshotContentType,
   snapshotImageUrl,
   verifyUrl,
+  showImage = true,
 }: Props) {
   const t = copy[locale].snapshotBinary;
   const [pending, setPending] = useState(false);
@@ -93,7 +96,7 @@ export function ObservationSnapshotBinaryPanel({
         {t.titleIntegrity}
       </h2>
 
-      {snapshotImageUrl && /^https?:\/\//i.test(snapshotImageUrl) ? (
+      {showImage && snapshotImageUrl && /^https?:\/\//i.test(snapshotImageUrl) ? (
         <div className="mt-4 overflow-hidden rounded-xl border border-border bg-surface">
           <p className="border-b border-border px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-ink-muted">
             {t.savedScreenshotLabel}

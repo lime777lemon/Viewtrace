@@ -1,3 +1,4 @@
+import { auditEvidenceDomId } from "@/lib/observation-ai-audit";
 import {
   classifyHtmlHeadSignals,
   ogPreviewFromSignals,
@@ -347,15 +348,15 @@ export function ObservationHtmlHeadSignalsPanel({ signals, copy, requestedUrl }:
       </details>
 
       <dl className="mt-4 grid gap-3 sm:grid-cols-2">
-        <div>
+        <div id={auditEvidenceDomId("http_status")} className="scroll-mt-28">
           <dt className="text-xs text-ink-muted">{copy.httpStatus}</dt>
           <dd className="mt-0.5 font-mono text-sm text-ink">{httpLabel}</dd>
         </div>
-        <div>
+        <div id={auditEvidenceDomId("html_lang")} className="scroll-mt-28">
           <dt className="text-xs text-ink-muted">{copy.htmlLang}</dt>
           <dd className="mt-0.5 text-sm text-ink">{dash(signals.html_lang)}</dd>
         </div>
-        <div className="sm:col-span-2">
+        <div id={auditEvidenceDomId("final_url")} className="scroll-mt-28 sm:col-span-2">
           <dt className="text-xs text-ink-muted">{copy.finalUrl}</dt>
           <dd className="mt-0.5 break-all font-mono text-xs text-ink">{dash(signals.final_url)}</dd>
         </div>
@@ -363,22 +364,22 @@ export function ObservationHtmlHeadSignalsPanel({ signals, copy, requestedUrl }:
           <dt className="text-xs text-ink-muted">{copy.redirect}</dt>
           <dd className="mt-0.5 text-sm text-ink">{redirectLabel}</dd>
         </div>
-        <div className="sm:col-span-2">
+        <div id={auditEvidenceDomId("title")} className="scroll-mt-28 sm:col-span-2">
           <dt className="text-xs text-ink-muted">{copy.documentTitle}</dt>
           <dd className="mt-0.5 text-sm text-ink">{withLength(signals.document_title, copy.chars)}</dd>
         </div>
-        <div className="sm:col-span-2">
+        <div id={auditEvidenceDomId("description")} className="scroll-mt-28 sm:col-span-2">
           <dt className="text-xs text-ink-muted">{copy.metaDescription}</dt>
           <dd className="mt-0.5 text-sm text-ink">
             {withLength(signals.meta_description, copy.chars)}
           </dd>
         </div>
-        <div className="sm:col-span-2">
+        <div id={auditEvidenceDomId("canonical")} className="scroll-mt-28 sm:col-span-2">
           <dt className="text-xs text-ink-muted">{copy.canonical}</dt>
           <dd className="mt-0.5 break-all font-mono text-xs text-ink">{dash(signals.canonical_url)}</dd>
           <dd className="mt-0.5 text-xs text-ink-muted">{mismatchLabel}</dd>
         </div>
-        <div>
+        <div id={auditEvidenceDomId("robots")} className="scroll-mt-28">
           <dt className="text-xs text-ink-muted">{copy.robotsMeta}</dt>
           <dd className="mt-0.5 break-all font-mono text-xs text-ink">{dash(signals.robots_meta)}</dd>
         </div>
@@ -386,7 +387,7 @@ export function ObservationHtmlHeadSignalsPanel({ signals, copy, requestedUrl }:
           <dt className="text-xs text-ink-muted">{copy.xRobots}</dt>
           <dd className="mt-0.5 break-all font-mono text-xs text-ink">{dash(signals.x_robots_tag)}</dd>
         </div>
-        <div>
+        <div id={auditEvidenceDomId("noindex")} className="scroll-mt-28">
           <dt className="text-xs text-ink-muted">{copy.noindex}</dt>
           <dd className="mt-0.5 text-sm text-ink">{noindexLabel}</dd>
         </div>
@@ -394,7 +395,7 @@ export function ObservationHtmlHeadSignalsPanel({ signals, copy, requestedUrl }:
           <dt className="text-xs text-ink-muted">{copy.viewport}</dt>
           <dd className="mt-0.5 break-all font-mono text-xs text-ink">{dash(signals.viewport)}</dd>
         </div>
-        <div>
+        <div id={auditEvidenceDomId("og")} className="scroll-mt-28">
           <dt className="text-xs text-ink-muted">{copy.openGraph}</dt>
           <dd className="mt-0.5 text-sm text-ink">{ogDetected ? copy.openGraphDetected : "—"}</dd>
         </div>

@@ -1,4 +1,5 @@
 import { ObservationSnapshotVisuals, type ComparePreviousSnapshot } from "@/components/dashboard/ObservationSnapshotVisuals";
+import { auditEvidenceDomId } from "@/lib/observation-ai-audit";
 import type { Observation, ObservationHistoryEvent } from "@/lib/demo/observations";
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
 import type { Locale } from "@/lib/i18n";
@@ -88,16 +89,18 @@ export function ObservationDetailSnapshotSection({
           <p className="mt-1 text-ink-muted">{captureEventDetail ?? ""}</p>
         </div>
       ) : null}
-      <ObservationSnapshotVisuals
-        observationUrl={obs.url}
-        serverImageUrl={displayImageUrl}
-        openUrl={openUrl}
-        fetchSnapshot={fetchSnapshot}
-        displayTitle={displayTitle}
-        metaLine={metaLine}
-        locale={locale}
-        comparePrevious={comparePrevious}
-      />
+      <div id={auditEvidenceDomId("screenshot")} className="scroll-mt-28">
+        <ObservationSnapshotVisuals
+          observationUrl={obs.url}
+          serverImageUrl={displayImageUrl}
+          openUrl={openUrl}
+          fetchSnapshot={fetchSnapshot}
+          displayTitle={displayTitle}
+          metaLine={metaLine}
+          locale={locale}
+          comparePrevious={comparePrevious}
+        />
+      </div>
 
       <section>
         <h2 className="font-display text-lg font-semibold text-ink">

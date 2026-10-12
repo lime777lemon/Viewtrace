@@ -57,3 +57,12 @@ export async function countObservationsThisUtcMonth(
   if (error) return null;
   return count ?? 0;
 }
+
+export function countIsoTimestampsThisUtcMonth(timestamps: string[], now = new Date()): number {
+  const start = Date.parse(utcMonthStartIso(now));
+  if (!Number.isFinite(start)) return 0;
+  return timestamps.filter((row) => {
+    const t = Date.parse(row);
+    return Number.isFinite(t) && t >= start;
+  }).length;
+}

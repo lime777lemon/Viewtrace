@@ -164,25 +164,26 @@ export function ObservationSnapshotVisuals({
         {displayTitle ? (
           <p className="mt-3 text-sm font-medium text-ink">{displayTitle}</p>
         ) : null}
-        <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-surface-elevated">
+        <div className="relative mt-4 overflow-hidden rounded-2xl border border-border bg-surface-elevated">
           {showImg ? (
-            <button
-              type="button"
-              onClick={() => setFullscreenOpen(true)}
-              className="group relative block w-full cursor-zoom-in"
-              aria-label={t.viewFullscreen}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element -- 外部 OG / Microlink CDN */}
-              <img
-                src={imageUrl!}
-                alt=""
-                className="max-h-[min(70vh,720px)] w-full object-cover object-top"
-                loading="eager"
-              />
-              <span className="pointer-events-none absolute bottom-3 right-3 rounded-full bg-ink/75 px-3 py-1.5 text-xs font-semibold text-white shadow-sm">
+            <>
+              <div className="max-h-[min(80vh,960px)] overflow-y-auto overflow-x-hidden overscroll-contain">
+                {/* eslint-disable-next-line @next/next/no-img-element -- 外部 OG / Microlink CDN */}
+                <img
+                  src={imageUrl!}
+                  alt=""
+                  className="block h-auto w-full"
+                  loading="eager"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setFullscreenOpen(true)}
+                className="absolute bottom-3 right-3 rounded-full bg-ink/80 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-ink"
+              >
                 {t.viewFullscreen}
-              </span>
-            </button>
+              </button>
+            </>
           ) : showLoading ? (
             <div className="flex aspect-16/10 flex-col justify-center gap-2 bg-linear-to-br from-[#dfe9e6] to-[#c8d9d3] px-6 py-10 text-center">
               <p className="text-sm font-medium text-ink">{t.loadingTitle}</p>
@@ -207,7 +208,8 @@ export function ObservationSnapshotVisuals({
             </div>
           )}
         </div>
-        <p className="mt-2 text-xs text-ink-muted">{metaLine}</p>
+        <p className="mt-2 text-xs text-ink-muted">{t.fullPageScrollHint}</p>
+        <p className="mt-1 text-xs text-ink-muted">{metaLine}</p>
       </section>
 
       <section>
