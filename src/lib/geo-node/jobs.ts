@@ -1,4 +1,5 @@
 import { put } from "@vercel/blob";
+import { blobClientAuth } from "@/lib/blob-client-auth";
 import { lookupIpRegion, verifiedRegionFromLookup } from "@/lib/geo-node/ip-lookup";
 import { parseRequestedGeo, resolveObservedGeo } from "@/lib/geo-node/observe";
 import { getGeoNode, nodeCanTakeJob, pickNodeForRequest, type GeoNodeRow } from "@/lib/geo-node/registry";
@@ -144,12 +145,13 @@ export async function completeGeoNodeJob(input: {
   });
 
   let screenshotUrl: string | null = null;
-  if (input.screenshotPng && process.env.BLOB_READ_WRITE_TOKEN?.trim()) {
+  const blobAuth = blobClientAuth();
+  if (input.screenshotPng && blobAuth) {
     try {
       const uploaded = await put(`geo-node/${input.jobId}.png`, input.screenshotPng, {
         access: "public",
         contentType: "image/png",
-        token: process.env.BLOB_READ_WRITE_TOKEN.trim(),
+        ...blobAuth.options,
       });
       screenshotUrl = uploaded.url;
     } catch {
