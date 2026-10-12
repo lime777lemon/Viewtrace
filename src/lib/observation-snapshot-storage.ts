@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { del, put } from "@vercel/blob";
 import sharp from "sharp";
+import { blobClientAuth } from "@/lib/blob-client-auth";
 import { computeSnapshotPerceptualHash } from "@/lib/snapshot-perceptual-hash";
 
 export type ObservationSnapshotUploadResult =
@@ -45,8 +46,8 @@ export async function uploadObservationSnapshotPng(
   png: ArrayBuffer,
   opts?: ObservationSnapshotUploadOptions,
 ): Promise<ObservationSnapshotUploadResult> {
-  const token = process.env.BLOB_READ_WRITE_TOKEN?.trim();
-  if (!token) {
+  const auth = blobClientAuth();
+  if (!auth) {
     console.warn("[blob] observation snapshot skipped", { observationId, code: "token_missing" });
     return { ok: false, code: "token_missing" };
   }
@@ -98,7 +99,7 @@ export async function uploadObservationSnapshotPng(
     const { url } = await put(key, body, {
       access: "public",
       contentType,
-      token,
+      ...auth.options,
     });
     if (url.length >= 2048) {
       console.warn("[blob] observation snapshot rejected", {
@@ -110,6 +111,7 @@ export async function uploadObservationSnapshotPng(
     }
     console.info("[blob] observation snapshot uploaded", {
       observationId,
+      auth: auth.mode,
       format: contentType,
       bytes: snapshotBytes,
       snapshotSha256,
@@ -144,8 +146,8 @@ function isVercelBlobUrl(url: string): boolean {
 export async function deleteObservationSnapshotByUrl(
   url: string,
 ): Promise<{ ok: true } | { ok: false; code: "token_missing" | "delete_failed"; message?: string }> {
-  const token = process.env.BLOB_READ_WRITE_TOKEN?.trim();
-  if (!token) {
+  const auth = blobClientAuth();
+  if (!auth) {
     console.warn("[blob] observation snapshot delete skipped", { code: "token_missing" });
     return { ok: false, code: "token_missing" };
   }
@@ -158,7 +160,7 @@ export async function deleteObservationSnapshotByUrl(
     return { ok: true };
   }
   try {
-    await del(trimmed, { token });
+    await del(trimmed, auth.options);
     return { ok: true };
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
