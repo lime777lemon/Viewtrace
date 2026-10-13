@@ -81,6 +81,9 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
               <a href="#auto-observations" className="transition hover:text-ink">
                 {t.nav.autoWatch}
               </a>
+              <a href="#optional-measures" className="transition hover:text-ink">
+                {t.nav.optionalMeasures}
+              </a>
               <Link href="/features" className="transition hover:text-ink">
                 {t.nav.features}
               </Link>
@@ -138,6 +141,14 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                       onClick={() => setMobileNavOpen(false)}
                     >
                       {t.nav.autoWatch}
+                    </a>
+                    <a
+                      href="#optional-measures"
+                      role="menuitem"
+                      className="block px-4 py-2.5 text-sm font-medium text-ink-muted transition hover:bg-border/30 hover:text-ink"
+                      onClick={() => setMobileNavOpen(false)}
+                    >
+                      {t.nav.optionalMeasures}
                     </a>
                     <Link
                       href="/features"
@@ -442,6 +453,69 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
           </div>
         </section>
 
+        <section id="optional-measures" className="border-b border-border">
+          <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-14">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#276248] sm:text-xs">
+              {t.optionalOnRecord.kicker}
+            </p>
+            <h2 className="font-display mt-3 max-w-3xl text-2xl font-semibold leading-snug text-ink sm:text-3xl">
+              {t.optionalOnRecord.title}
+            </h2>
+            <p className="mt-4 max-w-3xl text-sm leading-relaxed text-ink-muted sm:text-base">
+              {t.optionalOnRecord.body}
+            </p>
+            <ol className="mt-8 flex flex-wrap items-center gap-2 text-xs font-semibold sm:gap-3">
+              <li className="rounded-full border border-border bg-surface-elevated px-3 py-1.5 text-ink">
+                {t.optionalOnRecord.recordStep}
+              </li>
+              <li aria-hidden className="text-ink-muted">
+                →
+              </li>
+              <li className="rounded-full border border-border bg-surface-elevated px-3 py-1.5 text-ink">
+                {t.optionalOnRecord.factsStep}
+              </li>
+              <li aria-hidden className="text-ink-muted">
+                →
+              </li>
+              <li className="rounded-full border border-[#276248]/30 bg-[#276248]/8 px-3 py-1.5 text-[#276248]">
+                {t.optionalOnRecord.optionsStep}
+              </li>
+            </ol>
+            <div className="mt-10 grid gap-4 sm:grid-cols-2">
+              {t.optionalOnRecord.items.map((item) => (
+                <article
+                  key={item.title}
+                  className="flex flex-col rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm sm:p-6"
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-muted">
+                      {item.layer}
+                    </p>
+                    <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-ink">
+                      {t.optionalOnRecord.badge}
+                    </span>
+                  </div>
+                  <h3 className="font-display mt-3 text-lg font-semibold text-ink">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-ink-muted">{item.body}</p>
+                  <p className="mt-4 rounded-xl border border-border bg-surface px-3 py-2 font-mono text-xs text-ink">
+                    {item.sample}
+                  </p>
+                  <p className="mt-3 text-xs text-ink-muted">{item.quota}</p>
+                </article>
+              ))}
+            </div>
+            <p className="mt-8 max-w-3xl text-sm leading-relaxed text-ink-muted">
+              {t.optionalOnRecord.note}
+            </p>
+            <Link
+              href="/login?mode=signup"
+              className="mt-6 inline-flex items-center text-sm font-semibold text-accent transition hover:text-accent-hover"
+            >
+              {t.optionalOnRecord.cta}
+            </Link>
+          </div>
+        </section>
+
         <section id="auto-observations" className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-14">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#276248] sm:text-xs">
@@ -688,6 +762,11 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                   <li>
                     <a href="#auto-observations" className="text-surface/80 hover:text-white">
                       {t.footer.links.autoWatch}
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#optional-measures" className="text-surface/80 hover:text-white">
+                      {t.footer.links.optionalMeasures}
                     </a>
                   </li>
                   <li>
