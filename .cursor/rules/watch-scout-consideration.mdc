@@ -1,5 +1,5 @@
 ---
-description: Observe → Observe again → Compare → Share. Facts in the record. AI Change Audit is a separate product.
+description: Observation is the engine. Sequence 36 → 41 → 42 → 38/19 → 12. Do not freeze large features.
 alwaysApply: true
 ---
 
@@ -7,11 +7,17 @@ alwaysApply: true
 
 `docs/considerations/current-implementation-policy.md`
 
-本体は Observation（URL × 地域 × 時点の記録）。プロダクトの流れは一本:
+**カテゴリー:** Website Monitoring for Digital Agencies。一文: Know which client websites need attention before your clients do.
+
+エンジンは Observation（`URL × 地域 × 時点`）。流れ:
 
 **Observe → Observe again → Compare → Share**
 
-価値は Observation。本番の撮影出口は Browserless。記録は事実だけ。事実以上は **AI Change Audit** として、既存 Observation / Compare の上に載せる。普通の AI Website Audit（SEO / Performance / A11y / サイト採点）には寄せない。追加撮影しない。Observation 消費は 0。高くするのは「AI を使ったから」ではなく、証拠の上で担当者が判断できるところまで書いたとき。
+顧客が買う流れ:
+
+**Agency Monitor → Watch → Alert → Compare**
+
+大規模機能は止めない。Visualping 互換の機能一覧にしない。AI Website Audit に寄せない。AI は Observation → Diff → Signals のあとの読み。価値はデータ。Requested ≠ Observed。本番の撮影出口は Browserless。記録の中では事実以上を断定しない。Page changed とは言わない。$49 / $99 は動かさない。
 
 画面の順は **記録 → 検出した事実 → 監査（AI）**。SHA は同じか違うかまで。何が変わったかは html_signals などの事実。読みは推定とラベルする。Page changed とは言わない。AI Score は出さない。Potential impact は根拠になった信号へ戻れること。
 
@@ -21,7 +27,7 @@ Screenshot の判定は三値のみ: Same / Changed / Not comparable。Changed �
 
 Verify（`/verify/[token]`）は削除しない。成長ループではなく、**納品・共有の公開サーフェス**。Verify → 次の Observation を最重要 KPI にしない。Powered by ViewTrace は残す。読みを載せるなら記録の下。
 
-**今やること:** 36 事実レイアウト。隣に 41（既存ハッシュの見せ方）。次に 42（Changed の下のメタ差）。38 の構造化監査（What changed / Impact / Evidence）は Observation 詳細に載せる。19（Vision）は 38 の中。37（レイアウト AI）は 41 より先にしなくてよい。12（Client / Project / Agency 価格）は 38 のあと。
+**今やること:** 36 事実レイアウト。隣に 41（既存ハッシュの見せ方）。次に 42（Changed の下のメタ差）。38 の構造化監査（What changed / Impact / Evidence）は Observation 詳細に載せる。19（Vision）は 38 の中。37（レイアウト AI）は 41 より先にしなくてよい。12（Client / Project / Agency 価格）は 38 のあと。Agency Monitor → Watch → Alert → Compare も磨く。50 州網・RUM・Scout・クレジットパックはしない。
 
 次に足す順: **36 → 41 → 42 → 38/19 → 12**。Watch / html_signals / Multi-region / `JP-13` / Share Collection / Page Signals / Time Compare Slider（条件一致時）は出荷済。html_signals は常時表示（選ばせない）。メタ差分メールだけ Watch で選ばせる。Watch メールの Page Signals は既存通知への添え書きのみ。Change Audit は Watch の毎回には自動で走らせない。Changed のとき、押した件数だけ。Pro で月あたり一定回数を検証する。クレジットパックにはしない。今は $49 / $99 を動かさない。
 
@@ -35,9 +41,13 @@ Mac は開発機。Linux は将来の worker。Python は撮影後の抽出（A:
 
 Activation **計測**は固定。Activation **UI**は母数が小さいうちはいじらない。
 
-新機能の条件: Observation を作る理由、2回目を作る理由、Observation の価値を強くする機能、または既存 Observation の上に事実と分けて売る解釈。追加 Observation が 0。根拠なしのスコアを出さない。
+新機能の条件: Observation を作る理由、2回目を作る理由、Observation の価値を強くする機能、または既存 Observation の上に事実と分けて売る解釈。今日見るクライアントが分かること、Watch / Alert を開く理由、Compare まで落ちて判断できることも条件に入る。追加 Observation が 0。根拠なしのスコアを出さない。大規模機能は止めない。
 
-KPI:
+入口の計測は残す。事業の北星:
+
+**Demo → Pilot → Client added → Alert viewed → Compare viewed → Week-2 active → Paid**
+
+入口の計測（UI はいじらない）:
 
 **登録 → メール確認 → 初回 Observation → 2回目 Observation**
 

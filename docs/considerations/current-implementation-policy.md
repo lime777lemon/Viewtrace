@@ -1,10 +1,13 @@
 # 現行の実装方針
 
-- **状態:** Activation 計測は固定。Activation UI は母数が小さいうちはいじらない。Observation の価値を強くする新機能は進めてよい。Verify を成長ループの主役にしない。事実以上は Observation に混ぜず、別商品として足してよい。
-- **記録日:** 2026-10-12
-- **置き換え:** 新機能を全部止める、ではない。芯は Observation。解釈は上に載せる。普通の AI Website Audit には寄せない。
-- **一言:** 価値は Observation。流れは Observe → Observe again → Compare → Share。1 Capture = 1 Observation。本番の撮影出口は Browserless。観測記録は事実だけ。事実以上は **AI Change Audit（読み）** として、既存記録の上に売る。高くするのは「AI を使ったから」ではなく、証拠の上で担当者が判断できるところまで書いたとき。
-- **今やること:** 既存 Observation の事実レイアウト整理（36）。同じ記録面に既存ハッシュを載せる（41）。Changed の下に既にあるメタ差を事実で並べる（42）。その空きに Change Audit（38）を後から差し込む。Share Collection は出荷済。
+- **状態:** 大規模機能は止めない。次に足す順は **36 → 41 → 42 → 38/19 → 12**。カテゴリーは Website Monitoring for Digital Agencies。Activation 計測は残す。Activation UI はいじらない。Verify を成長ループの主役にしない。
+- **記録日:** 2026-10-13
+- **置き換え:** 「30 日は大規模な新機能を止める」は撤回。Observation の価値を強くする新機能は進めてよい。Agency Monitor → Watch → Alert → Compare も磨く。Scout / RUM / 50 州 / クレジットは今は作らない。
+- **カテゴリー:** Website Monitoring for Digital Agencies（Geo-aware Website QA）。Screenshot SaaS / Visualping 互換 / AI Website Audit にはしない。
+- **一文:** Know which client websites need attention before your clients do.
+- **下の説明:** Monitor visual changes, SEO issues and regional differences across all your client websites from one dashboard.
+- **一言（実装）:** エンジンは Observation（`URL × 地域 × 時点`）。顧客が毎日見るのは Agency Monitor。AI は最後の読み。Requested と Observed は混ぜない。$49 / $99 は動かさない。
+- **今やること:** 36 事実レイアウト。隣に 41（既存ハッシュの見せ方）。次に 42（Changed の下のメタ差）。38 の構造化監査（What changed / Impact / Evidence）は Observation 詳細に載せる。19（Vision）は 38 の中。37（レイアウト AI）は 41 より先にしなくてよい。12（Client / Project / Agency 価格）は 38 のあと。Agency Monitor も磨く。50 州ネットワーク・RUM・Scout はしない。
 
 各段階は「機能が完成したか」ではなく、**次へ進む根拠となる行動データが出たか**で判断する。
 
@@ -16,9 +19,15 @@
 
 **1 URL × 1 Region × 1 Capture = 1 Observation**
 
-プロダクトの流れは一本だけ:
+エンジンの流れは一本:
 
 **Observe → Observe again → Compare → Share**
+
+顧客が買う流れは一本:
+
+**Agency Monitor → Watch → Alert → Compare**
+
+代理店担当者は Observation を作りたいのではない。欲しいのは **Which clients need my attention today?** エンジン（Observation）は見せすぎない。Monitor から Compare へ落ちる。
 
 Time Compare と Region Compare は別軸。Before / After は別ページにしない。
 
@@ -37,15 +46,20 @@ URL 識別子は query を残す（`?campaign=A` と `?campaign=B` は別の着�
 
 既存製品の記録面は observational（納品保証ではない）。
 
-### 二層（事実と商品）
+### 三層（エンジン・読み・毎日見る面）
 
-芯は変えない。足すのは層です。
+芯の記録モデルは変えない。売る単位を変える。
 
-**① Observation（記録・無料で付く本体）**  
-Requested / Observed / Screenshot 三値 / html_signals / 取得条件。ここには Improved / Worse / スコア / 要対応を書かない。**記録の中では、観測できた事実以上を断定しない。**
+**① Observation Engine（裏側）**  
+`URL × Location × Time`。Browserless / Screenshot 三値 / html_signals / Final URL / HTTP / Canonical / Noindex / Lang / Requested と Observed。顧客にはあまり見せなくてよい。ここには Improved / Worse / 要対応を書かない。**記録の中では、観測できた事実以上を断定しない。**
 
-**② AI Change Audit（読み・監査・事実以上の商品）**  
-既存 Observation / Compare の上にだけ載せる。追加撮影しない。Browserless 経路を変えない。Compare / Share / SHA と同じく Observation 消費は 0。AI 原価は別計測。クレジットパックにはしない。
+**② Intelligence（読み）**  
+Changed / Broken / 地域差 / 想定外リダイレクト / CTA 欠落 などは、①の事実から変換する。推定とラベルする。Page changed とは言わない。AI はここ。**AI が価値なのではなく Observation Data が価値。** 「AI がサイトを監査します」とは言わない。
+
+**③ Agency Monitor（毎日見る面）**  
+Need attention / Opportunities / Healthy。クリックして「どのクライアントの、どの地域の、何が昨日と違うか」→ Compare。方向は正しい。本体の Observation 詳細より、こちらを商品として磨く。
+
+普通の **AI Website Audit** にはしない。Visualping 互換の機能一覧にもしない。楔は **顧客より先に、どのクライアントサイトを見るべきかが分かること**。Geo（広告 LP・地域価格・consent・キャンペーン）は捨てない。50 州自社網は PMF ではないので今は作らない。
 
 普通の **AI Website Audit**（SEO / Performance / A11y / サイト採点）にはしない。Semrush / Ahrefs / $5〜$50 級の監査 SaaS と同じ土俵に乗らない。楔は **いつ・どの地域で・スクショとメタのどれが違い・それがなぜ重要か**。商品名は **AI Change Audit**（1 件を読む監査は残してよいが、先に出すのは変化側）。
 
@@ -78,13 +92,15 @@ Verify / Share に載せるときは、監査を記録の下に置き、AI の�
 
 ### KPI（分ける）
 
+入口の計測は残す（母数が小さいうち UI はいじらない）:
+
 **登録数 → メール確認数 → 初回 Observation → 2回目 Observation**
 
-- 登録 → 確認 = Auth / メール（入口）
-- 確認 → 初回 Observation = Activation
-- 初回 → 2回目 Observation = Repeat usage
+事業の北星は登録数ではない。入口と別に追う:
 
-これで次のどれかが一目で分かる。登録は増えているのに確認されない / 確認はされるが初回 Observation が作られない / 初回は作られるがリピートされない。
+**Demo → Pilot → Client added → Alert viewed → Compare viewed → Week-2 active → Paid**
+
+対象は Performance / PPC / SEO / Web Agency。目標はデモ約 20、pilot 3。Signup だけ追うのはやめる。売却を考えるときも、機能数より ICP と 3〜5 社の pilot・継続利用の方が評価される。
 
 内部アカウントと既知のテストアドレスは「外部」の分母から外す。方法は `ACTIVATION_EXCLUDE_EMAILS`（検証用。管理権限は付かない）、`ADMIN_EMAILS`、`@viewtrace.net`。仕組みを増やさない。リストに無い個人アドレスが1件残ると、n が小さいうちは率を大きく動かす。
 
@@ -98,24 +114,29 @@ Activation **計測**は固定。Activation **UI**は母数が小さいうちは
 
 ### 新機能の条件
 
-追加してよいのは、次のいずれかに当てはまるものだけ。
+大規模機能は止めない。次に足す順は **36 → 41 → 42 → 38/19 → 12**。
 
-- Observation を作る理由になる
-- 2回目の Observation を作る理由になる
-- 既存 Observation の価値を強くする
-- 既存 Observation の上に、事実と分けて売る解釈になる
+足してよい条件:
 
-$49 / $99 の差は、既存の記録機能を Starter から取り上げるのではなく、**件数・保存期間・地域・Watch 頻度・CSV / クライアント運用**で付ける。Change Audit は **AI を使ったから値上げ**しない。証拠の上で判断できる監査まで作るなら、Pro に月あたり一定回数を載せて検証する（クレジットパックにはしない）。Starter でも検出した事実（メタ差）は出す。今は $49 / $99 を動かさない。Agency 利用が取れ、「Compare を毎回目視しなくて済んだ」が確認できてから **Agency $149〜$199** を試す余地がある。撮影範囲は trial / Starter / Pro ともフルページ。粗利監視は PNG 容量ではなく **Residential 転送 MB / Observation の中央値と P90**。500 回が変動費の防波堤。
+- Observation を作る理由、2回目を作る理由、Observation の価値を強くする
+- 既存 Observation の上に、事実と分けて売る解釈になる（AI を前面に出さない）
+- 今日見るクライアントが分かることになる
+- Watch / Alert を開く理由になる
+- Compare まで落ちて判断できる
+
+追加 Observation が 0。根拠なしのスコアを出さない。Scout / RUM / 50 州 / クレジットパックは今は作らない。
+
+$49 / $99 は動かさない。表の主役を「500 Observations」から **Small agencies / Growing agencies（何社見られるか）** へ寄せる余地はある。Observation は内部の原価単位のまま。Change Audit は **AI を使ったから値上げ**しない。クレジットパックにはしない。Starter でも検出した事実（メタ差）は出す。Agency 利用と「Compare を毎回目視しなくて済んだ」が確認できてから **Agency $149〜$199** を試す余地がある。撮影範囲は trial / Starter / Pro ともフルページ。粗利監視は PNG 容量ではなく **Residential 転送 MB / Observation の中央値と P90**。500 回が変動費の防波堤。
 
 ---
 
 ## 2. 実行計画
 
-番号は社内リスト（1–37）と対応する。上から順に進める。下の段階を先に作らない。
+番号は社内リスト（1–37）と対応する。次に足す順は **36 → 41 → 42 → 38/19 → 12**。Agency Monitor → Watch → Alert → Compare も磨く。下の段階（Scout、RUM、50 州、クレジット）を先に作らない。
 
-### 今やってよい（見た目だけ）
+### 今やってよい
 
-既存の事実を読みやすくする。新しい判定・新しい原価・新しい出口は足さない。
+既存の事実を読みやすくする。解釈（38 / 19）は 42 のあと。Monitor の「今日見るクライアント」が短くなる変更も進めてよい。
 
 | # | 方針 | 内容 |
 | --- | --- | --- |
