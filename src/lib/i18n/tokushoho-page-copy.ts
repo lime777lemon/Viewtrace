@@ -45,10 +45,6 @@ export const tokushohoPageCopyJa: TokushohoPageCopy = {
       paragraphs: ["The Establish合同会社", "サービス名：Viewtrace"],
     },
     {
-      title: "代表責任者",
-      paragraphs: ["池田　優希子"],
-    },
-    {
       title: "所在地",
       paragraphs: ["東京都渋谷区道玄坂1-16-6 二葉ビル8b"],
     },
@@ -183,10 +179,6 @@ export const tokushohoPageCopyEn: TokushohoPageCopy = {
     {
       title: "Seller",
       paragraphs: ["The Establish LLC (Japan)", "Service: Viewtrace"],
-    },
-    {
-      title: "Responsible person",
-      paragraphs: ["Yukiko Ikeda"],
     },
     {
       title: "Address",
