@@ -1,12 +1,30 @@
 import { NextResponse } from "next/server";
 import { AUDIT_ACTION, appendAuditEventAsService } from "@/lib/audit-log";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { runDueJourneyWatches } from "@/lib/journey-store";
 import {
   buildCaptureConditionsFromBrowserless,
   buildCaptureConditionsFromPlaywrightWorker,
 } from "@/lib/capture-conditions";
 import { runObservationPrimaryScreenshot } from "@/lib/observation-primary-capture";
 import { runUrlPreviewFetch } from "@/lib/url-preview-fetch";
+import { seoFactsForObservation } from "@/lib/observation-seo-facts";
+import { collectObservationWebFacts } from "@/lib/observation-web-facts";
+import { isBrowserlessConfigured } from "@/lib/browserless-screenshot";
+import { runBrowserlessScrollWithProxyRetry } from "@/lib/browserless-scroll-interaction";
+import {
+  interactionWatchPlan,
+  persistRegionalInteractionCheck,
+  stampDiscoveryFullAt,
+  WATCH_INTERACTION_MIN_BUDGET_MS,
+} from "@/lib/observation-watch-interaction";
+import {
+  behaviorAlertEmailCopy,
+  behaviorAlertTransitions,
+  behaviorMapAlertDiffs,
+  type BehaviorMapDiffV1,
+  type BehaviorTransitionV1,
+} from "@/lib/observation-behavior-diff";
 import { htmlHeadSignalsHasAny } from "@/lib/url-preview";
 import { shouldNotifyWatchOnMetadata } from "@/lib/observation-html-signals-readout";
 import { getPngDimensions } from "@/lib/png-dimensions";
@@ -157,6 +175,8 @@ export async function POST(req: Request) {
    */
   const SCHEDULE_HORIZON_MS = 60 * 60 * 1000;
   const now = new Date();
+  const cronStartedAt = Date.now();
+  const CRON_BUDGET_MS = 270_000;
   const horizonIso = new Date(now.getTime() + SCHEDULE_HORIZON_MS).toISOString();
   const todayStartIso = startOfUtcDay(now).toISOString();
 
@@ -206,6 +226,9 @@ export async function POST(req: Request) {
   let failureNotified = 0;
   let quotaSkipped = 0;
   let quotaSkipNotified = 0;
+  let interactionRan = 0;
+  let interactionSkipped = 0;
+  let interactionAlerted = 0;
 
   const dashboardUrl = `${getAppOriginForEmailLinks()}/dashboard/observations`;
 
@@ -444,7 +467,6 @@ export async function POST(req: Request) {
     const userId = getString(row, "user_id");
     const notifyMode: WatchNotifyMode = parseWatchNotifyMode(getString(row, "notify_mode")) ?? "always";
     const notifyOnMetadata = parseWatchNotifyOnMetadata(row.notify_on_metadata);
-    const fullPage = getBool(row, "snapshot_full_page", false);
     const webhookUrl = normalizeObservationWebhookUrl(getString(row, "webhook_url") || null);
 
     if (!url || !region || !watchId || !userId) continue;
@@ -476,6 +498,7 @@ export async function POST(req: Request) {
     }
 
     const userEmail = await getUserEmail(userId);
+    const fullPage = plan.snapshotFullPage;
 
     const primary = await runObservationPrimaryScreenshot({ url, region, fullPage });
     const shot = primary.result;
@@ -544,12 +567,14 @@ export async function POST(req: Request) {
     );
 
     let htmlSignals;
+    let previewForFacts: Awaited<ReturnType<typeof runUrlPreviewFetch>> | undefined;
     try {
       const preview = await runUrlPreviewFetch(url, {
         screenshotFallback: false,
         regionValue: region,
         retryWithoutProxyOnFailure: true,
       });
+      previewForFacts = preview;
       if (preview.ok && htmlHeadSignalsHasAny(preview.htmlSignals)) {
         htmlSignals = preview.htmlSignals;
       }
@@ -623,6 +648,39 @@ export async function POST(req: Request) {
     } else if (htmlSignals) {
       captureConditions = { ...captureConditions, html_signals: htmlSignals };
     }
+    try {
+      const preview = previewForFacts?.ok ? previewForFacts : undefined;
+      const webFacts = await collectObservationWebFacts({
+        target: url,
+        observedAt: new Date().toISOString(),
+        preview: preview
+          ? {
+              status: preview.status,
+              final_url: preview.canonicalUrl,
+              via_proxy: preview.viaProxy,
+              headers: preview.headers,
+              html_sample_sha256: preview.htmlSampleSha256,
+              html_sample_bytes: preview.htmlSampleBytes,
+              html_sample_truncated: preview.htmlSampleTruncated,
+            }
+          : undefined,
+      });
+      if (webFacts) captureConditions = { ...captureConditions, web_facts: webFacts };
+    } catch (err) {
+      console.warn("[cron] web facts unavailable", {
+        watchId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+    const seoFacts = seoFactsForObservation({
+      requestedUrl: url,
+      storedHtmlSignals: captureConditions.html_signals,
+      preview: previewForFacts?.ok
+        ? { ok: true, html: previewForFacts.html, htmlSignals: previewForFacts.htmlSignals }
+        : { ok: false },
+      webFacts: captureConditions.web_facts,
+    });
+    if (seoFacts) captureConditions = { ...captureConditions, seo_facts: seoFacts };
 
     const obsForHash: Observation = {
       id: obsId,
@@ -749,6 +807,93 @@ export async function POST(req: Request) {
       ? pageSignalsScoreDelta(previous.captureConditions?.html_signals, captureConditions.html_signals)
       : null;
     const pageSignalsEmail = pageSignalsDelta ? pageSignalsWatchEmailLines(pageSignalsDelta) : null;
+
+    let behaviorAlerts: BehaviorTransitionV1[] = [];
+    let behaviorMapAlerts: BehaviorMapDiffV1[] = [];
+    if (blobUrl) {
+      const timeLeft = CRON_BUDGET_MS - (Date.now() - cronStartedAt);
+      if (!isBrowserlessConfigured() || timeLeft < WATCH_INTERACTION_MIN_BUDGET_MS) {
+        interactionSkipped += 1;
+        console.warn("[cron] interaction check skipped", {
+          watchId,
+          reason: isBrowserlessConfigured() ? "time_budget" : "not_configured",
+          timeLeft,
+        });
+      } else {
+        try {
+          const currentSha = captureConditions.web_facts?.html.sample_sha256 ?? null;
+          const previousSha = previous?.captureConditions?.web_facts?.html.sample_sha256 ?? null;
+          const htmlChanged = Boolean(currentSha && previousSha && currentSha !== previousSha);
+          const watchPlan = await interactionWatchPlan(svc, {
+            userId,
+            url,
+            region,
+            capturedAt,
+            excludeId: obsId,
+            htmlChanged,
+          });
+          const interaction = await runBrowserlessScrollWithProxyRetry({
+            url,
+            region,
+            prior: watchPlan.prior,
+            scan: watchPlan.scan,
+          });
+          if (!interaction.ok) {
+            console.warn("[cron] interaction check failed", {
+              watchId,
+              error: interaction.error,
+              durationMs: interaction.durationMs,
+              proxyBytes: interaction.proxyBytes,
+            });
+          } else {
+            stampDiscoveryFullAt(interaction.check, watchPlan.lastFullDiscoveryAt);
+            const persisted = await persistRegionalInteractionCheck(svc, {
+              userId,
+              observationId: obsId,
+              url,
+              region,
+              capturedAt,
+              check: interaction.check,
+              billing: "watch_included",
+            });
+            if (persisted.saved) {
+              interactionRan += 1;
+              behaviorAlerts = behaviorAlertTransitions(persisted.diff);
+              behaviorMapAlerts = behaviorMapAlertDiffs(persisted.diff);
+              const detected = interaction.check.types.filter((row) => row.detected).length;
+              const executed = interaction.check.types.filter(
+                (row) =>
+                  row.status === "working" ||
+                  row.status === "no_change_observed" ||
+                  row.status === "failed" ||
+                  row.status === "blocked_for_safety" ||
+                  row.status === "playback_not_verifiable",
+              ).length;
+              await appendAuditEventAsService(svc, userId, {
+                scope: "observation",
+                action: "observation.watch_interaction_check",
+                observationId: obsId,
+                meta: {
+                  watchId,
+                  region,
+                  duration_ms: interaction.check.duration_ms,
+                  proxy_bytes: interaction.check.proxy_bytes,
+                  detected,
+                  executed,
+                  alerts: behaviorAlerts.length,
+                  billing: "watch_included",
+                },
+              });
+            }
+          }
+        } catch (err) {
+          console.warn("[cron] interaction check unavailable", {
+            watchId,
+            error: err instanceof Error ? err.message : String(err),
+          });
+        }
+      }
+    }
 
     if (webhookUrl) {
       const posted = await postObservationWebhook(webhookUrl, {
@@ -916,9 +1061,74 @@ export async function POST(req: Request) {
         }
       }
     }
+
+    if (behaviorAlerts.length > 0 || behaviorMapAlerts.length > 0) {
+      if (!userEmail) {
+        console.warn("[cron] behavior email skipped: user_email_missing", { watchId, userId });
+      } else if (!isResendConfigured()) {
+        console.warn("[cron] behavior email skipped: resend_not_configured", { watchId, userId });
+      } else {
+        const behaviorCopy = behaviorAlertEmailCopy({ region, alerts: behaviorAlerts, mapDiffs: behaviorMapAlerts });
+        const text = [
+          ...behaviorCopy.lines,
+          "",
+          compareOpenUrl ? `Open compare / 比較を開く: ${compareOpenUrl}` : "",
+          `Open record / 記録を開く: ${openUrl}`,
+          "",
+          emailAccountHintText(userEmail),
+        ]
+          .filter((line) => line !== "")
+          .join("\n");
+        const html = [
+          "<p><strong>Observed interaction behavior changed</strong></p>",
+          ...behaviorCopy.lines.filter((line) => line !== "").map((line) => `<p>${escapeHtml(line)}</p>`),
+          compareOpenUrl ? observationCompareLinkHtml(compareOpenUrl) : "",
+          observationRecordLinkHtml(openUrl),
+          emailAccountHintHtml(userEmail),
+        ].join("");
+        const res = await sendResendEmail({
+          to: userEmail,
+          subject: behaviorCopy.subject,
+          text,
+          html,
+        });
+        if (res.ok) {
+          notified += 1;
+          interactionAlerted += 1;
+          await markWatchNotified(watchId);
+        } else {
+          console.warn("[cron] behavior email failed", { watchId, userId, error: res.error });
+        }
+      }
+    }
   }
 
-  return okJson({ ran, notified, failureNotified, quotaSkipped, quotaSkipNotified });
+  let journeyRan = 0;
+  let journeySkipped = 0;
+  try {
+    const journeyResult = await runDueJourneyWatches(svc, async (userId) => {
+      const { data } = await svc.from("users").select("plan").eq("id", userId).maybeSingle();
+      const planId = parsePlanId(typeof (data as { plan?: unknown } | null)?.plan === "string" ? String((data as { plan: string }).plan) : null);
+      return getPlan(planId).monthlyObservations;
+    });
+    journeyRan = journeyResult.ran;
+    journeySkipped = journeyResult.skipped;
+  } catch (err) {
+    console.warn("[cron] journey watch unavailable", { error: err instanceof Error ? err.message : String(err) });
+  }
+
+  return okJson({
+    ran,
+    notified,
+    failureNotified,
+    quotaSkipped,
+    quotaSkipNotified,
+    interactionRan,
+    interactionSkipped,
+    interactionAlerted,
+    journeyRan,
+    journeySkipped,
+  });
 }
 
 function escapeHtml(s: string): string {

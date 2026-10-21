@@ -13,7 +13,7 @@ import type { ObservationAiAudit } from "@/lib/observation-ai-audit";
 import { loadObservationAiAuditForPublicShare } from "@/lib/observation-ai-audit-store";
 
 export const PUBLIC_OBSERVATION_ROW_SELECT =
-  "id,user_id,url,region,region_label,status,captured_at,snapshot_image_url,snapshot_sha256,snapshot_phash,content_hash,snapshot_purged_at,capture_conditions" as const;
+  "id,user_id,url,region,region_label,status,captured_at,snapshot_image_url,snapshot_sha256,snapshot_phash,snapshot_content_type,content_hash,snapshot_purged_at,capture_conditions" as const;
 
 export type PublicVerifyObservation = {
   id: string;
@@ -23,6 +23,7 @@ export type PublicVerifyObservation = {
   regionValue?: string;
   status: ObservationStatus;
   snapshotImageUrl?: string;
+  snapshotContentType?: string;
   snapshotSha256?: string;
   snapshotPhash?: string;
   snapshotPurgedAt?: string;
@@ -90,6 +91,10 @@ export function mapObservationRowToPublicVerify(
     regionValue: typeof row.region === "string" && row.region.trim() ? row.region.trim() : undefined,
     status,
     snapshotImageUrl,
+    snapshotContentType:
+      typeof row.snapshot_content_type === "string" && row.snapshot_content_type.trim()
+        ? row.snapshot_content_type.trim()
+        : undefined,
     snapshotSha256,
     snapshotPhash,
     snapshotPurgedAt,

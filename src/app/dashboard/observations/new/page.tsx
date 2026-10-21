@@ -19,10 +19,12 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+export const maxDuration = 120;
+
 export default async function NewObservationPage({
   searchParams,
 }: {
-  searchParams: Promise<{ url?: string; region?: string; error?: string }>;
+  searchParams: Promise<{ url?: string; region?: string; error?: string; mode?: string }>;
 }) {
   const session = await getSession();
   if (!session) redirect("/login?next=/dashboard/observations/new");
@@ -58,6 +60,8 @@ export default async function NewObservationPage({
   const sp = await searchParams;
   const defaultUrl = sp.url ? decodeURIComponent(sp.url) : "";
   const defaultRegion = sp.region && regions.some((r) => r.value === sp.region) ? sp.region : undefined;
+  const defaultHomepageMode =
+    sp.mode === "live_check" || sp.mode === "share_clip" ? sp.mode : "still";
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
@@ -111,7 +115,22 @@ export default async function NewObservationPage({
           remainingHint: tSettings.observationRemainingHint,
           suggestedLabel: tSettings.observationSuggestedRegions,
           runError: tSettings.observationRunError,
+          homepageModeLabel: tSettings.homepageModeLabel,
+          homepageModeHint: tSettings.homepageModeHint,
+          homepageModeStill: tSettings.homepageModeStill,
+          homepageModeStillHint: tSettings.homepageModeStillHint,
+          homepageModeLive: tSettings.homepageModeLive,
+          homepageModeLiveHint: tSettings.homepageModeLiveHint,
+          homepageModeClip: tSettings.homepageModeClip,
+          homepageModeClipHint: tSettings.homepageModeClipHint,
+          homepageMotionSingleRegion: tSettings.homepageMotionSingleRegion,
+          observationSubmitLive: tSettings.observationSubmitLive,
+          observationSubmitClip: tSettings.observationSubmitClip,
+          observationSubmitLivePending: tSettings.observationSubmitLivePending,
+          observationSubmitClipPending: tSettings.observationSubmitClipPending,
+          homepageLiveFailed: tSettings.homepageLiveFailed,
         }}
+        defaultHomepageMode={defaultHomepageMode}
       />
     </div>
   );

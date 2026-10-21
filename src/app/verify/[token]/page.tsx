@@ -18,6 +18,7 @@ import {
   observationPageSignalsCopyFrom,
 } from "@/components/dashboard/ObservationPageSignalsPanel";
 import { observationAiAuditCopyFrom } from "@/lib/observation-ai-audit-copy";
+import { ObservationSeoFactsPanel } from "@/components/dashboard/ObservationSeoFactsPanel";
 import { PublicShareActions } from "@/components/verify/PublicShareActions";
 import { PublicVerifySnapshot } from "@/components/verify/PublicVerifySnapshot";
 import { VerifyViewBeacon } from "@/components/verify/VerifyViewBeacon";
@@ -109,6 +110,7 @@ export default async function PublicVerifyPage({ params }: Props) {
           {obs.snapshotImageUrl ? (
             <PublicVerifySnapshot
               imageUrl={obs.snapshotImageUrl}
+              contentType={obs.snapshotContentType}
               labels={{
                 viewFullscreen: sv.viewFullscreen,
                 closeFullscreen: sv.closeFullscreen,
@@ -117,7 +119,11 @@ export default async function PublicVerifyPage({ params }: Props) {
             />
           ) : (
             <p className="px-4 py-12 text-center text-sm text-ink-muted">
-              {obs.screenshotExpired ? t.screenshotExpired : t.noScreenshot}
+              {obs.screenshotExpired
+                ? t.screenshotExpired
+                : obs.captureConditions?.homepage_observation?.mode === "live_check"
+                  ? sv.liveOnlyHint
+                  : t.noScreenshot}
             </p>
           )}
         </div>
@@ -188,6 +194,16 @@ export default async function PublicVerifyPage({ params }: Props) {
               signals={obs.htmlSignals}
               copy={htmlHeadSignalsCopy}
               requestedUrl={obs.url}
+            />
+          </div>
+        ) : null}
+
+        {obs.captureConditions?.seo_facts ? (
+          <div className="mt-6">
+            <ObservationSeoFactsPanel
+              facts={obs.captureConditions.seo_facts}
+              html={obs.captureConditions?.html_signals}
+              locale={locale}
             />
           </div>
         ) : null}

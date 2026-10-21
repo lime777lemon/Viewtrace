@@ -1,0 +1,37 @@
+# gcloud run services replace service.yaml --region us-central1
+# Then set the secret: VIEWTRACE_GEO_WORKER_SECRET
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: viewtrace-geo-screenshot-us
+  annotations:
+    run.googleapis.com/ingress: all
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "1"
+        run.googleapis.com/startup-cpu-boost: "true"
+    spec:
+      containerConcurrency: 1
+      timeoutSeconds: 120
+      containers:
+        - image: IMAGE_PLACEHOLDER
+          ports:
+            - name: http1
+              containerPort: 8080
+          resources:
+            limits:
+              cpu: "2"
+              memory: 2Gi
+          env:
+            - name: VIEWTRACE_GEO_WORKER_REGION
+              value: US
+            - name: VIEWTRACE_GEO_WORKER_PROVIDER
+              value: gcp
+            - name: VIEWTRACE_GEO_WORKER_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: viewtrace-geo-worker-secret
+                  key: latest

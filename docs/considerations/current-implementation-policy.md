@@ -377,3 +377,5 @@ Linux / Python が効く場所は **A**（hash / parse / diff / classify / 統�
 | 51 | Experimental（内部） | Capture diagnostics。顧客画面ではなく原価用。C に $200 を混ぜない。`proxy_bytes` の 0/null は既存方針 |
 | 45 | Rejected（今は） | Heartbeat。Observation 商品の外。36 / 42 / 38 より先にしない |
 | 46 | Rejected（今は） | HTTP health。Watch の添え書き以上にしない。Uptime 商品にしない |
+| 52 | Later（12 のあと。最初のスライスのみ） | Journey は既存 15d（安全クリック 1〜3）を地域つきで見せる。追加エンジンなし。小型 Datadog（SSL/DNS/TCP/UDP/ICMP/gRPC/Mobile）にはしない。Playwright の geolocation だけでは Geo にしない。出口は現行どおり Residential。Login / カート / 決済 / Watch 自動は禁止のまま。今の順（36 → 41 → 42 → 38/19 → 12）より上げない。詳細は `docs/considerations/journey-monitor.md` |
+| 53 | Later（12 のあと） | Regional Interaction Check は共通エンジン。1 Region × 1 Check セッション = 合成 1。タイプごとには課金しない。同じセッションで User interactions / Motion / Media を Detect → Execute → Verify。Detected だけでは Working にしない。Verify は DOM だけでなく frame hash / media / resource。Accordion は trigger と panel。Scroll reveal / Lazy-load は candidate まで scroll。Load は要素単位。Cookie は Delayed。`/tests/interactions` fixture は本番 Browserless で回す（fixture だから Working にはしない）。Form は submit しない。Journey とは別。今の順より上げない。詳細は `docs/considerations/regional-interaction-check.md` |

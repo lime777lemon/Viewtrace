@@ -18,6 +18,10 @@ export const observationEventJa = {
   captureNoUrlScreenshotFailed: "スクリーンショットを取得できませんでした",
   captureNoUrlPreviewFailed: "ページ情報の取得に失敗しました",
   captureNoUrlNoPreview: "画像を取得できませんでした",
+  captureLiveCheck: "ライブ確認（動きは保存していません）",
+  captureShareClip: "短い動画を保存",
+  captureLiveFailed: "ライブ確認を開始できませんでした",
+  captureClipFailed: "短い動画を記録できませんでした",
 } as const;
 
 export function formatProcessingDetailSuccess(regionLabel: string, httpStatus: number): string {
@@ -30,6 +34,14 @@ export function formatProcessingDetailRecordedWithImage(regionLabel: string): st
 
 export function formatProcessingDetailScreenshotVerified(regionLabel: string): string {
   return `${regionLabel} · スクリーンショットで確認`;
+}
+
+export function formatProcessingDetailLiveCheck(regionLabel: string): string {
+  return `${regionLabel} · ライブ確認`;
+}
+
+export function formatProcessingDetailShareClip(regionLabel: string): string {
+  return `${regionLabel} · 短い動画`;
 }
 
 export function formatProcessingDetailFailure(regionLabel: string): string {

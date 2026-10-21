@@ -133,6 +133,51 @@ export async function uploadObservationSnapshotPng(
   }
 }
 
+/** 短いホームページ動画（webm/mp4）。連続ショットは保存しない。 */
+export async function uploadObservationMedia(params: {
+  observationId: string;
+  body: ArrayBuffer;
+  contentType: "video/webm" | "video/mp4";
+}): Promise<ObservationSnapshotUploadResult> {
+  const auth = blobClientAuth();
+  if (!auth) {
+    console.warn("[blob] observation media skipped", {
+      observationId: params.observationId,
+      code: "token_missing",
+    });
+    return { ok: false, code: "token_missing" };
+  }
+  try {
+    const body = Buffer.from(params.body);
+    const ext = params.contentType === "video/mp4" ? "mp4" : "webm";
+    const key = `observations/${params.observationId}.${ext}`;
+    const snapshotSha256 = createHash("sha256").update(body).digest("hex");
+    const { url } = await put(key, body, {
+      access: "public",
+      contentType: params.contentType,
+      ...auth.options,
+    });
+    if (url.length >= 2048) {
+      return { ok: false, code: "url_too_long", message: `URL length ${url.length}` };
+    }
+    return {
+      ok: true,
+      url,
+      snapshotSha256,
+      snapshotPhash: null,
+      snapshotBytes: body.length,
+      snapshotContentType: params.contentType,
+    };
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    console.warn("[blob] observation media upload failed", {
+      observationId: params.observationId,
+      message,
+    });
+    return { ok: false, code: "upload_failed", message };
+  }
+}
+
 function isVercelBlobUrl(url: string): boolean {
   try {
     const host = new URL(url).hostname.toLowerCase();

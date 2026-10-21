@@ -1,10 +1,12 @@
+import { createHash } from "node:crypto";
 import { BROWSER_LIKE_HEADERS } from "@/lib/browser-fingerprint";
 import { fetchMicrolinkScreenshotUrl } from "@/lib/microlink-screenshot";
 import {
   extractHtmlHeadSignals,
   extractHtmlPreviewMeta,
   isBlockedPreviewHost,
-  readHtmlHeadForPreview,
+  MAX_HTML_PREVIEW_CHARS,
+  readHtmlPreviewDocument,
   type HtmlHeadSignalsV1,
 } from "@/lib/url-preview";
 import { getGeoProxyAgent } from "@/lib/geo/proxy";
@@ -20,6 +22,9 @@ export type UrlPreviewResult =
       headers: Record<string, string>;
       viaProxy: boolean;
       htmlSignals: HtmlHeadSignalsV1;
+      htmlSampleSha256: string | null;
+      htmlSampleBytes: number;
+      htmlSampleTruncated: boolean;
     }
   | { ok: false; error: string };
 
@@ -115,6 +120,9 @@ export async function runUrlPreviewFetch(
       headers: {},
       viaProxy: false,
       htmlSignals: extractHtmlHeadSignals("", target, null),
+      htmlSampleSha256: null,
+      htmlSampleBytes: 0,
+      htmlSampleTruncated: false,
     };
   }
 
@@ -202,7 +210,12 @@ export async function runUrlPreviewFetch(
         key === "content-language" ||
         key === "cache-control" ||
         key === "content-security-policy" ||
+        key === "permissions-policy" ||
+        key === "referrer-policy" ||
+        key === "server" ||
         key === "set-cookie" ||
+        key === "strict-transport-security" ||
+        key === "x-content-type-options" ||
         key === "x-frame-options" ||
         key === "x-robots-tag" ||
         key === "location"
@@ -227,17 +240,24 @@ export async function runUrlPreviewFetch(
           headersOut["x-robots-tag"] ?? null,
           res.status,
         ),
+        htmlSampleSha256: null,
+        htmlSampleBytes: 0,
+        htmlSampleTruncated: false,
       };
     }
 
-    const chunk = await readHtmlHeadForPreview(res.body);
+    const document = await readHtmlPreviewDocument(res.body);
+    const chunk = document.head;
     const { title, image } = extractHtmlPreviewMeta(chunk, finalUrl);
     const htmlSignals = extractHtmlHeadSignals(
       chunk,
       finalUrl,
       headersOut["x-robots-tag"] ?? null,
       res.status,
+      { html: document.body, complete: document.complete },
     );
+    const htmlSampleBytes = Buffer.byteLength(chunk);
+    const htmlSampleSha256 = createHash("sha256").update(chunk).digest("hex");
 
     let imageOut = image;
     if (screenshotFallback && (preferScreenshotOverOg || !imageOut)) {
@@ -259,6 +279,9 @@ export async function runUrlPreviewFetch(
       headers: headersOut,
       viaProxy: usedProxy,
       htmlSignals,
+      htmlSampleSha256,
+      htmlSampleBytes,
+      htmlSampleTruncated: chunk.length >= MAX_HTML_PREVIEW_CHARS,
     };
   } catch (err) {
     const kind = classifyNetworkError(err);

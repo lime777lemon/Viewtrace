@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { Locale } from "@/lib/i18n";
 import { copy } from "@/lib/i18n";
+import { decodeHtmlText } from "@/lib/url-preview";
 
 type Phase = "ready" | "loading" | "error";
 
@@ -76,6 +77,9 @@ type Props = {
   metaLine: string;
   locale: Locale;
   comparePrevious?: ComparePreviousSnapshot | null;
+  mediaKind?: "image" | "video" | "live";
+  clipHref?: string | null;
+  fullPage?: boolean;
 };
 
 export function ObservationSnapshotVisuals({
@@ -87,12 +91,15 @@ export function ObservationSnapshotVisuals({
   metaLine,
   locale,
   comparePrevious = null,
+  mediaKind = "image",
+  clipHref = null,
+  fullPage = false,
 }: Props) {
   const t = copy[locale].snapshotVisuals;
   const { imageUrl, phase } = useHydratedSnapshotImage(
     observationUrl,
     serverImageUrl,
-    fetchSnapshot,
+    fetchSnapshot && mediaKind === "image",
   );
 
   const [diffRatioLabel, setDiffRatioLabel] = useState<string | null>(null);
@@ -102,7 +109,7 @@ export function ObservationSnapshotVisuals({
   const previousUrl = comparePrevious?.snapshotImageUrl ?? null;
 
   useEffect(() => {
-    if (!currentForDiff || !previousUrl) {
+    if (mediaKind !== "image" || !currentForDiff || !previousUrl) {
       setDiffRatioLabel(null);
       setDiffPhase("idle");
       return;
@@ -135,11 +142,13 @@ export function ObservationSnapshotVisuals({
     return () => {
       cancelled = true;
     };
-  }, [currentForDiff, previousUrl]);
+  }, [currentForDiff, previousUrl, mediaKind]);
 
-  const showImg = Boolean(imageUrl);
-  const showLoading = !showImg && phase === "loading";
-  const showError = !showImg && phase === "error";
+  const showVideo = mediaKind === "video" && Boolean(serverImageUrl);
+  const showLive = mediaKind === "live";
+  const showImg = !showVideo && !showLive && Boolean(imageUrl);
+  const showLoading = !showImg && !showVideo && !showLive && phase === "loading";
+  const showError = !showImg && !showVideo && !showLive && phase === "error";
 
   const [fullscreenOpen, setFullscreenOpen] = useState(false);
 
@@ -160,14 +169,36 @@ export function ObservationSnapshotVisuals({
   return (
     <>
       <section>
-        <h2 className="font-display text-lg font-semibold text-ink">{t.snapshotTitle}</h2>
-        {displayTitle ? (
-          <p className="mt-3 text-sm font-medium text-ink">{displayTitle}</p>
+        <h2 className="font-display text-lg font-semibold text-ink">
+          {showVideo ? t.videoTitle : showLive ? t.liveOnlyTitle : t.snapshotTitle}
+        </h2>
+        {decodeHtmlText(displayTitle) ? (
+          <p className="mt-3 text-sm font-medium text-ink">{decodeHtmlText(displayTitle)}</p>
         ) : null}
         <div className="relative mt-4 overflow-hidden rounded-2xl border border-border bg-surface-elevated">
-          {showImg ? (
+          {showVideo ? (
+            <video
+              src={serverImageUrl!}
+              controls
+              playsInline
+              className="block h-auto w-full bg-ink"
+            />
+          ) : showLive ? (
+            <div className="flex aspect-16/10 flex-col justify-center gap-2 px-6 py-10 text-center">
+              <p className="text-sm font-medium text-ink">{t.liveOnlyTitle}</p>
+              <p className="text-xs text-ink-muted">{t.liveOnlyHint}</p>
+              {clipHref ? (
+                <Link
+                  href={clipHref}
+                  className="mx-auto mt-2 text-sm font-semibold text-accent hover:text-accent-hover"
+                >
+                  {t.liveOnlyCta}
+                </Link>
+              ) : null}
+            </div>
+          ) : showImg ? (
             <>
-              <div className="max-h-[min(80vh,960px)] overflow-y-auto overflow-x-hidden overscroll-contain">
+              <div className={fullPage ? "max-h-[min(80vh,960px)] overflow-y-auto overflow-x-hidden overscroll-contain" : ""}>
                 {/* eslint-disable-next-line @next/next/no-img-element -- 外部 OG / Microlink CDN */}
                 <img
                   src={imageUrl!}
@@ -208,10 +239,13 @@ export function ObservationSnapshotVisuals({
             </div>
           )}
         </div>
-        <p className="mt-2 text-xs text-ink-muted">{t.fullPageScrollHint}</p>
+        <p className="mt-2 text-xs text-ink-muted">
+          {showVideo ? t.videoHint : showLive ? t.liveOnlyHint : fullPage ? t.fullPageScrollHint : t.viewportHint}
+        </p>
         <p className="mt-1 text-xs text-ink-muted">{metaLine}</p>
       </section>
 
+      {mediaKind === "image" ? (
       <section>
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <h2 className="font-display text-lg font-semibold text-ink">{t.diffTitle}</h2>
@@ -288,15 +322,16 @@ export function ObservationSnapshotVisuals({
           </div>
         </div>
       </section>
+      ) : null}
 
       {fullscreenOpen && showImg ? (
         <div
-          className="fixed inset-0 z-50 flex flex-col bg-black/95"
+          className="fixed inset-0 z-50 flex h-dvh flex-col overflow-hidden bg-black/95"
           role="dialog"
           aria-modal="true"
           aria-label={t.snapshotTitle}
         >
-          <div className="flex items-center justify-between gap-3 px-4 py-3">
+          <div className="flex shrink-0 items-center justify-between gap-3 px-4 py-3">
             <p className="truncate text-xs text-white/70">{t.fullscreenHint}</p>
             <button
               type="button"
@@ -306,12 +341,12 @@ export function ObservationSnapshotVisuals({
               {t.closeFullscreen}
             </button>
           </div>
-          <div className="flex-1 overflow-auto overscroll-contain px-2 pb-[env(safe-area-inset-bottom)]">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 pb-[env(safe-area-inset-bottom)]">
             {/* eslint-disable-next-line @next/next/no-img-element -- 外部 OG / Microlink CDN */}
             <img
               src={imageUrl!}
               alt=""
-              className="mx-auto h-auto w-full max-w-4xl"
+              className="mx-auto block h-auto w-full max-w-4xl"
             />
           </div>
         </div>

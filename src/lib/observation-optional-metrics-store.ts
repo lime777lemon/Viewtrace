@@ -19,16 +19,24 @@ import {
   parseSyntheticRunTimes,
   type SyntheticInteractionV1,
 } from "@/lib/observation-synthetic-interaction";
+import { parseBehaviorDiff, type BehaviorDiffV1 } from "@/lib/observation-behavior-diff";
+import { appendScrollRunTime, parseScrollRunTimes } from "@/lib/observation-scroll-interaction";
+import {
+  parseRegionalInteractionCheckFromUnknown,
+  type RegionalInteractionCheckV1,
+} from "@/lib/observation-regional-interaction";
 import { countIsoTimestampsThisUtcMonth } from "@/lib/observation-quota";
 
 export const LAB_CWV_ANALYSIS_TYPE = "lab_cwv" as const;
 export const SUBPAGE_ANALYSIS_TYPE = "subpage_scores" as const;
 export const FIELD_CWV_ANALYSIS_TYPE = "field_cwv" as const;
 export const SYNTHETIC_INTERACTION_ANALYSIS_TYPE = "synthetic_interaction" as const;
+export const SCROLL_INTERACTION_ANALYSIS_TYPE = "scroll_interaction" as const;
 const LAB_CWV_PROMPT = "lab-cwv-v1";
 const SUBPAGE_PROMPT = "subpage-scores-v1";
 const FIELD_CWV_PROMPT = "field-cwv-v1";
 const SYNTHETIC_PROMPT = "synthetic-interaction-v1";
+const SCROLL_PROMPT = "scroll-interaction-v1";
 
 export type StoredLabCwv = {
   result: LabCwvV1;
@@ -45,6 +53,16 @@ export type StoredSyntheticInteraction = {
   run_times: string[];
 };
 
+export type InteractionCheckBilling = "synthetic" | "watch_included";
+
+export type StoredScrollInteraction = {
+  result: RegionalInteractionCheckV1;
+  run_times: string[];
+  quota_run_times: string[];
+  billing: InteractionCheckBilling;
+  behavior_diff: BehaviorDiffV1 | null;
+};
+
 function notesArray(raw: unknown): unknown[] {
   return Array.isArray(raw) ? raw : [];
 }
@@ -56,6 +74,32 @@ export function parseStoredLabCwv(notes: unknown): StoredLabCwv | null {
   const result = parseLabCwvFromUnknown(o.result ?? first);
   if (!result) return null;
   return { result, run_times: parseLabCwvRunTimes(o.run_times) };
+}
+
+function interactionBilling(raw: unknown): InteractionCheckBilling {
+  return raw === "watch_included" ? "watch_included" : "synthetic";
+}
+
+export function parseStoredScroll(notes: unknown): StoredScrollInteraction | null {
+  const first = notesArray(notes)[0];
+  if (!first || typeof first !== "object") return null;
+  const o = first as Record<string, unknown>;
+  const result = parseRegionalInteractionCheckFromUnknown(o.result ?? first);
+  if (!result) return null;
+  const billing = interactionBilling(o.billing);
+  const run_times = parseScrollRunTimes(o.run_times);
+  const quota_run_times = Array.isArray(o.quota_run_times)
+    ? parseScrollRunTimes(o.quota_run_times)
+    : billing === "watch_included"
+      ? []
+      : run_times;
+  return {
+    result,
+    run_times,
+    quota_run_times,
+    billing,
+    behavior_diff: parseBehaviorDiff(o.behavior_diff),
+  };
 }
 
 export function parseStoredSynthetic(notes: unknown): StoredSyntheticInteraction | null {
@@ -189,6 +233,34 @@ export async function saveObservationSubpageScores(
   });
 }
 
+export async function loadObservationSyntheticInteractionsByIds(
+  supabase: SupabaseClient,
+  userId: string,
+  observationIds: string[],
+): Promise<Map<string, SyntheticInteractionV1>> {
+  const out = new Map<string, SyntheticInteractionV1>();
+  const ids = [...new Set(observationIds.filter((id) => isObservationUuid(id)))].slice(0, 12);
+  if (ids.length === 0) return out;
+  const { data, error } = await supabase
+    .from("ai_analyses")
+    .select("observation_id,notes")
+    .eq("user_id", userId)
+    .eq("analysis_type", SYNTHETIC_INTERACTION_ANALYSIS_TYPE)
+    .in("observation_id", ids);
+  if (error) {
+    if (!isMissingTable(error)) {
+      console.warn("[optional-metrics] load synthetic batch failed", error.code, error.message);
+    }
+    return out;
+  }
+  for (const row of data ?? []) {
+    const id = typeof row.observation_id === "string" ? row.observation_id : "";
+    const stored = parseStoredSynthetic(row.notes);
+    if (id && stored?.result) out.set(id, stored.result);
+  }
+  return out;
+}
+
 export async function loadObservationSyntheticInteraction(
   supabase: SupabaseClient,
   userId: string,
@@ -229,6 +301,97 @@ export async function saveObservationFieldCwv(
     promptVersion: FIELD_CWV_PROMPT,
     summary: "Field Core Web Vitals (CrUX)",
     notes: [{ kind: FIELD_CWV_ANALYSIS_TYPE, result: input.fieldCwv, run_times: runTimes }],
+  });
+}
+
+export async function loadObservationScrollInteraction(
+  supabase: SupabaseClient,
+  userId: string,
+  observationId: string,
+): Promise<StoredScrollInteraction | null> {
+  if (!isObservationUuid(observationId)) return null;
+  const { data, error } = await supabase
+    .from("ai_analyses")
+    .select("notes")
+    .eq("user_id", userId)
+    .eq("observation_id", observationId)
+    .eq("analysis_type", SCROLL_INTERACTION_ANALYSIS_TYPE)
+    .maybeSingle();
+  if (error) {
+    if (!isMissingTable(error)) {
+      console.warn("[optional-metrics] load scroll failed", error.code, error.message);
+    }
+    return null;
+  }
+  return parseStoredScroll(data?.notes);
+}
+
+export async function loadObservationScrollInteractionsByIds(
+  supabase: SupabaseClient,
+  userId: string,
+  observationIds: string[],
+): Promise<Map<string, RegionalInteractionCheckV1>> {
+  const out = new Map<string, RegionalInteractionCheckV1>();
+  const ids = [...new Set(observationIds.filter((id) => isObservationUuid(id)))].slice(0, 12);
+  if (ids.length === 0) return out;
+  const { data, error } = await supabase
+    .from("ai_analyses")
+    .select("observation_id,notes")
+    .eq("user_id", userId)
+    .eq("analysis_type", SCROLL_INTERACTION_ANALYSIS_TYPE)
+    .in("observation_id", ids);
+  if (error) {
+    if (!isMissingTable(error)) {
+      console.warn("[optional-metrics] load scroll batch failed", error.code, error.message);
+    }
+    return out;
+  }
+  for (const row of data ?? []) {
+    const id = typeof row.observation_id === "string" ? row.observation_id : "";
+    const stored = parseStoredScroll(row.notes);
+    if (id && stored?.result) out.set(id, stored.result);
+  }
+  return out;
+}
+
+export async function saveObservationScrollInteraction(
+  supabase: SupabaseClient,
+  input: {
+    userId: string;
+    observationId: string;
+    check: RegionalInteractionCheckV1;
+    previousRunTimes?: string[];
+    previousQuotaRunTimes?: string[];
+    billing?: InteractionCheckBilling;
+    behaviorDiff?: BehaviorDiffV1 | null;
+  },
+): Promise<boolean> {
+  if (!isObservationUuid(input.observationId)) return false;
+  const billing = input.billing ?? "synthetic";
+  const runTimes = appendScrollRunTime(input.previousRunTimes ?? [], input.check.measured_at);
+  const quotaBase =
+    input.previousQuotaRunTimes ??
+    (billing === "watch_included" ? [] : (input.previousRunTimes ?? []));
+  const quotaRunTimes =
+    billing === "synthetic"
+      ? appendScrollRunTime(quotaBase, input.check.measured_at)
+      : parseScrollRunTimes(quotaBase);
+  return upsertNotes(supabase, {
+    userId: input.userId,
+    observationId: input.observationId,
+    analysisType: SCROLL_INTERACTION_ANALYSIS_TYPE,
+    promptVersion: SCROLL_PROMPT,
+    summary: "Regional interaction check (not a screenshot)",
+    notes: [
+      {
+        kind: SCROLL_INTERACTION_ANALYSIS_TYPE,
+        result: input.check,
+        run_times: runTimes,
+        quota_run_times: quotaRunTimes,
+        billing,
+        behavior_diff: input.behaviorDiff ?? null,
+      },
+    ],
   });
 }
 
@@ -316,9 +479,9 @@ export async function countSyntheticInteractionRunsThisUtcMonth(
   if (!id) return null;
   const { data, error } = await supabase
     .from("ai_analyses")
-    .select("notes")
+    .select("notes,analysis_type")
     .eq("user_id", id)
-    .eq("analysis_type", SYNTHETIC_INTERACTION_ANALYSIS_TYPE);
+    .in("analysis_type", [SYNTHETIC_INTERACTION_ANALYSIS_TYPE, SCROLL_INTERACTION_ANALYSIS_TYPE]);
   if (error) {
     if (!isMissingTable(error)) {
       console.warn("[optional-metrics] count synthetic failed", error.code, error.message);
@@ -327,9 +490,14 @@ export async function countSyntheticInteractionRunsThisUtcMonth(
   }
   let used = 0;
   for (const row of data ?? []) {
+    const analysisType = typeof row.analysis_type === "string" ? row.analysis_type : "";
+    if (analysisType === SCROLL_INTERACTION_ANALYSIS_TYPE) {
+      const stored = parseStoredScroll(row.notes);
+      used += countIsoTimestampsThisUtcMonth(stored?.quota_run_times ?? [], now);
+      continue;
+    }
     const stored = parseStoredSynthetic(row.notes);
-    const times = stored?.run_times ?? [];
-    used += countIsoTimestampsThisUtcMonth(times, now);
+    used += countIsoTimestampsThisUtcMonth(stored?.run_times ?? [], now);
   }
   return used;
 }
@@ -343,7 +511,8 @@ async function upsertNotes(
       | typeof LAB_CWV_ANALYSIS_TYPE
       | typeof SUBPAGE_ANALYSIS_TYPE
       | typeof FIELD_CWV_ANALYSIS_TYPE
-      | typeof SYNTHETIC_INTERACTION_ANALYSIS_TYPE;
+      | typeof SYNTHETIC_INTERACTION_ANALYSIS_TYPE
+      | typeof SCROLL_INTERACTION_ANALYSIS_TYPE;
     promptVersion: string;
     summary: string;
     notes: unknown[];

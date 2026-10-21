@@ -7,12 +7,15 @@ import { resolveBrowserlessResidentialTarget } from "@/lib/regions";
 import type { HtmlHeadSignalsV1 } from "@/lib/url-preview";
 import type { LabCwvV1 } from "@/lib/observation-lab-cwv";
 import type { SubpageScoresV1 } from "@/lib/observation-subpages";
+import type { ObservationSeoFactsV1 } from "@/lib/observation-seo-facts";
+import type { ObservationWebFactsV1 } from "@/lib/observation-web-facts";
 import {
   nonNegativeNumberOrNull,
   summarizeCaptureCostAttempts,
   type CaptureCostAttemptStage,
   type CaptureCostAttemptV1,
 } from "@/lib/observation-cost-signals";
+
 export const CAPTURE_CONDITIONS_SCHEMA_VERSION = 1 as const;
 
 /** Legacy rows with capture_conditions before evidence-only v3. */
@@ -40,6 +43,16 @@ export type CaptureViewportSource =
   | "playwright_worker_1280x800"
   | "microlink_default"
   | "not_applicable";
+
+export type BrowserlessApiSurface = "screenshot_v2" | "live_bql" | "screencast_v2";
+
+export type HomepageObservationRecord = {
+  mode: "live_check" | "share_clip";
+  /** 連続ショットは使わない。ライブか短い動画だけ。 */
+  sequential_stills: false;
+  clip_duration_ms?: number;
+  live_ttl_ms?: number;
+};
 
 export type CaptureConditionsV1 = {
   schema_version: typeof CAPTURE_CONDITIONS_SCHEMA_VERSION;
@@ -70,12 +83,13 @@ export type CaptureConditionsV1 = {
     name: CaptureEngineName;
     browserless?: {
       endpoint_host: string;
-      api_surface: "screenshot_v2";
+      api_surface: BrowserlessApiSurface;
       wait_until: "networkidle2";
       goto_timeout_ms: number;
-      upstream_image_format: "png";
-      storage_format: "webp" | "png";
+      upstream_image_format: "png" | "webm" | "none";
+      storage_format: "webp" | "png" | "webm" | "none";
       webp_quality: number | null;
+      clip_duration_ms?: number;
     };
     playwright_worker?: {
       wait_until: "networkidle";
@@ -100,6 +114,13 @@ export type CaptureConditionsV1 = {
   };
   /** 取得済み HTML head の読み取り。content_hash には含めない。 */
   html_signals?: HtmlHeadSignalsV1;
+  /** HTML/HTTP/DNS/robots/well-known の補助観測。撮影経路・地域とは別。 */
+  web_facts?: ObservationWebFactsV1;
+  /**
+   * 単一 URL の SEO 事実。取得済み HTML・HTTP・robots.txt だけ。
+   * Score ではない。content_hash には含めない。
+   */
+  seo_facts?: ObservationSeoFactsV1;
   /** Observation 原価の実測用。content_hash には含めない。 */
   cost_signals?: CaptureCostSignalsV1;
   /**
@@ -114,6 +135,11 @@ export type CaptureConditionsV1 = {
    * 記録の Observed には混ぜない。content_hash には含めない。
    */
   subpage_scores?: SubpageScoresV1;
+  /**
+   * ホームページの動き確認。content_hash には含めない。
+   * 確認だけならライブ、残して共有するなら短い動画。連続ショットは使わない。
+   */
+  homepage_observation?: HomepageObservationRecord;
 };
 
 export type { CaptureCostAttemptStage, CaptureCostAttemptV1 };
@@ -281,7 +307,7 @@ export type BuildBrowserlessCaptureConditionsInput = {
   viaExternalProxy: boolean;
   usedRetryWithoutProxy: boolean;
   residentialStateApplied?: boolean;
-  storageFormat: "webp" | "png";
+  storageFormat: "webp" | "png" | "webm" | "none";
   webpQuality: number | null;
   imageWidthPx: number | null;
   imageHeightPx: number | null;
@@ -295,6 +321,10 @@ export type BuildBrowserlessCaptureConditionsInput = {
   fallback?: boolean;
   attempts?: number | null;
   attemptsLog?: CaptureCostAttemptV1[] | null;
+  apiSurface?: BrowserlessApiSurface;
+  upstreamImageFormat?: "png" | "webm" | "none";
+  clipDurationMs?: number;
+  homepageObservation?: HomepageObservationRecord;
 };
 
 export function buildCaptureConditionsFromBrowserless(
@@ -327,12 +357,13 @@ export function buildCaptureConditionsFromBrowserless(
       name: "browserless",
       browserless: {
         endpoint_host: getBrowserlessEndpointHost(),
-        api_surface: BROWSERLESS_API_SURFACE,
+        api_surface: input.apiSurface ?? BROWSERLESS_API_SURFACE,
         wait_until: "networkidle2",
         goto_timeout_ms: BROWSERLESS_GOTO_TIMEOUT_MS,
-        upstream_image_format: "png",
+        upstream_image_format: input.upstreamImageFormat ?? "png",
         storage_format: input.storageFormat,
         webp_quality: input.webpQuality,
+        ...(input.clipDurationMs != null ? { clip_duration_ms: input.clipDurationMs } : {}),
       },
     },
     result: {
@@ -344,6 +375,7 @@ export function buildCaptureConditionsFromBrowserless(
     },
     meta: optionalMeta(),
     cost_signals: buildCostSignals(input),
+    ...(input.homepageObservation ? { homepage_observation: input.homepageObservation } : {}),
   };
 }
 

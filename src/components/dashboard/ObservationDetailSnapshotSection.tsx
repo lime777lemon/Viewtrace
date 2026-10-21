@@ -9,6 +9,11 @@ import {
   localizeObservationEventDetail,
   localizeObservationEventLabel,
 } from "@/lib/i18n/observation-persisted-copy";
+import {
+  isHomepageClipObservation,
+  isHomepageLiveCheckObservation,
+  shouldHydrateObservationSnapshot,
+} from "@/lib/observation-homepage-mode";
 
 function defaultHistory(obs: Observation, locale: Locale): ObservationHistoryEvent[] {
   const t = copy[locale].observationDetail;
@@ -66,13 +71,22 @@ export function ObservationDetailSnapshotSection({
     locale,
   });
   const metaLine = `snapshot · ${geo.headline} · ${formatUtcLabel(obs.capturedAt)}`;
-  const fetchSnapshot = obs.status === "success";
+  const liveCheck = isHomepageLiveCheckObservation(obs);
+  const clip = isHomepageClipObservation(obs);
+  const fetchSnapshot = shouldHydrateObservationSnapshot(obs);
   const captureEventDetailRaw = obs.events?.find((e) => e.kind === "capture")?.detail;
   const captureEventDetail = captureEventDetailRaw
     ? localizeObservationEventDetail(captureEventDetailRaw, locale)
     : undefined;
   const showPersistedSnapshotWarning =
-    !screenshotExpired && !obs.snapshotImageUrl && Boolean(captureEventDetailRaw?.trim());
+    !screenshotExpired &&
+    !obs.snapshotImageUrl &&
+    Boolean(captureEventDetailRaw?.trim()) &&
+    !liveCheck;
+  const clipHref =
+    liveCheck && obs.url && obs.regionValue
+      ? `/dashboard/observations/new?url=${encodeURIComponent(obs.url)}&region=${encodeURIComponent(obs.regionValue)}&mode=share_clip`
+      : null;
 
   return (
     <div className="space-y-10">
@@ -99,6 +113,9 @@ export function ObservationDetailSnapshotSection({
           metaLine={metaLine}
           locale={locale}
           comparePrevious={comparePrevious}
+          mediaKind={liveCheck ? "live" : clip ? "video" : "image"}
+          clipHref={clipHref}
+          fullPage={obs.captureConditions?.full_page_requested === true}
         />
       </div>
 

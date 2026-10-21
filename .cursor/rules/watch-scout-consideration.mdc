@@ -27,17 +27,17 @@ Screenshot の判定は三値のみ: Same / Changed / Not comparable。Changed �
 
 Verify（`/verify/[token]`）は削除しない。成長ループではなく、**納品・共有の公開サーフェス**。Verify → 次の Observation を最重要 KPI にしない。Powered by ViewTrace は残す。読みを載せるなら記録の下。
 
-**今やること:** 36 事実レイアウト。隣に 41（既存ハッシュの見せ方）。次に 42（Changed の下のメタ差）。38 の構造化監査（What changed / Impact / Evidence）は Observation 詳細に載せる。19（Vision）は 38 の中。37（レイアウト AI）は 41 より先にしなくてよい。12（Client / Project / Agency 価格）は 38 のあと。Agency Monitor → Watch → Alert → Compare も磨く。50 州網・RUM・Scout・クレジットパックはしない。
+**今やること:** 36 事実レイアウト。隣に 41（既存ハッシュの見せ方）。次に 42（Changed の下のメタ差）。38 の構造化監査（What changed / Impact / Evidence）は Observation 詳細に載せる。19（Vision）は 38 の中。37（レイアウト AI）は 41 より先にしなくてよい。12（Client / Project / Agency 価格）は 38 のあと。Agency Monitor → Watch → Alert → Compare も磨く。50 州網、RUM・Scoutをする。クレジットパックはしない。
 
-次に足す順: **36 → 41 → 42 → 38/19 → 12**。Watch / html_signals / Multi-region / `JP-13` / Share Collection / Page Signals / Time Compare Slider（条件一致時）は出荷済。html_signals は常時表示（選ばせない）。メタ差分メールだけ Watch で選ばせる。Watch メールの Page Signals は既存通知への添え書きのみ。Change Audit は Watch の毎回には自動で走らせない。Changed のとき、押した件数だけ。Pro で月あたり一定回数を検証する。クレジットパックにはしない。今は $49 / $99 を動かさない。
+次に足す順: **36 → 41 → 42 → 38/19 → 12**。Watch / html_signals / Multi-region / `JP-13` / Share Collection / Page Signals / Time Compare Slider（条件一致時）は出荷済。html_signals は常時表示（選ばせない）。メタ差分メールだけ Watch で選ばせる。Watch メールの Page Signals は既存通知への添え書きのみ。Change Audit は Watch の毎回には自動で走らせる。Changed のとき、押した件数だけ。Pro で月あたり一定回数を検証する。クレジットパックにはしない。今は $49 / $99 を動かさない。
 
-記録に混ぜない: 測っていない Performance / SEO / Accessibility 数字。ラボ CWV・フィールド CWV（CrUX）・撮っていない下層の採点は、記録の Observed には混ぜず、**料金内オプション**（押した件数だけ。Watch では自動実行しない）。Lab と Field は別セクション。URL 単位 CrUX が無ければ Origin 単位と明示する。no_data も正常な保存結果。再取得は補助（数分では変わらない）。**CrUX は完成。Field INP の代替は作らない。** 任意 URL の操作応答は合成操作テスト（安全なクリック 1〜3。Field INP と呼ばない）。自社 RUM は将来・自サイトへ script を置いたときだけ。第三者 Observation には置けない。RUM は今の順（36 → 41 → 42 → 38/19 → 12）より上げない。合成は料金内オプション（trial 2 / Starter 10 / Pro 30）。Watch では自動実行しない。Page Signals は html_signals 減点の点数として記録の下に出してよい（根拠必須、SEO とは書かない。CWV と下層はこの点数に入れない）。このページの監査指摘は読み側に出してよい。今やらない: サイト全体 SEO crawler、自社 RUM（優先しない）、Free AI Visual Checker、Scout、Apollo、クレジットパック、Tokyo Proxy 再販、Heartbeat / HTTP health を商品化。Verify を KPI の主役にしない。$49 / $99 は動かさない。ラボ CWV は trial 月 2 / Starter 月 10 / Pro 月 30。フィールド CWV は trial 月 10 / Starter 月 50 / Pro 月 150。下層はスクショなし・同じホスト trial 3 / Starter 5 / Pro 10。
-
+記録に混ぜない: 測っていない Performance / SEO / Accessibility 数字。ラボ CWV・フィールド CWV（CrUX）・撮っていない下層の採点は、記録の Observed には混ぜず、**料金内オプション**（押した件数だけ。Watch で自動実行する）。Lab と Field は別セクション。URL 単位 CrUX が無ければ Origin 単位と明示する。no_data も正常な保存結果。再取得は補助（**CrUX は完成。Field INP の代替は作らない。** 任意 URL の操作応答は合成操作テスト（安全なクリック 1〜3。Field INP と呼ばない）。自社 RUM は将来・自サイトへ script を置いたときだけ。第三者 Observation には置けない。RUM は今の順（36 → 41 → 42 → 38/19 → 12）より上げない。合成は料金内オプション（trial 2 / Starter 10 / Pro 30）。Watch では自動実行する。Page Signals は html_signals 減点の点数として記録の下に出してよい。CWV と下層はこの点数に入れない）。このページの監査指摘は読み側に出して良い。のちに実行するもの: 、自社 RUM（優先しない）、Free AI Visual Checker、Scout、Apollo、クレジットパック、Tokyo Proxy 再販、Heartbeat / HTTP health を商品化。Journey の最初のスライスは既存合成（安全クリック 1〜3）の再利用のみ。Regional Interaction Check は 1 Region × 1 Check セッション = 合成 1（タイプごとではない）。同じセッションで User interactions / Motion / Media を Detect → Execute → Verify。Detected だけでは Working にしない。Verify は DOM だけでなく frame hash / media / resource。Accordion は trigger+panel。Scroll reveal / Lazy-load は candidate-specific。Load は要素単位（cookie は Delayed）。fixture `/tests/interactions` は本番 Browserless で回す。Canvas / WebGL / Lottie は短いフレーム差分のみ。Form は submit しない。Journey とは別。Watch で自動実行する。Verify を KPI の主役にしない。$49 / $99 は動かさない。ラボ CWV は trial 月 2 / Starter 月 10 / Pro 月 30。フィールド CWV は trial 月 10 / Starter 月 50 / Pro 月 150。下層はスクショなし・同じホスト trial 3 / Starter 5 / Pro 10。
+単一URLのObservationでは、取得済みHTML・HTTP・robots.txtを根拠にSEO関連事実を自動記録してよい。測っていない数値は記録へ混ぜない。サイト全体crawler、根拠のないSEO Score、未撮影ページの評価は行わない。
 自社 pull Node（`agent.mjs`）は実験。自社 Playwright Observation Worker は `workers/observation-worker`。本番出口は Browserless。切替は `VIEWTRACE_CAPTURE_BACKEND=playwright_worker` のみ。顧客に proxy は売らない。Residential は外部供給。US 州を選んだ Observation は Browserless REST で同じ州の代表都市 `proxyCity` を先に付ける。失敗したら国単位へ落とす。Requested と Observed を混ぜない。US-CA を選んでも国単位で取れたら California と表示しない。
 
 Mac は開発機。Linux は将来の worker。Python は撮影後の抽出（A: hash / parse / diff）。B（heartbeat / HTTP）と C（撮影）は混ぜない。41 / 42 は Node。Python は HTML を切る 43 / 44 / 48。
 
-1 地域 = 1 Observation。複数地域は件数分消費。Compare / Share / SHA / Interpretation は 0。Watch も 1 URL × 1 地域 × 1 実行 = 1。残量不足なら定期実行は部分実行せずスキップ。超過従量はしない。原価設計は一旦止める。Starter 500 / Pro 1500 は仮置き（2000 に戻さない）。trial / Starter / Pro ともフルページ。$49 / $99 の差は件数・保存・地域・Watch 頻度・CSV。Starter から記録の事実は取り上げない。Change Audit は Pro の上。粗利は PNG ではなく Residential 転送 MB / Observation の中央値と P90。国単位 residential 20〜50 件で CSV を渡し、①上限（P75〜P90 の C、100%消費で変動費 25%）と②損益分岐（実利用率の貢献利益で固定費を割る）を分ける。C に $200 を混ぜない。計測項目は増やさない。proxy_bytes の 0 は実測 0、null は未測定。`retry_without_proxy` は C に使わない。超過上限 $20。State Geo は Starter では保証しない。
+1 地域 = 1 Observation。複数地域は件数分消費。Compare / Share / SHA / Interpretation は 0。Watch も 1 URL × 1 地域 × 1 実行 = 1。残量不足なら定期実行は部分実行せずスキップ。超過従量はしない。原価設計は一旦止める。Starter 500 / Pro 1500 は仮置き（2000 に戻さない）。trial / Starter / Pro ともフルページ。$49 / $99 の差は件数・保存・地域・Watch 頻度・CSV。Starter から記録の事実は取り上げない。Change Audit は Pro の上。粗利は PNG ではなく Residential 転送 MB / Observation の中央値と P90。国単位 residential 20〜50 件で CSV を渡し、①上限（P75〜P90 の C、100%消費で変動費 25%）と②損益分岐（実利用率の貢献利益で固定費を割る）を分ける。C に $200 を混ぜない。計測項目は増やす。proxy_bytes の 0 は実測 0、null は未測定。`retry_without_proxy` は C に使わない。超過上限 $20。State Geo は Starter では保証しない。
 
 Activation **計測**は固定。Activation **UI**は母数が小さいうちはいじらない。
 
@@ -52,3 +52,1137 @@ Activation **計測**は固定。Activation **UI**は母数が小さいうちは
 **登録 → メール確認 → 初回 Observation → 2回目 Observation**
 
 Existing product remains observational (not a delivery guarantee). Interpretation is labeled inference, not Observed.
+---
+description: Observation is the engine. Sequence 36 → 41 → 42 → 38/19 → 12. Do not freeze large features.
+alwaysApply: true
+---
+
+# 現行方針（固定）
+
+`docs/considerations/current-implementation-policy.md`
+
+**カテゴリー:** Website Monitoring for Digital Agencies。
+
+一文:
+
+**Know which client websites need attention before your clients do.**
+
+エンジンは Observation（`URL × 地域 × 時点`）。
+
+基本フロー:
+
+**Observe → Observe again → Compare → Share**
+
+顧客が買う流れ:
+
+**Agency Monitor → Watch → Alert → Compare**
+
+大規模機能は止めない。Visualping 互換の機能一覧にしない。AI Website Audit に寄せない。
+
+AI は Observation → Diff → Signals のあとの読み。
+
+価値はデータ。
+
+Requested ≠ Observed。
+
+本番の撮影出口は Browserless。
+
+記録の中では観測できた事実以上を断定しない。
+
+「Page changed」とは言わない。
+
+$49 / $99 は動かさない。
+
+---
+
+# Observation の原則
+
+画面の順は、
+
+**記録 → 検出した事実 → 監査（AI）**
+
+とする。
+
+SHA は同じか違うかまで。
+
+何が変わったかは html_signals などの観測事実から示す。
+
+AIによる読みは推定としてラベルする。
+
+AI Score は出さない。
+
+Potential impact は必ず根拠となった Signal / Evidence へ戻れるようにする。
+
+Time Compare と Region Compare は別軸。
+
+Before / After を別ページにはしない。
+
+Slider は Time Compare の表示モード。
+
+viewport・高さ・full-page が一致するときだけ利用する。
+
+Time Compare Slider は出荷済。
+
+Screenshot の判定は以下の三値のみ。
+
+- Same
+- Changed
+- Not comparable
+
+Changed は、
+
+**screenshot content differs**
+
+という意味に限定する。
+
+Monitor / Watch でも同じ三値を再利用する。
+
+---
+
+# Verify
+
+Verify（`/verify/[token]`）は削除しない。
+
+成長ループの中心ではなく、
+
+**納品・共有の公開サーフェス**
+
+として扱う。
+
+Verify → 次の Observation を最重要 KPI にしない。
+
+Powered by ViewTrace は残す。
+
+Interpretation を載せる場合は記録の下に配置する。
+
+Verify を KPI の主役にしない。
+
+---
+
+# 現在の主要実装順
+
+**36 → 41 → 42 → 38/19 → 12**
+
+36: 事実レイアウト。
+
+41: 既存 Screenshot hash の見せ方。
+
+42: Changed の下の metadata diff。
+
+38: 構造化監査。
+
+- What changed
+- Impact
+- Evidence
+
+19（Vision）は38の中。
+
+37（Layout AI）は41より先にしなくてよい。
+
+12（Client / Project / Agency pricing）は38のあと。
+
+Agency Monitor → Watch → Alert → Compare も磨く。
+
+Regional Interaction Check / Watch 自動検証を追加しても、原則としてこの主要順を崩さない。
+
+大規模機能は止めない。
+
+---
+
+# 出荷済み
+
+以下は出荷済み。
+
+- Watch
+- html_signals
+- Multi-region
+- `JP-13`
+- Share Collection
+- Page Signals
+- Time Compare Slider（条件一致時）
+
+html_signals は常時表示する。
+
+ユーザーに選ばせない。
+
+メタ差分メールだけ Watch で選択可能にする。
+
+Watch メールの Page Signals は既存通知への添え書きのみ。
+
+---
+
+# Change Audit
+
+Change Audit と Regional Interaction Check は別機能。
+
+**Regional Interaction Check = Watch で自動実行**
+
+**Change Audit = Watch の毎回には自動実行しない**
+
+Change Audit は必要な Changed Observation に対して実行する。
+
+実行した件数だけ扱う。
+
+Pro で月あたり一定回数を検証できる。
+
+クレジットパックにはしない。
+
+AI Interpretation は Observed Evidence のあと。
+
+AI が Evidence なしで Working / Broken / Impact を断定しない。
+
+---
+
+# Observed と追加計測
+
+測っていない Performance / SEO / Accessibility 数字を Observed に混ぜない。
+
+ラボ CWV・フィールド CWV（CrUX）・撮っていない下層ページの採点は Observation の Observed には混ぜない。
+
+これらは料金内オプションとして分離する。
+
+Lab と Field は別セクション。
+
+URL 単位 CrUX が存在しなければ Origin 単位と明示する。
+
+`no_data` も正常な保存結果。
+
+数分で変わらないデータについて再取得を主要機能にしない。
+
+**CrUX は完成。**
+
+Field INP の代替値は作らない。
+
+任意 URL の操作応答は Synthetic Interaction Test として扱う。
+
+Field INP とは呼ばない。
+
+---
+
+# Page Signals
+
+Page Signals は html_signals に基づく評価として記録の下に表示してよい。
+
+根拠必須。
+
+SEO Score とは呼ばない。
+
+CWV と下層ページの結果は Page Signals の点数に入れない。
+
+このページについての監査指摘は Interpretation 側に表示してよい。
+
+---
+
+# Regional Interaction Check
+
+Regional Interaction Check は、実ブラウザ上でページの Interaction / Motion / Media が実際に機能しているかを検証する。
+
+単なるDOM検出機能にはしない。
+
+基本フロー:
+
+**Detect → Execute → Verify**
+
+Detected だけでは Working にしない。
+
+---
+
+# Regional Interaction Check の結果
+
+結果は以下の6値に限定する。
+
+- Working
+- Not measured
+- Not detected
+- No rendered state change observed
+- Blocked for safety
+- Execution error
+
+Working は実際の runtime / rendered / media / resource state の変化を確認できた場合のみ。
+
+Technology detection だけでは Working にしない。
+
+---
+
+# Regional Interaction Check の Evidence
+
+Verify は DOM だけに依存しない。
+
+必要に応じて以下を使用する。
+
+## DOM / Render
+
+- transform
+- opacity
+- visibility
+- display
+- boundingClientRect
+- computedStyle
+- class
+- aria-expanded
+- aria-selected
+- hidden
+- DOM mutation
+
+## Media
+
+- paused
+- currentTime
+- readyState
+
+## Visual
+
+- frame hash
+- frame delta
+
+## Resource
+
+- image complete
+- naturalWidth
+- resource completion
+
+Evidence は対象要素に紐づける。
+
+ページ全体の偶然の変化を対象Interactionの成功Evidenceとして使わない。
+
+---
+
+# User interactions
+
+検証対象:
+
+- Scroll
+- Hover
+- Menu
+- Modal
+- Accordion
+- Carousel
+- Form
+- Tabs
+- Tooltip / Popover
+- Drag
+- Swipe
+- Cursor-follow / mousemove
+
+---
+
+# Motion
+
+検証対象:
+
+- Load animation
+- Auto carousel / slider
+- CSS animation / transition
+- JS animation
+- GSAP
+- Framer Motion
+- Scroll reveal
+- Delayed content
+- Lazy-load
+
+---
+
+# Media / Graphics
+
+検証対象:
+
+- Native video
+- Embedded video
+- YouTube / Vimeo
+- Lottie
+- SVG animation
+- Canvas animation
+- WebGL / Three.js
+
+---
+
+# Interaction-specific verification
+
+Accordion は trigger と controlled panel を対応付ける。
+
+以下のいずれかを Evidence とする。
+
+- `aria-expanded false → true`
+- controlled panel hidden → visible
+- panel height / rect change
+
+Scroll reveal は candidate-specific に実行する。
+
+対象要素を検出し、
+
+**scrollIntoView → wait → remeasure**
+
+する。
+
+Lazy-load も candidate-specific。
+
+**scrollIntoView → wait → resource/render verify**
+
+とする。
+
+Load animation は要素単位で検証する。
+
+Cookie banner 等の遅延出現を Hero Load animation と混同しない。
+
+Cookie等は Delayed content として扱う。
+
+Hover は必要に応じて複数の安全な候補を検証する。
+
+一つの候補が変化しなかっただけでページ全体の Hover を壊れていると断定しない。
+
+Canvas / WebGL / Lottie / SVG 等は、DOMだけで判断できない場合、短時間の frame sampling / frame delta を使用する。
+
+長時間動画や連続スクリーンショット保存を必須にはしない。
+
+---
+
+# Form
+
+Form は、
+
+**focus → test input → value verify → clear**
+
+まで。
+
+submit しない。
+
+入力内容はテスト値のみ。
+
+検証後に clear する。
+
+---
+
+# State restoration
+
+Interaction type の間では状態を可能な限り復元する。
+
+- Escape
+- scroll 0
+- video pause
+- input clear
+- temporary focus解除
+- URL が変化した場合は元URLへ goto
+- 必要なら reload
+
+Interaction A の結果が Interaction B の検証結果を汚染しないようにする。
+
+---
+
+# Safety boundary
+
+Regional Interaction Check は Watch 自動実行でも安全境界を変更しない。
+
+以下の副作用を伴う可能性がある操作は自動実行しない。
+
+- Login
+- Sign in
+- Submit
+- Subscribe
+- Add to cart
+- Buy
+- Purchase
+- Checkout
+- Delete
+- Confirm
+- Account creation
+- Payment
+- destructive action
+
+安全性を確認できない操作は実行しない。
+
+結果:
+
+**Blocked for safety**
+
+として記録する。
+
+Navigation / CTA は Journey と分離する。
+
+---
+
+# Regional Interaction Check × Browserless
+
+本番実行は Browserless の地域セッションを使用する。
+
+Regional Interaction Check は、
+
+**1 Region × 1 Check session**
+
+で実行する。
+
+Interaction type ごとに別セッションを作らない。
+
+同一セッション内で User interactions / Motion / Media を Detect → Execute → Verify する。
+
+---
+
+# Interaction Test Fixtures
+
+fixture:
+
+`/tests/interactions`
+
+は実際の Check engine の検証用として使用する。
+
+Fixtureだから Working とみなしてはいけない。
+
+本番と同じ Browserless 地域セッションと同じ Check engine で、
+
+**Detect → Execute → Verify**
+
+を実行する。
+
+各Interaction typeについて可能な限り以下を検証する。
+
+- Feature absent → Not detected
+- Feature exists + works → Working
+- Feature exists + broken/no response → No rendered state change observed
+- Unsafe → Blocked for safety
+- Execution failure → Execution error
+
+FixtureはPreviewではない。
+
+実Browserless executionで検証する。
+
+---
+
+# Watch × Regional Interaction Check
+
+**Regional Interaction Check は Watch の各定期 Observation で自動実行する。**
+
+ユーザーが毎回 Observation を開いて手動で Check を押す必要はない。
+
+Watch の基本フロー:
+
+**Watch → Observation → Regional Interaction Check → Behavior Diff → Alert → Compare**
+
+Watch による Regional Interaction Check は Watch Observation の一部として扱う。
+
+---
+
+# Watch の課金・消費単位
+
+Watch:
+
+**1 URL × 1 Region × 1実行 = 1 Observation**
+
+を消費する。
+
+Watch によって自動実行される Regional Interaction Check は、
+
+**追加の Synthetic quota を消費しない。**
+
+同一 Watch 実行内で何種類の Interaction を検証しても、Interaction type ごとの追加消費はしない。
+
+したがって、
+
+**Watch Observation + automatic Regional Interaction Check = 1 Observation**
+
+としてユーザーに見せる。
+
+Observation と Synthetic の二重消費にはしない。
+
+---
+
+# Manual Synthetic quota
+
+Manual Regional Interaction Check / Journey は Watch とは別に Synthetic quota を消費する。
+
+Synthetic quota:
+
+- trial: 2 / month
+- Starter: 10 / month
+- Pro: 30 / month
+
+Manual Regional Interaction Check:
+
+**1 Region × 1 Check session = Synthetic 1**
+
+Interaction type ごとには消費しない。
+
+Journey も既定の Synthetic quota を使用する。
+
+Watch の automatic Regional Interaction Check はこの quota に含めない。
+
+クレジットパックにはしない。
+
+---
+
+# Watch Interaction capability
+
+Watch のたびに全Interaction typeを無条件に総当たりする設計にはしない。
+
+初回または必要なタイミングでページ上の安全な Interaction candidate を検出する。
+
+Observation / Check から、その URL × Region について検出された Interaction capability を保存できる。
+
+例:
+
+- Scroll: detected
+- Hover: detected
+- Accordion: detected
+- Form: detected
+- Video: not detected
+- Carousel: not detected
+- WebGL: not detected
+
+以降の Watch では既知の Interaction capability を優先して regression verification する。
+
+既知の対象だけに固定はしない。
+
+新しい candidate が検出された場合は検証対象へ追加する。
+
+削除された candidate も Behavior Diff の対象にできる。
+
+目的は、
+
+**毎回すべてを総当たりすることではなく、実際に存在するBehaviorが継続して機能しているかを検証すること。**
+
+---
+
+# Watch Behavior Diff
+
+Watch は今回の結果と、前回の同一 **URL × Region** の Regional Interaction Check を比較する。
+
+単発の Working 判定だけで終わらせない。
+
+基本状態遷移:
+
+**Working → Working**
+= regressionなし
+
+**Working → No rendered state change observed**
+= Alert
+
+**Working → Execution error**
+= Alert
+
+**Working → Not detected**
+= Alert candidate
+
+**Not detected → Working**
+= 新しい Interaction として記録
+
+**Blocked for safety → Blocked for safety**
+= regression判定しない
+
+**Not measured**
+= Working / Broken と推定しない
+
+必要に応じて6値間の状態遷移を保存する。
+
+---
+
+# Watch Alert
+
+Watch Alert は、
+
+「Page changed」
+
+とは表現しない。
+
+Interactionについては、
+
+**Observed interaction behavior changed**
+
+または、
+
+**Behavior regression detected**
+
+として扱う。
+
+例:
+
+**Carousel regression detected in California**
+
+Previous:
+Working
+
+Current:
+No rendered state change observed
+
+Evidence:
+対象Carousel / state / rendered evidence
+
+Alert から以下へ戻れるようにする。
+
+- Watch
+- Observation
+- Interaction evidence
+- Time Compare
+- Region Compare
+
+---
+
+# Watch と検証コスト
+
+Watch の automatic Regional Interaction Check は Synthetic quota を消費しないが、実行原価が0という意味ではない。
+
+Browserless execution time と Residential transfer を計測する。
+
+特に、
+
+- Watch frequency
+- Region count
+- Watch count
+- Browserless execution time
+- proxy MB
+
+によって原価が増える。
+
+Watch Interaction Check の本番実測を **20〜50 runs** 行う。
+
+計測する主要項目:
+
+- execution duration
+- proxy_bytes
+- detected interaction count
+- executed interaction count
+- verification duration
+- success / failure
+- Region
+
+集計:
+
+- mean
+- median / P50
+- P75
+- P90
+
+特に原価判断には median と P90 を使う。
+
+この実測が完了するまでは $49 / $99 を変更しない。
+
+---
+
+# Watch frequency と料金設計
+
+現行価格:
+
+**Starter $49**
+**Pro $99**
+
+は維持する。
+
+現時点の基本設計:
+
+## Starter
+
+- 500 Observations / month
+- Watch
+- automatic Regional Interaction Check
+- Watch 最大 1回 / day
+- manual Synthetic 10 / month
+- 7日保存
+- full-page capture
+
+## Pro
+
+- 1,500 Observations / month
+- Watch
+- automatic Regional Interaction Check
+- Watch 最大 4回 / day
+- manual Synthetic 30 / month
+- 60日保存
+- full-page capture
+- Region Compare
+- Time Compare
+- CSV
+- その他Pro機能
+
+Watch automatic Regional Interaction Check は Observation quota 内に含める。
+
+別途 Synthetic quota を引かない。
+
+---
+
+# Watch capacity の考え方
+
+1 URL × 1 Region の場合:
+
+1日1回 Watch:
+
+約30 Observations / month
+
+1日2回:
+
+約60 Observations / month
+
+1日4回:
+
+約120 Observations / month
+
+Region数を増やす場合は Region ごとに Observation を消費する。
+
+例:
+
+10 Watch × 1 Region × 1/day
+
+≈ 300 Observations / month
+
+10 Watch × 1 Region × 4/day
+
+≈ 1,200 Observations / month
+
+3 Regionsなら、それぞれ約3倍。
+
+Watchを設定するときは、現在の Observation quota に対して予想月間消費量を計算できるようにする。
+
+残量不足なら定期実行を部分実行しない。
+
+必要な Region 全体を実行できない場合は、その Watch run をスキップし、未実行であることを記録する。
+
+超過従量はしない。
+
+---
+
+# Watch Optimization
+
+Watch の Interaction Check は原価と時間を抑える。
+
+優先順位:
+
+1. Known working interactions の regression verification
+2. Previously detected interactions
+3. 新しく検出された安全な candidate
+4. expensive visual verification
+
+Video / Canvas / WebGL / Lottie 等の visual verification は必要な場合だけ短時間実行する。
+
+ページに存在しないことが既知で、DOM / resource / runtime上も新candidateがないものを毎回長時間探索しない。
+
+ただし capability cache だけを信頼して新しいInteractionを永久に見逃す設計にはしない。
+
+定期的または構造変化検出時に candidate discovery を更新する。
+
+---
+
+# Lab / Field / Deep-page checks
+
+Lab CWV:
+
+- trial 月2
+- Starter 月10
+- Pro 月30
+
+Field CWV:
+
+- trial 月10
+- Starter 月50
+- Pro 月150
+
+下層:
+
+- screenshotなし
+- 同じhost
+- trial 3
+- Starter 5
+- Pro 10
+
+これらは Regional Interaction Check とは別機能。
+
+Watch の automatic Interaction Check ルールを自動的に適用しない。
+
+---
+
+# Journey
+
+Journey と Regional Interaction Check は別目的。
+
+Regional Interaction Check:
+
+**このページ上のInteraction / Motion / Mediaが実際に動作するか**
+
+Journey:
+
+**ページ間・ステップ間の安全なユーザー経路**
+
+Journey の最初のスライスは既存Syntheticの安全クリック1〜3を再利用する。
+
+Navigation / CTA は Journey が担当する。
+
+Regional Interaction Check ではNavigation / CTAを無理に統合しない。
+
+Login / Submit / Subscribe / Add to cart / Buy / Purchase / Checkout / Delete / Confirm は自動実行しない。
+
+---
+
+# RUM
+
+自社 RUM は将来、自サイトへ script を設置した場合のみ。
+
+第三者 Observation には設置できない。
+
+RUM は、
+
+**36 → 41 → 42 → 38/19 → 12**
+
+より優先しない。
+
+Regional Interaction Check を Field INP と呼ばない。
+
+Synthetic interaction と Field data を混同しない。
+
+---
+
+# 今優先しないもの
+
+以下は現行主要順より優先しない。
+
+- 50州網の全面展開
+- 自社RUMの商品化
+- Scout
+- サイト全体SEO crawler
+- Free AI Visual Checker
+- Apollo
+- Credit packs
+- Tokyo Proxy resale
+- Heartbeat / HTTP healthの商品化
+
+将来検討はできるが、Regional Interaction Check / Watch / Observationの完成を止めてまで先に作らない。
+
+---
+
+# Capture / Geo
+
+自社 pull Node（`agent.mjs`）は実験。
+
+自社 Playwright Observation Worker は、
+
+`workers/observation-worker`
+
+本番出口は Browserless。
+
+切替は、
+
+`VIEWTRACE_CAPTURE_BACKEND=playwright_worker`
+
+のみ。
+
+顧客にproxyは売らない。
+
+Residentialは外部供給。
+
+US州を選んだ Observation は Browserless REST で同じ州の代表都市 `proxyCity` を先に付ける。
+
+失敗した場合は国単位へ落とす。
+
+Requested と Observed を混ぜない。
+
+US-CAをRequestedしても国単位で取得された場合はCaliforniaと表示しない。
+
+---
+
+# Worker / Processing
+
+Macは開発機。
+
+Linuxは将来のworker。
+
+Pythonは撮影後の抽出:
+
+**A: hash / parse / diff**
+
+B（heartbeat / HTTP）とC（capture）は混ぜない。
+
+41 / 42 はNode。
+
+PythonはHTMLを切る43 / 44 / 48。
+
+---
+
+# Observation usage
+
+1 Region = 1 Observation。
+
+複数RegionはRegion数分消費する。
+
+Compare / Share / SHA / Interpretation = 0。
+
+Watch:
+
+**1 URL × 1 Region × 1 run = 1 Observation**
+
+Watch automatic Regional Interaction Check:
+
+**追加Observation = 0**
+
+**追加Synthetic = 0**
+
+**Interaction typeごとの追加消費 = 0**
+
+Manual Regional Interaction Check:
+
+**1 Region × 1 Check session = Synthetic 1**
+
+残量不足ならWatch定期実行は部分実行しない。
+
+超過従量はしない。
+
+---
+
+# Pricing
+
+原価検証中も、
+
+**Starter $49**
+**Pro $99**
+
+は動かさない。
+
+Starter:
+
+**500 Observations**
+
+Pro:
+
+**1,500 Observations**
+
+2000には戻さない。
+
+trial / Starter / Proともfull-page。
+
+$49 / $99 の差は主に、
+
+- Observation件数
+- 保存期間
+- 地域
+- Watch頻度
+- CSV
+- Pro機能
+
+で作る。
+
+StarterからObservationの事実を取り上げない。
+
+---
+
+# Cost model
+
+粗利判断はPNGサイズだけでは行わない。
+
+Residential転送量:
+
+**MB / Observation**
+
+のmedianとP90を重視する。
+
+Watch Interaction Checkについても、
+
+**MB / Watch Check**
+**execution duration / Watch Check**
+
+を測る。
+
+国単位Residentialについて20〜50件の実測を行う。
+
+原価判断では、
+
+1. 上限
+   - P75〜P90のC
+   - 100%消費時に変動費25%を目安
+
+2. 損益分岐
+   - 実利用率での貢献利益
+   - 固定費を何ユーザーで回収できるか
+
+を分ける。
+
+CにBrowserless固定費$200を混ぜない。
+
+`proxy_bytes = 0` は実測0。
+
+`proxy_bytes = null` は未測定。
+
+`retry_without_proxy` はCの計算に使わない。
+
+超過上限 $20。
+
+State GeoはStarterでは保証しない。
+
+Watch Interaction Checkの実測が料金設計上危険な原価を示した場合は、価格を即変更するのではなく、まず以下を検討する。
+
+- candidate executionの削減
+- known capability reuse
+- discovery frequency調整
+- visual verification時間短縮
+- Watch frequency制御
+- Region数制御
+
+その後に必要ならObservation quota / pricingを再検討する。
+
+---
+
+# Activation
+
+Activation **計測**は固定。
+
+Activation **UI**は母数が小さいうちは変更しない。
+
+入口の計測:
+
+**登録 → メール確認 → 初回 Observation → 2回目 Observation**
+
+---
+
+# 新機能の条件
+
+新機能は以下のいずれかを満たすこと。
+
+- Observationを作る理由になる
+- 2回目のObservationを作る理由になる
+- Observationの価値を強くする
+- 既存Observationの上に事実と分けて売れるInterpretationを追加する
+- 今日見るべきクライアントが分かる
+- Watch / Alertを開く理由になる
+- Compareまで落ちて判断できる
+
+追加Observationが0という理由だけで優先しない。
+
+根拠なしのScoreを出さない。
+
+大規模機能は止めない。
+
+---
+
+# North Star
+
+事業の北星:
+
+**Demo → Pilot → Client added → Alert viewed → Compare viewed → Week-2 active → Paid**
+
+入口の計測:
+
+**登録 → メール確認 → 初回 Observation → 2回目 Observation**
+
+UIは母数が小さいうちはいじらない。
+
+---
+
+# Product boundary
+
+Existing product remains observational.
+
+Delivery guaranteeにはしない。
+
+Observedは実測された事実。
+
+Interpretationは推定として明確に分離する。
+
+Requested ≠ Observed。
+
+Screenshot Changed ≠ 「ページの意味が変わった」。
+
+Interaction detected ≠ Working。
+
+Working = Execute後に期待されるruntime / rendered / media / resource state changeを実測できた場合のみ。
+
+Watchは単なるScreenshot pollingではなく、
+
+**Observation + safe behavior verification + Behavior Diff**
+
+として扱う。
+
+ViewTraceのWatchの目的は、
+
+**見た目の差だけでなく、クライアントサイト上で以前動いていた安全に検証可能なBehaviorが動かなくなったことを、クライアントより先に発見できること。**

@@ -9,8 +9,9 @@ import {
 import { PublicShareActions } from "@/components/verify/PublicShareActions";
 import { PublicVerifySnapshot } from "@/components/verify/PublicVerifySnapshot";
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
-import { copy } from "@/lib/i18n";
+import { copy, type Locale } from "@/lib/i18n";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
+import { clientJourneyColumns, clientPageLabel } from "@/lib/measured-client-summary";
 import { observationGeoCopyFrom, observationGeoReadout } from "@/lib/observation-geo-readout";
 import {
   fetchShareCollectionForPublic,
@@ -41,6 +42,61 @@ function requestedRegionText(obs: PublicShareCollectionItem): string {
     .map((v) => v?.trim())
     .filter((v): v is string => Boolean(v));
   return [...new Set(bits)].join(" · ");
+}
+
+function countText(value: number | null, empty: string): string {
+  return value == null ? empty : String(value);
+}
+
+function MeasuredTotals({
+  item,
+  labels,
+}: {
+  item: PublicShareCollectionItem;
+  labels: (typeof copy)[Locale]["publicShareCollection"];
+}) {
+  const verdict = item.screenshotCompare?.verdict;
+  const page =
+    clientPageLabel(
+      item.status,
+      verdict === "same" || verdict === "changed" || verdict === "incomparable" ? verdict : null,
+    ) || labels.measuredEmpty;
+  const journey = clientJourneyColumns(item.measured.journeys);
+  const rows: { label: string; value: string; note?: string }[] = [
+    { label: labels.measuredPage, value: page },
+    { label: labels.measuredVerified, value: countText(item.measured.verified, labels.measuredEmpty) },
+    {
+      label: labels.measuredUnknown,
+      value: countText(item.measured.unknownChanges, labels.measuredEmpty),
+    },
+    {
+      label: labels.measuredNotClicked,
+      value: countText(item.measured.notClicked, labels.measuredEmpty),
+      note:
+        item.measured.notClicked != null && item.measured.notClicked > 0
+          ? [item.measured.notClickedDetail, labels.measuredNotClickedNote].filter(Boolean).join(" · ")
+          : undefined,
+    },
+    { label: labels.measuredJourney, value: journey.journey || labels.measuredEmpty },
+    { label: labels.measuredResult, value: journey.result || labels.measuredEmpty },
+  ];
+
+  return (
+    <section className="mt-4 rounded-2xl border border-border bg-surface-elevated px-5 py-4 sm:px-6">
+      <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-muted">{labels.measuredTitle}</h2>
+      <dl className="mt-3 divide-y divide-border">
+        {rows.map((row) => (
+          <div key={row.label} className="grid gap-1 py-3 sm:grid-cols-[9.5rem_1fr] sm:gap-4">
+            <dt className="text-xs font-semibold uppercase tracking-wide text-ink-muted">{row.label}</dt>
+            <dd className="text-sm text-ink">
+              <p>{row.value}</p>
+              {row.note ? <p className="mt-1 text-xs leading-relaxed text-ink-muted">{row.note}</p> : null}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
 }
 
 function screenshotTriStateLabel(
@@ -168,10 +224,13 @@ export default async function PublicShareCollectionPage({ params }: TokenParams)
                   <p className="mt-3 text-xs leading-relaxed text-ink-muted">{t.noPreviousInCollection}</p>
                 )}
 
+                <MeasuredTotals item={obs} labels={t} />
+
                 <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-surface-elevated">
                   {obs.snapshotImageUrl ? (
                     <PublicVerifySnapshot
                       imageUrl={obs.snapshotImageUrl}
+                      contentType={obs.snapshotContentType}
                       labels={{
                         viewFullscreen: sv.viewFullscreen,
                         closeFullscreen: sv.closeFullscreen,

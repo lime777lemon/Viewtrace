@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import type { Observation } from "@/lib/demo/observations";
 import { copy, type Locale } from "@/lib/i18n";
 import {
@@ -27,6 +27,8 @@ export function ObservationsLibrary({
   const tb = copy[locale].observationsTable;
   const [query, setQuery] = useState("");
   const [tagFilter, setTagFilter] = useState<string | null>(null);
+  const [pendingTag, setPendingTag] = useState<string | null>(null);
+  const [filterPending, startFilter] = useTransition();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const availableTags = useMemo(() => uniqueObservationTags(rows), [rows]);
@@ -36,6 +38,15 @@ export function ObservationsLibrary({
   );
 
   const hasActiveFilter = query.trim().length > 0 || tagFilter !== null;
+
+  function chooseTag(key: string, value: string | null) {
+    setPendingTag(key);
+    startFilter(() => setTagFilter(value));
+  }
+
+  function tagLabel(key: string, label: string) {
+    return filterPending && pendingTag === key ? t.filtering : label;
+  }
 
   function toggleSelect(id: string, selected: boolean) {
     setSelectedIds((prev) => {
@@ -75,41 +86,44 @@ export function ObservationsLibrary({
         <div className="mt-4 flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={() => setTagFilter(null)}
+            onClick={() => chooseTag("all", null)}
             aria-pressed={tagFilter === null}
+            aria-busy={filterPending && pendingTag === "all"}
             className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
               tagFilter === null
                 ? "bg-ink text-white"
                 : "border border-border bg-surface text-ink-muted hover:text-ink"
             }`}
           >
-            {t.allTags}
+            {tagLabel("all", t.allTags)}
           </button>
           <button
             type="button"
-            onClick={() => setTagFilter(UNTAGGED_FILTER)}
+            onClick={() => chooseTag(UNTAGGED_FILTER, UNTAGGED_FILTER)}
             aria-pressed={tagFilter === UNTAGGED_FILTER}
+            aria-busy={filterPending && pendingTag === UNTAGGED_FILTER}
             className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
               tagFilter === UNTAGGED_FILTER
                 ? "bg-ink text-white"
                 : "border border-border bg-surface text-ink-muted hover:text-ink"
             }`}
           >
-            {t.untagged}
+            {tagLabel(UNTAGGED_FILTER, t.untagged)}
           </button>
           {availableTags.map((tag) => (
             <button
               key={tag}
               type="button"
-              onClick={() => setTagFilter(tag)}
+              onClick={() => chooseTag(tag, tag)}
               aria-pressed={tagFilter?.toLowerCase() === tag.toLowerCase()}
+              aria-busy={filterPending && pendingTag === tag}
               className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
                 tagFilter?.toLowerCase() === tag.toLowerCase()
                   ? "bg-accent text-white"
                   : "border border-border bg-surface text-ink-muted hover:text-ink"
               }`}
             >
-              {tag}
+              {tagLabel(tag, tag)}
             </button>
           ))}
         </div>

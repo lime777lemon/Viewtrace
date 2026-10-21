@@ -41,7 +41,9 @@ export async function generateObservationAiAuditAction(
   );
   const previous = previousObservationForCompare(obs, siblings);
   const record = buildRecordPageAudit(obs, locale, previous);
-  const image = await loadAuditScreenshot(obs.snapshotImageUrl);
+  const image = (obs.snapshotContentType ?? "").toLowerCase().startsWith("video/")
+    ? undefined
+    : await loadAuditScreenshot(obs.snapshotImageUrl);
   const llm = await tryLlmPageAudit({
     facts: observationAuditFacts(obs, previous),
     image,

@@ -5,15 +5,24 @@ import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getObservationMergedForPlan } from "@/lib/demo/user-observations";
+import { observationUrlIdentity } from "@/lib/observation-compare";
 import { sanitizeObservationRouteId } from "@/lib/observation-route-id";
 import { getPlan } from "@/lib/plans";
 import { isBrowserlessConfigured } from "@/lib/browserless-screenshot";
 import { runBrowserlessPerformanceWithProxyRetry } from "@/lib/browserless-performance";
+import { runBrowserlessScrollWithProxyRetry } from "@/lib/browserless-scroll-interaction";
+import {
+  persistRegionalInteractionCheck,
+  previousInteractionPrior,
+  stampDiscoveryFullAt,
+} from "@/lib/observation-watch-interaction";
 import { runBrowserlessSyntheticWithProxyRetry } from "@/lib/browserless-synthetic";
 import { runSameOriginSubpageScores } from "@/lib/observation-subpage-run";
 import type { LabCwvV1 } from "@/lib/observation-lab-cwv";
 import { parseSubpageScoresFromUnknown, type SubpageScoresV1 } from "@/lib/observation-subpages";
 import type { FieldCwvV1 } from "@/lib/observation-field-cwv";
+import type { RegionalInteractionCheckV1 } from "@/lib/observation-regional-interaction";
+import { SCROLL_CHECK_MAX_REGIONS } from "@/lib/observation-scroll-interaction";
 import type { SyntheticInteractionV1 } from "@/lib/observation-synthetic-interaction";
 import { fetchFieldCwvForUrl, isCruxConfigured } from "@/lib/crux";
 import {
@@ -61,6 +70,14 @@ export type RunFieldCwvResult =
 
 export type RunSyntheticInteractionResult =
   | { ok: true; synthetic: SyntheticInteractionV1; used: number; limit: number }
+  | { ok: false; error: OptionalMetricsError; used?: number; limit?: number };
+
+export type RunScrollInteractionResult =
+  | { ok: true; check: RegionalInteractionCheckV1; used: number; limit: number }
+  | { ok: false; error: OptionalMetricsError; used?: number; limit?: number };
+
+export type PrepareScrollChecksResult =
+  | { ok: true; observationIds: string[]; used: number; limit: number }
   | { ok: false; error: OptionalMetricsError; used?: number; limit?: number };
 
 function revalidateObservation(observationId: string) {
@@ -247,6 +264,106 @@ export async function runObservationSyntheticInteractionAction(
   return {
     ok: true,
     synthetic: result.synthetic,
+    used: used + 1,
+    limit: plan.syntheticInteractionMonthly,
+  };
+}
+
+export async function prepareObservationScrollChecksAction(
+  observationIdsRaw: string[],
+): Promise<PrepareScrollChecksResult> {
+  const session = await getSession();
+  if (!session) return { ok: false, error: "unauthorized" };
+  if (!isBrowserlessConfigured()) return { ok: false, error: "browserless_not_configured" };
+
+  const observationIds = [
+    ...new Set(observationIdsRaw.map((id) => sanitizeObservationRouteId(id)).filter(Boolean)),
+  ].slice(0, SCROLL_CHECK_MAX_REGIONS);
+  if (observationIds.length === 0) return { ok: false, error: "invalid_id" };
+
+  const loaded = [];
+  for (const observationId of observationIds) {
+    const obs = await getObservationMergedForPlan(observationId, session.plan);
+    if (!obs?.url) return { ok: false, error: "not_found" };
+    loaded.push(obs);
+  }
+  const identity = observationUrlIdentity(loaded[0]?.url ?? "");
+  if (!identity) return { ok: false, error: "not_found" };
+  for (const obs of loaded) {
+    if (observationUrlIdentity(obs.url ?? "") !== identity) return { ok: false, error: "not_found" };
+  }
+
+  const plan = getPlan(session.plan);
+  const supabase = await createSupabaseServerClient();
+  const used = await countSyntheticInteractionRunsThisUtcMonth(supabase, session.userId);
+  if (used == null) return { ok: false, error: "failed" };
+  if (used + observationIds.length > plan.syntheticInteractionMonthly) {
+    return { ok: false, error: "quota", used, limit: plan.syntheticInteractionMonthly };
+  }
+  return {
+    ok: true,
+    observationIds,
+    used,
+    limit: plan.syntheticInteractionMonthly,
+  };
+}
+
+export async function runObservationScrollInteractionAction(
+  observationIdRaw: string,
+): Promise<RunScrollInteractionResult> {
+  const session = await getSession();
+  if (!session) return { ok: false, error: "unauthorized" };
+
+  const observationId = sanitizeObservationRouteId(observationIdRaw);
+  if (!observationId) return { ok: false, error: "invalid_id" };
+  if (!isBrowserlessConfigured()) return { ok: false, error: "browserless_not_configured" };
+
+  const obs = await getObservationMergedForPlan(observationId, session.plan);
+  if (!obs?.url) return { ok: false, error: "not_found" };
+
+  const plan = getPlan(session.plan);
+  const supabase = await createSupabaseServerClient();
+  const used = await countSyntheticInteractionRunsThisUtcMonth(supabase, session.userId);
+  if (used == null) return { ok: false, error: "failed" };
+  if (used >= plan.syntheticInteractionMonthly) {
+    return { ok: false, error: "quota", used, limit: plan.syntheticInteractionMonthly };
+  }
+
+  const prior = await previousInteractionPrior(supabase, {
+    userId: session.userId,
+    url: obs.url,
+    region: obs.regionValue ?? "",
+    capturedAt: obs.capturedAt,
+    excludeId: observationId,
+  });
+  const result = await runBrowserlessScrollWithProxyRetry({
+    url: obs.url,
+    region: obs.regionValue,
+    prior,
+    scan: "full",
+  });
+  if (!result.ok) {
+    console.warn("[optional-metrics] scroll failed", result.error, result.detail?.slice(0, 200));
+    return { ok: false, error: "failed", used, limit: plan.syntheticInteractionMonthly };
+  }
+
+  const check = result.check;
+  stampDiscoveryFullAt(check, null);
+  const persisted = await persistRegionalInteractionCheck(supabase, {
+    userId: session.userId,
+    observationId,
+    url: obs.url,
+    region: obs.regionValue ?? "",
+    capturedAt: obs.capturedAt,
+    check,
+    billing: "synthetic",
+  });
+  if (!persisted.saved) return { ok: false, error: "failed", used, limit: plan.syntheticInteractionMonthly };
+
+  revalidateObservation(observationId);
+  return {
+    ok: true,
+    check,
     used: used + 1,
     limit: plan.syntheticInteractionMonthly,
   };

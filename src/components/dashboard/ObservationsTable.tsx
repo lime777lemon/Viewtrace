@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition, type MouseEvent } from "react";
 import { updateObservationAnnotationsAction } from "@/app/actions/update-observation-annotations";
 import type { Observation } from "@/lib/demo/observations";
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
@@ -98,6 +98,141 @@ function RowTagEditor({
   );
 }
 
+function ObservationTableRow({
+  row,
+  locale,
+  tagging,
+  onTagClick,
+  retentionDays,
+  selected,
+  onToggleSelect,
+}: {
+  row: Observation;
+  locale: Locale;
+  tagging: boolean;
+  onTagClick?: (tag: string) => void;
+  retentionDays?: number;
+  selected?: boolean;
+  onToggleSelect?: (id: string, selected: boolean) => void;
+}) {
+  const tb = copy[locale].observationsTable;
+  const geoCopy = observationGeoCopyFrom(copy[locale].observationDetail);
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const detailHref = `/dashboard/observations/${row.id}`;
+  const capturedLabel = formatJaDateTime(row.capturedAt, locale);
+  const detailAria = `${pending ? tb.actionOpening : tb.actionDetail}: ${capturedLabel}`;
+  const cellLinkClass =
+    "block h-full px-4 py-3 no-underline outline-offset-[-2px] hover:bg-accent-soft/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent";
+
+  function openDetail(event: MouseEvent<HTMLAnchorElement>) {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    if (pending) return;
+    startTransition(() => {
+      router.push(detailHref);
+    });
+  }
+
+  return (
+    <tr className={`hover:bg-surface/80 ${pending ? "opacity-70" : ""}`} aria-busy={pending || undefined}>
+      {onToggleSelect ? (
+        <td className="px-3 py-3 align-top">
+          <input
+            type="checkbox"
+            checked={selected ?? false}
+            disabled={!isObservationUuid(row.id)}
+            title={isObservationUuid(row.id) ? undefined : copy[locale].observationsListPage.shareCollectionDemoSkip}
+            onChange={(e) => onToggleSelect(row.id, e.target.checked)}
+            className="mt-1 h-4 w-4 accent-accent"
+            aria-label={copy[locale].observationsListPage.shareCollectionSelectRow}
+          />
+        </td>
+      ) : null}
+      <td className="p-0 align-top text-ink-muted">
+        <Link href={detailHref} aria-label={detailAria} className={cellLinkClass} onClick={openDetail}>
+          <span className="text-ink">{capturedLabel}</span>
+          <span className="mt-0.5 block text-[11px] text-ink-muted">
+            {formatUtcLabel(row.capturedAt)}
+          </span>
+        </Link>
+      </td>
+      <td className="max-w-55 p-0 align-top font-mono text-xs text-ink">
+        <Link href={detailHref} aria-label={detailAria} className={`${cellLinkClass} min-w-0 truncate`} onClick={openDetail}>
+          {row.url}
+        </Link>
+      </td>
+      <td className="p-0 align-top text-ink">
+        <Link href={detailHref} aria-label={detailAria} className={cellLinkClass} onClick={openDetail}>
+          <ObservationRegionReadout
+            requestedLabel={row.regionLabel}
+            regionValue={row.regionValue}
+            captureConditions={row.captureConditions}
+            copy={geoCopy}
+            locale={locale}
+            compact
+          />
+        </Link>
+      </td>
+      <td className="p-0 align-top">
+        <Link href={detailHref} aria-label={detailAria} className={cellLinkClass} onClick={openDetail}>
+          <StatusBadge status={row.status} locale={locale} />
+          {pending ? <span className="mt-1 block text-[11px] font-semibold text-ink-muted">{tb.actionOpening}</span> : null}
+          {retentionDays != null && isObservationScreenshotExpired(row, retentionDays) ? (
+            <span className="mt-1 block text-[11px] text-ink-muted">{tb.screenshotExpired}</span>
+          ) : null}
+          {row.note ? (
+            <span className="mt-1 block text-[11px] text-ink-muted">
+              {localizeObservationNote(row.note, locale)}
+            </span>
+          ) : null}
+        </Link>
+      </td>
+      <td className="px-4 py-3 align-top">
+        <div className="flex flex-wrap gap-1">
+          {(row.tags ?? []).map((tag) =>
+            onTagClick ? (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => onTagClick(tag)}
+                className="rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-ink"
+              >
+                {tag}
+              </button>
+            ) : (
+              <span
+                key={tag}
+                className="rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-ink"
+              >
+                {tag}
+              </span>
+            ),
+          )}
+        </div>
+        {tagging ? (
+          <RowTagEditor
+            observationId={row.id}
+            currentTags={row.tags ?? []}
+            locale={locale}
+          />
+        ) : null}
+      </td>
+      <td className="px-4 py-3 text-right align-top">
+        <Link
+          href={detailHref}
+          data-tour="recordDetail"
+          aria-busy={pending || undefined}
+          onClick={openDetail}
+          className="font-medium text-accent hover:text-accent-hover"
+        >
+          {pending ? tb.actionOpening : tb.actionDetail}
+        </Link>
+      </td>
+    </tr>
+  );
+}
+
 export function ObservationsTable({
   rows,
   emptyMessage,
@@ -118,7 +253,6 @@ export function ObservationsTable({
   onToggleSelect?: (id: string, selected: boolean) => void;
 }) {
   const tb = copy[locale].observationsTable;
-  const geoCopy = observationGeoCopyFrom(copy[locale].observationDetail);
   if (rows.length === 0) {
     return (
       <p className="rounded-xl border border-dashed border-border bg-surface-elevated px-4 py-8 text-center text-sm text-ink-muted">
@@ -143,107 +277,18 @@ export function ObservationsTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {rows.map((row) => {
-              const detailHref = `/dashboard/observations/${row.id}`;
-              const capturedLabel = formatJaDateTime(row.capturedAt, locale);
-              const detailAria = `${tb.actionDetail}: ${capturedLabel}`;
-              const cellLinkClass =
-                "block h-full px-4 py-3 no-underline outline-offset-[-2px] hover:bg-accent-soft/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent";
-              return (
-              <tr key={row.id} className="hover:bg-surface/80">
-                {onToggleSelect ? (
-                  <td className="px-3 py-3 align-top">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds?.has(row.id) ?? false}
-                      disabled={!isObservationUuid(row.id)}
-                      title={isObservationUuid(row.id) ? undefined : copy[locale].observationsListPage.shareCollectionDemoSkip}
-                      onChange={(e) => onToggleSelect(row.id, e.target.checked)}
-                      className="mt-1 h-4 w-4 accent-accent"
-                      aria-label={copy[locale].observationsListPage.shareCollectionSelectRow}
-                    />
-                  </td>
-                ) : null}
-                <td className="p-0 align-top text-ink-muted">
-                  <Link href={detailHref} aria-label={detailAria} className={cellLinkClass}>
-                    <span className="text-ink">{capturedLabel}</span>
-                    <span className="mt-0.5 block text-[11px] text-ink-muted">
-                      {formatUtcLabel(row.capturedAt)}
-                    </span>
-                  </Link>
-                </td>
-                <td className="max-w-55 p-0 align-top font-mono text-xs text-ink">
-                  <Link href={detailHref} aria-label={detailAria} className={`${cellLinkClass} min-w-0 truncate`}>
-                    {row.url}
-                  </Link>
-                </td>
-                <td className="p-0 align-top text-ink">
-                  <Link href={detailHref} aria-label={detailAria} className={cellLinkClass}>
-                    <ObservationRegionReadout
-                      requestedLabel={row.regionLabel}
-                      regionValue={row.regionValue}
-                      captureConditions={row.captureConditions}
-                      copy={geoCopy}
-                      locale={locale}
-                      compact
-                    />
-                  </Link>
-                </td>
-                <td className="p-0 align-top">
-                  <Link href={detailHref} aria-label={detailAria} className={cellLinkClass}>
-                    <StatusBadge status={row.status} locale={locale} />
-                    {retentionDays != null && isObservationScreenshotExpired(row, retentionDays) ? (
-                      <span className="mt-1 block text-[11px] text-ink-muted">{tb.screenshotExpired}</span>
-                    ) : null}
-                    {row.note ? (
-                      <span className="mt-1 block text-[11px] text-ink-muted">
-                        {localizeObservationNote(row.note, locale)}
-                      </span>
-                    ) : null}
-                  </Link>
-                </td>
-                <td className="px-4 py-3 align-top">
-                  <div className="flex flex-wrap gap-1">
-                    {(row.tags ?? []).map((tag) =>
-                      onTagClick ? (
-                        <button
-                          key={tag}
-                          type="button"
-                          onClick={() => onTagClick(tag)}
-                          className="rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-ink"
-                        >
-                          {tag}
-                        </button>
-                      ) : (
-                        <span
-                          key={tag}
-                          className="rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-ink"
-                        >
-                          {tag}
-                        </span>
-                      ),
-                    )}
-                  </div>
-                  {tagging ? (
-                    <RowTagEditor
-                      observationId={row.id}
-                      currentTags={row.tags ?? []}
-                      locale={locale}
-                    />
-                  ) : null}
-                </td>
-                <td className="px-4 py-3 text-right align-top">
-                  <Link
-                    href={detailHref}
-                    data-tour="recordDetail"
-                    className="font-medium text-accent hover:text-accent-hover"
-                  >
-                    {tb.actionDetail}
-                  </Link>
-                </td>
-              </tr>
-              );
-            })}
+            {rows.map((row) => (
+              <ObservationTableRow
+                key={row.id}
+                row={row}
+                locale={locale}
+                tagging={tagging}
+                onTagClick={onTagClick}
+                retentionDays={retentionDays}
+                selected={selectedIds?.has(row.id)}
+                onToggleSelect={onToggleSelect}
+              />
+            ))}
           </tbody>
         </table>
       </div>

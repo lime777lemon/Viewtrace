@@ -1,0 +1,3 @@
+# Replace with URLs already captured via current residential Observations.
+# Include ad / geo landing pages. Do not judge from this example.com row alone.
+https://example.com

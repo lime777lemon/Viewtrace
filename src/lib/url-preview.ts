@@ -1,17 +1,16 @@
 /** LP の「ライブ確認」用。OG / title を HTML から取得。スクリーンショットは `url-preview-fetch` + Microlink で補完。 */
 
-const MAX_HTML_BYTES = 900_000;
+export const MAX_HTML_PREVIEW_CHARS = 900_000;
 
-/** 貼り付け由来の BOM・不可視文字・全角コロン／スラッシュを整える */
+/** 貼り付け由来の BOM・不可視文字・全角英数記号を整える */
 function stripAndNormalizeUrlInput(input: string): string {
   return input
     .replace(/^\uFEFF/, "")
     .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .replace(/[\uFF01-\uFF5E]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
     .replace(/[\u00A0\u3000]/g, " ")
     .trim()
-    .replace(/\.+$/, "")
-    .replace(/\uFF1A/g, ":")
-    .replace(/\uFF0F/g, "/");
+    .replace(/\.+$/, "");
 }
 
 export function normalizeUserUrlInput(input: string): string | null {
@@ -40,7 +39,20 @@ export function isBlockedPreviewHost(hostname: string): boolean {
   if (h.endsWith(".local")) return true;
   if (h === "metadata.google.internal") return true;
 
-  if (h === "[::1]" || h.startsWith("[fe80:") || h.startsWith("[fc") || h.startsWith("[fd")) return true;
+  const ipv6 = h.replace(/^\[|\]$/g, "");
+  if (
+    ipv6 === "::" ||
+    ipv6 === "::1" ||
+    ipv6.startsWith("fc") ||
+    ipv6.startsWith("fd") ||
+    /^fe[89ab]/.test(ipv6) ||
+    ipv6.startsWith("ff") ||
+    ipv6.startsWith("2001:db8:")
+  ) {
+    return true;
+  }
+  const mappedV4 = ipv6.match(/^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/);
+  if (mappedV4) return isBlockedPreviewHost(mappedV4[1]);
 
   const ipv4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
   const m = h.match(ipv4);
@@ -53,6 +65,10 @@ export function isBlockedPreviewHost(hostname: string): boolean {
     if (a === 192 && b === 168) return true;
     if (a === 169 && b === 254) return true;
     if (a === 100 && b >= 64 && b <= 127) return true; /* RFC6598 */
+    if (a === 192 && b === 0 && (c === 0 || c === 2)) return true;
+    if (a === 198 && (b === 18 || b === 19 || (b === 51 && c === 100))) return true;
+    if (a === 203 && b === 0 && c === 113) return true;
+    if (a >= 224) return true;
   }
 
   if (h === "169.254.169.254") return true;
@@ -169,6 +185,10 @@ export type HtmlHeadSignalsV1 = {
   twitter_image?: string | null;
   http_status?: number | null;
   final_url?: string | null;
+  /** `<h1` の件数。body を見ていないときは付けない。 */
+  h1_count?: number | null;
+  /** complete はレスポンス終端まで見た。partial は上限で打ち切った。 */
+  body_scan?: "complete" | "partial";
   /** robots / X-Robots-Tag に noindex があるか。どちらも無いときは null。 */
   noindex?: boolean | null;
   /** canonical があるとき、最終 URL と一致しないか。canonical 無しは null。 */
@@ -212,11 +232,17 @@ function resolveMaybeUrl(raw: string | null, base: URL | null): string | null {
   return clipSignal(raw, 2000);
 }
 
+export function countHtmlH1(html: string): number {
+  const matches = html.match(/<h1\b/gi);
+  return matches ? Math.min(matches.length, 20) : 0;
+}
+
 export function extractHtmlHeadSignals(
   html: string,
   responseUrl: string,
   xRobotsTag?: string | null,
   httpStatus?: number | null,
+  bodyScan?: { html?: string; complete?: boolean },
 ): HtmlHeadSignalsV1 {
   let base: URL | null = null;
   try {
@@ -242,6 +268,8 @@ export function extractHtmlHeadSignals(
   const finalUrl = clipSignal(responseUrl, 2000);
   const status =
     typeof httpStatus === "number" && httpStatus > 0 ? httpStatus : null;
+  const scannedBody = bodyScan?.html ?? "";
+  const jsonLdTypes = jsonLdTypesFromHead(`${html}\n${scannedBody}`);
 
   return {
     document_title: documentTitle,
@@ -252,7 +280,13 @@ export function extractHtmlHeadSignals(
     og_title: ogTitle,
     og_description: ogDescription,
     og_image: resolveMaybeUrl(rawOgImage, base),
-    json_ld_types: jsonLdTypesFromHead(html),
+    json_ld_types: jsonLdTypes,
+    ...(bodyScan
+      ? {
+          h1_count: countHtmlH1(html) + countHtmlH1(scannedBody),
+          body_scan: bodyScan.complete ? ("complete" as const) : ("partial" as const),
+        }
+      : {}),
     html_lang: htmlLangAttr(html),
     viewport: clipSignal(metaContent(html, "viewport"), 200),
     twitter_card: clipSignal(metaContent(html, "twitter:card"), 64),
@@ -290,6 +324,21 @@ export function htmlHeadSignalsHasAny(signals: HtmlHeadSignalsV1): boolean {
   );
 }
 
+export function decodeHtmlText(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const text = value
+    .replace(/&#(\d+);/g, (_, code: string) => String.fromCodePoint(Number(code)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, code: string) => String.fromCodePoint(parseInt(code, 16)))
+    .replace(/&quot;/g, "\"")
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+    .replace(/\s+/g, " ")
+    .trim();
+  return text || null;
+}
+
 export function extractHtmlPreviewMeta(
   html: string,
   responseUrl: string,
@@ -305,7 +354,7 @@ export function extractHtmlPreviewMeta(
   const twTitle = metaContent(html, "twitter:title");
   const titleTag = html.match(/<title[^>]*>([^<]{0,500})<\/title>/i);
   const rawTitle = titleTag?.[1]?.replace(/\s+/g, " ").trim() ?? null;
-  const title = ogTitle || twTitle || rawTitle || null;
+  const title = decodeHtmlText(ogTitle || twTitle || rawTitle);
 
   const ogImage = metaContent(html, "og:image");
   const twImage = metaContent(html, "twitter:image");
@@ -315,20 +364,56 @@ export function extractHtmlPreviewMeta(
   return { title, image };
 }
 
-export async function readHtmlHeadForPreview(body: ReadableStream<Uint8Array> | null): Promise<string> {
-  if (!body) return "";
+/** `</head>` より後に、H1 と JSON-LD を見るための上限。ハッシュ対象の head には混ぜない。 */
+export const HTML_BODY_SCAN_CHARS = 400_000;
+
+export type HtmlPreviewDocument = {
+  head: string;
+  body: string;
+  complete: boolean;
+};
+
+export async function readHtmlPreviewDocument(
+  body: ReadableStream<Uint8Array> | null,
+): Promise<HtmlPreviewDocument> {
+  if (!body) return { head: "", body: "", complete: true };
   const reader = body.getReader();
   const dec = new TextDecoder();
-  let buf = "";
+  let head = "";
+  let scannedBody = "";
+  let mode: "head" | "body" = "head";
+  let complete = false;
   try {
-    while (buf.length < MAX_HTML_BYTES) {
+    while (head.length < MAX_HTML_PREVIEW_CHARS && scannedBody.length < HTML_BODY_SCAN_CHARS) {
       const { done, value } = await reader.read();
-      if (done) break;
-      buf += dec.decode(value, { stream: true });
-      if (/<\/head>/i.test(buf)) break;
+      if (done) {
+        complete = true;
+        const tail = dec.decode();
+        if (tail) {
+          if (mode === "head") head += tail;
+          else scannedBody += tail;
+        }
+        break;
+      }
+      const chunk = dec.decode(value, { stream: true });
+      if (mode === "head") {
+        head += chunk;
+        if (/<\/head>/i.test(head) || head.length >= MAX_HTML_PREVIEW_CHARS) mode = "body";
+      } else {
+        scannedBody += chunk;
+      }
     }
   } finally {
     reader.releaseLock();
   }
-  return buf;
+  if (!complete && mode === "head" && head.length >= MAX_HTML_PREVIEW_CHARS) complete = false;
+  return {
+    head: head.slice(0, MAX_HTML_PREVIEW_CHARS),
+    body: scannedBody.slice(0, HTML_BODY_SCAN_CHARS),
+    complete,
+  };
+}
+
+export async function readHtmlHeadForPreview(body: ReadableStream<Uint8Array> | null): Promise<string> {
+  return (await readHtmlPreviewDocument(body)).head;
 }

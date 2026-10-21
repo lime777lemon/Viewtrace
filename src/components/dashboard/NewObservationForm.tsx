@@ -31,7 +31,23 @@ type FormLabels = {
   remainingHint: string;
   suggestedLabel: string;
   runError: string;
+  homepageModeLabel: string;
+  homepageModeHint: string;
+  homepageModeStill: string;
+  homepageModeStillHint: string;
+  homepageModeLive: string;
+  homepageModeLiveHint: string;
+  homepageModeClip: string;
+  homepageModeClipHint: string;
+  homepageMotionSingleRegion: string;
+  observationSubmitLive: string;
+  observationSubmitClip: string;
+  observationSubmitLivePending: string;
+  observationSubmitClipPending: string;
+  homepageLiveFailed: string;
 };
+
+type HomepageMode = "still" | "live_check" | "share_clip";
 
 type Props = {
   regions: RegionOption[];
@@ -40,6 +56,7 @@ type Props = {
   remainingSlots: number;
   defaultUrl?: string;
   defaultRegion?: string;
+  defaultHomepageMode?: HomepageMode;
 };
 
 export function NewObservationForm({
@@ -49,6 +66,7 @@ export function NewObservationForm({
   remainingSlots,
   defaultUrl = "",
   defaultRegion,
+  defaultHomepageMode = "still",
 }: Props) {
   const router = useRouter();
   const allowed = useMemo(() => new Set(regions.map((r) => r.value)), [regions]);
@@ -57,9 +75,11 @@ export function NewObservationForm({
   const [selected, setSelected] = useState<string[]>(
     initialRegion ? clampRegionSelection([initialRegion], allowed) : [],
   );
+  const [homepageMode, setHomepageMode] = useState<HomepageMode>(defaultHomepageMode);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const motionMode = homepageMode !== "still";
 
   const regionLabel = useMemo(() => {
     const first = selected[0];
@@ -74,6 +94,7 @@ export function NewObservationForm({
   function toggleRegion(value: string) {
     setSelected((prev) => {
       if (prev.includes(value)) return prev.filter((v) => v !== value);
+      if (motionMode) return clampRegionSelection([value], allowed);
       return clampRegionSelection([...prev, value], allowed);
     });
   }
@@ -97,6 +118,7 @@ export function NewObservationForm({
       fd.set("regionLabel", option?.label ?? label);
       fd.set("verifiedTitle", "");
       fd.set("verifiedImageUrl", "");
+      fd.set("homepageMode", homepageMode);
       const result = await recordObservationForRegionAction(fd);
       if (!result.ok) {
         if (result.code === "unauthenticated") {
@@ -138,12 +160,64 @@ export function NewObservationForm({
   }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
-    if (selected.length <= 1) return;
+    const needsClientSubmit = motionMode || selected.length > 1;
+    if (!needsClientSubmit) return;
     event.preventDefault();
     if (!canSubmit) return;
     setBusy(true);
     setError(null);
     try {
+      if (motionMode) {
+        const url = String(new FormData(event.currentTarget).get("url") ?? "").trim();
+        const value = selected[0];
+        if (!value) return;
+        const option = regions.find((r) => r.value === value);
+        const label = option ? getRegionLabelForLocale(option, locale) : value;
+        const fd = new FormData();
+        fd.set("url", url);
+        fd.set("region", value);
+        fd.set("regionLabel", option?.label ?? label);
+        fd.set("verifiedTitle", "");
+        fd.set("verifiedImageUrl", "");
+        fd.set("homepageMode", homepageMode);
+        const liveTab =
+          homepageMode === "live_check" ? window.open("about:blank", "_blank") : null;
+        const result = await recordObservationForRegionAction(fd);
+        if (!result.ok) {
+          liveTab?.close();
+          if (result.code === "unauthenticated") {
+            router.push("/login?next=/dashboard/observations/new");
+            return;
+          }
+          if (result.code === "trial_expired") {
+            router.push("/checkout?plan=starter&reason=trial_expired");
+            return;
+          }
+          if (result.code === "trial_limit") {
+            router.push("/checkout?plan=starter&reason=trial_observation_limit");
+            return;
+          }
+          if (result.code === "monthly_limit") {
+            router.push("/dashboard/observations/new?error=limit");
+            return;
+          }
+          setError(homepageMode === "live_check" ? labels.homepageLiveFailed : labels.runError);
+          return;
+        }
+        if (homepageMode === "live_check" && result.liveUrl) {
+          if (liveTab) {
+            liveTab.location.replace(result.liveUrl);
+          } else {
+            window.location.assign(result.liveUrl);
+            return;
+          }
+        } else if (homepageMode === "live_check") {
+          liveTab?.close();
+          setError(labels.homepageLiveFailed);
+        }
+        router.push(`/dashboard/observations/${result.id}`);
+        return;
+      }
       await runMultiRegion(event.currentTarget);
     } finally {
       setBusy(false);
@@ -151,8 +225,18 @@ export function NewObservationForm({
     }
   }
 
-  const submitLabel =
-    selected.length > 1 ? labels.observeN.replace("{n}", String(selected.length)) : labels.observationSubmit;
+  const submitLabel = motionMode
+    ? homepageMode === "live_check"
+      ? labels.observationSubmitLive
+      : labels.observationSubmitClip
+    : selected.length > 1
+      ? labels.observeN.replace("{n}", String(selected.length))
+      : labels.observationSubmit;
+  const pendingLabel = motionMode
+    ? homepageMode === "live_check"
+      ? labels.observationSubmitLivePending
+      : labels.observationSubmitClipPending
+    : (progress ?? labels.observationSubmitPending);
 
   return (
     <form
@@ -164,6 +248,7 @@ export function NewObservationForm({
       <input type="hidden" name="regionLabel" value={regionLabel} />
       <input type="hidden" name="verifiedTitle" value="" />
       <input type="hidden" name="verifiedImageUrl" value="" />
+      <input type="hidden" name="homepageMode" value={homepageMode} />
       <div>
         <label htmlFor="url" className="block text-sm font-medium text-ink">
           URL
@@ -178,6 +263,44 @@ export function NewObservationForm({
           className="mt-1.5 w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm outline-none ring-accent/30 focus:ring-2"
         />
       </div>
+      <fieldset disabled={busy} className="space-y-3">
+        <legend className="text-sm font-medium text-ink">{labels.homepageModeLabel}</legend>
+        <p className="text-xs leading-relaxed text-ink-muted">{labels.homepageModeHint}</p>
+        {(
+          [
+            ["still", labels.homepageModeStill, labels.homepageModeStillHint],
+            ["live_check", labels.homepageModeLive, labels.homepageModeLiveHint],
+            ["share_clip", labels.homepageModeClip, labels.homepageModeClipHint],
+          ] as const
+        ).map(([value, title, hint]) => (
+          <label
+            key={value}
+            className={`flex cursor-pointer gap-3 rounded-xl border px-3 py-2.5 ${
+              homepageMode === value ? "border-accent bg-accent/5" : "border-border bg-surface"
+            }`}
+          >
+            <input
+              type="radio"
+              name="homepageModeChoice"
+              checked={homepageMode === value}
+              onChange={() => {
+                setHomepageMode(value);
+                if (value !== "still" && selected.length > 1) {
+                  setSelected((prev) => prev.slice(0, 1));
+                }
+              }}
+              className="mt-1 border-border text-accent focus:ring-accent"
+            />
+            <span>
+              <span className="block text-sm font-medium text-ink">{title}</span>
+              <span className="mt-0.5 block text-xs text-ink-muted">{hint}</span>
+            </span>
+          </label>
+        ))}
+        {motionMode ? (
+          <p className="text-xs text-ink-muted">{labels.homepageMotionSingleRegion}</p>
+        ) : null}
+      </fieldset>
       <fieldset disabled={busy}>
         <legend className="text-sm font-medium text-ink">{labels.regionLabel}</legend>
         <p className="mt-1 text-xs leading-relaxed text-ink-muted">{labels.regionsHint}</p>
@@ -248,7 +371,7 @@ export function NewObservationForm({
       <div className="flex flex-wrap gap-3">
         <PendingSubmitButton
           label={submitLabel}
-          pendingLabel={progress ?? labels.observationSubmitPending}
+          pendingLabel={pendingLabel}
           waiting={busy}
           disabled={selected.length < 1 || overQuota}
           className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-accent-hover hover:shadow-md active:translate-y-px disabled:hover:shadow-sm"

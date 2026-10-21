@@ -1,5 +1,16 @@
 import type { Observation } from "@/lib/demo/observations";
 import { formatViewportLabel } from "@/lib/capture-conditions";
+import {
+  clientJourneyColumns,
+  clientPageLabel,
+  emptyClientMeasuredFacts,
+  type ClientMeasuredFacts,
+} from "@/lib/measured-client-summary";
+import {
+  previousObservationForCompare,
+  sameObservationUrlIdentity,
+  screenshotCompareField,
+} from "@/lib/observation-compare";
 
 export type ObservationsCsvMode = "standard" | "audit";
 
@@ -86,7 +97,43 @@ const STANDARD_EXTRA = [
 
 const AUDIT_EXTRA = ["captureConditionsJson"] as const;
 
-export function observationsToCsv(rows: Observation[], mode: ObservationsCsvMode = "standard"): string {
+const CLIENT_COLUMNS = [
+  "page",
+  "verified",
+  "unknownChanges",
+  "notClicked",
+  "notClickedDetail",
+  "journey",
+  "journeyResult",
+] as const;
+
+function countCell(value: number | null): string {
+  return value == null ? "" : String(value);
+}
+
+function pageCell(row: Observation, rows: Observation[]): string {
+  if (row.status !== "success") return "";
+  const siblings = rows.filter(
+    (other) =>
+      other.id !== row.id &&
+      sameObservationUrlIdentity(other.url, row.url) &&
+      other.regionValue === row.regionValue,
+  );
+  const previous = previousObservationForCompare(row, siblings);
+  if (!previous) return clientPageLabel(row.status, null);
+  const field = screenshotCompareField(previous, row);
+  const verdict =
+    field.verdict === "same" || field.verdict === "changed" || field.verdict === "incomparable"
+      ? field.verdict
+      : null;
+  return clientPageLabel(row.status, verdict);
+}
+
+export function observationsToCsv(
+  rows: Observation[],
+  mode: ObservationsCsvMode = "standard",
+  measured?: Map<string, ClientMeasuredFacts>,
+): string {
   const header = [
     "id",
     "capturedAt",
@@ -99,6 +146,7 @@ export function observationsToCsv(rows: Observation[], mode: ObservationsCsvMode
     "reviewStatus",
     ...EVIDENCE_COLUMNS,
     ...STANDARD_EXTRA,
+    ...CLIENT_COLUMNS,
     ...(mode === "audit" ? AUDIT_EXTRA : []),
   ];
 
@@ -106,6 +154,8 @@ export function observationsToCsv(rows: Observation[], mode: ObservationsCsvMode
     header.join(","),
     ...rows.map((r) => {
       const cap = captureFlatFields(r);
+      const facts = measured?.get(r.id) ?? emptyClientMeasuredFacts();
+      const journey = clientJourneyColumns(facts.journeys);
       const base = [
         r.id,
         r.capturedAt,
@@ -134,6 +184,13 @@ export function observationsToCsv(rows: Observation[], mode: ObservationsCsvMode
         cap.costFallback,
         cap.costScreenshotBytes,
         cap.costAttempts,
+        pageCell(r, rows),
+        countCell(facts.verified),
+        countCell(facts.unknownChanges),
+        countCell(facts.notClicked),
+        facts.notClickedDetail ? csvCell(facts.notClickedDetail) : "",
+        journey.journey ? csvCell(journey.journey) : "",
+        journey.result ? csvCell(journey.result) : "",
       ];
       if (mode === "audit") {
         base.push(cap.json ? csvCell(cap.json) : "");

@@ -1,0 +1,404 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useMemo, useRef, useState } from "react";
+import { runMonitoringCheckAction } from "@/app/actions/monitoring-runs";
+import { REGION_SEARCH_FIELD_CLASS } from "@/components/RegionSearchQueryField";
+import type { RegionSearchLabels } from "@/components/RegionSearchQueryField";
+import {
+  JOURNEY_STEP_KINDS,
+  type JourneySideEffect,
+  type JourneyStepDefinition,
+  type JourneyStepKind,
+} from "@/lib/journey-definition";
+import type { Locale } from "@/lib/i18n";
+import { monitoringCheckPlan } from "@/lib/monitoring-run";
+import type { PlanId } from "@/lib/plans";
+import { DEFAULT_OBSERVATION_REGION, getRegionLabelForLocale, getRegionOptions } from "@/lib/regions";
+
+const TEXT = {
+  ja: {
+    extraRegions: "ほかの地域",
+    run: "確認する",
+    runPending: "確認しています…",
+    checks: "この確認は",
+    checksUnit: "件です",
+    pageObservations: "ページの Observation",
+    journeyRuns: "Journey Run",
+    available: "残量",
+    steps: "手順",
+    stepOne: "1. open_url は上の URL です。",
+    addStep: "手順を追加",
+    fillValue: "入力する値",
+    urlRequired: "https://viewtrace.net のように URL を入力してください。",
+    noSideEffect: "副作用なし",
+    permitOrder: "注文確定を許可",
+    permitPayment: "決済を許可",
+    permitDelete: "削除を許可",
+    permitSend: "外部送信を許可",
+    becomesVisible: "表示される",
+    expectedSelector: "期待するセレクタ",
+    expectedText: "期待する文言",
+    errors: {
+      invalid_url: "https://viewtrace.net のように URL を入力してください。",
+      quota: "残量を確認できなかったため、開始していません。",
+      unauthorized: "ログインしてください。",
+      trial_expired: "無料期間が終わっています。",
+      trial_limit: "無料期間の回数に達しています。",
+      region_required: "地域を選んでください。",
+      environment_required: "Desktop か Mobile を選んでください。",
+      selector_required: "クリックなどの手順にはセレクタが必要です。",
+      value_required: "この手順には値が必要です。",
+      url_host: "手順の URL は開始 URL と同じホストにしてください。",
+      save_failed: "Journey を保存できませんでした。",
+      region: "このプランでは選べない地域です。",
+      invalid: "URL と地域を確認してください。",
+    } as Record<string, string>,
+  },
+  en: {
+    extraRegions: "More regions",
+    run: "Run check",
+    runPending: "Running the check…",
+    checks: "This check will use",
+    checksUnit: "checks",
+    pageObservations: "Page observations",
+    journeyRuns: "Journey runs",
+    available: "Available",
+    steps: "Steps",
+    stepOne: "1. open_url uses the URL above.",
+    addStep: "Add step",
+    fillValue: "Value to enter",
+    urlRequired: "Enter a full URL, such as https://viewtrace.net.",
+    noSideEffect: "No side effect",
+    permitOrder: "Permit place order",
+    permitPayment: "Permit payment",
+    permitDelete: "Permit delete",
+    permitSend: "Permit external send",
+    becomesVisible: "Becomes visible",
+    expectedSelector: "expected selector",
+    expectedText: "expected text change",
+    errors: {
+      invalid_url: "Enter a full URL, such as https://viewtrace.net.",
+      quota: "The remaining allowance could not be read, so the check did not start.",
+      unauthorized: "Sign in to run this check.",
+      trial_expired: "The trial period has ended.",
+      trial_limit: "The trial allowance is used up.",
+      region_required: "Choose a region.",
+      environment_required: "Choose Desktop or Mobile.",
+      selector_required: "A click or similar step needs a selector.",
+      value_required: "This step needs a value.",
+      url_host: "Step URLs stay on the same host as the start URL.",
+      save_failed: "Could not save the Journey.",
+      region: "That region is outside this plan.",
+      invalid: "Check the URL and region.",
+    } as Record<string, string>,
+  },
+};
+
+function emptyStep(index: number): JourneyStepDefinition {
+  return {
+    id: `s${index}`,
+    kind: "click",
+    selector: "",
+    value: "",
+    url: "",
+    wait_ms: 1000,
+    permitted_side_effect: null,
+    expect_selector: "",
+    expect_text: "",
+    expect_visible: false,
+    expect_url: "",
+  };
+}
+
+export function CaptureEntryForm({
+  locale,
+  labels,
+  planId,
+  remaining,
+}: {
+  locale: Locale;
+  labels: RegionSearchLabels;
+  planId: PlanId;
+  remaining: number | null;
+}) {
+  const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
+  const copy = TEXT[locale];
+  const options = useMemo(
+    () => getRegionOptions(planId).map((option) => ({
+      value: option.value,
+      label: getRegionLabelForLocale(option, locale),
+    })),
+    [locale, planId],
+  );
+  const defaultRegion = options.some((option) => option.value === DEFAULT_OBSERVATION_REGION)
+    ? DEFAULT_OBSERVATION_REGION
+    : options[0]?.value ?? "";
+  const [region, setRegion] = useState(defaultRegion);
+  const [extraRegions, setExtraRegions] = useState<string[]>([]);
+  const [steps, setSteps] = useState<JourneyStepDefinition[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const plan = monitoringCheckPlan({
+    regions: [region, ...extraRegions],
+    environments: ["desktop", "mobile"],
+    workflowSteps: steps.length,
+  });
+
+  function readUrl() {
+    return formRef.current?.querySelector<HTMLInputElement>('[name="url"]')?.value.trim() ?? "";
+  }
+
+  function updateStep(index: number, patch: Partial<JourneyStepDefinition>) {
+    setSteps((current) => current.map((step, i) => (i === index ? { ...step, ...patch } : step)));
+  }
+
+  function toggleExtra(value: string) {
+    setExtraRegions((current) => {
+      if (current.includes(value)) return current.filter((item) => item !== value);
+      if (current.length >= 3) return current;
+      return [...current, value];
+    });
+  }
+
+  async function runCheck() {
+    const url = readUrl();
+    if (!url || url === "https://" || url === "http://") {
+      setError(copy.urlRequired);
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    const result = await runMonitoringCheckAction({
+      url,
+      regions: [region, ...extraRegions],
+      steps,
+    });
+    if (!result.ok) {
+      setBusy(false);
+      if (result.error === "unauthorized") {
+        router.push("/login?next=/dashboard/region-search");
+        return;
+      }
+      if (result.error === "trial_expired") {
+        router.push("/checkout?plan=starter&reason=trial_expired");
+        return;
+      }
+      if (result.error === "trial_limit") {
+        router.push("/checkout?plan=starter&reason=trial_observation_limit");
+        return;
+      }
+      setError(copy.errors[result.error] ?? result.error);
+      return;
+    }
+    router.push(`/dashboard/monitoring-runs/${result.id}`);
+  }
+
+  return (
+    <form
+      ref={formRef}
+      data-tour="observe"
+      className="rounded-2xl border border-border bg-surface p-5 shadow-sm sm:p-8"
+      onSubmit={(event) => event.preventDefault()}
+    >
+      <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">{labels.planLabel}</p>
+      <p className="mt-2 text-sm text-ink-muted">
+        {planId === "pro" ? `${labels.planPro} · ${labels.planProHint}` : `${labels.planStarter} · ${labels.planStarterHint}`}
+      </p>
+
+      <div className="mt-8 grid gap-6 lg:grid-cols-2 lg:gap-8">
+        <div>
+          <label htmlFor="capture-entry-region" className="block text-sm font-medium text-ink">
+            {labels.dashboardRegionLabel}
+          </label>
+          <select
+            id="capture-entry-region"
+            value={region}
+            aria-label={labels.dashboardRegionAria}
+            onChange={(event) => {
+              const next = event.target.value;
+              setRegion(next);
+              setExtraRegions((current) => current.filter((value) => value !== next));
+            }}
+            className={REGION_SEARCH_FIELD_CLASS}
+          >
+            {options.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="capture-entry-url" className="block text-sm font-medium text-ink">
+            {labels.dashboardQueryLabel}
+          </label>
+          <input
+            id="capture-entry-url"
+            name="url"
+            type="text"
+            required
+            enterKeyHint="go"
+            autoComplete="off"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            placeholder={labels.queryPlaceholder}
+            className={REGION_SEARCH_FIELD_CLASS}
+          />
+        </div>
+      </div>
+
+      <fieldset className="mt-8">
+        <legend className="text-sm font-medium text-ink">{copy.extraRegions}</legend>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          {extraRegions.map((value) => {
+            const option = options.find((item) => item.value === value);
+            return (
+              <button
+                key={value}
+                type="button"
+                onClick={() => toggleExtra(value)}
+                aria-label={locale === "ja" ? `${option?.label ?? value} を外す` : `Remove ${option?.label ?? value}`}
+                className="rounded-full border border-border px-3 py-1 text-xs text-ink"
+              >
+                {option?.label ?? value} ×
+              </button>
+            );
+          })}
+          {extraRegions.length < 3 ? (
+            <select
+              aria-label={copy.extraRegions}
+              value=""
+              onChange={(event) => {
+                if (event.target.value) toggleExtra(event.target.value);
+              }}
+              className="rounded-lg border border-border bg-surface px-2 py-1 text-xs text-ink"
+            >
+              <option value="">{locale === "ja" ? "地域を追加" : "Add a region"}</option>
+              {options.filter((option) => option.value !== region && !extraRegions.includes(option.value)).map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          ) : null}
+        </div>
+      </fieldset>
+
+      <div className="mt-6">
+        <h2 className="text-sm font-medium text-ink">{copy.steps}</h2>
+        <p className="mt-1 text-xs text-ink-muted">{copy.stepOne}</p>
+        <ol className="mt-3 space-y-3">
+          {steps.map((step, index) => (
+            <li key={step.id} className="rounded-lg border border-border bg-surface-elevated p-3">
+              <div className="flex flex-wrap gap-2">
+                <span className="pt-2 text-xs text-ink-muted">{index + 2}</span>
+                <select
+                  value={step.kind}
+                  onChange={(event) => updateStep(index, { kind: event.target.value as JourneyStepKind })}
+                  className="rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
+                >
+                  {JOURNEY_STEP_KINDS.filter((kind) => kind !== "open_url").map((kind) => (
+                    <option key={kind} value={kind}>{kind}</option>
+                  ))}
+                </select>
+                {step.kind !== "wait" && step.kind !== "assert_url" ? (
+                  <input
+                    value={step.selector}
+                    placeholder="selector"
+                    onChange={(event) => updateStep(index, { selector: event.target.value })}
+                    className="min-w-40 flex-1 rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
+                  />
+                ) : null}
+                {step.kind === "assert_url" ? (
+                  <input
+                    value={step.value}
+                    placeholder="url contains"
+                    onChange={(event) => updateStep(index, { value: event.target.value })}
+                    className="min-w-40 flex-1 rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
+                  />
+                ) : null}
+                {step.kind === "fill" || step.kind === "select" || step.kind === "assert_text" ? (
+                  <input
+                    value={step.value}
+                    placeholder={step.kind === "fill" ? copy.fillValue : "value"}
+                    onChange={(event) => updateStep(index, { value: event.target.value })}
+                    className="min-w-32 flex-1 rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
+                  />
+                ) : null}
+                {step.kind === "wait" ? (
+                  <input
+                    type="number"
+                    value={step.wait_ms}
+                    min={200}
+                    max={15000}
+                    onChange={(event) => updateStep(index, { wait_ms: Number(event.target.value) })}
+                    className="w-28 rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
+                  />
+                ) : null}
+              </div>
+              {step.kind === "click" ? (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <input
+                    value={step.expect_selector}
+                    placeholder={copy.expectedSelector}
+                    onChange={(event) => updateStep(index, { expect_selector: event.target.value })}
+                    className="min-w-36 flex-1 rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
+                  />
+                  <input
+                    value={step.expect_text}
+                    placeholder={copy.expectedText}
+                    onChange={(event) => updateStep(index, { expect_text: event.target.value })}
+                    className="min-w-36 flex-1 rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
+                  />
+                  <label className="flex items-center gap-1 text-xs text-ink-muted">
+                    <input type="checkbox" checked={step.expect_visible} onChange={(event) => updateStep(index, { expect_visible: event.target.checked })} />
+                    {copy.becomesVisible}
+                  </label>
+                  <select
+                    value={step.permitted_side_effect ?? ""}
+                    onChange={(event) => updateStep(index, { permitted_side_effect: (event.target.value || null) as JourneySideEffect | null })}
+                    className="rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
+                  >
+                    <option value="">{copy.noSideEffect}</option>
+                    <option value="place_order">{copy.permitOrder}</option>
+                    <option value="payment">{copy.permitPayment}</option>
+                    <option value="delete">{copy.permitDelete}</option>
+                    <option value="external_send">{copy.permitSend}</option>
+                  </select>
+                </div>
+              ) : null}
+            </li>
+          ))}
+        </ol>
+        <button
+          type="button"
+          className="mt-3 text-xs font-semibold text-ink"
+          onClick={() => setSteps((current) => current.length >= 7 ? current : [...current, emptyStep(current.length + 2)])}
+        >
+          {copy.addStep}
+        </button>
+      </div>
+
+      {error ? <p className="mt-3 text-xs font-medium text-red-700" role="alert">{error}</p> : null}
+
+      <div className="mt-6">
+        <p className="text-sm font-semibold text-ink">
+          {copy.checks} {plan.total} {locale === "en" && plan.total === 1 ? "check" : copy.checksUnit}
+        </p>
+        <p className="mt-1 text-xs text-ink-muted">
+          {copy.pageObservations}: {plan.pageObservations}
+          {" · "}
+          {copy.journeyRuns}: {plan.journeyRuns}
+          {remaining != null ? ` · ${copy.available}: ${remaining}` : ""}
+        </p>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => void runCheck()}
+          className="mt-4 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-accent-hover disabled:opacity-60"
+        >
+          {busy ? copy.runPending : copy.run}
+        </button>
+      </div>
+    </form>
+  );
+}

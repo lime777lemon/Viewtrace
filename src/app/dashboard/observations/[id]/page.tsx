@@ -4,6 +4,9 @@ import { notFound, redirect } from "next/navigation";
 import { ObservationAnnotationPanel } from "@/components/dashboard/ObservationAnnotationPanel";
 import { ObservationComparePrompt } from "@/components/dashboard/ObservationComparePrompt";
 import { ObservationDetectedFacts } from "@/components/dashboard/ObservationDetectedFacts";
+import { ObservationInteractionCheckPanel } from "@/components/dashboard/ObservationInteractionCheckPanel";
+import { ObservationJourneyPanel } from "@/components/dashboard/ObservationJourneyPanel";
+import { ObservationMeasurementsPanel } from "@/components/dashboard/ObservationMeasurementsPanel";
 import { ObservationEvidenceHashes } from "@/components/dashboard/ObservationEvidenceHashes";
 import { ObservationPublicVerifyLink } from "@/components/dashboard/ObservationPublicVerifyLink";
 import {
@@ -16,6 +19,8 @@ import {
   ObservationHtmlHeadSignalsPanel,
   observationHtmlHeadCopyFrom,
 } from "@/components/dashboard/ObservationHtmlHeadSignalsPanel";
+import { ObservationSeoFactsPanel } from "@/components/dashboard/ObservationSeoFactsPanel";
+import { ObservationWebFactsPanel } from "@/components/dashboard/ObservationWebFactsPanel";
 import { ObservationCaptureTierBanner } from "@/components/dashboard/ObservationCaptureTierBanner";
 import { ObservationDetailSnapshotSection } from "@/components/dashboard/ObservationDetailSnapshotSection";
 import { ObservationDigitalSeal } from "@/components/dashboard/ObservationDigitalSeal";
@@ -33,6 +38,7 @@ import { loadObservationAiAudit } from "@/lib/observation-ai-audit-store";
 import { ObservationLpVerdictCard } from "@/components/dashboard/ObservationLpVerdictCard";
 import { ObservationNotVisible } from "@/components/dashboard/ObservationNotVisible";
 import { ObservationLivePageComparePanel } from "@/components/dashboard/ObservationLivePageComparePanel";
+import { isHomepageClipObservation, isHomepageLiveCheckObservation } from "@/lib/observation-homepage-mode";
 import { ObservationSnapshotBinaryPanel } from "@/components/dashboard/ObservationSnapshotBinaryPanel";
 import { getSession } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -43,7 +49,9 @@ import {
 } from "@/lib/demo/user-observations";
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
 import { ObservationWatchPanel } from "@/components/dashboard/ObservationWatchPanel";
+import { listJourneys } from "@/lib/journey-store";
 import { getPlan } from "@/lib/plans";
+import { decodeHtmlText } from "@/lib/url-preview";
 import { isBrowserlessConfigured } from "@/lib/browserless-screenshot";
 import { isCruxConfigured } from "@/lib/crux";
 import {
@@ -53,7 +61,10 @@ import {
   loadObservationFieldCwv,
   loadObservationLabCwv,
   loadObservationSubpageScores,
+  loadObservationScrollInteraction,
+  loadObservationScrollInteractionsByIds,
   loadObservationSyntheticInteraction,
+  loadObservationSyntheticInteractionsByIds,
 } from "@/lib/observation-optional-metrics-store";
 import {
   clampRepeatCount,
@@ -139,6 +150,16 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
   }
 
   const supabase = await createSupabaseServerClient();
+  let journeyTargets: Array<{ id: string; name: string; startUrl: string }> = [];
+  try {
+    journeyTargets = (await listJourneys(supabase, session.userId)).map((journey) => ({
+      id: journey.id,
+      name: journey.name,
+      startUrl: journey.start_url,
+    }));
+  } catch {
+    journeyTargets = [];
+  }
 
   const verifyToken = await ensureObservationVerifyTokenForUser(supabase, obs.id);
   const verifyUrl = verifyToken ? buildPublicVerifyUrlForObservation(verifyToken) : null;
@@ -174,15 +195,21 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
 
   const screenshotExpired = isObservationScreenshotExpired(obs, plan.retentionDays);
   const storedVisibleImage = visibleSnapshotImageUrl(obs, plan.retentionDays);
+  const homepageLive = isHomepageLiveCheckObservation(obs);
+  const homepageClip = isHomepageClipObservation(obs);
   const live =
+    !homepageLive &&
+    !homepageClip &&
     !screenshotExpired &&
     obs.status === "success" &&
     (!storedVisibleImage || !obs.pageTitle)
       ? await getCachedUrlPreviewForObservation(obs.url, obs.regionValue)
       : null;
 
-  const displayTitle = obs.pageTitle ?? live?.title ?? null;
-  const displayImageUrl = storedVisibleImage ?? (screenshotExpired ? null : live?.image ?? null);
+  const displayTitle = decodeHtmlText(obs.pageTitle ?? live?.title ?? null);
+  const displayImageUrl = homepageLive
+    ? null
+    : storedVisibleImage ?? (screenshotExpired ? null : live?.image ?? null);
   const resolvedCanonical = live?.canonicalUrl ?? null;
 
   const previousRaw =
@@ -215,10 +242,37 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
   const storedLabCwv = await loadObservationLabCwv(supabase, session.userId, obs.id);
   const storedFieldCwv = await loadObservationFieldCwv(supabase, session.userId, obs.id);
   const storedSynthetic = await loadObservationSyntheticInteraction(supabase, session.userId, obs.id);
+  const storedScroll = await loadObservationScrollInteraction(supabase, session.userId, obs.id);
+  const previousCheckId = storedScroll?.behavior_diff?.previous_observation_id ?? null;
+  const previousStored = previousCheckId
+    ? await loadObservationScrollInteraction(supabase, session.userId, previousCheckId)
+    : null;
   const storedSubpages = await loadObservationSubpageScores(supabase, session.userId, obs.id);
   const optionalLabCwv = storedLabCwv?.result ?? null;
   const optionalFieldCwv = storedFieldCwv?.result ?? null;
   const optionalSynthetic = storedSynthetic?.result ?? null;
+  const optionalScroll = storedScroll?.result ?? null;
+  const latestPeerByRegion = new Map<string, (typeof compareRelated)[number]>();
+  for (const row of compareRelated) {
+    if (row.id === obs.id) continue;
+    const region = (row.regionValue ?? "").trim();
+    if (!region || region === (obs.regionValue ?? "").trim()) continue;
+    const existing = latestPeerByRegion.get(region);
+    if (!existing || Date.parse(row.capturedAt) > Date.parse(existing.capturedAt)) {
+      latestPeerByRegion.set(region, row);
+    }
+  }
+  const journeyPeers = [...latestPeerByRegion.values()].slice(0, 4);
+  const peerSynthetics = await loadObservationSyntheticInteractionsByIds(
+    supabase,
+    session.userId,
+    journeyPeers.map((row) => row.id),
+  );
+  const peerScrolls = await loadObservationScrollInteractionsByIds(
+    supabase,
+    session.userId,
+    journeyPeers.map((row) => row.id),
+  );
   const existingAudit = await loadObservationAiAudit(supabase, session.userId, obs.id);
   const pack = buildObservationEvidencePack({
     obs,
@@ -349,6 +403,13 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
           </div>
         </dl>
 
+        <ObservationMeasurementsPanel
+          current={obs}
+          timeSiblings={compareSiblings}
+          locale={locale}
+          synthetic={optionalSynthetic}
+        />
+
         <ObservationLpVerdictCard
           copy={{
             title: t.lpVerdictTitle,
@@ -388,11 +449,57 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
           locale={locale}
         />
 
+        <ObservationJourneyPanel
+          observationId={obs.id}
+          regionLabel={obs.regionLabel}
+          observationStatus={obs.status}
+          initialSynthetic={optionalSynthetic}
+          regionPeers={journeyPeers.map((row) => ({
+            observationId: row.id,
+            regionLabel: row.regionLabel,
+            status: row.status,
+            synthetic: peerSynthetics.get(row.id) ?? null,
+          }))}
+          locale={locale}
+          canRun={isBrowserlessConfigured()}
+          used={syntheticUsed}
+          limit={plan.syntheticInteractionMonthly}
+        />
+
+        <ObservationInteractionCheckPanel
+          observationId={obs.id}
+          regionLabel={obs.regionLabel}
+          initialCheck={optionalScroll}
+          regionPeers={journeyPeers.map((row) => ({
+            observationId: row.id,
+            regionLabel: row.regionLabel,
+            check: peerScrolls.get(row.id) ?? null,
+          }))}
+          locale={locale}
+          canRun={isBrowserlessConfigured()}
+          used={syntheticUsed}
+          limit={plan.syntheticInteractionMonthly}
+          behaviorDiff={storedScroll?.behavior_diff ?? null}
+          previousCheck={previousStored?.result ?? null}
+          watchIncluded={storedScroll?.billing === "watch_included"}
+          observationUrl={obs.url}
+          journeyTargets={journeyTargets}
+        />
+
         <div className="grid gap-4 sm:grid-cols-2">
           <ObservationHtmlHeadSignalsPanel
             signals={obs.captureConditions?.html_signals}
             copy={htmlHeadSignalsCopy}
             requestedUrl={obs.url}
+          />
+          <ObservationWebFactsPanel
+            facts={obs.captureConditions?.web_facts}
+            locale={locale}
+          />
+          <ObservationSeoFactsPanel
+            facts={obs.captureConditions?.seo_facts}
+            html={obs.captureConditions?.html_signals}
+            locale={locale}
           />
           <ObservationEvidenceHashes obs={obs} locale={locale} />
           <ObservationCaptureConditionsPanel
@@ -448,6 +555,7 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
         subpageMaxLinks={plan.subpageMaxLinks}
         browserlessConfigured={isBrowserlessConfigured()}
         cruxConfigured={isCruxConfigured()}
+        hideSyntheticRunner
       />
 
       <ObservationAiAuditPanel
@@ -496,7 +604,9 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
             obs.status === "success" &&
             Boolean(storedVisibleImage) &&
             Boolean(obs.regionValue?.trim()) &&
-            Boolean(obs.url?.trim())
+            Boolean(obs.url?.trim()) &&
+            !isHomepageClipObservation(obs) &&
+            !isHomepageLiveCheckObservation(obs)
           }
         />
 

@@ -75,6 +75,10 @@ function translateStaticEventDetailToEn(detail: string): string | null {
   if (detail === ja.captureNoUrlScreenshotFailed) return en.captureNoUrlScreenshotFailed;
   if (detail === ja.captureNoUrlPreviewFailed) return en.captureNoUrlPreviewFailed;
   if (detail === ja.captureNoUrlNoPreview) return en.captureNoUrlNoPreview;
+  if (detail === ja.captureLiveCheck) return en.captureLiveCheck;
+  if (detail === ja.captureShareClip) return en.captureShareClip;
+  if (detail === ja.captureLiveFailed) return en.captureLiveFailed;
+  if (detail === ja.captureClipFailed) return en.captureClipFailed;
   return null;
 }
 
@@ -103,6 +107,16 @@ function localizeObservationEventDetailEn(detail: string): string {
     return `${screenshotVerified[1]} · ${en.processingScreenshotVerifiedSuffix}`;
   }
 
+  const liveCheck = /^(\S+)\s*·\s*ライブ確認$/.exec(detail);
+  if (liveCheck) {
+    return `${liveCheck[1]} · ${en.processingLiveCheckSuffix}`;
+  }
+
+  const shareClip = /^(\S+)\s*·\s*短い動画$/.exec(detail);
+  if (shareClip) {
+    return `${shareClip[1]} · ${en.processingShareClipSuffix}`;
+  }
+
   return detail;
 }
 
@@ -124,6 +138,11 @@ function localizeObservationNoteEn(note: string): string {
   s = s.replace(/確認時タイトル: /g, "Title at verification: ");
   s = s.replace(/ — 確認画像で記録済み$/, " — Recorded with the confirmation image");
   s = s.replace(/ — スクリーンショットで確認済み$/, " — Verified with screenshot");
+  s = s.replace(
+    / — ライブ確認のみ。動きは保存していません$/,
+    " — Live check only; motion was not saved",
+  );
+  s = s.replace(/ — 短い動画を保存$/, " — Saved a short clip");
 
   return s;
 }

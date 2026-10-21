@@ -1,4 +1,9 @@
 import type { Observation } from "@/lib/demo/observations";
+import { loadClientMeasuredFacts } from "@/lib/measured-client-facts-load";
+import {
+  emptyClientMeasuredFacts,
+  type ClientMeasuredFacts,
+} from "@/lib/measured-client-summary";
 import {
   previousObservationForCompare,
   sameObservationUrlIdentity,
@@ -34,6 +39,7 @@ export {
 
 export type PublicShareCollectionItem = PublicVerifyObservation & {
   screenshotCompare: ObservationCompareField | null;
+  measured: ClientMeasuredFacts;
 };
 
 export type PublicShareCollection = {
@@ -134,12 +140,19 @@ export async function fetchShareCollectionForPublic(
 
   if (items.length === 0) return null;
 
+  const measured = await loadClientMeasuredFacts(
+    admin,
+    ownerUserId,
+    items.map((item) => item.id),
+  );
+
   return {
     token: typeof collection.token === "string" ? collection.token : token,
     createdAt: typeof collection.created_at === "string" ? collection.created_at : "",
     items: items.map((item) => ({
       ...item,
       screenshotCompare: screenshotCompareInShareCollection(item, items),
+      measured: measured.get(item.id) ?? emptyClientMeasuredFacts(),
     })),
   };
 }

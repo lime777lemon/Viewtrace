@@ -2,6 +2,17 @@ import { notFound } from "next/navigation";
 import { ObservationComparePrompt } from "@/components/dashboard/ObservationComparePrompt";
 import { ObservationCompareView } from "@/components/dashboard/ObservationCompareView";
 import { ObservationDetectedFacts } from "@/components/dashboard/ObservationDetectedFacts";
+import { ObservationInteractionCheckPanel } from "@/components/dashboard/ObservationInteractionCheckPanel";
+import { ObservationSeoFactsPanel } from "@/components/dashboard/ObservationSeoFactsPanel";
+import { ObservationJourneyPanel } from "@/components/dashboard/ObservationJourneyPanel";
+import {
+  INTERACTION_CHECK_TYPES,
+  wrapScrollAsRegionalCheck,
+  type InteractionTypeRow,
+  type RegionalInteractionCheckV1,
+} from "@/lib/observation-regional-interaction";
+import type { ScrollInteractionStatus, ScrollInteractionV1 } from "@/lib/observation-scroll-interaction";
+import { ObservationMeasurementsPanel } from "@/components/dashboard/ObservationMeasurementsPanel";
 import { ObservationAiAuditPanel } from "@/components/dashboard/ObservationAiAuditPanel";
 import { ObservationAiAuditReadout } from "@/components/dashboard/ObservationAiAuditReadout";
 import { observationAiAuditCopyFrom } from "@/lib/observation-ai-audit-copy";
@@ -23,6 +34,8 @@ import type { SyntheticInteractionV1 } from "@/lib/observation-synthetic-interac
 import type { SubpageScoresV1 } from "@/lib/observation-subpages";
 import { copy } from "@/lib/i18n";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
+import { buildBehaviorDiff } from "@/lib/observation-behavior-diff";
+import { buildObservationSeoFacts } from "@/lib/observation-seo-facts";
 import { compareObservations, orderObservationsByCapturedAt } from "@/lib/observation-compare";
 import type { Observation } from "@/lib/demo/observations";
 import {
@@ -137,6 +150,38 @@ export default async function DevComparePreviewPage({ searchParams }: Props) {
     ],
     error: null,
   };
+  const previewScroll: ScrollInteractionV1 = {
+    schema_version: 1,
+    source: "browserless_scroll",
+    type: "scroll",
+    measured_at: compareFixtureTimeRight.capturedAt,
+    requested_url: compareFixtureTimeRight.url,
+    requested_region: compareFixtureTimeRight.regionValue ?? "JP-13",
+    status: "working",
+    reason: null,
+    scroll_start: 0,
+    scroll_end: 2100,
+    checkpoints: 5,
+    changed_elements: 7,
+    changes: ["transform", "opacity", "visibility", "bounding_rect"],
+    reduced_motion: false,
+    duration_ms: 9000,
+    proxy_bytes: null,
+  };
+
+  function previewSession(
+    scroll: ScrollInteractionV1,
+    extras: Partial<Record<(typeof INTERACTION_CHECK_TYPES)[number], ScrollInteractionStatus>>,
+  ): RegionalInteractionCheckV1 {
+    const base = wrapScrollAsRegionalCheck(scroll);
+    const types: InteractionTypeRow[] = INTERACTION_CHECK_TYPES.map((type) => {
+      if (type === "scroll") return base.types[0]!;
+      const status = extras[type] ?? "working";
+      return { type, detected: status !== "not_detected", status };
+    });
+    return { ...base, types };
+  }
+
   const previewSubpages: SubpageScoresV1 = {
     schema_version: 1,
     source: "same_origin_html_fetch",
@@ -260,9 +305,117 @@ export default async function DevComparePreviewPage({ searchParams }: Props) {
               mode="time"
             />
             <div className="mt-8 space-y-6">
+              <ObservationMeasurementsPanel
+                current={previewAuditObservation()}
+                timeSiblings={[compareFixtureTimeLeft, previewAuditObservation()]}
+                locale={locale}
+                synthetic={previewSynthetic}
+              />
               <ObservationDetectedFacts
                 current={previewAuditObservation()}
                 timeSiblings={[compareFixtureTimeLeft, previewAuditObservation()]}
+                locale={locale}
+              />
+              <ObservationJourneyPanel
+                observationId={previewAuditObservation().id}
+                regionLabel={previewAuditObservation().regionLabel}
+                observationStatus={previewAuditObservation().status}
+                initialSynthetic={previewSynthetic}
+                regionPeers={[
+                  {
+                    observationId: compareFixtureRegionRight.id,
+                    regionLabel: compareFixtureRegionRight.regionLabel,
+                    status: compareFixtureRegionRight.status,
+                    synthetic: {
+                      ...previewSynthetic,
+                      measured_at: compareFixtureRegionRight.capturedAt,
+                      interactions: [
+                        {
+                          label: "Navigation menu",
+                          kind: "nav",
+                          latency_ms: 210,
+                          navigated: false,
+                          error: null,
+                        },
+                        {
+                          label: "Features",
+                          kind: "link",
+                          latency_ms: 640,
+                          navigated: false,
+                          error: "timeout",
+                        },
+                      ],
+                    },
+                  },
+                ]}
+                locale={locale}
+                canRun={false}
+                used={1}
+                limit={10}
+              />
+              <ObservationInteractionCheckPanel
+                observationId={previewAuditObservation().id}
+                regionLabel={previewAuditObservation().regionLabel}
+                initialCheck={previewSession(previewScroll, {
+                  hover: "working",
+                  carousel: "no_change_observed",
+                  menu: "not_detected",
+                  modal: "working",
+                  accordion: "working",
+                  video: "working",
+                  form: "working",
+                  load_animation: "working",
+                  js_animation: "working",
+                  scroll_reveal: "working",
+                  canvas: "not_detected",
+                  webgl: "not_detected",
+                })}
+                previousCheck={previewSession(previewScroll, { carousel: "working", menu: "working" })}
+                regionPeers={[
+                  {
+                    observationId: compareFixtureRegionRight.id,
+                    regionLabel: compareFixtureRegionRight.regionLabel,
+                    check: previewSession(
+                      {
+                        ...previewScroll,
+                        requested_region: compareFixtureRegionRight.regionValue ?? "US-CA",
+                        status: "working",
+                        reason: null,
+                      },
+                      {
+                        hover: "working",
+                        carousel: "working",
+                        menu: "working",
+                        modal: "no_change_observed",
+                        accordion: "working",
+                        video: "working",
+                        form: "working",
+                      },
+                    ),
+                  },
+                ]}
+                locale={locale}
+                canRun={false}
+                used={1}
+                limit={10}
+                watchIncluded
+                behaviorDiff={buildBehaviorDiff(
+                  previewSession(previewScroll, { carousel: "working", menu: "working" }),
+                  previewSession(previewScroll, {
+                    carousel: "no_change_observed",
+                    menu: "not_detected",
+                  }),
+                  compareFixtureTimeLeft.id,
+                )}
+              />
+              <ObservationSeoFactsPanel
+                facts={
+                  buildObservationSeoFacts({
+                    requestedUrl: compareFixtureTimeRight.url,
+                    html: compareFixtureTimeRight.captureConditions?.html_signals ?? null,
+                    webFacts: null,
+                  }) ?? undefined
+                }
                 locale={locale}
               />
               <ObservationHtmlHeadSignalsPanel
@@ -303,6 +456,7 @@ export default async function DevComparePreviewPage({ searchParams }: Props) {
                 subpageMaxLinks={5}
                 browserlessConfigured={false}
                 cruxConfigured={false}
+                hideSyntheticRunner
               />
               <ObservationAiAuditPanel
                 copy={aiAuditCopy}

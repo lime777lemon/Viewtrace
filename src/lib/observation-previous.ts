@@ -29,7 +29,7 @@ export async function findPreviousObservationWithSnapshot(
 
   const { data, error } = await supabase
     .from("observations")
-    .select("id,captured_at,snapshot_image_url,url")
+    .select("id,captured_at,snapshot_image_url,snapshot_content_type,url")
     .eq("user_id", params.userId)
     .in("url", variants)
     .eq("region", params.region)
@@ -44,6 +44,9 @@ export async function findPreviousObservationWithSnapshot(
 
   const row = data.find((item) => {
     const url = typeof item.url === "string" ? item.url : "";
+    const contentType =
+      typeof item.snapshot_content_type === "string" ? item.snapshot_content_type : "";
+    if (contentType.toLowerCase().startsWith("video/")) return false;
     return identity ? observationUrlIdentity(url) === identity : url.trim() === params.url.trim();
   });
   if (!row) return null;
@@ -61,7 +64,7 @@ export async function findPreviousObservationWithSnapshot(
 const PREVIOUS_COMPARE_SELECT =
   "id,url,region,region_label,status,captured_at,snapshot_image_url,snapshot_sha256,snapshot_phash,snapshot_purged_at,capture_conditions" as const;
 
-function mapPreviousRowToObservation(row: Record<string, unknown>): Observation | null {
+export function observationFromCompareRow(row: Record<string, unknown>): Observation | null {
   const id = typeof row.id === "string" ? row.id : "";
   const url = typeof row.url === "string" ? row.url : "";
   const capturedAt = typeof row.captured_at === "string" ? row.captured_at : "";
@@ -136,5 +139,5 @@ export async function findPreviousObservationForCompare(
     return identity ? observationUrlIdentity(url) === identity : url.trim() === params.url.trim();
   });
   if (!row) return null;
-  return mapPreviousRowToObservation(row as Record<string, unknown>);
+  return observationFromCompareRow(row as Record<string, unknown>);
 }

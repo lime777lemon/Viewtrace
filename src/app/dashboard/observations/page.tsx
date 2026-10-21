@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PendingNavLink } from "@/components/dashboard/PendingNavLink";
 import { ObservationsCsvExport } from "@/components/dashboard/ObservationsCsvExport";
 import { ObservationsLibrary } from "@/components/dashboard/ObservationsLibrary";
 import { getSession } from "@/lib/auth/session";
@@ -74,13 +75,14 @@ export default async function ObservationsListPage() {
             />
           ) : null}
           {hideNewObservationButton ? null : (
-            <Link
+            <PendingNavLink
               href="/dashboard/observations/new"
-              data-tour="observeAgain"
-              className="inline-flex h-11 shrink-0 items-center justify-center self-stretch rounded-full bg-accent px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-accent-hover sm:self-center"
+              dataTour="observeAgain"
+              pendingLabel={t.newObservationPending}
+              className="inline-flex h-11 shrink-0 items-center justify-center self-stretch rounded-full bg-accent px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-accent-hover disabled:opacity-70 sm:self-center"
             >
               {t.newObservation}
-            </Link>
+            </PendingNavLink>
           )}
         </div>
       </div>

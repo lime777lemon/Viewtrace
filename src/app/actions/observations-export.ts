@@ -3,6 +3,7 @@
 import { getSession } from "@/lib/auth/session";
 import { appendAuditEvent, AUDIT_ACTION } from "@/lib/audit-log";
 import { getMergedObservationsForPlan } from "@/lib/demo/user-observations";
+import { loadClientMeasuredFacts } from "@/lib/measured-client-facts-load";
 import { observationsToCsv } from "@/lib/observations-csv-format";
 import { getPlan } from "@/lib/plans";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -17,8 +18,13 @@ export async function exportObservationsCsvAction(
 
   const supabase = await createSupabaseServerClient();
   const rows = await getMergedObservationsForPlan(session.plan);
+  const measured = await loadClientMeasuredFacts(
+    supabase,
+    session.userId,
+    rows.map((row) => row.id),
+  );
   const mode = includeAuditJson ? "audit" : "standard";
-  const csv = observationsToCsv(rows, mode);
+  const csv = observationsToCsv(rows, mode, measured);
 
   await appendAuditEvent(supabase, {
     scope: "system",
@@ -53,8 +59,13 @@ export async function exportObservationsCsvForWatchAction(
   const supabase = await createSupabaseServerClient();
   const all = await getMergedObservationsForPlan(session.plan);
   const rows = all.filter((r) => r.url === trimmedUrl && r.regionValue === trimmedRegion);
+  const measured = await loadClientMeasuredFacts(
+    supabase,
+    session.userId,
+    rows.map((row) => row.id),
+  );
   const mode = includeAuditJson ? "audit" : "standard";
-  const csv = observationsToCsv(rows, mode);
+  const csv = observationsToCsv(rows, mode, measured);
 
   await appendAuditEvent(supabase, {
     scope: "system",

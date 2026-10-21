@@ -83,6 +83,7 @@ export type ObservationOptionalMetricsCopy = {
   syntheticNoTarget: string;
   syntheticNavigated: string;
   syntheticTested: string;
+  syntheticRunViaJourney: string;
   severityCritical: string;
   severityImportant: string;
   severityMinor: string;
@@ -172,6 +173,7 @@ export function observationOptionalMetricsCopyFrom(t: {
   optionalSyntheticNoTarget: string;
   optionalSyntheticNavigated: string;
   optionalSyntheticTested: string;
+  optionalSyntheticRunViaJourney: string;
   pageSignalsSeverityCritical: string;
   pageSignalsSeverityImportant: string;
   pageSignalsSeverityMinor: string;
@@ -274,6 +276,7 @@ export function observationOptionalMetricsCopyFrom(t: {
     syntheticNoTarget: t.optionalSyntheticNoTarget,
     syntheticNavigated: t.optionalSyntheticNavigated,
     syntheticTested: t.optionalSyntheticTested,
+    syntheticRunViaJourney: t.optionalSyntheticRunViaJourney,
     severityCritical: t.pageSignalsSeverityCritical,
     severityImportant: t.pageSignalsSeverityImportant,
     severityMinor: t.pageSignalsSeverityMinor,

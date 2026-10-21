@@ -476,6 +476,7 @@ type Props = {
   subpageMaxLinks: number;
   browserlessConfigured: boolean;
   cruxConfigured: boolean;
+  hideSyntheticRunner?: boolean;
 };
 
 export function ObservationOptionalMetricsPanel({
@@ -494,6 +495,7 @@ export function ObservationOptionalMetricsPanel({
   subpageMaxLinks,
   browserlessConfigured,
   cruxConfigured,
+  hideSyntheticRunner = false,
 }: Props) {
   const [labCwv, setLabCwv] = useState<LabCwvV1 | null>(initialLabCwv);
   const [fieldCwv, setFieldCwv] = useState<FieldCwvV1 | null>(initialFieldCwv);
@@ -638,7 +640,9 @@ export function ObservationOptionalMetricsPanel({
               {syntheticError}
             </p>
           ) : null}
-          {canRun ? (
+          {hideSyntheticRunner ? (
+            <p className="mt-2 text-xs text-ink-muted">{copy.syntheticRunViaJourney}</p>
+          ) : canRun ? (
             <button
               type="button"
               onClick={runSynthetic}

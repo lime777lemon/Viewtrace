@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 type Props = {
   imageUrl: string;
+  contentType?: string | null;
   labels: {
     viewFullscreen: string;
     closeFullscreen: string;
@@ -15,7 +16,8 @@ type Props = {
  * 公開検証ページ（顧客共有・ログイン不要）用のスクリーンショット表示。
  * 画像をタップすると全画面になり、取得ページ全体をスクロールして確認できる。
  */
-export function PublicVerifySnapshot({ imageUrl, labels }: Props) {
+export function PublicVerifySnapshot({ imageUrl, contentType, labels }: Props) {
+  const isVideo = (contentType ?? "").toLowerCase().startsWith("video/");
   const [fullscreenOpen, setFullscreenOpen] = useState(false);
 
   useEffect(() => {
@@ -31,6 +33,12 @@ export function PublicVerifySnapshot({ imageUrl, labels }: Props) {
       document.removeEventListener("keydown", onKey);
     };
   }, [fullscreenOpen]);
+
+  if (isVideo) {
+    return (
+      <video src={imageUrl} controls playsInline className="block h-auto w-full bg-ink" />
+    );
+  }
 
   return (
     <>
@@ -54,12 +62,12 @@ export function PublicVerifySnapshot({ imageUrl, labels }: Props) {
 
       {fullscreenOpen ? (
         <div
-          className="fixed inset-0 z-50 flex flex-col bg-black/95"
+          className="fixed inset-0 z-50 flex h-dvh flex-col overflow-hidden bg-black/95"
           role="dialog"
           aria-modal="true"
           aria-label={labels.viewFullscreen}
         >
-          <div className="flex items-center justify-between gap-3 px-4 py-3">
+          <div className="flex shrink-0 items-center justify-between gap-3 px-4 py-3">
             <p className="truncate text-xs text-white/70">{labels.fullscreenHint}</p>
             <button
               type="button"
@@ -69,7 +77,7 @@ export function PublicVerifySnapshot({ imageUrl, labels }: Props) {
               {labels.closeFullscreen}
             </button>
           </div>
-          <div className="min-h-0 flex-1 overflow-auto overscroll-contain px-2 pb-[env(safe-area-inset-bottom)]">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 pb-[env(safe-area-inset-bottom)]">
             {/* eslint-disable-next-line @next/next/no-img-element -- 保存済みスナップショット / 外部 CDN */}
             <img
               src={imageUrl}

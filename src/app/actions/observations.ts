@@ -15,6 +15,8 @@ import {
   isBrowserlessConfigured,
   type BrowserlessScreenshotResult,
 } from "@/lib/browserless-screenshot";
+import { runBrowserlessLiveWithProxyRetry } from "@/lib/browserless-live";
+import { runBrowserlessScreencastWithProxyRetry } from "@/lib/browserless-screencast";
 import { isPlaywrightWorkerCaptureEnabled } from "@/lib/observation-capture-backend";
 import { runObservationPrimaryScreenshot } from "@/lib/observation-primary-capture";
 import type { ObservationWorkerCaptureResult } from "@/lib/observation-worker-capture";
@@ -27,20 +29,31 @@ import {
 } from "@/lib/demo/user-observations";
 import {
   type ObservationSnapshotUploadResult,
+  uploadObservationMedia,
   uploadObservationSnapshotPng,
 } from "@/lib/observation-snapshot-storage";
+import {
+  HOMEPAGE_CLIP_DURATION_MS,
+  HOMEPAGE_LIVE_TTL_MS,
+  parseHomepageObservationMode,
+  type HomepageObservationMode,
+} from "@/lib/observation-homepage-mode";
 import { getPlan, TRIAL_CONFIG } from "@/lib/plans";
 import { getRegionOptions } from "@/lib/regions";
 import { fetchMicrolinkScreenshotUrl } from "@/lib/microlink-screenshot";
 import { htmlHeadSignalsHasAny, normalizeUserUrlInput } from "@/lib/url-preview";
 import { runUrlPreviewFetch } from "@/lib/url-preview-fetch";
+import { seoFactsForObservation } from "@/lib/observation-seo-facts";
+import { collectObservationWebFacts } from "@/lib/observation-web-facts";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   formatCaptureNoUrlPreviewFail,
   formatCaptureNoUrlUploadFail,
   formatProcessingDetailFailure,
+  formatProcessingDetailLiveCheck,
   formatProcessingDetailRecordedWithImage,
   formatProcessingDetailScreenshotVerified,
+  formatProcessingDetailShareClip,
   formatProcessingDetailSuccess,
   observationEventJa,
 } from "@/lib/i18n/observation-event-strings";
@@ -77,7 +90,7 @@ export type RecordObservationFailureCode =
   | "monthly_limit";
 
 export type RecordObservationResult =
-  | { ok: true; id: string }
+  | { ok: true; id: string; liveUrl?: string }
   | { ok: false; code: RecordObservationFailureCode };
 
 function parseObservationForm(formData: FormData): {
@@ -86,6 +99,7 @@ function parseObservationForm(formData: FormData): {
   regionLabel: string;
   verifiedTitle: string;
   verifiedImageUrl: string;
+  homepageMode: HomepageObservationMode;
 } {
   return {
     urlRaw: String(formData.get("url") ?? "").trim(),
@@ -93,6 +107,7 @@ function parseObservationForm(formData: FormData): {
     regionLabel: String(formData.get("regionLabel") ?? "").trim(),
     verifiedTitle: String(formData.get("verifiedTitle") ?? "").trim(),
     verifiedImageUrl: String(formData.get("verifiedImageUrl") ?? "").trim(),
+    homepageMode: parseHomepageObservationMode(formData.get("homepageMode")),
   };
 }
 
@@ -102,6 +117,7 @@ async function recordOneObservation(input: {
   regionLabel: string;
   verifiedTitle: string;
   verifiedImageUrl: string;
+  homepageMode: HomepageObservationMode;
 }): Promise<RecordObservationResult> {
   const session = await getSession();
   if (!session) return { ok: false, code: "unauthenticated" };
@@ -111,6 +127,7 @@ async function recordOneObservation(input: {
   let regionLabel = input.regionLabel;
   const verifiedTitle = input.verifiedTitle;
   const verifiedImageUrl = input.verifiedImageUrl;
+  const homepageMode = input.homepageMode;
 
   const url = coerceRecordingUrl(urlRaw);
   if (!url || !regionValue) {
@@ -175,7 +192,41 @@ async function recordOneObservation(input: {
   let lastBrowserlessShot: Extract<BrowserlessScreenshotResult, { ok: true }> | null = null;
   let lastWorkerShot: Extract<ObservationWorkerCaptureResult, { ok: true }> | null = null;
   let usedMicrolink = false;
-  if (primaryCaptureOn) {
+  let liveUrl: string | undefined;
+  let liveCheckOk = false;
+  let lastLive:
+    | Extract<Awaited<ReturnType<typeof runBrowserlessLiveWithProxyRetry>>, { ok: true }>
+    | null = null;
+  let lastClip:
+    | Extract<Awaited<ReturnType<typeof runBrowserlessScreencastWithProxyRetry>>, { ok: true }>
+    | null = null;
+
+  if (homepageMode === "live_check" && browserlessOn) {
+    const live = await runBrowserlessLiveWithProxyRetry({ url, region: regionValue });
+    if (live.ok) {
+      liveCheckOk = true;
+      lastLive = live;
+      liveUrl = live.liveUrl;
+    }
+  } else if (homepageMode === "share_clip" && browserlessOn) {
+    const clip = await runBrowserlessScreencastWithProxyRetry({ url, region: regionValue });
+    if (clip.ok) {
+      lastClip = clip;
+      const mediaType = clip.contentType === "video/mp4" ? "video/mp4" : "video/webm";
+      blobUploadResult = await uploadObservationMedia({
+        observationId: id,
+        body: clip.bytes,
+        contentType: mediaType,
+      });
+      if (blobUploadResult.ok) {
+        uploadedBrowserlessUrl = blobUploadResult.url;
+        snapshotBinarySha256 = blobUploadResult.snapshotSha256;
+        snapshotBytes = blobUploadResult.snapshotBytes;
+        snapshotContentType = blobUploadResult.snapshotContentType;
+        snapshotImageUrl = snapshotImageUrl ?? uploadedBrowserlessUrl;
+      }
+    }
+  } else if (homepageMode === "still" && primaryCaptureOn) {
     const primary = await runObservationPrimaryScreenshot({
       url,
       region: regionValue,
@@ -212,7 +263,7 @@ async function recordOneObservation(input: {
     }
   }
 
-  if (!snapshotImageUrl) {
+  if (!snapshotImageUrl && homepageMode === "still") {
     /**
      * 最後の砦：プレビュー HTML 取得や Browserless キャプチャが失敗していても、
      * Microlink 側だけは別経路（独立した取得サーバ＋スクリーンショット）なので
@@ -229,7 +280,18 @@ async function recordOneObservation(input: {
     }
   }
 
+  const clipSaved = Boolean(lastClip && uploadedBrowserlessUrl);
   const captureDetail = (() => {
+    if (homepageMode === "live_check") {
+      return liveCheckOk ? observationEventJa.captureLiveCheck : observationEventJa.captureLiveFailed;
+    }
+    if (homepageMode === "share_clip") {
+      if (clipSaved) return observationEventJa.captureShareClip;
+      if (blobUploadResult && !blobUploadResult.ok) {
+        return formatCaptureNoUrlUploadFail(blobUploadResult.message);
+      }
+      return observationEventJa.captureClipFailed;
+    }
     if (snapshotImageUrl) {
       if (verifiedSnap && snapshotImageUrl === verifiedSnap) return observationEventJa.captureFormImage;
       if (uploadedBrowserlessUrl && snapshotImageUrl === uploadedBrowserlessUrl) {
@@ -256,19 +318,34 @@ async function recordOneObservation(input: {
     verifiedSnap && snapshotImageUrl && snapshotImageUrl === verifiedSnap,
   );
   /** サーバー側 HTML プレビューが落ちても、Browserless 成功 or フォーム確認画像なら記録は成立とみなす */
-  const ok = preview.ok || browserlessShotOk || userVerifiedCapture;
+  const ok =
+    homepageMode === "live_check"
+      ? liveCheckOk
+      : homepageMode === "share_clip"
+        ? clipSaved
+        : preview.ok || browserlessShotOk || userVerifiedCapture;
   const pageTitle =
     preview.ok && preview.title ? preview.title.slice(0, 300) : undefined;
 
   const processingDetailWithoutPreview =
     !preview.ok && ok
-      ? browserlessShotOk
-        ? formatProcessingDetailScreenshotVerified(regionLabel)
-        : formatProcessingDetailRecordedWithImage(regionLabel)
+      ? liveCheckOk
+        ? formatProcessingDetailLiveCheck(regionLabel)
+        : clipSaved
+          ? formatProcessingDetailShareClip(regionLabel)
+          : browserlessShotOk
+            ? formatProcessingDetailScreenshotVerified(regionLabel)
+            : formatProcessingDetailRecordedWithImage(regionLabel)
       : null;
 
   const successNote = (() => {
     if (!ok) return "取得に失敗しました";
+    if (liveCheckOk) {
+      return `${noteParts.join(" — ")} — ライブ確認のみ。動きは保存していません`;
+    }
+    if (clipSaved) {
+      return `${noteParts.join(" — ")} — 短い動画を保存`;
+    }
     if (preview.ok) return noteParts.join(" — ");
     if (browserlessShotOk) return `${noteParts.join(" — ")} — スクリーンショットで確認済み`;
     if (userVerifiedCapture) return `${noteParts.join(" — ")} — 確認画像で記録済み`;
@@ -276,7 +353,60 @@ async function recordOneObservation(input: {
   })();
 
   let captureConditions: CaptureConditionsV1;
-  if (lastWorkerShot) {
+  if (lastLive) {
+    captureConditions = buildCaptureConditionsFromBrowserless({
+      capturedAt,
+      regionInput: regionValue,
+      regionLabel,
+      fullPageRequested: false,
+      viaResidential: lastLive.viaResidential,
+      viaExternalProxy: lastLive.viaExternalProxy,
+      usedRetryWithoutProxy: lastLive.usedRetryWithoutProxy,
+      residentialStateApplied: lastLive.residentialStateApplied,
+      durationMs: lastLive.durationMs,
+      storageFormat: "none",
+      webpQuality: null,
+      imageWidthPx: null,
+      imageHeightPx: null,
+      snapshotBytes: null,
+      snapshotContentType: null,
+      snapshotSha256Present: false,
+      apiSurface: "live_bql",
+      upstreamImageFormat: "none",
+      homepageObservation: {
+        mode: "live_check",
+        sequential_stills: false,
+        live_ttl_ms: HOMEPAGE_LIVE_TTL_MS,
+      },
+    });
+  } else if (lastClip) {
+    captureConditions = buildCaptureConditionsFromBrowserless({
+      capturedAt,
+      regionInput: regionValue,
+      regionLabel,
+      fullPageRequested: false,
+      viaResidential: lastClip.viaResidential,
+      viaExternalProxy: lastClip.viaExternalProxy,
+      usedRetryWithoutProxy: lastClip.usedRetryWithoutProxy,
+      residentialStateApplied: lastClip.residentialStateApplied,
+      durationMs: lastClip.durationMs,
+      storageFormat: "webm",
+      webpQuality: null,
+      imageWidthPx: 1280,
+      imageHeightPx: 800,
+      snapshotBytes: snapshotBytes ?? null,
+      snapshotContentType: snapshotContentType ?? null,
+      snapshotSha256Present: Boolean(snapshotBinarySha256),
+      apiSurface: "screencast_v2",
+      upstreamImageFormat: "webm",
+      clipDurationMs: HOMEPAGE_CLIP_DURATION_MS,
+      homepageObservation: {
+        mode: "share_clip",
+        sequential_stills: false,
+        clip_duration_ms: HOMEPAGE_CLIP_DURATION_MS,
+      },
+    });
+  } else if (lastWorkerShot) {
     const dims = await getPngDimensions(lastWorkerShot.png);
     const webpQuality = session.plan === "pro" ? 86 : 78;
     captureConditions = buildCaptureConditionsFromPlaywrightWorker({
@@ -360,6 +490,37 @@ async function recordOneObservation(input: {
   ) {
     captureConditions = { ...captureConditions, html_signals: preview.htmlSignals };
   }
+  try {
+    const webFacts = await collectObservationWebFacts({
+      target: url,
+      observedAt: new Date().toISOString(),
+      preview: preview.ok
+        ? {
+            status: preview.status,
+            final_url: preview.canonicalUrl,
+            via_proxy: preview.viaProxy,
+            headers: preview.headers,
+            html_sample_sha256: preview.htmlSampleSha256,
+            html_sample_bytes: preview.htmlSampleBytes,
+            html_sample_truncated: preview.htmlSampleTruncated,
+          }
+        : undefined,
+    });
+    if (webFacts) captureConditions = { ...captureConditions, web_facts: webFacts };
+  } catch (err) {
+    console.warn("[observation] web facts unavailable", {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+  const seoFacts = seoFactsForObservation({
+    requestedUrl: url,
+    storedHtmlSignals: captureConditions.html_signals,
+    preview: preview.ok
+      ? { ok: true, html: preview.html, htmlSignals: preview.htmlSignals }
+      : { ok: false },
+    webFacts: captureConditions.web_facts,
+  });
+  if (seoFacts) captureConditions = { ...captureConditions, seo_facts: seoFacts };
 
   const obs: Observation = {
     id,
@@ -435,7 +596,7 @@ async function recordOneObservation(input: {
         browserless: browserlessOn,
       },
     });
-    return { ok: true, id };
+    return { ok: true, id, liveUrl };
   }
 
   return { ok: false, code: "invalid" };
