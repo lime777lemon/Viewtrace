@@ -102,7 +102,7 @@ export default async function SettingsPage() {
                   </li>
                   <li>{t.trialDays.replace("{days}", String(TRIAL_CONFIG.trialDays))}</li>
                   <li>{labels?.coverageLabel ?? plan.coverageLabel}</li>
-                  <li>{t.csvNotAvailable}</li>
+                  <li>{plan.csvExport ? t.csvAvailable : t.csvNotAvailable}</li>
                   <li>{t.snapshotsAvailable}</li>
                   <li>{t.snapshotTechnicalTrial}</li>
                 </ul>

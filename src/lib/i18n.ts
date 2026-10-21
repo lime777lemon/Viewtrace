@@ -275,7 +275,7 @@ export const copy = {
         },
         {
           title: "CSV",
-          plan: "Pro",
+          plan: "すべてのプラン",
           body: "一覧を表計算に出せます。報告や社内共有に使えます。",
         },
         {
@@ -301,7 +301,7 @@ export const copy = {
         { feature: "地域ルーティングで取得（州・国）", viewtrace: true, generic: false },
         { feature: "改ざん検知可能な記録（チェック値付き）", viewtrace: true, generic: false },
         { feature: "公開 Verify リンク", viewtrace: true, generic: false },
-        { feature: "印刷 / PDF・CSV（Pro）", viewtrace: true, generic: false },
+        { feature: "印刷 / PDF・CSV", viewtrace: true, generic: false },
         { feature: "ネイティブの Slack / Sheets / Teams", viewtrace: false, generic: true },
         { feature: "テキスト・HTML 要素単位の差分", viewtrace: false, generic: true },
       ],
@@ -479,7 +479,7 @@ export const copy = {
     pricingTrialTitle: "無料トライアル",
     /** FAQ「無料トライアルはどのくらい使えますか？」と同一文言 */
     pricingTrialBody:
-      "20回までオブザベーションを無料でお試しいただけます。クレジットカードは不要です。トライアル期間は14日間で、終了後は Starter または Pro を選択して継続いただけます。無料枠の20回を使い切ると、ログイン後のダッシュボード上部にお申し込み・プラン選択の案内が表示されます。",
+      "20回までオブザベーションを無料でお試しいただけます。クレジットカードは不要です。トライアル期間は14日間で、終了後は Starter または Pro を選択して継続いただけます。無料枠の20回を使い切ると、ログイン後のダッシュボード上部にお申し込み・プラン選択の案内が表示されます。記録の CSV 書き出しも使えます。",
     plans: [
       {
         name: "Starter",
@@ -501,6 +501,7 @@ export const copy = {
           "ステータス履歴",
           "サーバー記録・記録内容のチェック用コード（ずれ検知の補助）",
           "自動観測（日／週／月の回数を設定）とメール通知",
+          "CSVエクスポート",
           "オプション採点（料金内・押したときだけ）：ラボ CWV 月10 · フィールド 月50 · 合成操作 月10 · 下層最大5件",
         ],
         cta: "このコースに申し込む",
@@ -551,11 +552,11 @@ export const copy = {
     faqs: [
       {
         q: "Starter と Pro はどう使い分けますか？",
-        a: "試す・軽い検証用途なら Starter。本番運用・代理店・報告・記録整理で、より多くのオブザベーション・長いスクリーンショット保存・CSVが必要なら Pro を想定しています。",
+        a: "試す・軽い検証用途なら Starter。本番運用・代理店・報告・記録整理で、より多くのオブザベーションと長いスクリーンショット保存が必要なら Pro を想定しています。",
       },
       {
         q: "無料トライアルはどのくらい使えますか？",
-        a: "20回までオブザベーションを無料でお試しいただけます。クレジットカードは不要です。トライアル期間は14日間で、終了後は Starter または Pro を選択して継続いただけます。無料枠の20回を使い切ると、ログイン後のダッシュボード上部にお申し込み・プラン選択の案内が表示されます。",
+        a: "20回までオブザベーションを無料でお試しいただけます。クレジットカードは不要です。トライアル期間は14日間で、終了後は Starter または Pro を選択して継続いただけます。無料枠の20回を使い切ると、ログイン後のダッシュボード上部にお申し込み・プラン選択の案内が表示されます。記録の CSV 書き出しも使えます。",
       },
       {
         q: "クリック後のランディングページを確認できますか？",
@@ -1597,8 +1598,8 @@ export const copy = {
       subtitle:
         "URL・地域・タグで一覧を探せます。タグはその URL の記録すべてに保存されます。スクリーンショットはプランの保存期間後に削除され、メタデータは残ります。",
       planSuffix: " 現在のプラン：{plan}。",
-      csvProHint: "Pro プランでは一覧を CSV でエクスポートできます。",
-      csvUpgradeHint: "CSV エクスポートは Pro プランの機能です。",
+      csvProHint: "一覧を CSV でエクスポートできます。",
+      csvUpgradeHint: "一覧を CSV でエクスポートできます。",
       csvUpgradeLink: "設定でプランを変更",
       newObservation: "新規オブザベーション",
       newObservationPending: "処理中…",
@@ -1850,7 +1851,7 @@ export const copy = {
       planMonthlyLimit: "月 {limit} オブザベーションまで",
       planRetentionDays: "スクリーンショット保存 {days} 日間",
       csvAvailable: "CSVエクスポート：利用可",
-      csvProOnly: "CSVエクスポート：Pro で利用可",
+      csvProOnly: "CSVエクスポート：利用可",
       snapshotMarketingTrial: "フルページの画面記録",
       snapshotTechnicalTrial: "フルページのスクリーンショット取得",
       snapshotMarketingStarter: "フルページの画面記録",
@@ -2206,7 +2207,7 @@ export const copy = {
         },
         {
           title: "CSV",
-          plan: "Pro",
+          plan: "All plans",
           body: "Export the observation list to a spreadsheet for reports and internal sharing.",
         },
         {
@@ -2232,7 +2233,7 @@ export const copy = {
         { feature: "Geo-routed capture (states & countries)", viewtrace: true, generic: false },
         { feature: "Tamper-evident records (integrity checks)", viewtrace: true, generic: false },
         { feature: "Public verify links", viewtrace: true, generic: false },
-        { feature: "Print / PDF and CSV (Pro)", viewtrace: true, generic: false },
+        { feature: "Print / PDF and CSV", viewtrace: true, generic: false },
         { feature: "Native Slack / Sheets / Teams", viewtrace: false, generic: true },
         { feature: "Text / HTML element-level diffs", viewtrace: false, generic: true },
       ],
@@ -2409,7 +2410,7 @@ export const copy = {
       "If you exceed your monthly allowance, additional observations are billed at {price} each and added to your next invoice. Observations continue after you’ve used your included quota.",
     pricingTrialTitle: "Free trial",
     pricingTrialBody:
-      "Your trial includes up to 20 observations at no charge, with no credit card required. The trial lasts 14 days; afterward, choose Starter or Pro to continue. After you use all 20 trial observations, a banner at the top of the dashboard guides you to subscribe.",
+      "Your trial includes up to 20 observations at no charge, with no credit card required. The trial lasts 14 days; afterward, choose Starter or Pro to continue. After you use all 20 trial observations, a banner at the top of the dashboard guides you to subscribe. CSV export of your records is included.",
     plans: [
       {
         name: "Starter",
@@ -2432,6 +2433,7 @@ export const copy = {
           "Status history",
           "Server timestamps & record check codes (drift detection aid)",
           "Auto-observation (set daily / weekly / monthly run counts) with email notifications",
+          "CSV export",
           "On-demand measures (in plan, when you run them): lab CWV 10 / field 50 / synthetic 10 / up to 5 subpages per month",
         ],
         cta: "Subscribe to this plan",
@@ -2483,11 +2485,11 @@ export const copy = {
     faqs: [
       {
         q: "How do I choose between Starter and Pro?",
-        a: "Starter fits try-it-out and light validation. Pro fits production use, agencies, and reporting workflows—more observations, longer screenshot retention, and CSV when you need it.",
+        a: "Starter fits try-it-out and light validation. Pro fits production use, agencies, and reporting workflows—more observations and longer screenshot retention.",
       },
       {
         q: "How does the free trial work?",
-        a: "You can take up to 20 observations at no charge, with no credit card required. The trial lasts 14 days; afterward, choose Starter or Pro to continue. After you use all 20 trial observations, a banner at the top of the dashboard guides you to subscribe.",
+        a: "You can take up to 20 observations at no charge, with no credit card required. The trial lasts 14 days; afterward, choose Starter or Pro to continue. After you use all 20 trial observations, a banner at the top of the dashboard guides you to subscribe. CSV export of your records is included.",
       },
       {
         q: "Can I see what was waiting after the click?",
@@ -3537,8 +3539,8 @@ export const copy = {
       subtitle:
         "Search by URL, region, or tag. Screenshots are removed after the plan window; URL, region, time, and hashes remain.",
       planSuffix: " Current plan: {plan}.",
-      csvProHint: "On the Pro plan you can export this list as CSV.",
-      csvUpgradeHint: "CSV export is a Pro plan feature.",
+      csvProHint: "You can export this list as CSV.",
+      csvUpgradeHint: "You can export this list as CSV.",
       csvUpgradeLink: "Change plan in Settings",
       newObservation: "New observation",
       newObservationPending: "Processing…",
@@ -3812,7 +3814,7 @@ export const copy = {
       planMonthlyLimit: "Up to {limit} observations / month",
       planRetentionDays: "{days}-day screenshot retention",
       csvAvailable: "CSV export: available",
-      csvProOnly: "CSV export: available on Pro",
+      csvProOnly: "CSV export: available",
       snapshotMarketingTrial: "Full-page captures",
       snapshotTechnicalTrial: "Full-page screenshots",
       snapshotMarketingStarter: "Full-page captures",

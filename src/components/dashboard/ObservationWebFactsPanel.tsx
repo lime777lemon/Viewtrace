@@ -74,7 +74,7 @@ function FactRow({ label, value, detail }: { label: string; value: string; detai
     <div className="grid gap-0.5 border-b border-border/70 py-2.5 last:border-b-0 sm:grid-cols-[11rem_1fr] sm:gap-4">
       <dt className="text-sm text-ink-muted">{label}</dt>
       <dd className="min-w-0 text-sm text-ink">
-        <p className="break-words">{value}</p>
+        <p className="wrap-break-word">{value}</p>
         {detail ? <p className="mt-0.5 text-xs text-ink-muted">{detail}</p> : null}
       </dd>
     </div>

@@ -63,7 +63,7 @@ export const tokushohoPageCopyJa: TokushohoPageCopy = {
       title: "役務の内容",
       paragraphs: [
         "ユーザーが指定した URL について、特定の地域および時刻における表示状態のスナップショット記録をクラウド上で提供する SaaS です。",
-        "プランにより、月間観測回数、保存期間、対応地域、自動観測・メール通知、CSV 出力等の機能が異なります。",
+        "プランにより、月間観測回数、保存期間、対応地域、自動観測・メール通知等の機能が異なります。",
       ],
     },
     {
@@ -199,7 +199,7 @@ export const tokushohoPageCopyEn: TokushohoPageCopy = {
       title: "Service description",
       paragraphs: [
         "Cloud SaaS that records timestamped snapshots of user-specified URLs as rendered in selected regions.",
-        "Plans differ by monthly observation limits, retention, regions, scheduled observations, email notifications, CSV export, etc.",
+        "Plans differ by monthly observation limits, retention, regions, scheduled observations, email notifications, and similar features.",
       ],
     },
     {

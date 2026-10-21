@@ -279,7 +279,7 @@ const JA: Record<TopicSlug, TopicBody> = {
     h1: "Proof for ad agencies — クライアントワークの説明負荷を下げる",
     paragraphs: [
       "代理店には「いつ・どの市場で・何を見せていたか」という proof for ad agencies が求められます。Viewtrace はその前提で、観測をインフラとして積み上げます。",
-      "Pro では保持期間や CSV など、報告・稟議に使いやすい出力も選べます（プラン詳細はトップの料金を参照）。",
+      "Pro では保持期間など、報告・稟議に使いやすい条件も選べます（プラン詳細はトップの料金を参照）。",
     ],
   },
 };
