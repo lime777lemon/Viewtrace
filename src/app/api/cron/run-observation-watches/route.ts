@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { AUDIT_ACTION, appendAuditEventAsService } from "@/lib/audit-log";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { runDueJourneyWatches } from "@/lib/journey-store";
+import { runDueMonitoringWatches } from "@/lib/monitoring-watch-store";
 import {
   buildCaptureConditionsFromBrowserless,
   buildCaptureConditionsFromPlaywrightWorker,
@@ -1103,6 +1104,20 @@ export async function POST(req: Request) {
     }
   }
 
+  let monitoringRan = 0;
+  let monitoringSkipped = 0;
+  try {
+    const monitoringResult = await runDueMonitoringWatches(svc, async (userId) => {
+      const { data } = await svc.from("users").select("plan").eq("id", userId).maybeSingle();
+      const planId = parsePlanId(typeof (data as { plan?: unknown } | null)?.plan === "string" ? String((data as { plan: string }).plan) : null);
+      return getPlan(planId).monthlyObservations;
+    });
+    monitoringRan = monitoringResult.ran;
+    monitoringSkipped = monitoringResult.skipped;
+  } catch (err) {
+    console.warn("[cron] monitoring watch unavailable", { error: err instanceof Error ? err.message : String(err) });
+  }
+
   let journeyRan = 0;
   let journeySkipped = 0;
   try {
@@ -1128,6 +1143,8 @@ export async function POST(req: Request) {
     interactionAlerted,
     journeyRan,
     journeySkipped,
+    monitoringRan,
+    monitoringSkipped,
   });
 }
 

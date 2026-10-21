@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
-import { deleteJourneyAction, runJourneyNowAction, saveJourneyAction } from "@/app/actions/journeys";
+import { deleteJourneyAction, disableJourneyMonitoringAction, enableJourneyMonitoringAction, runJourneyNowAction, saveJourneyAction } from "@/app/actions/journeys";
 import {
   JOURNEY_STEP_KINDS,
   journeyCaptureLine,
@@ -17,6 +17,7 @@ import {
 } from "@/lib/journey-definition";
 import type { Locale } from "@/lib/i18n";
 import type { JourneyDefinitionPublic, JourneyRunPublic } from "@/lib/journey-store";
+import { evaluateMonitoringPreflight, journeyMonitoringChecks, type MonitoringPreflight } from "@/lib/monitoring-watch";
 
 type RegionChoice = { value: string; label: string };
 
@@ -40,16 +41,19 @@ export function JourneyEditor({
   watchAllowed,
   runs,
   locale = "en",
+  availableChecks = null,
 }: {
   journey: JourneyDefinitionPublic | null;
   regions: RegionChoice[];
   watchAllowed: boolean;
   runs: JourneyRunPublic[];
   locale?: Locale;
+  availableChecks?: number | null;
 }) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [pending, start] = useTransition();
+  const [monitoringPending, startMonitoring] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState(journey?.name ?? "");
   const [startUrl, setStartUrl] = useState(journey?.start_url ?? "https://");
@@ -59,8 +63,8 @@ export function JourneyEditor({
   });
   const [selectedRegions, setSelectedRegions] = useState<string[]>(journey?.regions.length ? journey.regions : ["US-CA"]);
   const [devices, setDevices] = useState<JourneyDeviceClass[]>(journey?.device_classes.length ? journey.device_classes : ["desktop"]);
-  const [watchEnabled, setWatchEnabled] = useState(journey?.watch_enabled ?? false);
-  const [watchFrequency, setWatchFrequency] = useState<"daily" | "weekly">(journey?.watch_frequency ?? "daily");
+  const [schedule, setSchedule] = useState<"off" | "daily" | "weekly">(journey?.watch_enabled ? journey.watch_frequency : "off");
+  const [preflightNote, setPreflightNote] = useState<MonitoringPreflight | null>(null);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -98,8 +102,9 @@ export function JourneyEditor({
         steps: nextSteps,
         regions: selectedRegions,
         deviceClasses: devices,
-        watchEnabled,
-        watchFrequency,
+        watchEnabled: false,
+        watchFrequency: schedule === "weekly" ? "weekly" : "daily",
+        preserveWatch: Boolean(journey),
         username: fieldValue("testUsername", username),
         password: fieldValue("testPassword", password),
       });
@@ -108,6 +113,39 @@ export function JourneyEditor({
         return;
       }
       router.push(`/dashboard/journeys/${result.id}`);
+      router.refresh();
+    });
+  }
+
+  function applyMonitoring() {
+    if (!journey) return;
+    setError(null);
+    const frequency = schedule === "weekly" ? "weekly" : "daily";
+    startMonitoring(async () => {
+      if (schedule === "off") {
+        const result = await disableJourneyMonitoringAction(journey.id);
+        if (!result.ok) {
+          setError(result.error);
+          return;
+        }
+        setPreflightNote(null);
+        router.refresh();
+        return;
+      }
+      const result = await enableJourneyMonitoringAction({
+        id: journey.id,
+        frequency,
+        regions: selectedRegions,
+        deviceClasses: devices,
+        username: fieldValue("testUsername", username),
+        password: fieldValue("testPassword", password),
+      });
+      if (!result.ok) {
+        setError(result.error);
+        setPreflightNote(result.preflight ?? null);
+        return;
+      }
+      setPreflightNote(null);
       router.refresh();
     });
   }
@@ -312,22 +350,30 @@ export function JourneyEditor({
         </div>
         <p className="mt-1 text-xs text-ink-muted">Use {"{{username}}"} and {"{{password}}"} in Fill. The password is not shown again after save.</p>
 
-        {watchAllowed ? (
-          <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-ink">
-            <label className="flex items-center gap-2">
-              <input type="checkbox" checked={watchEnabled} onChange={(event) => setWatchEnabled(event.target.checked)} />
-              Run on Watch
-            </label>
-            <select value={watchFrequency} onChange={(event) => setWatchFrequency(event.target.value === "weekly" ? "weekly" : "daily")} className="rounded-lg border border-border bg-surface px-2 py-1">
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-            </select>
-          </div>
+        {watchAllowed && journey ? (
+          <MonitoringSchedulePanel
+            locale={locale}
+            schedule={schedule}
+            onSchedule={setSchedule}
+            regionLabels={regions.filter((region) => selectedRegions.includes(region.value)).map((region) => region.label)}
+            selectedRegions={selectedRegions}
+            devices={devices}
+            availableChecks={availableChecks}
+            credentialsReady={journey.credentials_ready || Boolean(username && password)}
+            startUrl={startUrl}
+            steps={steps}
+            runs={runs}
+            nextRunAt={journey.next_run_at}
+            enabled={journey.watch_enabled}
+            serverPreflight={preflightNote}
+            pending={monitoringPending}
+            onApply={applyMonitoring}
+          />
         ) : (
           <p className="mt-4 text-xs text-ink-muted">Scheduled Watch is included with Starter and Pro. You can still run this Journey now.</p>
         )}
 
-        {error ? <p className="mt-3 text-xs font-medium text-red-700" role="alert">{error === "invalid_url" ? "Enter a full URL, such as https://viewtrace.net" : error}</p> : null}
+        {error ? <p className="mt-3 text-xs font-medium text-red-700" role="alert">{monitoringErrorText(error, locale)}</p> : null}
         <div className="mt-4 flex flex-wrap gap-2">
           <button type="submit" disabled={pending} className="rounded-full bg-ink px-4 py-2 text-xs font-semibold text-surface disabled:opacity-60">
             {pending ? "Saving…" : "Save Journey"}
@@ -417,4 +463,112 @@ export function JourneyEditor({
       ) : null}
     </div>
   );
+}
+
+function monitoringErrorText(error: string, locale: Locale): string {
+  const ja = locale === "ja";
+  if (error === "invalid_url") return ja ? "URLを https://viewtrace.net のように入力してください。" : "Enter a full URL, such as https://viewtrace.net";
+  if (error === "preflight") return ja ? "監視をオンにする条件が揃っていません。" : "Monitoring preflight did not pass.";
+  if (error === "test_run") return ja ? "テストRunは保存されましたが、成功していないため監視はオンにしていません。" : "The test run was saved. Monitoring stays off because it did not pass.";
+  if (error === "plan") return ja ? "定期監視は Starter と Pro に含まれます。" : "Scheduled monitoring is included with Starter and Pro.";
+  if (error === "quota") return ja ? "今月の残量が、この実行全体に足りません。" : "Monthly capacity is short for this whole run.";
+  return error;
+}
+
+function MonitoringSchedulePanel({
+  locale,
+  schedule,
+  onSchedule,
+  regionLabels,
+  selectedRegions,
+  devices,
+  availableChecks,
+  credentialsReady,
+  startUrl,
+  steps,
+  runs,
+  nextRunAt,
+  enabled,
+  serverPreflight,
+  pending,
+  onApply,
+}: {
+  locale: Locale;
+  schedule: "off" | "daily" | "weekly";
+  onSchedule: (value: "off" | "daily" | "weekly") => void;
+  regionLabels: string[];
+  selectedRegions: string[];
+  devices: JourneyDeviceClass[];
+  availableChecks: number | null;
+  credentialsReady: boolean;
+  startUrl: string;
+  steps: JourneyStepDefinition[];
+  runs: JourneyRunPublic[];
+  nextRunAt: string | null;
+  enabled: boolean;
+  serverPreflight: MonitoringPreflight | null;
+  pending: boolean;
+  onApply: () => void;
+}) {
+  const ja = locale === "ja";
+  const checks = journeyMonitoringChecks(selectedRegions, devices);
+  const preview = evaluateMonitoringPreflight({
+    startUrl,
+    steps,
+    regions: selectedRegions,
+    environments: devices,
+    credentialsAvailable: credentialsReady,
+    availableChecks,
+    runs,
+  });
+  const shown = serverPreflight ?? preview;
+  const lines = [
+    [shown.urlValid, ja ? "URLは有効" : "URL valid"],
+    [shown.definitionValid, ja ? "Journey定義は有効" : "Journey definition valid"],
+    [shown.credentialsAvailable, ja ? "必要な認証情報がある" : "Required credentials available"],
+    [shown.capacityAvailable, ja ? "月間の残量がある" : "Monthly capacity available"],
+    [shown.testRunPassed, ja ? "テストRunが成功している" : "Test run passed"],
+  ] as const;
+  const nextLabel = enabled && nextRunAt
+    ? new Date(nextRunAt).toLocaleString(ja ? "ja-JP" : "en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+    : null;
+  return (
+    <fieldset className="mt-4 rounded-lg border border-border p-3">
+      <legend className="px-1 text-xs font-semibold text-ink">{ja ? "Journeyの監視" : "Journey Monitoring"}</legend>
+      <div className="mt-2 flex flex-wrap gap-3 text-xs text-ink">
+        {(["off", "daily", "weekly"] as const).map((value) => (
+          <label key={value} className="flex items-center gap-1">
+            <input type="radio" name="monitoring-schedule" checked={schedule === value} onChange={() => onSchedule(value)} />
+            {value === "off" ? "Off" : value === "daily" ? (ja ? "毎日" : "Daily") : (ja ? "毎週" : "Weekly")}
+          </label>
+        ))}
+      </div>
+      <p className="mt-3 text-xs text-ink-muted">
+        {ja ? "地域" : "Regions"} {regionLabels.length ? regionLabels.join(", ") : "—"}
+      </p>
+      <p className="mt-1 text-xs text-ink-muted">
+        {ja ? "環境" : "Environments"} {devices.map((device) => (device === "mobile" ? (ja ? "モバイル" : "Mobile") : (ja ? "デスクトップ" : "Desktop"))).join(", ") || "—"}
+      </p>
+      <p className="mt-1 text-xs text-ink">{checks} {ja ? "checks / 回" : "checks per run"}</p>
+      {nextLabel ? <p className="mt-1 text-xs text-ink-muted">{ja ? "次回" : "Next run"} {nextLabel}</p> : null}
+      <ul className="mt-3 space-y-1 text-xs text-ink">
+        {lines.map(([ok, label]) => (
+          <li key={label}>{ok ? "✓" : "·"} {label}</li>
+        ))}
+      </ul>
+      <p className="mt-2 text-xs text-ink-muted">
+        {ja
+          ? "成功したRunがまだ無いときは、有効化の前に 1地域 × 1環境のテストを保存します。残量が実行全体に足りないときは、何も実行しません。"
+          : "If no successful run is saved yet, enabling runs and saves one region and one environment first. If capacity is short for the whole schedule, nothing runs."}
+      </p>
+      <button type="button" disabled={pending || !journeyReady(schedule, enabled)} onClick={onApply} className="mt-3 rounded-full border border-border px-4 py-2 text-xs font-semibold text-ink disabled:opacity-60">
+        {pending ? (ja ? "確認しています…" : "Checking…") : schedule === "off" ? (ja ? "監視を停止" : "Stop monitoring") : (ja ? "監視を有効にする" : "Enable monitoring")}
+      </button>
+    </fieldset>
+  );
+}
+
+function journeyReady(schedule: "off" | "daily" | "weekly", enabled: boolean): boolean {
+  if (schedule === "off") return enabled;
+  return true;
 }

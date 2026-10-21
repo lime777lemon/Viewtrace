@@ -59,6 +59,27 @@ export function buildJourneyFunctionCode(): string {
       .replace(/\\{\\{username\\}\\}/g, String(credentials.username || ""))
       .replace(/\\{\\{password\\}\\}/g, String(credentials.password || ""));
   }
+  function resolveOpen(raw) {
+    const start = String(context && context.url ? context.url : "").trim();
+    const value = String(raw || "").trim();
+    const base = /^https?:\\/\\//i.test(start) ? start : (start.indexOf(".") > 0 ? "https://" + start : "");
+    let next = "";
+    try {
+      if (!value || value === "https://" || value === "http://") next = base;
+      else if (/^https?:\\/\\//i.test(value)) next = new URL(value).href;
+      else if (/^[a-z0-9.-]+\\.[a-z]{2,}([/:?#].*)?$/i.test(value)) next = new URL("https://" + value).href;
+      else if (base) next = new URL(value, base).href;
+    } catch (e) {
+      next = "";
+    }
+    if (!next) return "";
+    try {
+      if (base && new URL(next).hostname !== new URL(base).hostname) return "";
+    } catch (e) {
+      return "";
+    }
+    return next;
+  }
   function sideEffect(text) {
     const sample = String(text || "").slice(0, 240);
     if (/place\\s*order|complete\\s*(purchase|order)|注文(を)?確定|購入を確定/i.test(sample)) return "place_order";
@@ -112,7 +133,8 @@ export function buildJourneyFunctionCode(): string {
     }
     try {
       if (kind === "open_url") {
-        const requested = String(step.url || context.url || "");
+        const requested = resolveOpen(step.url || context.url || "");
+        if (!requested) throw new Error("invalid URL");
         if (!html) {
           await page.goto(requested, { waitUntil: "networkidle2", timeout: 30000 });
           try {

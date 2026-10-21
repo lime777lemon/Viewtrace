@@ -97,3 +97,57 @@ export function monitoringParentStatus(input: {
   if (input.journeys.some((journey) => journey === "blocked")) return "blocked";
   return "healthy";
 }
+
+/**
+ * Diff compares this completed Monitoring Run with the previous completed run
+ * of the same target URL and region. Journey results also match environment.
+ * Page scope leaves environment null.
+ */
+export type MonitoringDiffScope = {
+  targetUrl: string;
+  region: string;
+  environment: "desktop" | "mobile" | null;
+};
+
+export function monitoringDiffScope(input: {
+  targetUrl: string;
+  region: string;
+  environment?: "desktop" | "mobile" | null;
+}): MonitoringDiffScope {
+  const environment = input.environment === "desktop" || input.environment === "mobile" ? input.environment : null;
+  return {
+    targetUrl: input.targetUrl.trim(),
+    region: input.region.trim(),
+    environment,
+  };
+}
+
+export type MonitoringStatusReason =
+  | { code: "screenshot_differs"; region: string }
+  | { code: "screenshot_not_comparable"; region: string }
+  | { code: "page_incomplete"; region: string }
+  | { code: "behavior_new" }
+  | { code: "journey_failed"; name: string }
+  | { code: "journey_incomplete"; name: string }
+  | { code: "journey_blocked"; name: string };
+
+/** Facts that explain a non-healthy parent status. An unmeasured behavior is not a reason. */
+export function monitoringStatusReasons(input: {
+  pages: Array<{ label: string; fact: MonitoringPageFact }>;
+  journeys: Array<{ name: string; status: MonitoringJourneyFact }>;
+  newUnknown: boolean;
+}): MonitoringStatusReason[] {
+  const reasons: MonitoringStatusReason[] = [];
+  for (const page of input.pages) {
+    if (page.fact === "incomplete") reasons.push({ code: "page_incomplete", region: page.label });
+    else if (page.fact === "changed") reasons.push({ code: "screenshot_differs", region: page.label });
+    else if (page.fact === "not_comparable") reasons.push({ code: "screenshot_not_comparable", region: page.label });
+  }
+  if (input.newUnknown) reasons.push({ code: "behavior_new" });
+  for (const journey of input.journeys) {
+    if (journey.status === "failed") reasons.push({ code: "journey_failed", name: journey.name });
+    else if (journey.status === "incomplete") reasons.push({ code: "journey_incomplete", name: journey.name });
+    else if (journey.status === "blocked") reasons.push({ code: "journey_blocked", name: journey.name });
+  }
+  return reasons;
+}

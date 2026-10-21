@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { credentialsSatisfyJourney } from "@/lib/monitoring-watch";
 import { computeNextRunAfter, type WatchFrequency } from "@/lib/observation-watch-schedule";
 import { countObservationsThisUtcMonth, utcMonthStartIso } from "@/lib/observation-quota";
 import {
@@ -9,6 +10,7 @@ import {
   type JourneyStepDefinition,
 } from "@/lib/journey-definition";
 import { journeyAlert, runJourneyInBrowserless, type JourneyStepEvidence } from "@/lib/journey-runner";
+import { normalizeUserUrlInput } from "@/lib/url-preview";
 
 export type JourneyDefinitionPublic = {
   id: string;
@@ -22,6 +24,7 @@ export type JourneyDefinitionPublic = {
   next_run_at: string | null;
   last_run_at: string | null;
   has_credentials: boolean;
+  credentials_ready: boolean;
 };
 
 export type JourneyRunPublic = {
@@ -46,18 +49,22 @@ function asDevices(raw: unknown): JourneyDeviceClass[] {
 
 function toPublic(row: Record<string, unknown>): JourneyDefinitionPublic {
   const secret = row.secret_credentials && typeof row.secret_credentials === "object" ? row.secret_credentials as Record<string, unknown> : {};
+  const steps = parseJourneySteps(row.steps);
+  const username = typeof secret.username === "string" ? secret.username : "";
+  const password = typeof secret.password === "string" ? secret.password : "";
   return {
     id: String(row.id),
     name: String(row.name ?? ""),
     start_url: String(row.start_url ?? ""),
-    steps: parseJourneySteps(row.steps),
+    steps,
     regions: Array.isArray(row.regions) ? row.regions.filter((value): value is string => typeof value === "string").slice(0, 4) : [],
     device_classes: asDevices(row.device_classes),
     watch_enabled: row.watch_enabled === true,
     watch_frequency: row.watch_frequency === "weekly" ? "weekly" : "daily",
     next_run_at: typeof row.next_run_at === "string" ? row.next_run_at : null,
     last_run_at: typeof row.last_run_at === "string" ? row.last_run_at : null,
-    has_credentials: typeof secret.username === "string" && secret.username.length > 0,
+    has_credentials: username.length > 0,
+    credentials_ready: credentialsSatisfyJourney(steps, { username, password }),
   };
 }
 
@@ -135,30 +142,34 @@ export async function saveJourney(
     username?: string;
     password?: string;
     watchAllowed: boolean;
+    /** Leave an existing schedule untouched. Enabling goes through the monitoring preflight. */
+    preserveWatch?: boolean;
   },
 ): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
-  const steps = resolveJourneySteps(input.startUrl, parseJourneySteps(input.steps));
-  const invalid = validateJourneySteps(input.startUrl, steps);
+  const startUrl = normalizeUserUrlInput(input.startUrl);
+  if (!startUrl) return { ok: false, error: "invalid_url" };
+  const steps = resolveJourneySteps(startUrl, parseJourneySteps(input.steps));
+  const invalid = validateJourneySteps(startUrl, steps);
   if (invalid) return { ok: false, error: invalid };
   const regions = input.regions.map((region) => region.trim()).filter(Boolean).slice(0, 4);
   if (!regions.length) return { ok: false, error: "region_required" };
   const devices = input.deviceClasses.filter((device) => device === "desktop" || device === "mobile").slice(0, 2);
   if (!devices.length) return { ok: false, error: "environment_required" };
-  const watchEnabled = input.watchAllowed && input.watchEnabled;
   const frequency: WatchFrequency = input.watchFrequency === "weekly" ? "weekly" : "daily";
-  const next = watchEnabled ? computeNextRunAfter(new Date(), frequency, 1, 1).toISOString() : null;
   const payload: Record<string, unknown> = {
     user_id: userId,
     name: input.name.trim().slice(0, 80),
-    start_url: input.startUrl.trim().slice(0, 500),
+    start_url: startUrl,
     steps,
     regions,
     device_classes: devices,
-    watch_enabled: watchEnabled,
-    watch_frequency: frequency,
-    next_run_at: next,
     updated_at: new Date().toISOString(),
   };
+  if (!(input.preserveWatch && input.id)) {
+    payload.watch_enabled = false;
+    payload.watch_frequency = frequency;
+    payload.next_run_at = null;
+  }
   if (input.username || input.password) {
     let username = (input.username ?? "").slice(0, 120);
     let password = (input.password ?? "").slice(0, 200);
@@ -192,7 +203,12 @@ export async function executeJourney(
   userId: string,
   journeyId: string,
   monthlyLimit: number,
-  options?: { fixtureHtml?: string },
+  options?: {
+    fixtureHtml?: string;
+    pairs?: Array<{ region: string; device: JourneyDeviceClass }>;
+    /** Manual runs move a legacy Journey Watch. A Monitoring Watch advances its own schedule. */
+    advanceSchedule?: boolean;
+  },
 ): Promise<{ ok: true; runs: number; runIds: string[] } | { ok: false; error: string; runIds: string[] }> {
   const { data, error } = await supabase
     .from("journey_definitions")
@@ -203,13 +219,25 @@ export async function executeJourney(
   if (error || !data) return { ok: false, error: "not_found", runIds: [] };
   const row = data as Record<string, unknown>;
   const journey = toPublic(row);
-  const steps = resolveJourneySteps(journey.start_url, journey.steps);
+  const startUrl = normalizeUserUrlInput(journey.start_url);
+  if (!startUrl) return { ok: false, error: "invalid_url", runIds: [] };
+  const steps = resolveJourneySteps(startUrl, journey.steps);
+  const invalid = validateJourneySteps(startUrl, steps);
+  if (invalid) return { ok: false, error: invalid, runIds: [] };
+  await supabase.from("journey_definitions").update({
+    start_url: startUrl,
+    steps,
+    updated_at: new Date().toISOString(),
+  }).eq("id", journeyId).eq("user_id", userId);
   const secret = row.secret_credentials && typeof row.secret_credentials === "object" ? row.secret_credentials as Record<string, unknown> : {};
   const credentials = {
     username: typeof secret.username === "string" ? secret.username : "",
     password: typeof secret.password === "string" ? secret.password : "",
   };
-  const pairs = journey.regions.flatMap((region) => journey.device_classes.map((device) => ({ region, device })));
+  const pairs = (options?.pairs ?? journey.regions.flatMap((region) => journey.device_classes.map((device) => ({ region, device }))))
+    .filter((pair) => pair.region.trim() && (pair.device === "desktop" || pair.device === "mobile"))
+    .slice(0, 8);
+  if (!pairs.length) return { ok: false, error: "region_required", runIds: [] };
   const observations = await countObservationsThisUtcMonth(supabase, userId);
   const used = (observations ?? 0) + await monthlyJourneyRuns(supabase, userId);
   if (observations == null || used + pairs.length > monthlyLimit) return { ok: false, error: "quota", runIds: [] };
@@ -230,12 +258,12 @@ export async function executeJourney(
       ? (previous.data as { steps: JourneyStepEvidence[] }).steps
       : null;
     const result = await runJourneyInBrowserless({
-      url: journey.start_url,
+      url: startUrl,
       region: pair.region,
       deviceClass: pair.device,
       steps,
       credentials,
-      fixtureHtml: journey.start_url.endsWith("/tests/journey") ? options?.fixtureHtml : undefined,
+      fixtureHtml: startUrl.endsWith("/tests/journey") ? options?.fixtureHtml : undefined,
     });
     if (!result.ok) return { ok: false, error: result.error, runIds };
     const alert = journeyAlert(priorSteps, result.steps);
@@ -254,9 +282,12 @@ export async function executeJourney(
     runIds.push(String((inserted as { id: string }).id));
     runs += 1;
   }
+  const advanceSchedule = options?.advanceSchedule !== false;
   await supabase.from("journey_definitions").update({
     last_run_at: new Date().toISOString(),
-    next_run_at: journey.watch_enabled ? computeNextRunAfter(new Date(), journey.watch_frequency, 1, 1).toISOString() : null,
+    next_run_at: advanceSchedule && journey.watch_enabled
+      ? computeNextRunAfter(new Date(), journey.watch_frequency, 1, 1).toISOString()
+      : journey.next_run_at,
     updated_at: new Date().toISOString(),
   }).eq("id", journeyId);
   return { ok: true, runs, runIds };
@@ -275,9 +306,23 @@ export async function runDueJourneyWatches(
     .lte("next_run_at", now)
     .limit(8);
   if (error || !data) return { ran: 0, skipped: 0 };
+  const covered = new Set<string>();
+  const watches = await supabase.from("monitoring_watches").select("id").eq("enabled", true);
+  const watchIds = !watches.error && Array.isArray(watches.data)
+    ? (watches.data as Array<{ id?: string }>).map((watch) => watch.id).filter((id): id is string => typeof id === "string")
+    : [];
+  if (watchIds.length) {
+    const links = await supabase.from("monitoring_watch_journeys").select("journey_id").in("monitoring_watch_id", watchIds);
+    if (!links.error && Array.isArray(links.data)) {
+      for (const link of links.data as Array<{ journey_id?: string }>) {
+        if (typeof link.journey_id === "string") covered.add(link.journey_id);
+      }
+    }
+  }
   let ran = 0;
   let skipped = 0;
   for (const row of data as Array<{ id: string; user_id: string }>) {
+    if (covered.has(row.id)) continue;
     const limit = await limitForUser(row.user_id);
     const result = await executeJourney(supabase, row.user_id, row.id, limit, options);
     if (result.ok) ran += result.runs;

@@ -9,6 +9,8 @@ import { loadObservationScrollInteraction } from "@/lib/observation-optional-met
 import { isValidObservationRegionForPlan } from "@/lib/regions";
 import { normalizeUserUrlInput } from "@/lib/url-preview";
 import { executeJourney, getJourney, saveJourney } from "@/lib/journey-store";
+import { disableJourneyMonitoring, enableJourneyMonitoring } from "@/lib/monitoring-watch-store";
+import type { MonitoringPreflight } from "@/lib/monitoring-watch";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type JourneySaveInput = {
@@ -22,6 +24,7 @@ export type JourneySaveInput = {
   watchFrequency: "daily" | "weekly";
   username?: string;
   password?: string;
+  preserveWatch?: boolean;
 };
 
 export async function saveJourneyAction(input: JourneySaveInput): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
@@ -97,6 +100,7 @@ export async function addDiscoveryToJourneyAction(input: {
       watchEnabled: journey.watch_enabled,
       watchFrequency: journey.watch_frequency,
       watchAllowed: plan.autoObservationWatch,
+      preserveWatch: true,
     });
     if (saved.ok) {
       revalidatePath("/dashboard/journeys");
@@ -121,6 +125,48 @@ export async function addDiscoveryToJourneyAction(input: {
     revalidatePath(`/dashboard/observations/${input.observationId}`);
   }
   return saved;
+}
+
+export async function enableJourneyMonitoringAction(input: {
+  id: string;
+  frequency: "daily" | "weekly";
+  regions: string[];
+  deviceClasses: JourneyDeviceClass[];
+  username?: string;
+  password?: string;
+}): Promise<{ ok: true; nextRunAt: string } | { ok: false; error: string; preflight?: MonitoringPreflight }> {
+  const session = await getSession();
+  if (!session) return { ok: false, error: "unauthorized" };
+  const plan = getPlan(session.plan);
+  if (!plan.autoObservationWatch) return { ok: false, error: "plan" };
+  const regions = input.regions.filter((region) => isValidObservationRegionForPlan(session.plan, region));
+  const supabase = await createSupabaseServerClient();
+  const result = await enableJourneyMonitoring(supabase, session.userId, {
+    journeyId: input.id,
+    frequency: input.frequency,
+    regions,
+    deviceClasses: input.deviceClasses,
+    monthlyLimit: plan.monthlyObservations,
+    username: input.username,
+    password: input.password,
+  });
+  if (result.ok) {
+    revalidatePath("/dashboard/journeys");
+    revalidatePath(`/dashboard/journeys/${input.id}`);
+  }
+  return result;
+}
+
+export async function disableJourneyMonitoringAction(id: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const session = await getSession();
+  if (!session) return { ok: false, error: "unauthorized" };
+  const supabase = await createSupabaseServerClient();
+  const result = await disableJourneyMonitoring(supabase, session.userId, id);
+  if (result.ok) {
+    revalidatePath("/dashboard/journeys");
+    revalidatePath(`/dashboard/journeys/${id}`);
+  }
+  return result;
 }
 
 export async function deleteJourneyAction(id: string): Promise<{ ok: true } | { ok: false; error: string }> {
