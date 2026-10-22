@@ -5,8 +5,13 @@ import { useMemo, useRef, useState } from "react";
 import { runMonitoringCheckAction } from "@/app/actions/monitoring-runs";
 import { REGION_SEARCH_FIELD_CLASS } from "@/components/RegionSearchQueryField";
 import type { RegionSearchLabels } from "@/components/RegionSearchQueryField";
+import { JourneyCommerceFields } from "@/components/dashboard/JourneyCommerceFields";
 import {
+  commerceJourneyInputs,
+  isJourneyCommerceKind,
   JOURNEY_STEP_KINDS,
+  JOURNEY_STEP_LIMIT,
+  journeyKindLabel,
   type JourneySideEffect,
   type JourneyStepDefinition,
   type JourneyStepKind,
@@ -39,6 +44,9 @@ const TEXT = {
     journeyRuns: "Journey Run",
     available: "残量",
     steps: "手順",
+    evidenceNote: "各手順は、観測できたものだけを Evidence に残します。URL、表示、非表示、文言、入力値、属性、DOM、HTTP、リソース、ダウンロード、エラー、console、失敗したリクエスト、新しいタブ、リダイレクトです。領域のスクリーンショットと動画の再生は、その手順で有効にしたときだけです。",
+    evidenceScreenshot: "領域のスクリーンショット",
+    evidenceVideo: "動画の再生",
     stepOne: "1. open_url は上の URL です。",
     addStep: "手順を追加",
     fillValue: "入力する値",
@@ -59,7 +67,8 @@ const TEXT = {
       trial_limit: "無料期間の回数に達しています。",
       region_required: "地域を選んでください。",
       environment_required: "Desktop か Mobile を選んでください。",
-      selector_required: "クリックなどの手順にはセレクタが必要です。",
+      selector_required: "この手順にはセレクタが必要です。",
+      outcome_required: "Login、Signup、カート、Checkout には最終状態を指定してください。",
       value_required: "この手順には値が必要です。",
       url_host: "手順の URL は開始 URL と同じホストにしてください。",
       save_failed: "Journey を保存できませんでした。",
@@ -89,6 +98,9 @@ const TEXT = {
     journeyRuns: "Journey runs",
     available: "Available",
     steps: "Steps",
+    evidenceNote: "Each step keeps only the evidence it observed: URL, visible, hidden, text, input value, attribute, DOM, HTTP, resource, download, error, console, failed request, new tab, and redirect. Screenshot region and video playback run only on steps where you turn them on.",
+    evidenceScreenshot: "Screenshot region",
+    evidenceVideo: "Video playback",
     stepOne: "1. open_url uses the URL above.",
     addStep: "Add step",
     fillValue: "Value to enter",
@@ -109,7 +121,8 @@ const TEXT = {
       trial_limit: "The trial allowance is used up.",
       region_required: "Choose a region.",
       environment_required: "Choose Desktop or Mobile.",
-      selector_required: "A click or similar step needs a selector.",
+      selector_required: "This step needs a selector.",
+      outcome_required: "Login, Signup, Add to cart, and Checkout need a final state.",
       value_required: "This step needs a value.",
       url_host: "Step URLs stay on the same host as the start URL.",
       save_failed: "Could not save the Journey.",
@@ -163,6 +176,8 @@ export function CaptureEntryForm({
   const [environment, setEnvironment] = useState<"desktop" | "mobile" | "both">("desktop");
   const [extraRegions, setExtraRegions] = useState<string[]>([]);
   const [steps, setSteps] = useState<JourneyStepDefinition[]>([]);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const environments = environment === "both" ? (["desktop", "mobile"] as const) : ([environment] as const);
@@ -206,6 +221,8 @@ export function CaptureEntryForm({
       regions: [region, ...extraRegions],
       environments: [...environments],
       steps,
+      username,
+      password,
     });
     if (!result.ok) {
       setBusy(false);
@@ -341,6 +358,7 @@ export function CaptureEntryForm({
 
       <div className="mt-6">
         <h2 className="text-sm font-medium text-ink">{copy.steps}</h2>
+        <p className="text-xs leading-relaxed text-ink-muted">{copy.evidenceNote}</p>
         <p className="mt-1 text-xs text-ink-muted">{copy.stepOne}</p>
         <ol className="mt-3 space-y-3">
           {steps.map((step, index) => (
@@ -349,14 +367,22 @@ export function CaptureEntryForm({
                 <span className="pt-2 text-xs text-ink-muted">{index + 2}</span>
                 <select
                   value={step.kind}
-                  onChange={(event) => updateStep(index, { kind: event.target.value as JourneyStepKind })}
+                  onChange={(event) => {
+                    const kind = event.target.value as JourneyStepKind;
+                    updateStep(index, isJourneyCommerceKind(kind)
+                      ? { kind, inputs: commerceJourneyInputs(kind), confirm_selector: "", selector: "" }
+                      : { kind });
+                  }}
                   className="rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
                 >
                   {JOURNEY_STEP_KINDS.filter((kind) => kind !== "open_url").map((kind) => (
-                    <option key={kind} value={kind}>{kind}</option>
+                    <option key={kind} value={kind}>{journeyKindLabel(kind, locale)}</option>
                   ))}
                 </select>
-                {step.kind !== "wait" && step.kind !== "assert_url" ? (
+                {isJourneyCommerceKind(step.kind) ? (
+                  <JourneyCommerceFields step={step} locale={locale} onChange={(patch) => updateStep(index, patch)} />
+                ) : null}
+                {!isJourneyCommerceKind(step.kind) && step.kind !== "wait" && step.kind !== "assert_url" ? (
                   <input
                     value={step.selector}
                     placeholder="selector"
@@ -390,6 +416,24 @@ export function CaptureEntryForm({
                     className="w-28 rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
                   />
                 ) : null}
+              </div>
+              <div className="mt-2 flex flex-wrap gap-3">
+                <label className="flex items-center gap-1 text-xs text-ink-muted">
+                  <input
+                    type="checkbox"
+                    checked={step.evidence_screenshot === true}
+                    onChange={(event) => updateStep(index, { evidence_screenshot: event.target.checked })}
+                  />
+                  {copy.evidenceScreenshot}
+                </label>
+                <label className="flex items-center gap-1 text-xs text-ink-muted">
+                  <input
+                    type="checkbox"
+                    checked={step.evidence_video === true}
+                    onChange={(event) => updateStep(index, { evidence_video: event.target.checked })}
+                  />
+                  {copy.evidenceVideo}
+                </label>
               </div>
               {step.kind === "click" ? (
                 <div className="mt-2 flex flex-wrap gap-2">
@@ -425,13 +469,42 @@ export function CaptureEntryForm({
             </li>
           ))}
         </ol>
-        <button
-          type="button"
-          className="mt-3 text-xs font-semibold text-ink"
-          onClick={() => setSteps((current) => current.length >= 7 ? current : [...current, emptyStep(current.length + 2)])}
-        >
-          {copy.addStep}
-        </button>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="text-xs font-semibold text-ink"
+            onClick={() => setSteps((current) => current.length >= JOURNEY_STEP_LIMIT - 1 ? current : [...current, emptyStep(current.length + 2)])}
+          >
+            {copy.addStep}
+          </button>
+          {(["login", "signup", "add_to_cart", "checkout"] as const).map((kind) => (
+            <button
+              key={kind}
+              type="button"
+              className="rounded-full border border-border px-3 py-1 text-xs font-semibold text-ink"
+              onClick={() => setSteps((current) => current.length >= JOURNEY_STEP_LIMIT - 1 ? current : [...current, {
+                ...emptyStep(current.length + 2),
+                kind,
+                inputs: commerceJourneyInputs(kind),
+                wait_ms: 8000,
+              }])}
+            >
+              {journeyKindLabel(kind, locale)}
+            </button>
+          ))}
+        </div>
+        {steps.some((step) => step.kind === "login" || step.kind === "signup") ? (
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <label className="grid gap-1 text-xs text-ink-muted">
+              {locale === "ja" ? "テストのユーザー名" : "Test username"}
+              <input value={username} onChange={(event) => setUsername(event.target.value)} autoComplete="off" className="rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink" />
+            </label>
+            <label className="grid gap-1 text-xs text-ink-muted">
+              {locale === "ja" ? "テストのパスワード" : "Test password"}
+              <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="new-password" className="rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink" />
+            </label>
+          </div>
+        ) : null}
       </div>
 
       {error ? <p className="mt-3 text-xs font-medium text-red-700" role="alert">{error}</p> : null}
@@ -450,10 +523,21 @@ export function CaptureEntryForm({
         <button
           type="button"
           disabled={busy}
+          aria-busy={busy}
           onClick={() => void runCheck()}
-          className="mt-4 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-accent-hover disabled:opacity-60"
+          className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-80"
         >
-          {busy ? copy.runPending : copy.run}
+          {busy ? (
+            <>
+              <span
+                aria-hidden
+                className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-white/35 border-t-white"
+              />
+              <span>{copy.runPending}</span>
+            </>
+          ) : (
+            copy.run
+          )}
         </button>
       </div>
     </form>

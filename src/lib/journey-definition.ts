@@ -1,4 +1,5 @@
 import type { Locale } from "@/lib/i18n";
+import { journeyEvidenceLabel, type JourneyEvidenceItem } from "@/lib/journey-step-evidence";
 import { countryCodeDisplayName } from "@/lib/observation-geo-readout";
 import { resolveBrowserlessResidentialTarget, usStateDisplayName } from "@/lib/regions";
 import { normalizeUserUrlInput } from "@/lib/url-preview";
@@ -12,6 +13,10 @@ export const JOURNEY_STEP_KINDS = [
   "assert_visible",
   "assert_text",
   "assert_url",
+  "login",
+  "signup",
+  "add_to_cart",
+  "checkout",
 ] as const;
 
 export type JourneyStepKind = (typeof JOURNEY_STEP_KINDS)[number];
@@ -81,6 +86,21 @@ export function journeyCaptureLine(region: string, stage: string | null | undefi
     : `Requested ${requested} · Observed ${observed}`;
 }
 
+export type JourneyInputRole = "username" | "password" | "name" | "email" | "field";
+
+export type JourneyInput = {
+  role: JourneyInputRole;
+  selector: string;
+  value: string;
+};
+
+export const JOURNEY_COMMERCE_KINDS = ["login", "signup", "add_to_cart", "checkout"] as const;
+export type JourneyCommerceKind = (typeof JOURNEY_COMMERCE_KINDS)[number];
+
+export function isJourneyCommerceKind(kind: string): kind is JourneyCommerceKind {
+  return (JOURNEY_COMMERCE_KINDS as readonly string[]).includes(kind);
+}
+
 export type JourneyStepDefinition = {
   id: string;
   kind: JourneyStepKind;
@@ -94,6 +114,14 @@ export type JourneyStepDefinition = {
   expect_text: string;
   expect_visible: boolean;
   expect_url: string;
+  /** Login, signup, and checkout fields. Password values stay {{password}}. */
+  inputs?: JourneyInput[];
+  /** Checkout confirm control. Place order and payment still require permission. */
+  confirm_selector?: string;
+  /** Element JPEG before and after this step. Off unless the step turns it on. */
+  evidence_screenshot?: boolean;
+  /** Video currentTime and paused on this step. Off unless the step turns it on. */
+  evidence_video?: boolean;
 };
 
 export type JourneySideEffect = "payment" | "place_order" | "delete" | "external_send";
@@ -160,6 +188,40 @@ export function journeyStepHostAllowed(startUrl: string, nextUrl: string): boole
   }
 }
 
+const INPUT_ROLES = new Set<JourneyInputRole>(["username", "password", "name", "email", "field"]);
+
+export function commerceJourneyInputs(kind: JourneyCommerceKind): JourneyInput[] {
+  if (kind === "login") {
+    return [
+      { role: "username", selector: "", value: "{{username}}" },
+      { role: "password", selector: "", value: "{{password}}" },
+    ];
+  }
+  if (kind === "signup") {
+    return [
+      { role: "name", selector: "", value: "" },
+      { role: "email", selector: "", value: "" },
+      { role: "password", selector: "", value: "{{password}}" },
+    ];
+  }
+  return [];
+}
+
+function parseJourneyInputs(raw: unknown): JourneyInput[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.slice(0, 4).flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const row = item as Record<string, unknown>;
+    const role = INPUT_ROLES.has(row.role as JourneyInputRole) ? row.role as JourneyInputRole : "field";
+    const selector = typeof row.selector === "string" ? row.selector.trim().slice(0, 180) : "";
+    if (!selector) return [];
+    const value = role === "password"
+      ? "{{password}}"
+      : typeof row.value === "string" ? row.value.slice(0, 240) : "";
+    return [{ role, selector, value }];
+  });
+}
+
 export function parseJourneySteps(raw: unknown): JourneyStepDefinition[] {
   if (!Array.isArray(raw)) return [];
   const steps: JourneyStepDefinition[] = [];
@@ -181,13 +243,25 @@ export function parseJourneySteps(raw: unknown): JourneyStepDefinition[] {
       expect_text: typeof row.expect_text === "string" ? row.expect_text.slice(0, 180) : "",
       expect_visible: row.expect_visible === true,
       expect_url: typeof row.expect_url === "string" ? row.expect_url.trim().slice(0, 240) : "",
+      inputs: parseJourneyInputs(row.inputs),
+      confirm_selector: typeof row.confirm_selector === "string" ? row.confirm_selector.trim().slice(0, 180) : "",
+      evidence_screenshot: row.evidence_screenshot === true,
+      evidence_video: row.evidence_video === true,
     });
   }
   return steps;
 }
 
 export function journeyStepNeedsSelector(kind: JourneyStepKind): boolean {
-  return kind === "click" || kind === "fill" || kind === "select" || kind === "assert_visible" || kind === "assert_text";
+  return kind === "click" || kind === "fill" || kind === "select" || kind === "assert_visible" || kind === "assert_text" || isJourneyCommerceKind(kind);
+}
+
+function journeyExpectsOutcome(step: JourneyStepDefinition): boolean {
+  return Boolean(step.expect_text || step.expect_visible || step.expect_url);
+}
+
+function journeyInputSelector(step: JourneyStepDefinition, role: JourneyInputRole): string {
+  return step.inputs?.find((input) => input.role === role)?.selector ?? "";
 }
 
 export function validateJourneySteps(startUrl: string, steps: JourneyStepDefinition[]): string | null {
@@ -199,6 +273,13 @@ export function validateJourneySteps(startUrl: string, steps: JourneyStepDefinit
     if ((step.kind === "assert_text" || step.kind === "assert_url" || step.kind === "select") && !step.value) {
       return "value_required";
     }
+    if (step.kind === "login" && (!journeyInputSelector(step, "username") || !journeyInputSelector(step, "password"))) {
+      return "selector_required";
+    }
+    if (step.kind === "signup" && (!journeyInputSelector(step, "email") || !journeyInputSelector(step, "password"))) {
+      return "selector_required";
+    }
+    if (isJourneyCommerceKind(step.kind) && !journeyExpectsOutcome(step)) return "outcome_required";
   }
   return null;
 }
@@ -207,6 +288,10 @@ export function publicJourneySteps(steps: JourneyStepDefinition[]): JourneyStepD
   return steps.map((step) => ({
     ...step,
     value: step.value.includes("{{password}}") ? "{{password}}" : step.value,
+    inputs: (step.inputs ?? []).map((input) => ({
+      ...input,
+      value: input.role === "password" ? "{{password}}" : input.value,
+    })),
   }));
 }
 
@@ -220,6 +305,10 @@ const STEP_KIND_LABEL: Record<Locale, Record<JourneyStepKind, string>> = {
     assert_visible: "表示を確認",
     assert_text: "文言を確認",
     assert_url: "URLを確認",
+    login: "ログイン",
+    signup: "アカウント作成",
+    add_to_cart: "カートに追加",
+    checkout: "チェックアウト",
   },
   en: {
     open_url: "Open URL",
@@ -230,6 +319,10 @@ const STEP_KIND_LABEL: Record<Locale, Record<JourneyStepKind, string>> = {
     assert_visible: "Assert visible",
     assert_text: "Assert text",
     assert_url: "Assert URL",
+    login: "Login",
+    signup: "Signup",
+    add_to_cart: "Add to cart",
+    checkout: "Checkout",
   },
 };
 
@@ -310,6 +403,7 @@ export function journeyStepReport(
     after_visible?: boolean | null;
     duration_ms?: number | null;
     network?: Array<{ method: string; path: string; status: number | null }>;
+    evidence?: JourneyEvidenceItem[];
   },
   defined: Pick<JourneyStepDefinition, "selector" | "url" | "value" | "expect_text" | "expect_visible" | "expect_url" | "permitted_side_effect"> | null,
   index: number,
@@ -324,12 +418,14 @@ export function journeyStepReport(
   if (step.kind === "open_url") {
     if (target) lines.push({ label: ja ? "対象" : "Target", value: target });
     lines.push({ label: ja ? "現在の URL" : "Current URL", value: step.url_after || "about:blank" });
-  } else if (step.kind === "click" || step.kind === "fill" || step.kind === "select") {
-    const action = step.kind === "click"
-      ? (ja ? "クリック" : "Click")
-      : step.kind === "fill"
-        ? (ja ? "入力" : "Fill")
-        : (ja ? "選択" : "Select");
+  } else if (isJourneyCommerceKind(step.kind) || step.kind === "click" || step.kind === "fill" || step.kind === "select") {
+    const action = isJourneyCommerceKind(step.kind)
+      ? journeyKindLabel(step.kind, locale)
+      : step.kind === "click"
+        ? (ja ? "クリック" : "Click")
+        : step.kind === "fill"
+          ? (ja ? "入力" : "Fill")
+          : (ja ? "選択" : "Select");
     lines.push({ label: ja ? "操作" : "Action", value: selector ? `${action} \`${selector}\`` : action });
   }
 
@@ -355,7 +451,11 @@ export function journeyStepReport(
     const reason = journeyFailureReason(step.detail, locale);
     if (reason) lines.push({ label: ja ? "理由" : "Reason", value: reason });
 
-    if (step.before_text != null || step.after_text != null) {
+    if (step.evidence?.length) {
+      for (const item of step.evidence) {
+        lines.push({ label: journeyEvidenceLabel(item.kind, locale), value: item.summary });
+      }
+    } else if (step.before_text != null || step.after_text != null) {
       lines.push({ label: "Evidence", value: `${step.before_text ?? ""} → ${step.after_text ?? ""}` });
     } else if (step.before_visible != null || step.after_visible != null) {
       lines.push({ label: "Evidence", value: `${String(step.before_visible)} → ${String(step.after_visible)}` });

@@ -3,10 +3,15 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { deleteJourneyAction, disableJourneyMonitoringAction, enableJourneyMonitoringAction, runJourneyNowAction, saveJourneyAction } from "@/app/actions/journeys";
+import { JourneyCommerceFields } from "@/components/dashboard/JourneyCommerceFields";
 import {
+  commerceJourneyInputs,
+  isJourneyCommerceKind,
   journeyPurposeLabel,
   JOURNEY_STEP_KINDS,
+  JOURNEY_STEP_LIMIT,
   journeyCaptureLine,
+  journeyKindLabel,
   journeyStatusLabel,
   journeyStepReport,
   resolveJourneyOpenUrl,
@@ -172,8 +177,9 @@ export function JourneyEditor({
       <form ref={formRef} className="rounded-xl border border-border bg-surface-elevated p-4 sm:p-5" onSubmit={(event) => { event.preventDefault(); save(); }}>
         <h1 className="text-lg font-semibold text-ink">{journey ? "Journey" : "New Journey"}</h1>
         <p className="mt-1 text-xs leading-relaxed text-ink-muted">
-          Discovery stays automatic. A Journey runs the steps you define, in each selected region and environment.
-          Place order, payment, delete, and external send stay blocked unless that step is explicitly permitted.
+          {locale === "ja"
+            ? "Discovery は自動のままです。Journey は、選んだ地域と環境で、定義した手順だけを実行します。ログイン、アカウント作成、カート、チェックアウトは追加した手順だけ実行します。注文確定と支払いは、その手順で許可したときだけです。各手順では、URL、表示、文言、入力、属性、DOM、HTTP、リソース、ダウンロード、エラー、console、失敗したリクエスト、新しいタブ、リダイレクトのうち、観測できたものを Evidence として残します。領域のスクリーンショットと動画の再生は、その手順で有効にしたときだけです。"
+            : "Discovery stays automatic. A Journey runs the steps you define, in each selected region and environment. Login, Signup, Add to cart, and Checkout run only as steps you add. Place order and payment stay blocked unless that step permits them. Each step keeps the evidence it actually observed: URL, visibility, text, input, attributes, DOM, HTTP, resources, downloads, errors, console, failed requests, new tabs, and redirects. Screenshot region and video playback run only on steps where you turn them on."}
         </p>
         <div className="mt-4 grid gap-3">
           <label className="grid gap-1 text-xs text-ink-muted">
@@ -256,14 +262,22 @@ export function JourneyEditor({
                 <span className="pt-2 text-xs text-ink-muted">{index + 1}</span>
                 <select
                   value={step.kind}
-                  onChange={(event) => updateStep(index, { kind: event.target.value as JourneyStepKind })}
+                  onChange={(event) => {
+                    const kind = event.target.value as JourneyStepKind;
+                    updateStep(index, isJourneyCommerceKind(kind)
+                      ? { kind, inputs: commerceJourneyInputs(kind), confirm_selector: "", selector: "" }
+                      : { kind });
+                  }}
                   className="rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
                 >
                   {JOURNEY_STEP_KINDS.map((kind) => (
-                    <option key={kind} value={kind}>{kind}</option>
+                    <option key={kind} value={kind}>{journeyKindLabel(kind, locale)}</option>
                   ))}
                 </select>
-                {step.kind !== "wait" && step.kind !== "open_url" && step.kind !== "assert_url" ? (
+                {isJourneyCommerceKind(step.kind) ? (
+                  <JourneyCommerceFields step={step} locale={locale} onChange={(patch) => updateStep(index, patch)} />
+                ) : null}
+                {!isJourneyCommerceKind(step.kind) && step.kind !== "wait" && step.kind !== "open_url" && step.kind !== "assert_url" ? (
                   <input
                     value={step.selector}
                     placeholder="selector"
@@ -311,6 +325,24 @@ export function JourneyEditor({
                     : `Saved ${journey.steps[index].url} opens as ${step.url}.`}
                 </p>
               ) : null}
+              <div className="mt-2 flex flex-wrap gap-3">
+                <label className="flex items-center gap-1 text-xs text-ink-muted">
+                  <input
+                    type="checkbox"
+                    checked={step.evidence_screenshot === true}
+                    onChange={(event) => updateStep(index, { evidence_screenshot: event.target.checked })}
+                  />
+                  {locale === "ja" ? "領域のスクリーンショット" : "Screenshot region"}
+                </label>
+                <label className="flex items-center gap-1 text-xs text-ink-muted">
+                  <input
+                    type="checkbox"
+                    checked={step.evidence_video === true}
+                    onChange={(event) => updateStep(index, { evidence_video: event.target.checked })}
+                  />
+                  {locale === "ja" ? "動画の再生" : "Video playback"}
+                </label>
+              </div>
               {step.kind === "click" ? (
                 <div className="mt-2 flex flex-wrap gap-2">
                   <input
@@ -345,13 +377,30 @@ export function JourneyEditor({
             </li>
           ))}
         </ol>
-        <button
-          type="button"
-          className="mt-3 text-xs font-semibold text-ink"
-          onClick={() => setSteps((current) => current.length >= 8 ? current : [...current, EMPTY_STEP(current.length + 1)])}
-        >
-          Add step
-        </button>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="text-xs font-semibold text-ink"
+            onClick={() => setSteps((current) => current.length >= JOURNEY_STEP_LIMIT ? current : [...current, EMPTY_STEP(current.length + 1)])}
+          >
+            Add step
+          </button>
+          {(["login", "signup", "add_to_cart", "checkout"] as const).map((kind) => (
+            <button
+              key={kind}
+              type="button"
+              className="rounded-full border border-border px-3 py-1 text-xs font-semibold text-ink"
+              onClick={() => setSteps((current) => current.length >= JOURNEY_STEP_LIMIT ? current : [...current, {
+                ...EMPTY_STEP(current.length + 1),
+                kind,
+                inputs: commerceJourneyInputs(kind),
+                wait_ms: 8000,
+              }])}
+            >
+              {journeyKindLabel(kind, locale)}
+            </button>
+          ))}
+        </div>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
           <label className="grid gap-1 text-xs text-ink-muted">
@@ -483,6 +532,8 @@ export function JourneyEditor({
 function monitoringErrorText(error: string, locale: Locale): string {
   const ja = locale === "ja";
   if (error === "invalid_url") return ja ? "URLを https://viewtrace.net のように入力してください。" : "Enter a full URL, such as https://viewtrace.net";
+  if (error === "outcome_required") return ja ? "Login、Signup、カート、Checkout には最終状態を指定してください。" : "Login, Signup, Add to cart, and Checkout need a final state.";
+  if (error === "selector_required") return ja ? "この手順にはセレクタが必要です。" : "This step needs a selector.";
   if (error === "preflight") return ja ? "監視をオンにする条件が揃っていません。" : "Monitoring preflight did not pass.";
   if (error === "test_run") return ja ? "テストRunは保存されましたが、成功していないため監視はオンにしていません。" : "The test run was saved. Monitoring stays off because it did not pass.";
   if (error === "plan") return ja ? "定期監視は Starter と Pro に含まれます。" : "Scheduled monitoring is included with Starter and Pro.";

@@ -32,6 +32,8 @@ export type MonitoringCheckInput = {
   regions: string[];
   environments?: JourneyDeviceClass[];
   steps: JourneyStepDefinition[];
+  username?: string;
+  password?: string;
 };
 
 function hostnameOf(url: string): string {
@@ -111,6 +113,8 @@ export async function runMonitoringCheckAction(
       watchEnabled: false,
       watchFrequency: "daily",
       watchAllowed: false,
+      username: input.username,
+      password: input.password,
     });
     if (!saved.ok) return saved;
     journeyId = saved.id;

@@ -8,6 +8,7 @@ import {
   type ScrollInteractionStatus,
   type ScrollInteractionV1,
 } from "@/lib/observation-scroll-interaction";
+import { parseSessionSignals, type SessionSignalsV1 } from "@/lib/session-signals";
 import {
   parseRenderedPage,
   type RenderedPageMeasurementV1,
@@ -166,6 +167,8 @@ export type BehaviorDiscoveryV1 = {
   environment: DiscoveryEnvironmentV1 | null;
   /** DOM after render in this Chromium session. Null on checks stored before this measurement. */
   rendered_page: RenderedPageMeasurementV1 | null;
+  /** HTTP, resources, errors, and paint timing from this same browser session. */
+  session: SessionSignalsV1 | null;
   measurement_cost: { visual_captures: number; action_duration_ms: number } | null;
   temporal: TemporalObservationV1 | null;
   exhaustion: ExplorationExhaustionV1 | null;
@@ -472,6 +475,7 @@ function parseDiscovery(raw: unknown): { discovery: BehaviorDiscoveryV1; observa
       region_track: parseRegionTrack(o.region_track),
       environment: parseDiscoveryEnvironment(o.environment),
       rendered_page: parseRenderedPage(o.rendered, o.navigation),
+      session: parseSessionSignals(o.session),
       measurement_cost: parseMeasurementCost(o.cost),
       temporal: parseTemporalObservation(o.temporal),
       exhaustion: parseExplorationExhaustion(o.exhaustion),

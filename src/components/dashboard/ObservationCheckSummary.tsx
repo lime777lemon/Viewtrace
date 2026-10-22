@@ -218,6 +218,18 @@ export function ObservationCheckSummary({
           <li>{copy.metadata} {seo ? `${seo.measured_signals} signals` : copy.notMeasured}</li>
           <li>{copy.behaviors} {check ? `${behaviorCount}` : copy.notMeasured}</li>
           <li>{copy.journeys} {journeyHere.length || copy.none}</li>
+          {check?.discovery?.session ? (
+            <li>
+              HTTP {check.discovery.session.http.status ?? "—"}
+              {check.discovery.session.http.timed_out ? " · timeout" : ""}
+              {` · JS ${check.discovery.session.resources.script} · CSS ${check.discovery.session.resources.stylesheet} · img ${check.discovery.session.resources.image}`}
+              {` · failed ${check.discovery.session.resources.failed}`}
+              {` · console ${check.discovery.session.errors.console_error} · pageerror ${check.discovery.session.errors.pageerror}`}
+              {check.discovery.session.performance.fcp_ms != null ? ` · FCP ${check.discovery.session.performance.fcp_ms}ms` : ""}
+              {check.discovery.session.performance.lcp_ms != null ? ` · LCP ${check.discovery.session.performance.lcp_ms}ms` : ""}
+              {check.discovery.session.performance.cls != null ? ` · CLS ${check.discovery.session.performance.cls}` : ""}
+            </li>
+          ) : null}
         </ul>
       </div>
 

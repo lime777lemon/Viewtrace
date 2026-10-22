@@ -5,6 +5,7 @@ import {
 import { COOKIE_NOISE_PATTERN_SOURCE } from "@/lib/observation-interaction-evidence";
 import { EXPENSIVE_INTERACTION_TYPES } from "@/lib/observation-interaction-plan";
 import { INTERACTION_UNSAFE_PATTERN_SOURCE } from "@/lib/observation-regional-interaction";
+import { SESSION_PROBE_INSTALL, SESSION_PROBE_READ } from "@/lib/session-signals";
 
 /** Same Browserless session: Detect → Execute → Verify. Detected is never Working. */
 export function buildInteractionFunctionCode(): string {
@@ -24,6 +25,8 @@ export function buildInteractionFunctionCode(): string {
   const started = Date.now();
   const deadline = started + 78000;
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  ${SESSION_PROBE_INSTALL}
+  ${SESSION_PROBE_READ}
   async function withTimeout(promise, ms, fallback) {
     let timer;
     try {
@@ -252,7 +255,7 @@ export function buildInteractionFunctionCode(): string {
   }
   function rememberRequest(req) {
     if (!req || pendingNet.has(req)) return pendingNet.get(req);
-    const row = { method: String(req.method ? req.method() : "GET"), path: requestPath(req.url ? req.url() : ""), started: Date.now(), done: false };
+    const row = { method: String(req.method ? req.method() : "GET"), path: requestPath(req.url ? req.url() : ""), type: String(req.resourceType ? req.resourceType() : "other"), started: Date.now(), done: false };
     pendingNet.set(req, row);
     return row;
   }
@@ -274,6 +277,7 @@ export function buildInteractionFunctionCode(): string {
         netLog.push({
           method: known.method,
           path: known.path,
+          type: known.type,
           status: res.status(),
           failed: res.status() >= 400,
           started: known.started,
@@ -287,7 +291,7 @@ export function buildInteractionFunctionCode(): string {
         known.done = true;
         const failure = req.failure && req.failure();
         const message = String(failure && failure.errorText ? failure.errorText : "request failed").slice(0, 120);
-        netLog.push({ method: known.method, path: known.path, status: null, failed: true, started: known.started, duration_ms: Math.max(0, Date.now() - known.started) });
+        netLog.push({ method: known.method, path: known.path, type: known.type, status: null, failed: true, started: known.started, duration_ms: Math.max(0, Date.now() - known.started) });
         runtimeLog.push({ kind: "requestfailed", message: (known.method + " " + known.path + " " + message).slice(0, 160), at: Date.now() });
       } catch (e) {}
     });
@@ -295,6 +299,7 @@ export function buildInteractionFunctionCode(): string {
   try {
     await page.goto("about:blank", { waitUntil: "domcontentloaded", timeout: 8000 });
     await page.evaluateOnNewDocument(installSampler, lightScan);
+    await page.evaluateOnNewDocument(installSessionProbe);
     initOk = true;
   } catch (e) {}
   if (html) {
@@ -431,6 +436,7 @@ export function buildInteractionFunctionCode(): string {
       }
       const h1 = Array.from(document.querySelectorAll("h1")).map((el) => textOrNull(el.textContent)).filter(Boolean).slice(0, 8);
       const jsonLd = [];
+      let jsonLdSyntaxErrors = 0;
       for (const node of Array.from(document.querySelectorAll('script[type="application/ld+json"]')).slice(0, 8)) {
         try {
           const parsed = JSON.parse(node.textContent || "");
@@ -442,7 +448,7 @@ export function buildInteractionFunctionCode(): string {
               for (const name of type) if (typeof name === "string") jsonLd.push(name);
             }
           }
-        } catch (e) {}
+        } catch (e) { jsonLdSyntaxErrors += 1; }
       }
       const canonical = document.querySelector('link[rel="canonical"]');
       return {
@@ -461,6 +467,7 @@ export function buildInteractionFunctionCode(): string {
         twitter_image: textOrNull(meta('meta[name="twitter:image"]')),
         h1: h1,
         json_ld_types: jsonLd.slice(0, 8),
+        json_ld_syntax_errors: jsonLdSyntaxErrors,
         robots_txt: robotsTxt,
       };
     });
@@ -3138,6 +3145,34 @@ export function buildInteractionFunctionCode(): string {
   function routeCount(source) {
     return observations.filter((row) => row.source === source).length;
   }
+  let probe = null;
+  try { probe = await page.evaluate(readSessionProbe); } catch (e) {}
+  const session = {
+    http: {
+      status: navigation && typeof navigation.status === "number" ? navigation.status : null,
+      final_url: navigation && navigation.final_url ? String(navigation.final_url) : null,
+      redirect_count: navigation && Array.isArray(navigation.redirect_chain) ? navigation.redirect_chain.length : null,
+      content_type: navigation && navigation.content_type ? String(navigation.content_type) : null,
+      robots_header: navigation && navigation.robots_header ? String(navigation.robots_header) : null,
+      loaded: navigation && typeof navigation.status === "number" ? navigation.status > 0 && navigation.status < 400 : null,
+      timed_out: false,
+    },
+    resources: Object.assign({}, probe && probe.resources ? probe.resources : {}, {
+      failed: netLog.filter((row) => row.failed).length,
+      status_4xx: netLog.filter((row) => row.status >= 400 && row.status < 500).length,
+      status_5xx: netLog.filter((row) => row.status >= 500).length,
+    }),
+    errors: {
+      console_error: runtimeLog.filter((row) => row.kind === "console_error").length,
+      pageerror: runtimeLog.filter((row) => row.kind === "pageerror").length,
+      request_failed: runtimeLog.filter((row) => row.kind === "requestfailed").length,
+    },
+    performance: probe && probe.performance ? probe.performance : {},
+    structured_data: {
+      types: rendered && Array.isArray(rendered.json_ld_types) ? rendered.json_ld_types : [],
+      syntax_errors: rendered && typeof rendered.json_ld_syntax_errors === "number" ? rendered.json_ld_syntax_errors : null,
+    },
+  };
   const detectedCount = types.filter((row) => row.detected).length;
   const verifiedCount = types.filter((row) => row.status === "working").length;
   const blockedCount = types.filter((row) => row.status === "blocked_for_safety").length;
@@ -3170,6 +3205,7 @@ export function buildInteractionFunctionCode(): string {
       environment: environment,
       rendered: rendered,
       navigation: navigation,
+      session: session,
       cost: { visual_captures: visualCaptures, action_duration_ms: actionDurationMs },
       temporal: temporal,
       exhaustion: exhaustion,

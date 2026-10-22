@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import {
+  commerceJourneyInputs,
   journeyNetworkEvidence,
   journeyCaptureLine,
   journeyOpenPageState,
@@ -14,6 +15,7 @@ import {
 import { discoveryJourneyCandidates, journeyStepsFromCandidates } from "../src/lib/discovery-to-journey";
 import { normalizeUserUrlInput } from "../src/lib/url-preview";
 import { journeyAlert, journeyRunStatus, type JourneyStepEvidence } from "../src/lib/journey-runner";
+import { parseJourneyEvidence } from "../src/lib/journey-step-evidence";
 import type { DiscoveryTransitionV1 } from "../src/lib/observation-behavior-discovery";
 
 assert.equal(journeyCaptureLine("US-CA", "city", "en"), "Requested United States · California · Observed United States · California");
@@ -69,6 +71,65 @@ assert.equal(journeySideEffectPermitted("place_order", "place_order"), true);
 assert.equal(journeySideEffectPermitted("payment", "place_order"), false);
 assert.equal(journeySideEffectPermitted("payment", null), false);
 assert.equal(journeySideEffectPermitted(null, null), true);
+
+const login = parseJourneySteps([{
+  id: "login",
+  kind: "login",
+  selector: "#login-button",
+  inputs: [
+    { role: "username", selector: "#user-name", value: "{{username}}" },
+    { role: "password", selector: "#password", value: "raw-secret" },
+  ],
+  expect_url: "inventory.html",
+}])[0];
+assert.equal(login?.inputs?.find((input) => input.role === "password")?.value, "{{password}}");
+assert.equal(validateJourneySteps("https://www.saucedemo.com/", [{
+  id: "open",
+  kind: "open_url",
+  selector: "",
+  value: "",
+  url: "https://www.saucedemo.com/",
+  wait_ms: 1000,
+  permitted_side_effect: null,
+  expect_selector: "",
+  expect_text: "",
+  expect_visible: false,
+  expect_url: "",
+}, {
+  id: "login",
+  kind: "login",
+  selector: "#login-button",
+  value: "",
+  url: "",
+  wait_ms: 8000,
+  permitted_side_effect: null,
+  expect_selector: "",
+  expect_text: "",
+  expect_visible: false,
+  expect_url: "",
+  inputs: commerceJourneyInputs("login").map((input, index) => ({ ...input, selector: index === 0 ? "#user" : "#pass" })),
+}]), "outcome_required");
+assert.equal(validateJourneySteps("https://www.saucedemo.com/", [{
+  id: "open",
+  kind: "open_url",
+  selector: "",
+  value: "",
+  url: "https://www.saucedemo.com/",
+  wait_ms: 1000,
+  permitted_side_effect: null,
+  expect_selector: "",
+  expect_text: "",
+  expect_visible: false,
+  expect_url: "",
+}, login!]), null);
+const loginReport = journeyStepReport(
+  { kind: "login", status: "pass", selector: "#login-button", detail: null, url_after: "https://www.saucedemo.com/inventory.html", before_text: "", after_text: "" },
+  { selector: "#login-button", url: "", value: "", expect_text: "", expect_visible: false, expect_url: "inventory.html", permitted_side_effect: null },
+  1,
+  "ja",
+);
+assert.equal(loginReport.title, "手順 2 · ログイン — 成功");
+assert.equal(loginReport.lines.find((line) => line.label === "操作")?.value, "ログイン `#login-button`");
 
 assert.equal(normalizeUserUrlInput("https://viewtrace.net"), "https://viewtrace.net/");
 assert.equal(normalizeUserUrlInput("https://viewtrace．net"), "https://viewtrace.net/");
@@ -155,5 +216,42 @@ assert.equal(drafted[0]?.kind, "open_url");
 assert.equal(drafted[1]?.expect_selector, "#panel");
 assert.equal(drafted.every((step) => step.permitted_side_effect == null), true);
 assert.equal(validateJourneySteps("https://example.com/shop", drafted), null);
+
+const evidence = parseJourneyEvidence([
+  { kind: "url_changed", summary: "https://a.example/ → https://b.example/" },
+  { kind: "url_changed", summary: "duplicate" },
+  { kind: "not_a_kind", summary: "ignored" },
+  { kind: "http_status", summary: "   " },
+  { kind: "console_error", summary: "probe-console" },
+  { kind: "input_value", summary: "entered" },
+]);
+assert.deepEqual(evidence.map((item) => item.kind), ["url_changed", "console_error", "input_value"]);
+assert.equal(evidence[2]?.summary, "entered");
+const evidenceReport = journeyStepReport({
+  kind: "click",
+  status: "pass",
+  detail: null,
+  url_after: "https://example.com/",
+  evidence,
+}, { selector: "#go", url: "", value: "", expect_text: "done", expect_visible: false, expect_url: "", permitted_side_effect: null }, 0, "en");
+assert.equal(evidenceReport.lines.some((line) => line.label === "URL changed" && line.value.includes("https://b.example/")), true);
+assert.equal(evidenceReport.lines.some((line) => line.label === "Console error occurred"), true);
+assert.equal(evidenceReport.lines.some((line) => line.label === "Download occurred"), false);
+const japaneseEvidence = journeyStepReport({
+  kind: "open_url",
+  status: "pass",
+  detail: null,
+  url_after: "https://example.com/",
+  evidence: [{ kind: "http_status", summary: "200 /" }],
+}, null, 0, "ja");
+assert.equal(japaneseEvidence.lines.some((line) => line.label === "HTTPステータス" && line.value === "200 /"), true);
+const gated = parseJourneySteps([
+  { kind: "open_url", url: "https://example.com/" },
+  { kind: "click", selector: "#go", evidence_screenshot: true, evidence_video: "yes" },
+]);
+assert.equal(gated[0]?.evidence_screenshot, false);
+assert.equal(gated[0]?.evidence_video, false);
+assert.equal(gated[1]?.evidence_screenshot, true);
+assert.equal(gated[1]?.evidence_video, false);
 
 console.log("ok");

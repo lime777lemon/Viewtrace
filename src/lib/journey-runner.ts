@@ -6,6 +6,7 @@ import {
 } from "@/lib/browserless-geo-endpoint";
 import { buildJourneyFunctionCode } from "@/lib/browserless-journey-function";
 import { journeyNetworkEvidence, type JourneyDeviceClass, type JourneyGeoStage, type JourneyStepDefinition } from "@/lib/journey-definition";
+import { parseJourneyEvidence, type JourneyEvidenceItem } from "@/lib/journey-step-evidence";
 import { resolveBrowserlessResidentialTarget } from "@/lib/regions";
 import { normalizeUserUrlInput } from "@/lib/url-preview";
 
@@ -27,6 +28,8 @@ export type JourneyStepEvidence = {
   after_visible: boolean | null;
   network: Array<{ method: string; path: string; status: number | null }>;
   runtime: Array<{ kind: string; message: string }>;
+  /** Evidence observed during this step. Absent kinds were not observed. */
+  evidence?: JourneyEvidenceItem[];
   /** open_url の画面。viewport の JPEG を base64。Observation のフルページ画像ではない。 */
   frame_jpeg?: string | null;
 };
@@ -101,6 +104,7 @@ function parseSteps(raw: unknown): JourneyStepEvidence[] {
       after_visible: typeof row.after_visible === "boolean" ? row.after_visible : null,
       network: journeyNetworkEvidence(network),
       runtime,
+      evidence: parseJourneyEvidence(row.evidence),
       frame_jpeg: typeof row.frame_jpeg === "string" && row.frame_jpeg.length > 32 && row.frame_jpeg.length < 180_000
         ? row.frame_jpeg
         : null,

@@ -284,7 +284,78 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
           </div>
         </section>
 
-        <section className="border-b border-border bg-surface-elevated">
+        <section id="verify" className="border-b border-border bg-surface-elevated">
+          <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#276248] sm:text-xs">
+              {t.verify.kicker}
+            </p>
+            <h2 className="font-display mt-3 max-w-3xl text-2xl font-semibold leading-snug text-ink sm:text-3xl">
+              {t.verify.title}
+            </h2>
+            <p className="mt-5 max-w-3xl text-base leading-relaxed text-ink sm:text-lg">
+              {t.verify.lead}
+            </p>
+            <p className="mt-3 max-w-3xl text-sm leading-relaxed text-ink-muted sm:text-base">
+              {t.verify.body}
+            </p>
+            <p className="mt-4 max-w-3xl text-base font-semibold leading-relaxed text-ink">
+              {t.verify.emphasis}
+            </p>
+            <div className="mt-10 grid gap-4 lg:grid-cols-2">
+              <article className="rounded-2xl border border-border bg-surface p-5 shadow-sm sm:p-6">
+                <h3 className="font-display text-lg font-semibold text-ink">{t.verify.pageTitle}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-ink-muted">{t.verify.pageBody}</p>
+                <p className="mt-3 text-sm font-medium leading-relaxed text-ink">{t.verify.pageEmphasis}</p>
+              </article>
+              <article className="rounded-2xl border border-border bg-surface p-5 shadow-sm sm:p-6">
+                <h3 className="font-display text-lg font-semibold text-ink">{t.verify.behaviorTitle}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-ink-muted">{t.verify.behaviorBody}</p>
+                <p className="mt-3 text-sm font-medium leading-relaxed text-ink">{t.verify.behaviorEmphasis}</p>
+              </article>
+            </div>
+            <article className="mt-4 rounded-2xl border border-border bg-surface p-5 shadow-sm sm:p-6">
+              <h3 className="font-display text-lg font-semibold text-ink">{t.verify.journeyTitle}</h3>
+              <p className="mt-3 max-w-3xl text-sm leading-relaxed text-ink-muted">{t.verify.journeyBody}</p>
+              <p className="mt-4 text-sm font-medium text-ink">{t.verify.journeyLead}</p>
+              <ul className="mt-3 flex flex-wrap gap-2">
+                {t.verify.journeyItems.map((item) => (
+                  <li
+                    key={item}
+                    className="rounded-full border border-border bg-surface-elevated px-3 py-1 text-xs text-ink"
+                  >
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-4 max-w-3xl text-sm leading-relaxed text-ink-muted">{t.verify.journeyOptional}</p>
+              <p className="mt-3 max-w-3xl text-sm font-medium leading-relaxed text-ink">{t.verify.journeyEmphasis}</p>
+            </article>
+            <div className="mt-10 max-w-3xl">
+              <h3 className="font-display text-xl font-semibold leading-snug text-ink sm:text-2xl">
+                {t.verify.regionTitle}
+              </h3>
+              <p className="mt-3 text-sm leading-relaxed text-ink-muted sm:text-base">{t.verify.regionBody}</p>
+              <p className="mt-3 text-sm font-medium leading-relaxed text-ink sm:text-base">{t.verify.regionEmphasis}</p>
+            </div>
+            <p className="mt-8 font-display text-lg font-semibold text-ink sm:text-xl">{t.verify.tagline}</p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link
+                href="/login?mode=signup&next=/dashboard/region-search"
+                className="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-accent-hover"
+              >
+                {t.verify.ctaRegion}
+              </Link>
+              <Link
+                href="/login?mode=signup"
+                className="inline-flex items-center justify-center rounded-full border border-border bg-surface px-6 py-3 text-sm font-semibold text-ink transition hover:border-ink-muted/40"
+              >
+                {t.verify.ctaStart}
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        <section className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-14">
             <h2 className="font-display max-w-3xl text-2xl font-semibold leading-snug text-ink sm:text-3xl">
               {t.pitch.problemTitle}

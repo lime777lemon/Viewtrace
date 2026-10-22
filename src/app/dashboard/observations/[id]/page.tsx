@@ -529,10 +529,6 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
             seo={pageSeoForCapture(obs.captureConditions)}
             previousSeo={pageSeoForCapture(previousCapture?.captureConditions)}
           />
-          <ObservationWebFactsPanel
-            facts={obs.captureConditions?.web_facts}
-            locale={locale}
-          />
           <ObservationSeoFactsPanel
             facts={obs.captureConditions?.seo_facts}
             html={obs.captureConditions?.html_signals}
@@ -545,6 +541,11 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
             locale={locale}
           />
         </div>
+
+        <ObservationWebFactsPanel
+          facts={obs.captureConditions?.web_facts}
+          locale={locale}
+        />
 
         <div className="space-y-1">
           <h3 className="font-display text-lg font-semibold text-ink">{t.evidenceTitle}</h3>
