@@ -78,6 +78,9 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
               <a href="#pricing" className="transition hover:text-ink">
                 {t.nav.pricing}
               </a>
+              <a href="#regional-behavior" className="transition hover:text-ink">
+                {t.nav.behavior}
+              </a>
               <a href="#auto-observations" className="transition hover:text-ink">
                 {t.nav.autoWatch}
               </a>
@@ -133,6 +136,14 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                       onClick={() => setMobileNavOpen(false)}
                     >
                       {t.nav.pricing}
+                    </a>
+                    <a
+                      href="#regional-behavior"
+                      role="menuitem"
+                      className="block px-4 py-2.5 text-sm font-medium text-ink-muted transition hover:bg-border/30 hover:text-ink"
+                      onClick={() => setMobileNavOpen(false)}
+                    >
+                      {t.nav.behavior}
                     </a>
                     <a
                       href="#auto-observations"
@@ -350,7 +361,65 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
           </div>
         </section>
 
-        <section id="page-metadata" className="border-b border-border bg-surface-elevated">
+        <section id="regional-behavior" className="border-b border-border bg-surface-elevated">
+          <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-14">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#276248] sm:text-xs">
+              {t.regionalBehavior.kicker}
+            </p>
+            <h2 className="font-display mt-3 max-w-3xl text-2xl font-semibold leading-snug text-ink sm:text-3xl">
+              {t.regionalBehavior.title}
+            </h2>
+            <p className="mt-4 max-w-3xl text-sm leading-relaxed text-ink-muted sm:text-base">
+              {t.regionalBehavior.body}
+            </p>
+            <p className="mt-8 text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-muted">
+              {t.regionalBehavior.exampleKicker}
+            </p>
+            <div className="mt-3 grid gap-4 lg:grid-cols-3">
+              {t.regionalBehavior.rows.map((row) => (
+                <article
+                  key={row.region}
+                  className={`rounded-2xl border bg-surface p-5 shadow-sm ${
+                    row.tone === "played" ? "border-[#276248]/40" : "border-border"
+                  }`}
+                >
+                  <p className="text-sm font-semibold text-ink">{row.region}</p>
+                  <p className="mt-3 text-xs font-medium text-ink-muted">{row.subject}</p>
+                  <p
+                    className={`mt-1 text-lg font-semibold ${
+                      row.tone === "played" ? "text-[#276248]" : "text-ink"
+                    }`}
+                  >
+                    {row.result}
+                  </p>
+                  <p className="mt-2 text-sm leading-relaxed text-ink-muted">{row.detail}</p>
+                </article>
+              ))}
+            </div>
+            <h3 className="font-display mt-10 text-base font-semibold text-ink">
+              {t.regionalBehavior.alsoTitle}
+            </h3>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              {t.regionalBehavior.also.map((item) => (
+                <article key={item.title} className="rounded-2xl border border-border bg-surface p-5">
+                  <h4 className="font-display text-base font-semibold text-ink">{item.title}</h4>
+                  <p className="mt-2 text-sm leading-relaxed text-ink-muted">{item.body}</p>
+                </article>
+              ))}
+            </div>
+            <p className="mt-8 max-w-3xl text-sm leading-relaxed text-ink-muted">
+              {t.regionalBehavior.note}
+            </p>
+            <Link
+              href="/login?mode=signup"
+              className="mt-6 inline-flex items-center text-sm font-semibold text-accent transition hover:text-accent-hover"
+            >
+              {t.regionalBehavior.cta}
+            </Link>
+          </div>
+        </section>
+
+        <section id="page-metadata" className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-14">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#276248] sm:text-xs">
               {t.pageMetadata.kicker}
@@ -361,85 +430,63 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
             <p className="mt-4 max-w-3xl text-sm leading-relaxed text-ink-muted sm:text-base">
               {t.pageMetadata.body}
             </p>
-            <div className="mt-10 grid items-start gap-8 lg:grid-cols-2 lg:gap-12">
-              <div className="grid gap-4">
-                {t.pageMetadata.points.map((item) => (
-                  <article
-                    key={item.title}
-                    className="rounded-2xl border border-border bg-surface p-5 shadow-sm"
-                  >
-                    <h3 className="font-display text-base font-semibold text-ink">
-                      {item.title}
-                    </h3>
-                    <p className="mt-2 text-sm leading-relaxed text-ink-muted">{item.body}</p>
-                  </article>
-                ))}
-              </div>
-              <aside className="space-y-4 rounded-2xl border border-border bg-surface p-6 shadow-sm sm:p-8">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-muted">
-                  {t.pageMetadata.panelKicker}
-                </p>
-                <dl className="space-y-3 text-sm">
-                  <div>
-                    <dt className="text-xs font-medium text-ink-muted">{t.pageMetadata.fieldTitle}</dt>
-                    <dd className="mt-0.5 text-ink">{t.pageMetadata.mockTitle}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-medium text-ink-muted">
-                      {t.pageMetadata.fieldDescription}
-                    </dt>
-                    <dd className="mt-0.5 text-ink">{t.pageMetadata.mockDescription}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-medium text-ink-muted">
-                      {t.pageMetadata.fieldCanonical}
-                    </dt>
-                    <dd className="mt-0.5 break-all font-mono text-xs text-ink">
-                      {t.pageMetadata.mockCanonical}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-medium text-ink-muted">{t.pageMetadata.fieldRobots}</dt>
-                    <dd className="mt-0.5 font-mono text-xs text-ink">{t.pageMetadata.mockRobots}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-medium text-ink-muted">{t.pageMetadata.fieldOg}</dt>
-                    <dd className="mt-0.5 text-ink">{t.pageMetadata.mockOg}</dd>
-                  </div>
-                </dl>
-                <div>
+            <div className="mt-10 grid items-start gap-4 lg:grid-cols-2 lg:gap-6">
+              <article className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
+                <div className="px-4 pt-4">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-muted">
-                    {t.pageMetadata.searchPreview}
+                    {t.pageMetadata.searchLabel}
                   </p>
-                  <p className="mt-1 text-xs leading-relaxed text-ink-muted">
-                    {t.pageMetadata.searchPreviewHint}
-                  </p>
-                  <div className="mt-2 rounded-lg border border-border bg-white px-3 py-2.5">
-                    <p className="text-sm font-medium text-[#1a0dab]">{t.pageMetadata.mockTitle}</p>
-                    <p className="mt-0.5 text-xs text-[#006621]">{t.pageMetadata.mockHost}</p>
-                    <p className="mt-1 text-xs leading-relaxed text-[#4d5156]">
-                      {t.pageMetadata.mockDescription}
-                    </p>
-                  </div>
+                  <p className="mt-1 text-xs leading-relaxed text-ink-muted">{t.pageMetadata.searchHint}</p>
                 </div>
-                <div>
+                <div className="mx-4 mt-3 rounded-lg border border-border bg-surface px-3 py-2.5">
+                  <p className="text-sm font-medium text-[#1a0dab]">{t.pageMetadata.mockTitle}</p>
+                  <p className="mt-0.5 text-xs text-[#006621]">{t.pageMetadata.mockHost}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-[#4d5156]">
+                    {t.pageMetadata.mockDescription}
+                  </p>
+                </div>
+                <div className="px-4 py-4">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-muted">
-                    {t.pageMetadata.ogPreview}
+                    {t.pageMetadata.factsLabel}
                   </p>
-                  <p className="mt-1 text-xs leading-relaxed text-ink-muted">
-                    {t.pageMetadata.ogPreviewHint}
-                  </p>
-                  <div className="mt-2 rounded-lg border border-border bg-white px-3 py-2.5">
-                    <p className="text-sm font-semibold text-ink">{t.pageMetadata.mockOg}</p>
-                    <p className="mt-1 text-xs leading-relaxed text-ink-muted">
-                      {t.pageMetadata.mockDescription}
-                    </p>
-                    <p className="mt-2 break-all font-mono text-[11px] text-ink-muted">
-                      {t.pageMetadata.mockOgImage}
-                    </p>
-                  </div>
+                  <dl className="mt-2 space-y-2 text-sm">
+                  {t.pageMetadata.searchFacts.map((fact) => (
+                    <div key={fact.label}>
+                      <dt className="text-xs font-medium text-ink-muted">{fact.label}</dt>
+                      <dd className="mt-0.5 break-all text-ink">{fact.value}</dd>
+                    </div>
+                  ))}
+                  </dl>
                 </div>
-              </aside>
+              </article>
+              <article className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
+                <div className="px-4 pt-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-muted">
+                    {t.pageMetadata.socialLabel}
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed text-ink-muted">{t.pageMetadata.socialHint}</p>
+                </div>
+                <div className="mx-4 mt-3 rounded-lg border border-border bg-surface px-3 py-2.5">
+                  <p className="text-sm font-semibold text-ink">{t.pageMetadata.mockOgTitle}</p>
+                  <p className="mt-0.5 text-xs text-ink-muted">{t.pageMetadata.mockHost}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-ink-muted">
+                    {t.pageMetadata.mockOgDescription}
+                  </p>
+                </div>
+                <div className="px-4 py-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-muted">
+                    {t.pageMetadata.factsLabel}
+                  </p>
+                  <dl className="mt-2 space-y-2 text-sm">
+                  {t.pageMetadata.socialFacts.map((fact) => (
+                    <div key={fact.label}>
+                      <dt className="text-xs font-medium text-ink-muted">{fact.label}</dt>
+                      <dd className="mt-0.5 break-all text-ink">{fact.value}</dd>
+                    </div>
+                  ))}
+                  </dl>
+                </div>
+              </article>
             </div>
             <p className="mt-8 max-w-3xl text-sm leading-relaxed text-ink-muted">
               {t.pageMetadata.note}
@@ -757,6 +804,11 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                   <li>
                     <a href="#pricing" className="text-surface/80 hover:text-white">
                       {t.footer.links.pricing}
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#regional-behavior" className="text-surface/80 hover:text-white">
+                      {t.footer.links.behavior}
                     </a>
                   </li>
                   <li>
