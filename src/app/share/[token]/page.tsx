@@ -306,6 +306,7 @@ export default async function PublicShareCollectionPage({ params }: TokenParams)
                       signals={obs.htmlSignals}
                       copy={htmlHeadSignalsCopy}
                       requestedUrl={obs.url}
+                      locale={locale === "ja" ? "ja" : "en"}
                     />
                   </div>
                 ) : null}

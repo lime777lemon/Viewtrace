@@ -9,7 +9,7 @@ import { journeyNetworkEvidence, type JourneyDeviceClass, type JourneyGeoStage, 
 import { resolveBrowserlessResidentialTarget } from "@/lib/regions";
 import { normalizeUserUrlInput } from "@/lib/url-preview";
 
-const FUNCTION_TIMEOUT_MS = 90_000;
+const FUNCTION_TIMEOUT_MS = 300_000;
 
 export type JourneyRunStatus = "passed" | "failed" | "blocked" | "incomplete";
 
@@ -61,7 +61,7 @@ export type JourneyExecutionFailure = {
 
 function parseSteps(raw: unknown): JourneyStepEvidence[] {
   if (!Array.isArray(raw)) return [];
-  return raw.slice(0, 8).flatMap((item) => {
+  return raw.slice(0, 12).flatMap((item) => {
     if (!item || typeof item !== "object") return [];
     const row = item as Record<string, unknown>;
     const status = row.status;
@@ -157,10 +157,12 @@ export async function runJourneyInBrowserless(params: {
             ? "country"
             : "direct";
     const ac = new AbortController();
-    const timer = setTimeout(() => ac.abort(), FUNCTION_TIMEOUT_MS);
+    const timer = setTimeout(() => ac.abort(), FUNCTION_TIMEOUT_MS + 15_000);
     const started = Date.now();
+    const endpoint = new URL(geo.href);
+    endpoint.searchParams.set("timeout", String(FUNCTION_TIMEOUT_MS));
     try {
-      const upstream = await fetch(geo.href, {
+      const upstream = await fetch(endpoint.href, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
@@ -169,6 +171,7 @@ export async function runJourneyInBrowserless(params: {
             url: target,
             html: params.fixtureHtml || undefined,
             device_class: params.deviceClass,
+            region: params.region,
             steps: params.steps,
             credentials: {
               username: params.credentials?.username ?? "",

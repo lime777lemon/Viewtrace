@@ -56,7 +56,7 @@ export async function loadClientMeasuredFacts(
       const stored = parseStoredScroll(row.notes);
       if (!id || !stored?.result || !out.has(id)) continue;
       const current = out.get(id) ?? emptyClientMeasuredFacts();
-      const measured = clientMeasuredFromCheck(stored.result);
+      const measured = clientMeasuredFromCheck(stored.result, stored.behavior_diff);
       out.set(id, { ...measured, journeys: current.journeys });
     }
   }

@@ -115,7 +115,7 @@ Verify that animations, buttons, forms, navigation, and other interactive elemen
 | Subscribe フォーム | 現行合成は `submit` を押さない |
 | Canvas / WebGL / Lottie | 3〜5 フレームの hash / pixel delta。動画は保存しない |
 
-連続ショットは使わない。Watch では自動実行する。$49 / $99 は動かさない。クレジットパックにはしない。
+連続ショットは使わない。Watch では自動実行する。$15 / $39 は動かさない。クレジットパックにはしない。
 
 ---
 

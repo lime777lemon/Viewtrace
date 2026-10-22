@@ -240,6 +240,7 @@ export function NewObservationForm({
 
   return (
     <form
+      id="new-observation-form"
       action={recordWebVerifiedObservationAction}
       onSubmit={(event) => void onSubmit(event)}
       className="space-y-5 rounded-2xl border border-border bg-surface-elevated p-6"
@@ -337,6 +338,7 @@ export function NewObservationForm({
             return (
               <label key={r.value} className="flex cursor-pointer items-center gap-2 rounded-lg px-1 py-1 text-sm">
                 <input
+                  id={`observation-region-${r.value}`}
                   type="checkbox"
                   checked={on}
                   onChange={() => toggleRegion(r.value)}

@@ -9,6 +9,11 @@ import {
   type ScrollInteractionV1,
 } from "@/lib/observation-scroll-interaction";
 import {
+  parseRenderedPage,
+  type RenderedPageMeasurementV1,
+} from "@/lib/browser-rendered-page";
+import {
+  confirmMeasuredStatus,
   parseInteractionEvidence,
   type InteractionEvidence,
 } from "@/lib/observation-interaction-evidence";
@@ -159,6 +164,9 @@ export type BehaviorDiscoveryV1 = {
   transitions: DiscoveryTransitionV1[] | null;
   region_track: { ran: boolean; samples: number; active_cells: number; error: string } | null;
   environment: DiscoveryEnvironmentV1 | null;
+  /** DOM after render in this Chromium session. Null on checks stored before this measurement. */
+  rendered_page: RenderedPageMeasurementV1 | null;
+  measurement_cost: { visual_captures: number; action_duration_ms: number } | null;
   temporal: TemporalObservationV1 | null;
   exhaustion: ExplorationExhaustionV1 | null;
   coverage: CoverageManifestV1 | null;
@@ -239,11 +247,12 @@ export function sessionTypeRows(
     if (!row || typeof row !== "object") continue;
     const r = row as Record<string, unknown>;
     if (!isInteractionCheckType(r.type)) continue;
+    const evidence = parseInteractionEvidence(r.evidence);
     byType.set(r.type, {
       type: r.type,
       detected: r.detected === true,
-      status: parseStatus(r.status),
-      evidence: parseInteractionEvidence(r.evidence),
+      status: confirmMeasuredStatus(parseStatus(r.status), evidence),
+      evidence,
     });
   }
   return INTERACTION_CHECK_TYPES.map((type) => {
@@ -367,6 +376,18 @@ function parseUnknownRow(raw: unknown): BehaviorDiscoveryV1["unknown"][number] |
   };
 }
 
+function parseMeasurementCost(raw: unknown): BehaviorDiscoveryV1["measurement_cost"] {
+  if (!raw || typeof raw !== "object") return null;
+  const row = raw as Record<string, unknown>;
+  const visual = row.visual_captures;
+  const action = row.action_duration_ms;
+  if (typeof visual !== "number" && typeof action !== "number") return null;
+  return {
+    visual_captures: typeof visual === "number" && Number.isFinite(visual) ? Math.max(0, Math.round(visual)) : 0,
+    action_duration_ms: typeof action === "number" && Number.isFinite(action) ? Math.max(0, Math.round(action)) : 0,
+  };
+}
+
 function parseRegionTrack(raw: unknown): BehaviorDiscoveryV1["region_track"] {
   if (!raw || typeof raw !== "object") return null;
   const row = raw as Record<string, unknown>;
@@ -450,6 +471,8 @@ function parseDiscovery(raw: unknown): { discovery: BehaviorDiscoveryV1; observa
         : refineActionChains(o.chain_raw),
       region_track: parseRegionTrack(o.region_track),
       environment: parseDiscoveryEnvironment(o.environment),
+      rendered_page: parseRenderedPage(o.rendered, o.navigation),
+      measurement_cost: parseMeasurementCost(o.cost),
       temporal: parseTemporalObservation(o.temporal),
       exhaustion: parseExplorationExhaustion(o.exhaustion),
       coverage: null,

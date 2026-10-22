@@ -28,6 +28,17 @@ assert.equal(resolveJourneyOpenUrl("https://viewtrace.net/", "viewtrace.net"), "
 assert.equal(resolveJourneyOpenUrl("https://viewtrace.net/", ""), "https://viewtrace.net/");
 assert.equal(resolveJourneyOpenUrl("https://viewtrace.net/", "/pricing"), "https://viewtrace.net/pricing");
 assert.equal(resolveJourneyOpenUrl("https://viewtrace.net/", "https://evil.test/"), null);
+assert.equal(
+  resolveJourneyOpenUrl("https://viewtrace.net/", "https://viewtrace.net/dashboard/observations/new?region={{region}}")?.includes("region="),
+  true,
+);
+assert.equal(parseJourneySteps(Array.from({ length: 12 }, (_, index) => ({
+  id: `s${index}`,
+  kind: index === 0 ? "open_url" : "wait",
+  url: index === 0 ? "https://viewtrace.net/" : "",
+  wait_ms: 60000,
+}))).length, 12);
+assert.equal(parseJourneySteps([{ kind: "wait", wait_ms: 60000 }])[0]?.wait_ms, 60000);
 const openFail = journeyStepReport(
   { kind: "open_url", status: "fail", detail: "Protocol error (Page.navigate): Cannot navigate to invalid URL", url_after: "about:blank" },
   { selector: "", url: "viewtrace.net", value: "", expect_text: "", expect_visible: false, expect_url: "", permitted_side_effect: null },

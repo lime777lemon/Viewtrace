@@ -188,6 +188,7 @@ export default async function ObservationReportPage({ params }: Props) {
                 signals={obs.captureConditions.html_signals}
                 copy={htmlHeadSignalsCopy}
                 requestedUrl={obs.url}
+                locale={locale === "ja" ? "ja" : "en"}
               />
             </div>
             <div className="mt-4">

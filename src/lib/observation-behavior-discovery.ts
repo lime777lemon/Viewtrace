@@ -76,6 +76,11 @@ export type DiscoveryEnvironmentV1 = {
   locale: string;
   timezone: string;
   prefers_reduced_motion: boolean;
+  /** Observed in the page, when the browser reported them. */
+  dpr?: number;
+  document_lang?: string;
+  user_agent?: string;
+  touch_points?: number;
 };
 
 export type TemporalBehaviorV1 = {
@@ -452,6 +457,10 @@ export function parseDiscoveryEnvironment(raw: unknown): DiscoveryEnvironmentV1 
   const width = finite(viewport.width);
   const height = finite(viewport.height);
   if (!width || !height) return null;
+  const dpr = typeof row.dpr === "number" && Number.isFinite(row.dpr) ? row.dpr : undefined;
+  const documentLang = typeof row.document_lang === "string" ? row.document_lang.slice(0, 32) : "";
+  const userAgent = typeof row.user_agent === "string" ? row.user_agent.slice(0, 180) : "";
+  const touchPoints = typeof row.touch_points === "number" && Number.isFinite(row.touch_points) ? Math.max(0, Math.round(row.touch_points)) : undefined;
   return {
     device_class: width < 700 ? "mobile" : "desktop",
     viewport: { width, height },
@@ -460,6 +469,10 @@ export function parseDiscoveryEnvironment(raw: unknown): DiscoveryEnvironmentV1 
     locale: typeof row.locale === "string" ? row.locale.slice(0, 40) : "",
     timezone: typeof row.timezone === "string" ? row.timezone.slice(0, 80) : "",
     prefers_reduced_motion: row.prefers_reduced_motion === true,
+    ...(dpr != null ? { dpr } : {}),
+    ...(documentLang ? { document_lang: documentLang } : {}),
+    ...(userAgent ? { user_agent: userAgent } : {}),
+    ...(touchPoints != null ? { touch_points: touchPoints } : {}),
   };
 }
 

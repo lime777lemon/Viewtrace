@@ -54,6 +54,8 @@ assert(measured.verified === 0, "verified");
 assert(measured.unknownChanges === 0, "unknown");
 assert(measured.notClicked === 2, "not clicked");
 assert(measured.notClickedDetail === "Log in × 2", measured.notClickedDetail);
+assert(measured.interactionHealth === "Good", measured.interactionHealth);
+assert(measured.interactionSkipped === "Log in /login × 2", measured.interactionSkipped);
 assert(clientMeasuredFromCheck(null).verified === null, "not measured");
 
 function obs(id: string, at: string, sha: string): Observation {
@@ -83,6 +85,28 @@ function obs(id: string, at: string, sha: string): Observation {
 
 const older = obs("11111111-1111-4111-8111-111111111111", "2026-10-20T10:00:00.000Z", "aaa");
 const newer = obs("22222222-2222-4222-8222-222222222222", "2026-10-21T10:00:00.000Z", "bbb");
+const html = {
+  document_title: "Summer Sale",
+  meta_description: "Old",
+  canonical_url: "https://viewtrace.net/",
+  robots_meta: null,
+  x_robots_tag: null,
+  og_title: "Summer Sale",
+  og_description: "Old",
+  og_image: "https://cdn.example.com/og.jpg",
+  json_ld_types: ["Organization"],
+  html_lang: "en",
+  viewport: "width=device-width",
+  http_status: 200,
+  final_url: "https://viewtrace.net/",
+  noindex: null,
+  canonical_mismatch: false,
+};
+older.captureConditions = { ...older.captureConditions!, html_signals: html };
+newer.captureConditions = {
+  ...newer.captureConditions!,
+  html_signals: { ...html, document_title: "Summer Sale — Extended" },
+};
 const facts = new Map([
   [
     newer.id,
@@ -91,17 +115,32 @@ const facts = new Map([
       unknownChanges: 12,
       notClicked: 8,
       notClickedDetail: "Log in × 2; Start for free × 5; Subscribe",
+      interactionHealth: "Problem",
+      interactionProblems: "Swipe: worked → no response",
+      interactionAreas: "Header 5; Main 1",
+      interactionWorking: "Scroll; Menu",
+      interactionSkipped: "Log in /login",
       journeys: [{ name: "Checkout", device: "desktop" as const, status: "passed" }],
     },
   ],
 ]);
 const csv = observationsToCsv([older, newer], "standard", facts);
 const [header, first, second] = csv.split("\n");
-assert(header?.endsWith("page,verified,unknownChanges,notClicked,notClickedDetail,journey,journeyResult"), header ?? "");
+assert(
+  header?.endsWith(
+    "page,interactionHealth,interactionProblems,interactionAreas,interactionWorking,interactionSkipped,searchTitle,socialTitle,seoScore,seoEarnedPoints,seoPossiblePoints,seoMeasuredSignals,seoScoringVersion,searchSocialChanges,journey,journeyResult",
+  ),
+  header ?? "",
+);
 const firstCells = first?.split(",") ?? [];
-assert(firstCells.at(-7) === "Not comparable", first ?? "");
-assert(firstCells.slice(-6).every((cell) => cell === ""), first ?? "");
-assert(second?.includes(',Changed,0,12,8,"Log in × 2; Start for free × 5; Subscribe","Checkout","Desktop Passed"') === true, second ?? "");
+assert(firstCells.at(-16) === "Not comparable", first ?? "");
+assert(first?.includes('"Summer Sale",100,100,100,9,page-seo-v1,"No previous capture"') === true, first ?? "");
+assert(
+  second?.includes(
+    ',Changed,Problem,"Swipe: worked → no response","Header 5; Main 1","Scroll; Menu","Log in /login","Summer Sale — Extended","Summer Sale",100,100,100,9,page-seo-v1,"Search title","Checkout","Desktop Passed"',
+  ) === true,
+  second ?? "",
+);
 assert(second?.includes("Desktop Passed") === true, second ?? "");
 const audit = observationsToCsv([older], "audit");
 assert(audit.split("\n")[0]?.endsWith("journeyResult,captureConditionsJson") === true, "audit tail");

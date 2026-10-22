@@ -113,6 +113,7 @@ async function main() {
     watch_frequency: "daily",
     next_run_at: new Date().toISOString(),
     secret_credentials: { username: "agent", password: "secret-test" },
+    purpose: "fixture",
   }).select("id").single();
   if (createError || !created) {
     console.log(JSON.stringify({ saved: false, error: "create_failed" }));

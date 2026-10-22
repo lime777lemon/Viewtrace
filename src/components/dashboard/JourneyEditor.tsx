@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { deleteJourneyAction, disableJourneyMonitoringAction, enableJourneyMonitoringAction, runJourneyNowAction, saveJourneyAction } from "@/app/actions/journeys";
 import {
+  journeyPurposeLabel,
   JOURNEY_STEP_KINDS,
   journeyCaptureLine,
   journeyStatusLabel,
@@ -11,6 +12,7 @@ import {
   resolveJourneyOpenUrl,
   resolveJourneySteps,
   type JourneyDeviceClass,
+  type JourneyPurpose,
   type JourneySideEffect,
   type JourneyStepDefinition,
   type JourneyStepKind,
@@ -56,6 +58,7 @@ export function JourneyEditor({
   const [monitoringPending, startMonitoring] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState(journey?.name ?? "");
+  const [purpose, setPurpose] = useState<JourneyPurpose>(journey?.purpose ?? "production");
   const [startUrl, setStartUrl] = useState(journey?.start_url ?? "https://");
   const [steps, setSteps] = useState<JourneyStepDefinition[]>(() => {
     const raw = journey?.steps.length ? journey.steps : [EMPTY_STEP(1)];
@@ -104,6 +107,7 @@ export function JourneyEditor({
         deviceClasses: devices,
         watchEnabled: false,
         watchFrequency: schedule === "weekly" ? "weekly" : "daily",
+        purpose,
         preserveWatch: Boolean(journey),
         username: fieldValue("testUsername", username),
         password: fieldValue("testPassword", password),
@@ -176,6 +180,17 @@ export function JourneyEditor({
             Name
             <input name="journeyName" value={name} onChange={(event) => setName(event.target.value)} autoComplete="off" className="rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink" />
           </label>
+          <fieldset className="grid gap-2">
+            <legend className="text-xs text-ink-muted">{locale === "ja" ? "用途" : "Purpose"}</legend>
+            <div className="flex flex-wrap gap-3 text-sm text-ink">
+              {(["production", "test", "fixture"] as const).map((value) => (
+                <label key={value} className="flex items-center gap-1.5">
+                  <input type="radio" name="journeyPurpose" checked={purpose === value} onChange={() => setPurpose(value)} />
+                  {journeyPurposeLabel(value, locale)}
+                </label>
+              ))}
+            </div>
+          </fieldset>
           <label className="grid gap-1 text-xs text-ink-muted">
             Start URL
             <input

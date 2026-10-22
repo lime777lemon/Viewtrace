@@ -1,6 +1,5 @@
-import type { PageSeoSignalId, PageSeoSignalScore, PageSeoVerdict } from "@/lib/observation-page-seo-score";
+import { pageSeoFromSignals, type PageSeoDerivedV1, type PageSeoSignalId } from "@/lib/measurement-record";
 import {
-  pageSeoScoreFromRecord,
   type ObservationSeoFactV1,
   type ObservationSeoFactsV1,
   type SeoFactState,
@@ -33,15 +32,13 @@ const FACT_LABELS: Record<ObservationSeoFactV1["id"], { ja: string; en: string }
 
 const SIGNAL_LABELS: Record<PageSeoSignalId, string> = {
   title: "Title",
-  meta_description: "Meta description",
+  description: "Description",
   canonical: "Canonical",
-  indexability: "Indexability",
-  robots_txt: "robots.txt",
-  h1: "H1",
+  noindex: "noindex",
   lang: "lang",
   viewport: "viewport",
-  http_status: "HTTP status",
-  open_graph: "Open Graph",
+  http: "HTTP status",
+  social: "Social",
   structured_data: "Structured data",
 };
 
@@ -64,23 +61,28 @@ function sourceLabel(source: ObservationSeoFactV1["source"]): string {
   return "robots.txt";
 }
 
-function verdictText(signal: PageSeoSignalScore, ja: boolean): string {
-  const detail = signal.detail ?? "";
-  if (signal.verdict === "not_measured") return ja ? "未測定" : "Not measured";
-  const mark: Record<Exclude<PageSeoVerdict, "not_measured">, string> = {
-    pass: "✓",
-    partial: "⚠",
-    fail: "✕",
-  };
-  const markText = mark[signal.verdict];
-  return detail ? `${markText} ${detail}` : markText;
+function verdictText(signal: PageSeoDerivedV1["signals"][number], ja: boolean): string {
+  if (signal.earned == null) return ja ? "未測定" : "Not measured";
+  if (signal.id === "noindex" && signal.status === "observed_absent") {
+    return ja ? "✓ noindex は観測されませんでした" : "✓ noindex was not observed";
+  }
+  if (signal.id === "noindex" && signal.status === "observed") {
+    return ja ? "✕ noindex が観測されました" : "✕ noindex was observed";
+  }
+  if (signal.earned === signal.weight) return "✓";
+  if (signal.id === "canonical" && signal.status === "observed") {
+    return ja ? "✕ 不一致" : "✕ Mismatch";
+  }
+  if (signal.status === "observed_absent") return ja ? "✕ 記録なし" : "✕ Not recorded";
+  if (signal.earned === 0) return ja ? "✕ 0" : "✕ 0";
+  return "⚠";
 }
 
-function scoreFill(verdict: PageSeoVerdict): string {
-  if (verdict === "pass") return "#276248";
-  if (verdict === "partial") return "#b45309";
-  if (verdict === "fail") return "#be123c";
-  return "transparent";
+function scoreFill(signal: PageSeoDerivedV1["signals"][number]): string {
+  if (signal.earned == null) return "transparent";
+  if (signal.earned === signal.weight) return "#276248";
+  if (signal.earned === 0) return "#be123c";
+  return "#b45309";
 }
 
 function ScoreRing({
@@ -136,7 +138,7 @@ function ScoreRing({
 export function ObservationSeoFactsPanel({ facts, html = null, locale }: Props) {
   if (!facts || facts.scope !== "single_url") return null;
   const ja = locale.startsWith("ja");
-  const score = pageSeoScoreFromRecord(facts, html);
+  const score = pageSeoFromSignals(html);
   return (
     <section className="rounded-xl border border-border bg-surface-elevated p-4 sm:col-span-2">
       <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-muted">Page SEO Score</h2>
@@ -150,14 +152,14 @@ export function ObservationSeoFactsPanel({ facts, html = null, locale }: Props) 
         <div className="mt-4">
           <div className="flex flex-wrap items-center gap-5">
             <ScoreRing
-              earned={score.earned}
-              possible={score.possible}
+              earned={score.earned_points}
+              possible={score.possible_points}
               label={
                 score.score == null
                   ? ja
                     ? "Page SEO Score 未測定"
                     : "Page SEO Score not measured"
-                  : `Page SEO Score ${score.score}/100. ${score.earned} / ${score.possible}`
+                  : `Page SEO Score ${score.score}/100. ${score.earned_points} / ${score.possible_points}`
               }
             />
             <div>
@@ -167,17 +169,17 @@ export function ObservationSeoFactsPanel({ facts, html = null, locale }: Props) 
               </p>
               <p className="mt-1 text-xs text-ink-muted">
                 {ja
-                  ? `測定した ${score.measured_count} 信号から算出`
-                  : `Based on ${score.measured_count} measured signal${score.measured_count === 1 ? "" : "s"}`}
+                  ? `測定した ${score.measured_signals} 信号 · ${score.scoring_version}`
+                  : `${score.measured_signals} measured signals · ${score.scoring_version}`}
               </p>
               <p className="text-xs text-ink-muted">
                 {ja
-                  ? `未測定 ${score.not_measured_count} 信号は円にも分母にも入っていません`
-                  : `${score.not_measured_count} signal${score.not_measured_count === 1 ? "" : "s"} not measured, excluded from the ring`}
+                  ? "未測定の信号は円にも分母にも入っていません"
+                  : "Unmeasured signals are left out of the ring and the total"}
               </p>
-              {score.possible > 0 ? (
+              {score.possible_points > 0 ? (
                 <p className="mt-1 font-mono text-[11px] text-ink-muted">
-                  {score.earned} / {score.possible} × 100
+                  {score.earned_points} / {score.possible_points} × 100
                 </p>
               ) : null}
             </div>
@@ -185,8 +187,8 @@ export function ObservationSeoFactsPanel({ facts, html = null, locale }: Props) 
 
           <ul className="mt-5 space-y-2.5">
             {score.signals.map((signal) => {
-              const measured = signal.verdict !== "not_measured" && signal.earned != null && signal.weight > 0;
-              const width = measured ? Math.round((signal.earned! / signal.weight) * 100) : 0;
+              const measured = signal.earned != null && signal.weight > 0;
+              const width = measured ? Math.round(((signal.earned ?? 0) / signal.weight) * 100) : 0;
               return (
                 <li key={signal.id}>
                   <div className="flex items-baseline justify-between gap-3 text-xs">
@@ -205,7 +207,7 @@ export function ObservationSeoFactsPanel({ facts, html = null, locale }: Props) 
                     {measured ? (
                       <div
                         className="h-full rounded-full"
-                        style={{ width: `${width}%`, backgroundColor: scoreFill(signal.verdict) }}
+                        style={{ width: `${width}%`, backgroundColor: scoreFill(signal) }}
                       />
                     ) : null}
                   </div>

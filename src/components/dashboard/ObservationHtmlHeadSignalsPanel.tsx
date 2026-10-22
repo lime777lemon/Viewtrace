@@ -1,12 +1,21 @@
+import { SavedSocialImage } from "@/components/dashboard/SavedSocialImage";
 import { auditEvidenceDomId } from "@/lib/observation-ai-audit";
 import {
-  classifyHtmlHeadSignals,
-  ogPreviewFromSignals,
-  searchPreviewFromSignals,
-  type HtmlSignalFactId,
-} from "@/lib/observation-html-signals-readout";
+  pageSeoFromSignals,
+  type PageSeoDerivedV1,
+  type PageSeoSignalId,
+  type PageSeoSignalResult,
+} from "@/lib/measurement-record";
+import {
+  presentSearchSocial,
+  searchSocialLanguageName,
+  type SearchSocialChange,
+  type SearchSocialFact,
+  type SearchSocialMissingId,
+} from "@/lib/search-social-presentation";
 import type { HtmlHeadSignalsV1 } from "@/lib/url-preview";
 import { htmlHeadSignalsHasAny } from "@/lib/url-preview";
+import type { ObservationWebFactsV1 } from "@/lib/observation-web-facts";
 
 export type ObservationHtmlHeadSignalsCopy = {
   title: string;
@@ -57,6 +66,42 @@ export type ObservationHtmlHeadSignalsCopy = {
   ogPreview: string;
   ogPreviewHint: string;
   previewToggle: string;
+  searchCard: string;
+  socialCard: string;
+  pageInfo: string;
+  structuredData: string;
+  fieldsRecorded: string;
+  fieldsClear: string;
+  fieldsMissing: string;
+  fieldsMissingOne: string;
+  changes: string;
+  changesOne: string;
+  unchangedSince: string;
+  changeBefore: string;
+  changeNow: string;
+  technical: string;
+  pageResponded: string;
+  noRedirect: string;
+  redirectObserved: string;
+  canonicalMatchesPage: string;
+  canonicalDiffersPage: string;
+  viewportDeclared: string;
+  noindexNotObserved: string;
+  noindexObserved: string;
+  socialFound: string;
+  largeCard: string;
+  cardDeclared: string;
+  changeSearchTitle: string;
+  changeSearchDescription: string;
+  changeSocialTitle: string;
+  changeSocialDescription: string;
+  changeSocialImage: string;
+  changeTwitterTitle: string;
+  changeTwitterImage: string;
+  changeCanonical: string;
+  changeNoindex: string;
+  changeHttp: string;
+  changeLang: string;
 };
 
 export function observationHtmlHeadCopyFrom(t: {
@@ -108,6 +153,42 @@ export function observationHtmlHeadCopyFrom(t: {
   htmlHeadOgPreview: string;
   htmlHeadOgPreviewHint: string;
   htmlHeadPreviewToggle: string;
+  htmlHeadSearchCard: string;
+  htmlHeadSocialCard: string;
+  htmlHeadPageInfo: string;
+  htmlHeadStructured: string;
+  htmlHeadFieldsRecorded: string;
+  htmlHeadFieldsClear: string;
+  htmlHeadFieldsMissing: string;
+  htmlHeadFieldsMissingOne: string;
+  htmlHeadChanges: string;
+  htmlHeadChangesOne: string;
+  htmlHeadUnchangedSince: string;
+  htmlHeadChangeBefore: string;
+  htmlHeadChangeNow: string;
+  htmlHeadTechnical: string;
+  htmlHeadPageResponded: string;
+  htmlHeadNoRedirect: string;
+  htmlHeadRedirectObserved: string;
+  htmlHeadCanonicalMatchesPage: string;
+  htmlHeadCanonicalDiffersPage: string;
+  htmlHeadViewportDeclared: string;
+  htmlHeadNoindexNotObserved: string;
+  htmlHeadNoindexObserved: string;
+  htmlHeadSocialFound: string;
+  htmlHeadLargeCard: string;
+  htmlHeadCardDeclared: string;
+  htmlHeadChangeSearchTitle: string;
+  htmlHeadChangeSearchDescription: string;
+  htmlHeadChangeSocialTitle: string;
+  htmlHeadChangeSocialDescription: string;
+  htmlHeadChangeSocialImage: string;
+  htmlHeadChangeTwitterTitle: string;
+  htmlHeadChangeTwitterImage: string;
+  htmlHeadChangeCanonical: string;
+  htmlHeadChangeNoindex: string;
+  htmlHeadChangeHttp: string;
+  htmlHeadChangeLang: string;
 }): ObservationHtmlHeadSignalsCopy {
   return {
     title: t.htmlHeadTitle,
@@ -158,6 +239,42 @@ export function observationHtmlHeadCopyFrom(t: {
     ogPreview: t.htmlHeadOgPreview,
     ogPreviewHint: t.htmlHeadOgPreviewHint,
     previewToggle: t.htmlHeadPreviewToggle,
+    searchCard: t.htmlHeadSearchCard,
+    socialCard: t.htmlHeadSocialCard,
+    pageInfo: t.htmlHeadPageInfo,
+    structuredData: t.htmlHeadStructured,
+    fieldsRecorded: t.htmlHeadFieldsRecorded,
+    fieldsClear: t.htmlHeadFieldsClear,
+    fieldsMissing: t.htmlHeadFieldsMissing,
+    fieldsMissingOne: t.htmlHeadFieldsMissingOne,
+    changes: t.htmlHeadChanges,
+    changesOne: t.htmlHeadChangesOne,
+    unchangedSince: t.htmlHeadUnchangedSince,
+    changeBefore: t.htmlHeadChangeBefore,
+    changeNow: t.htmlHeadChangeNow,
+    technical: t.htmlHeadTechnical,
+    pageResponded: t.htmlHeadPageResponded,
+    noRedirect: t.htmlHeadNoRedirect,
+    redirectObserved: t.htmlHeadRedirectObserved,
+    canonicalMatchesPage: t.htmlHeadCanonicalMatchesPage,
+    canonicalDiffersPage: t.htmlHeadCanonicalDiffersPage,
+    viewportDeclared: t.htmlHeadViewportDeclared,
+    noindexNotObserved: t.htmlHeadNoindexNotObserved,
+    noindexObserved: t.htmlHeadNoindexObserved,
+    socialFound: t.htmlHeadSocialFound,
+    largeCard: t.htmlHeadLargeCard,
+    cardDeclared: t.htmlHeadCardDeclared,
+    changeSearchTitle: t.htmlHeadChangeSearchTitle,
+    changeSearchDescription: t.htmlHeadChangeSearchDescription,
+    changeSocialTitle: t.htmlHeadChangeSocialTitle,
+    changeSocialDescription: t.htmlHeadChangeSocialDescription,
+    changeSocialImage: t.htmlHeadChangeSocialImage,
+    changeTwitterTitle: t.htmlHeadChangeTwitterTitle,
+    changeTwitterImage: t.htmlHeadChangeTwitterImage,
+    changeCanonical: t.htmlHeadChangeCanonical,
+    changeNoindex: t.htmlHeadChangeNoindex,
+    changeHttp: t.htmlHeadChangeHttp,
+    changeLang: t.htmlHeadChangeLang,
   };
 }
 
@@ -165,6 +282,12 @@ type Props = {
   signals: HtmlHeadSignalsV1 | undefined;
   copy: ObservationHtmlHeadSignalsCopy;
   requestedUrl?: string;
+  previous?: HtmlHeadSignalsV1 | null;
+  webFacts?: ObservationWebFactsV1 | null;
+  previousWebFacts?: ObservationWebFactsV1 | null;
+  seo?: PageSeoDerivedV1 | null;
+  previousSeo?: PageSeoDerivedV1 | null;
+  locale?: "ja" | "en";
 };
 
 function redirected(
@@ -196,163 +319,376 @@ function withLength(value: string | null | undefined, charsLabel: string): strin
   return `${v} (${[...v].length} ${charsLabel})`;
 }
 
-function factLabel(
-  id: HtmlSignalFactId,
-  copy: ObservationHtmlHeadSignalsCopy,
-  signals: HtmlHeadSignalsV1,
-): string {
-  switch (id) {
+function countLine(n: number, many: string, one: string): string {
+  return n === 1 ? one : many.replace("{n}", String(n));
+}
+
+function factText(fact: SearchSocialFact, copy: ObservationHtmlHeadSignalsCopy, locale: "ja" | "en"): string {
+  switch (fact.kind) {
+    case "http":
+      return copy.pageResponded.replace("{status}", String(fact.status));
+    case "lang":
+      return searchSocialLanguageName(fact.code, locale);
+    case "canonical":
+      return fact.matches ? copy.canonicalMatchesPage : copy.canonicalDiffersPage;
+    case "viewport":
+      return copy.viewportDeclared;
     case "noindex":
-      return copy.blockerNoindex;
-    case "http_error":
-      return copy.blockerHttp.replace("{status}", String(signals.http_status ?? ""));
-    case "canonical_mismatch":
-      return copy.blockerCanonical;
-    case "title_missing":
-      return copy.gapTitle;
-    case "description_missing":
-      return copy.gapDescription;
-    case "og_missing":
-      return copy.gapOg;
+      return fact.observed ? copy.noindexObserved : copy.noindexNotObserved;
+    case "redirect":
+      return fact.observed ? copy.redirectObserved : copy.noRedirect;
+    case "social":
+      return copy.socialFound;
+    case "card":
+      return fact.value === "summary_large_image"
+        ? copy.largeCard
+        : copy.cardDeclared.replace("{value}", fact.value);
   }
 }
 
-function FactList({
-  heading,
+function changeLabel(id: SearchSocialChange["id"], copy: ObservationHtmlHeadSignalsCopy): string {
+  switch (id) {
+    case "search_title":
+      return copy.changeSearchTitle;
+    case "search_description":
+      return copy.changeSearchDescription;
+    case "social_title":
+      return copy.changeSocialTitle;
+    case "social_description":
+      return copy.changeSocialDescription;
+    case "social_image":
+      return copy.changeSocialImage;
+    case "twitter_title":
+      return copy.changeTwitterTitle;
+    case "twitter_image":
+      return copy.changeTwitterImage;
+    case "canonical":
+      return copy.changeCanonical;
+    case "noindex":
+      return copy.changeNoindex;
+    case "http":
+      return copy.changeHttp;
+    case "lang":
+      return copy.changeLang;
+  }
+}
+
+function changeValue(value: string, copy: ObservationHtmlHeadSignalsCopy): string {
+  if (value === "observed") return copy.noindexObserved;
+  if (value === "not_observed") return copy.noindexNotObserved;
+  return value || "—";
+}
+
+function missingLabel(id: SearchSocialMissingId, copy: ObservationHtmlHeadSignalsCopy): string {
+  if (id === "title") return copy.gapTitle;
+  if (id === "description") return copy.gapDescription;
+  return copy.gapOg;
+}
+
+function ShareCard({
+  label,
+  title,
+  description,
+  host,
+  imageUrl,
   hint,
-  ids,
-  empty,
-  copy,
-  signals,
+  titleId,
+  descriptionId,
 }: {
-  heading: string;
-  hint: string;
-  ids: HtmlSignalFactId[];
-  empty: string;
-  copy: ObservationHtmlHeadSignalsCopy;
-  signals: HtmlHeadSignalsV1;
+  label: string;
+  title: string;
+  description: string;
+  host: string;
+  imageUrl?: string;
+  hint?: string;
+  titleId?: string;
+  descriptionId?: string;
 }) {
   return (
-    <div className="rounded-lg border border-border/80 bg-surface px-3 py-2.5">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-muted">{heading}</p>
-      <p className="mt-1 text-xs leading-relaxed text-ink-muted">{hint}</p>
-      {ids.length === 0 ? (
-        <p className="mt-2 text-sm text-ink">{empty}</p>
-      ) : (
-        <ul className="mt-2 list-disc space-y-1 pl-4 text-sm text-ink">
-          {ids.map((id) => (
-            <li key={id}>{factLabel(id, copy, signals)}</li>
-          ))}
-        </ul>
-      )}
-    </div>
+    <section className="overflow-hidden rounded-xl border border-border bg-white">
+      <p className="px-3 pt-3 text-[11px] font-semibold uppercase tracking-wide text-ink-muted">{label}</p>
+      {hint ? <p className="px-3 pt-1 text-xs leading-relaxed text-ink-muted">{hint}</p> : null}
+      {imageUrl ? <div className="mt-3"><SavedSocialImage src={imageUrl} alt="" /></div> : null}
+      <div className="px-3 py-3">
+        <p id={titleId} className="text-sm font-medium text-[#1a0dab]">{title || "—"}</p>
+        {host ? <p className="mt-0.5 text-xs text-[#006621]">{host}</p> : null}
+        <p id={descriptionId} className="mt-1 line-clamp-3 text-xs leading-relaxed text-[#4d5156]">{description || "—"}</p>
+      </div>
+    </section>
   );
 }
 
-export function ObservationHtmlHeadSignalsPanel({ signals, copy, requestedUrl }: Props) {
+const SEO_SIGNAL_LABEL: Record<PageSeoSignalId, { ja: string; en: string }> = {
+  title: { ja: "タイトル", en: "Title" },
+  description: { ja: "説明文", en: "Description" },
+  canonical: { ja: "カノニカル", en: "Canonical" },
+  noindex: { ja: "noindex", en: "noindex" },
+  lang: { ja: "言語", en: "Language" },
+  viewport: { ja: "ビューポート", en: "Viewport" },
+  http: { ja: "HTTP", en: "HTTP" },
+  structured_data: { ja: "構造化データ", en: "Structured data" },
+  social: { ja: "SNS", en: "Social" },
+};
+
+function seoStatusText(signal: PageSeoSignalResult, ja: boolean): string {
+  if (signal.earned == null) return ja ? "未測定" : "Not measured";
+  if (signal.id === "noindex" && signal.status === "observed_absent") {
+    return ja ? "noindex は観測されませんでした" : "noindex was not observed";
+  }
+  if (signal.id === "noindex" && signal.status === "observed") {
+    return ja ? "noindex が観測されました" : "noindex was observed";
+  }
+  if (signal.id === "canonical" && signal.status === "observed" && signal.earned === 0) {
+    return ja ? "不一致" : "Mismatch";
+  }
+  if (signal.status === "observed_absent") return ja ? "記録なし" : "Not recorded";
+  if (signal.status === "not_verifiable") return ja ? "確認できない" : "Not verifiable";
+  return ja ? "記録あり" : "Recorded";
+}
+
+function seoBarColor(signal: PageSeoSignalResult): string {
+  if (signal.earned == null) return "#a8a29e";
+  if (signal.earned >= signal.weight) return "#276248";
+  if (signal.earned > 0) return "#b45309";
+  return "#be123c";
+}
+
+function SearchSocialScore({
+  score,
+  previousScore,
+  locale,
+}: {
+  score: PageSeoDerivedV1;
+  previousScore: PageSeoDerivedV1 | null;
+  locale: "ja" | "en";
+}) {
+  const ja = locale === "ja";
+  const measured = score.signals.filter((signal) => signal.earned != null);
+  const excluded = score.signals.filter((signal) => signal.earned == null);
+  const delta =
+    previousScore?.score != null && score.score != null && previousScore.score !== score.score
+      ? ja
+        ? `前回 ${previousScore.score} → 今回 ${score.score}`
+        : `Previous ${previousScore.score} → now ${score.score}`
+      : previousScore?.score != null && score.score != null
+        ? ja
+          ? "前回の採点と同じです。"
+          : "Same score as the previous capture."
+        : null;
+
+  return (
+    <section className="mt-4 rounded-xl border border-border bg-white px-3 py-3" aria-label="Page SEO Score">
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-muted">Page SEO Score</p>
+          <p className="font-display text-3xl font-semibold tabular-nums text-ink">
+            {score.score == null ? "—" : score.score}
+            <span className="ml-1 text-base font-medium text-ink-muted">/ 100</span>
+          </p>
+        </div>
+        <p className="max-w-xs text-xs leading-relaxed text-ink-muted">
+          {ja
+            ? `測定した ${score.measured_signals} 信号 · ${score.earned_points}/${score.possible_points} · ${score.scoring_version}。未測定は分母に入れていません。`
+            : `${score.measured_signals} measured signals · ${score.earned_points}/${score.possible_points} · ${score.scoring_version}. Unmeasured signals stay out of the total.`}
+        </p>
+      </div>
+      {delta ? <p className="mt-2 text-xs font-semibold text-ink">{delta}</p> : null}
+      <ul className="mt-3 space-y-2">
+        {measured.map((signal) => {
+          const width = signal.weight > 0 ? Math.round(((signal.earned ?? 0) / signal.weight) * 100) : 0;
+          return (
+            <li key={signal.id}>
+              <div className="flex items-baseline justify-between gap-3 text-sm text-ink">
+                <span>{SEO_SIGNAL_LABEL[signal.id][locale]}</span>
+                <span className="shrink-0 text-xs text-ink-muted">
+                  {seoStatusText(signal, ja)} · {signal.earned ?? 0}/{signal.weight}
+                </span>
+              </div>
+              <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-surface">
+                <span
+                  className="block h-full rounded-full"
+                  style={{ width: `${width}%`, backgroundColor: seoBarColor(signal) }}
+                />
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+      {excluded.length > 0 ? (
+        <p className="mt-3 text-xs text-ink-muted">
+          {ja ? "未測定" : "Not measured"}
+          {": "}
+          {excluded.map((signal) => SEO_SIGNAL_LABEL[signal.id][locale]).join(" · ")}
+        </p>
+      ) : null}
+    </section>
+  );
+}
+
+export function ObservationHtmlHeadSignalsPanel({
+  signals,
+  copy,
+  requestedUrl,
+  previous,
+  webFacts,
+  previousWebFacts,
+  seo,
+  previousSeo,
+  locale = "en",
+}: Props) {
   if (!signals || !htmlHeadSignalsHasAny(signals)) return null;
 
-  const { blockers, gaps } = classifyHtmlHeadSignals(signals);
-  const search = searchPreviewFromSignals(signals, requestedUrl);
-  const og = ogPreviewFromSignals(signals);
-  const jsonLd =
-    signals.json_ld_types && signals.json_ld_types.length > 0
-      ? signals.json_ld_types.join(", ")
-      : "—";
+  const view = presentSearchSocial({ signals, requestedUrl, previous });
+  const seoScore = seo ?? pageSeoFromSignals(signals, webFacts);
+  const previousSeoScore = previousSeo ?? (previous ? pageSeoFromSignals(previous, previousWebFacts) : null);
+  const jsonLd = view.structured.length > 0 ? view.structured.join(", ") : "—";
   const ogDetected = Boolean(signals.og_title || signals.og_description || signals.og_image);
-  const noindexLabel =
-    signals.noindex === true
-      ? copy.noindexPresent
-      : signals.noindex === false
-        ? copy.noindexAbsent
-        : "—";
+  const noindexLabel = signals.noindex === true ? copy.noindexPresent : signals.noindex === false ? copy.noindexAbsent : "—";
   const mismatchLabel =
     signals.canonical_mismatch === true
       ? copy.canonicalMismatch
       : signals.canonical_mismatch === false
         ? copy.canonicalMatch
         : "—";
-  const httpLabel =
-    signals.http_status != null && signals.http_status > 0 ? String(signals.http_status) : "—";
+  const httpLabel = signals.http_status != null && signals.http_status > 0 ? String(signals.http_status) : "—";
   const redirectState = redirected(requestedUrl, signals.final_url);
-  const redirectLabel =
-    redirectState === true ? copy.redirectYes : redirectState === false ? copy.redirectNo : "—";
+  const redirectLabel = redirectState === true ? copy.redirectYes : redirectState === false ? copy.redirectNo : "—";
 
   return (
     <div className="rounded-xl border border-border bg-surface-elevated p-4 sm:col-span-2">
-      <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-muted">{copy.title}</h2>
-      <p className="mt-2 text-xs leading-relaxed text-ink-muted">{copy.hint}</p>
+      <h2 className="text-sm font-semibold text-ink">{copy.title}</h2>
+      <p className="mt-1 text-xs leading-relaxed text-ink-muted">{copy.hint}</p>
+      {seoScore ? (
+        <SearchSocialScore score={seoScore} previousScore={previousSeoScore} locale={locale} />
+      ) : null}
 
-      <div className="mt-3 grid gap-2 sm:grid-cols-3">
-        <FactList
-          heading={copy.blockers}
-          hint={copy.blockersHint}
-          ids={blockers}
-          empty={copy.bucketEmpty}
-          copy={copy}
-          signals={signals}
+      <div className="mt-4 grid gap-3 lg:grid-cols-2">
+        <ShareCard
+          label={copy.searchCard}
+          title={view.search.title}
+          description={view.search.description}
+          host={view.search.host}
+          hint={copy.searchPreviewHint}
+          titleId={auditEvidenceDomId("title")}
+          descriptionId={auditEvidenceDomId("description")}
         />
-        <FactList
-          heading={copy.gaps}
-          hint={copy.gapsHint}
-          ids={gaps}
-          empty={copy.bucketEmpty}
-          copy={copy}
-          signals={signals}
-        />
-        <div className="rounded-lg border border-border/80 bg-surface px-3 py-2.5">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-muted">
-            {copy.recorded}
-          </p>
-          <p className="mt-1 text-xs leading-relaxed text-ink-muted">{copy.recordedHint}</p>
-        </div>
+        <section id={auditEvidenceDomId("og")} className="scroll-mt-28 overflow-hidden rounded-xl border border-border bg-white">
+          <p className="px-3 pt-3 text-[11px] font-semibold uppercase tracking-wide text-ink-muted">{copy.socialCard}</p>
+          <p className="px-3 pt-1 text-xs leading-relaxed text-ink-muted">{copy.ogPreviewHint}</p>
+          {view.social.imageUrl ? (
+            <div className="mt-3">
+              <SavedSocialImage src={view.social.imageUrl} alt="" />
+            </div>
+          ) : null}
+          <div className="px-3 py-3">
+            <p className="text-sm font-semibold text-ink">{view.social.title || "—"}</p>
+            {view.social.host ? <p className="mt-0.5 text-xs text-ink-muted">{view.social.host}</p> : null}
+            <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-ink-muted">{view.social.description || "—"}</p>
+          </div>
+        </section>
       </div>
-
-      <details className="mt-4 rounded-lg border border-border/80 bg-surface px-3 py-2" open>
-        <summary className="cursor-pointer text-xs font-semibold text-ink-muted">
-          {copy.previewToggle}
-        </summary>
-        <div className="mt-3 grid gap-3 lg:grid-cols-2">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-muted">
-              {copy.searchPreview}
-            </p>
-            <p className="mt-1 text-xs leading-relaxed text-ink-muted">{copy.searchPreviewHint}</p>
-            <div className="mt-2 rounded-lg border border-border bg-white px-3 py-2.5">
-              <p className="text-sm font-medium text-[#1a0dab]">{search.title || "—"}</p>
-              <p className="mt-0.5 text-xs text-[#006621]">{search.host || "—"}</p>
-              <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-[#4d5156]">
-                {search.description || "—"}
-              </p>
-            </div>
-          </div>
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-muted">
-              {copy.ogPreview}
-            </p>
-            <p className="mt-1 text-xs leading-relaxed text-ink-muted">{copy.ogPreviewHint}</p>
-            <div className="mt-2 rounded-lg border border-border bg-white px-3 py-2.5">
-              <p className="text-sm font-semibold text-ink">{og.title || "—"}</p>
-              <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-ink-muted">
-                {og.description || "—"}
-              </p>
-              <p className="mt-2 break-all font-mono text-[11px] text-ink-muted">
-                {og.imageUrl || "—"}
-              </p>
-              {og.twitterCard ? (
-                <p className="mt-1 text-[11px] text-ink-muted">{og.twitterCard}</p>
-              ) : null}
-            </div>
-          </div>
+      {view.twitter ? (
+        <div className="mt-3 max-w-md">
+          <ShareCard
+            label="Twitter / X"
+            title={view.twitter.title}
+            description={view.twitter.description}
+            host={view.social.host}
+            imageUrl={view.twitter.imageUrl}
+          />
         </div>
-      </details>
+      ) : null}
 
+      {view.facts.length > 0 ? (
+        <section className="mt-4" aria-label={copy.pageInfo}>
+          <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">{copy.pageInfo}</p>
+          <ul className="mt-2 space-y-1 text-sm text-ink">
+            {view.facts.map((fact) => (
+              <li
+                key={fact.kind === "card" ? `card:${fact.value}` : fact.kind}
+                id={
+                  fact.kind === "http"
+                    ? auditEvidenceDomId("http_status")
+                    : fact.kind === "lang"
+                      ? auditEvidenceDomId("html_lang")
+                      : fact.kind === "canonical"
+                        ? auditEvidenceDomId("canonical")
+                        : fact.kind === "noindex"
+                          ? auditEvidenceDomId("noindex")
+                          : undefined
+                }
+                className="scroll-mt-28"
+              >
+                {factText(fact, copy, locale)}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {view.structured.length > 0 ? (
+        <p className="mt-3 text-sm text-ink">
+          <span className="text-ink-muted">{copy.structuredData}</span>
+          {" · "}
+          {view.structured.join(" · ")}
+        </p>
+      ) : null}
+
+      <p className="mt-3 text-xs text-ink-muted">
+        {copy.fieldsRecorded.replace("{n}", String(view.recordedCount))}
+        {view.missing.length === 0 ? ` · ${copy.fieldsClear}` : ""}
+      </p>
+      {view.missing.length > 0 ? (
+        <details className="mt-1">
+          <summary className="cursor-pointer text-xs font-semibold text-ink">
+            {countLine(view.missing.length, copy.fieldsMissing, copy.fieldsMissingOne)}
+          </summary>
+          <ul className="mt-1 list-disc pl-4 text-xs text-ink-muted">
+            {view.missing.map((id) => (
+              <li key={id}>{missingLabel(id, copy)}</li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
+
+      {view.compared && view.changes.length === 0 ? (
+        <p className="mt-3 text-xs text-ink-muted">{copy.unchangedSince}</p>
+      ) : null}
+      {view.changes.length > 0 ? (
+        <section className="mt-4">
+          <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+            {countLine(view.changes.length, copy.changes, copy.changesOne)}
+          </p>
+          <ul className="mt-2 space-y-3">
+            {view.changes.map((change) => (
+              <li key={change.id} className="rounded-lg border border-amber-200 bg-surface px-3 py-3 dark:border-amber-900/60">
+                <p className="text-sm font-semibold text-ink">{changeLabel(change.id, copy)}</p>
+                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-muted">{copy.changeBefore}</p>
+                    {change.image && change.before ? <SavedSocialImage src={change.before} alt="" /> : null}
+                    <p className="mt-1 break-all text-xs text-ink">{change.image ? "" : changeValue(change.before, copy)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-muted">{copy.changeNow}</p>
+                    {change.image && change.now ? <SavedSocialImage src={change.now} alt="" /> : null}
+                    <p className="mt-1 break-all text-xs text-ink">{change.image ? "" : changeValue(change.now, copy)}</p>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <details className="mt-4">
+        <summary className="cursor-pointer text-xs font-semibold text-ink-muted">{copy.technical}</summary>
       <dl className="mt-4 grid gap-3 sm:grid-cols-2">
-        <div id={auditEvidenceDomId("http_status")} className="scroll-mt-28">
+        <div>
           <dt className="text-xs text-ink-muted">{copy.httpStatus}</dt>
           <dd className="mt-0.5 font-mono text-sm text-ink">{httpLabel}</dd>
         </div>
-        <div id={auditEvidenceDomId("html_lang")} className="scroll-mt-28">
+        <div>
           <dt className="text-xs text-ink-muted">{copy.htmlLang}</dt>
           <dd className="mt-0.5 text-sm text-ink">{dash(signals.html_lang)}</dd>
         </div>
@@ -364,17 +700,17 @@ export function ObservationHtmlHeadSignalsPanel({ signals, copy, requestedUrl }:
           <dt className="text-xs text-ink-muted">{copy.redirect}</dt>
           <dd className="mt-0.5 text-sm text-ink">{redirectLabel}</dd>
         </div>
-        <div id={auditEvidenceDomId("title")} className="scroll-mt-28 sm:col-span-2">
+        <div className="sm:col-span-2">
           <dt className="text-xs text-ink-muted">{copy.documentTitle}</dt>
           <dd className="mt-0.5 text-sm text-ink">{withLength(signals.document_title, copy.chars)}</dd>
         </div>
-        <div id={auditEvidenceDomId("description")} className="scroll-mt-28 sm:col-span-2">
+        <div className="sm:col-span-2">
           <dt className="text-xs text-ink-muted">{copy.metaDescription}</dt>
           <dd className="mt-0.5 text-sm text-ink">
             {withLength(signals.meta_description, copy.chars)}
           </dd>
         </div>
-        <div id={auditEvidenceDomId("canonical")} className="scroll-mt-28 sm:col-span-2">
+        <div className="sm:col-span-2">
           <dt className="text-xs text-ink-muted">{copy.canonical}</dt>
           <dd className="mt-0.5 break-all font-mono text-xs text-ink">{dash(signals.canonical_url)}</dd>
           <dd className="mt-0.5 text-xs text-ink-muted">{mismatchLabel}</dd>
@@ -387,7 +723,7 @@ export function ObservationHtmlHeadSignalsPanel({ signals, copy, requestedUrl }:
           <dt className="text-xs text-ink-muted">{copy.xRobots}</dt>
           <dd className="mt-0.5 break-all font-mono text-xs text-ink">{dash(signals.x_robots_tag)}</dd>
         </div>
-        <div id={auditEvidenceDomId("noindex")} className="scroll-mt-28">
+        <div>
           <dt className="text-xs text-ink-muted">{copy.noindex}</dt>
           <dd className="mt-0.5 text-sm text-ink">{noindexLabel}</dd>
         </div>
@@ -395,7 +731,7 @@ export function ObservationHtmlHeadSignalsPanel({ signals, copy, requestedUrl }:
           <dt className="text-xs text-ink-muted">{copy.viewport}</dt>
           <dd className="mt-0.5 break-all font-mono text-xs text-ink">{dash(signals.viewport)}</dd>
         </div>
-        <div id={auditEvidenceDomId("og")} className="scroll-mt-28">
+        <div>
           <dt className="text-xs text-ink-muted">{copy.openGraph}</dt>
           <dd className="mt-0.5 text-sm text-ink">{ogDetected ? copy.openGraphDetected : "—"}</dd>
         </div>
@@ -432,6 +768,7 @@ export function ObservationHtmlHeadSignalsPanel({ signals, copy, requestedUrl }:
           <dd className="mt-0.5 text-sm text-ink">{jsonLd}</dd>
         </div>
       </dl>
+      </details>
     </div>
   );
 }

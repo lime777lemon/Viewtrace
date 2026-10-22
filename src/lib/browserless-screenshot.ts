@@ -141,6 +141,7 @@ export async function runBrowserlessScreenshot(params: {
   url: string;
   region?: string;
   fullPage: boolean;
+  viewport?: { width: number; height: number; isMobile: boolean; hasTouch: boolean };
   disableProxy?: boolean;
   /** US 州を proxyState で指定するか。未指定なら、州を選んだ Observation では true。 */
   residentialState?: boolean;
@@ -230,6 +231,15 @@ export async function runBrowserlessScreenshot(params: {
     setExtraHTTPHeaders: { "Accept-Language": BROWSER_LIKE_ACCEPT_LANGUAGE },
     gotoOptions: { waitUntil: "networkidle2", timeout: 30_000 },
   };
+  if (params.viewport) {
+    payload.viewport = {
+      width: params.viewport.width,
+      height: params.viewport.height,
+      deviceScaleFactor: 1,
+      isMobile: params.viewport.isMobile,
+      hasTouch: params.viewport.hasTouch,
+    };
+  }
   if (params.fullPage) {
     payload.options = { fullPage: true };
   }
@@ -369,6 +379,7 @@ export async function runBrowserlessScreenshotWithProxyRetry(params: {
   url: string;
   region?: string;
   fullPage: boolean;
+  viewport?: { width: number; height: number; isMobile: boolean; hasTouch: boolean };
 }): Promise<BrowserlessScreenshotResult> {
   const log: CaptureCostAttemptV1[] = [];
   const geo = geoRoutingRequested(params.region, false);

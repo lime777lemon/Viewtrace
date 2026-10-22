@@ -29,13 +29,13 @@ export type PlanDefinition = {
   watchMaxDailyRepeats: number;
   /**
    * ラボ Core Web Vitals（Browserless Lighthouse）の月間回数。
-   * $49 / $99 の中のオプション。自動では走らせない。クレジットパックにしない。
+   * $15 / $39 の中のオプション。自動では走らせない。クレジットパックにしない。
    */
   labCwvMonthly: number;
   /** 下層採点（スクショなし）で見る同じホストの最大件数。 */
   subpageMaxLinks: number;
   /**
-   * フィールド CWV（CrUX）の月間回数。撮影なし。$49 / $99 の中のオプション。
+   * フィールド CWV（CrUX）の月間回数。撮影なし。$15 / $39 の中のオプション。
    * Watch では自動実行しない。
    */
   fieldCwvMonthly: number;
@@ -77,8 +77,8 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
   starter: {
     id: "starter",
     name: "Starter",
-    priceLabel: "$49/月",
-    priceMonthlyUsd: 49,
+    priceLabel: "$15/月",
+    priceMonthlyUsd: 15,
     monthlyObservations: 500,
     retentionDays: 7,
     locationsKey: "us_major_countries",
@@ -97,8 +97,8 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
   pro: {
     id: "pro",
     name: "Pro",
-    priceLabel: "$99/月",
-    priceMonthlyUsd: 99,
+    priceLabel: "$39/月",
+    priceMonthlyUsd: 39,
     /** 2000 は実測変動原価 C が出るまで採用しない。安全側は price×0.25÷C */
     monthlyObservations: 1500,
     retentionDays: 60,

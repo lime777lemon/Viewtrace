@@ -16,9 +16,9 @@ const both = monitoringCheckPlan({
   environments: ["desktop", "mobile"],
   workflowSteps: 1,
 });
-assert.equal(both.pageObservations, 2);
+assert.equal(both.pageObservations, 4);
 assert.equal(both.journeyRuns, 4);
-assert.equal(both.total, 6);
+assert.equal(both.total, 4);
 
 assert.equal(monitoringPageFact({ captured: false, verdict: null }), "incomplete");
 assert.equal(monitoringPageFact({ captured: true, verdict: null }), "not_comparable");

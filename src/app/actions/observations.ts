@@ -4,12 +4,15 @@ import { redirect } from "next/navigation";
 import { appendAuditEvent, AUDIT_ACTION } from "@/lib/audit-log";
 import { getSession } from "@/lib/auth/session";
 import {
+  applyRequestedDevice,
   buildCaptureConditionsFromBrowserless,
   buildCaptureConditionsFromDirectFetch,
   buildCaptureConditionsFromFormUpload,
   buildCaptureConditionsFromMicrolink,
   buildCaptureConditionsFromPlaywrightWorker,
+  REQUESTED_DEVICE_VIEWPORT,
   type CaptureConditionsV1,
+  type RequestedDeviceClass,
 } from "@/lib/capture-conditions";
 import {
   isBrowserlessConfigured,
@@ -43,6 +46,7 @@ import { getRegionOptions } from "@/lib/regions";
 import { fetchMicrolinkScreenshotUrl } from "@/lib/microlink-screenshot";
 import { htmlHeadSignalsHasAny, normalizeUserUrlInput } from "@/lib/url-preview";
 import { runUrlPreviewFetch } from "@/lib/url-preview-fetch";
+import { stampMeasurement } from "@/lib/measurement-record";
 import { seoFactsForObservation } from "@/lib/observation-seo-facts";
 import { collectObservationWebFacts } from "@/lib/observation-web-facts";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -93,6 +97,11 @@ export type RecordObservationResult =
   | { ok: true; id: string; liveUrl?: string }
   | { ok: false; code: RecordObservationFailureCode };
 
+function parseDeviceClass(raw: FormDataEntryValue | null): RequestedDeviceClass | undefined {
+  const value = String(raw ?? "");
+  return value === "desktop" || value === "mobile" ? value : undefined;
+}
+
 function parseObservationForm(formData: FormData): {
   urlRaw: string;
   regionValue: string;
@@ -100,6 +109,7 @@ function parseObservationForm(formData: FormData): {
   verifiedTitle: string;
   verifiedImageUrl: string;
   homepageMode: HomepageObservationMode;
+  deviceClass?: RequestedDeviceClass;
 } {
   return {
     urlRaw: String(formData.get("url") ?? "").trim(),
@@ -108,6 +118,7 @@ function parseObservationForm(formData: FormData): {
     verifiedTitle: String(formData.get("verifiedTitle") ?? "").trim(),
     verifiedImageUrl: String(formData.get("verifiedImageUrl") ?? "").trim(),
     homepageMode: parseHomepageObservationMode(formData.get("homepageMode")),
+    deviceClass: parseDeviceClass(formData.get("deviceClass")),
   };
 }
 
@@ -118,6 +129,7 @@ async function recordOneObservation(input: {
   verifiedTitle: string;
   verifiedImageUrl: string;
   homepageMode: HomepageObservationMode;
+  deviceClass?: RequestedDeviceClass;
 }): Promise<RecordObservationResult> {
   const session = await getSession();
   if (!session) return { ok: false, code: "unauthenticated" };
@@ -227,10 +239,19 @@ async function recordOneObservation(input: {
       }
     }
   } else if (homepageMode === "still" && primaryCaptureOn) {
+    const requestedSize = input.deviceClass ? REQUESTED_DEVICE_VIEWPORT[input.deviceClass] : null;
     const primary = await runObservationPrimaryScreenshot({
       url,
       region: regionValue,
       fullPage: plan.snapshotFullPage,
+      viewport: requestedSize
+        ? {
+            width: requestedSize.width,
+            height: requestedSize.height,
+            isMobile: input.deviceClass === "mobile",
+            hasTouch: input.deviceClass === "mobile",
+          }
+        : undefined,
     });
     const shotOk =
       (primary.engine === "playwright_worker" && primary.result.ok) ||
@@ -507,6 +528,7 @@ async function recordOneObservation(input: {
         : undefined,
     });
     if (webFacts) captureConditions = { ...captureConditions, web_facts: webFacts };
+    captureConditions = stampMeasurement(captureConditions);
   } catch (err) {
     console.warn("[observation] web facts unavailable", {
       error: err instanceof Error ? err.message : String(err),
@@ -521,6 +543,7 @@ async function recordOneObservation(input: {
     webFacts: captureConditions.web_facts,
   });
   if (seoFacts) captureConditions = { ...captureConditions, seo_facts: seoFacts };
+  if (input.deviceClass) captureConditions = applyRequestedDevice(captureConditions, input.deviceClass);
 
   const obs: Observation = {
     id,

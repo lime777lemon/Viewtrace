@@ -55,7 +55,7 @@ const candidate = buildBehaviorDiff(
   check({ menu: "not_detected" }),
   "prev-obs",
 );
-assert.equal(behaviorAlertTransitions(candidate)[0]?.kind, "alert_candidate");
+assert.equal(behaviorAlertTransitions(candidate)[0]?.kind, "regression");
 
 const appeared = buildBehaviorDiff(
   check({ hover: "not_detected" }),

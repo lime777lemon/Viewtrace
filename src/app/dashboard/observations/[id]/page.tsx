@@ -15,6 +15,7 @@ import {
 } from "@/components/dashboard/ObservationCaptureConditionsPanel";
 import { ObservationRegionReadout } from "@/components/dashboard/ObservationRegionReadout";
 import { observationGeoCopyFrom } from "@/lib/observation-geo-readout";
+import { pageSeoForCapture } from "@/lib/measurement-record";
 import {
   ObservationHtmlHeadSignalsPanel,
   observationHtmlHeadCopyFrom,
@@ -35,6 +36,7 @@ import { observationOptionalMetricsCopyFrom } from "@/lib/observation-optional-m
 import { observationAiAuditCopyFrom } from "@/lib/observation-ai-audit-copy";
 import { auditEvidenceDomId } from "@/lib/observation-ai-audit";
 import { loadObservationAiAudit } from "@/lib/observation-ai-audit-store";
+import { ObservationCheckSummary } from "@/components/dashboard/ObservationCheckSummary";
 import { ObservationLpVerdictCard } from "@/components/dashboard/ObservationLpVerdictCard";
 import { ObservationNotVisible } from "@/components/dashboard/ObservationNotVisible";
 import { ObservationLivePageComparePanel } from "@/components/dashboard/ObservationLivePageComparePanel";
@@ -50,6 +52,7 @@ import {
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
 import { ObservationWatchPanel } from "@/components/dashboard/ObservationWatchPanel";
 import { listJourneys } from "@/lib/journey-store";
+import { loadMonitoringRunForObservation } from "@/lib/monitoring-run-store";
 import { getPlan } from "@/lib/plans";
 import { decodeHtmlText } from "@/lib/url-preview";
 import { isBrowserlessConfigured } from "@/lib/browserless-screenshot";
@@ -80,7 +83,10 @@ import {
   buildPublicVerifyUrlForObservation,
   ensureObservationVerifyTokenForUser,
 } from "@/lib/observation-verify-token";
-import { findPreviousObservationWithSnapshot } from "@/lib/observation-previous";
+import {
+  findPreviousObservationForCompare,
+  findPreviousObservationWithSnapshot,
+} from "@/lib/observation-previous";
 import { buildObservationEvidencePack } from "@/lib/observation-evidence-json";
 import {
   isObservationScreenshotExpired,
@@ -152,11 +158,13 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
   const supabase = await createSupabaseServerClient();
   let journeyTargets: Array<{ id: string; name: string; startUrl: string }> = [];
   try {
-    journeyTargets = (await listJourneys(supabase, session.userId)).map((journey) => ({
-      id: journey.id,
-      name: journey.name,
-      startUrl: journey.start_url,
-    }));
+    journeyTargets = (await listJourneys(supabase, session.userId))
+      .filter((journey) => journey.purpose === "production")
+      .map((journey) => ({
+        id: journey.id,
+        name: journey.name,
+        startUrl: journey.start_url,
+      }));
   } catch {
     journeyTargets = [];
   }
@@ -228,6 +236,16 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
   const compareSiblings = compareRelated.filter(
     (row) => (row.regionValue ?? "") === (obs.regionValue ?? ""),
   );
+  const previousCapture =
+    obs.url && obs.regionValue
+      ? await findPreviousObservationForCompare(supabase, {
+          userId: session.userId,
+          url: obs.url,
+          region: obs.regionValue,
+          beforeCapturedAt: obs.capturedAt,
+          excludeId: obs.id,
+        })
+      : null;
 
   const captureConditionsCopy = observationCaptureConditionsCopyFrom(t);
   const geoCopy = observationGeoCopyFrom(t);
@@ -280,6 +298,8 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
     hideSnapshotImage: screenshotExpired,
   });
 
+  const checkRun = await loadMonitoringRunForObservation(supabase, session.userId, obs.id);
+
   const comparePrevious = previousRaw
     ? {
         id: previousRaw.id,
@@ -326,6 +346,17 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
           </Link>
         </div>
       </div>
+
+      {checkRun ? (
+        <ObservationCheckSummary
+          loaded={checkRun}
+          observationId={obs.id}
+          locale={locale}
+          seo={pageSeoForCapture(obs.captureConditions)}
+          check={optionalScroll}
+          behaviorDiff={storedScroll?.behavior_diff ?? null}
+        />
+      ) : null}
 
       <ObservationCaptureTierBanner
         obs={obs}
@@ -491,6 +522,12 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
             signals={obs.captureConditions?.html_signals}
             copy={htmlHeadSignalsCopy}
             requestedUrl={obs.url}
+            locale={locale === "ja" ? "ja" : "en"}
+            previous={previousCapture?.captureConditions?.html_signals ?? null}
+            webFacts={obs.captureConditions?.web_facts ?? null}
+            previousWebFacts={previousCapture?.captureConditions?.web_facts ?? null}
+            seo={pageSeoForCapture(obs.captureConditions)}
+            previousSeo={pageSeoForCapture(previousCapture?.captureConditions)}
           />
           <ObservationWebFactsPanel
             facts={obs.captureConditions?.web_facts}

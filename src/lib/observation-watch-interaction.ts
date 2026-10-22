@@ -1,4 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { applyRenderedPageMeasurement } from "@/lib/browser-rendered-page";
+import { parseCaptureConditionsFromDb } from "@/lib/capture-conditions";
 import { buildBehaviorDiff, type BehaviorDiffV1 } from "@/lib/observation-behavior-diff";
 import {
   observationUrlIdentity,
@@ -149,6 +151,25 @@ export async function persistRegionalInteractionCheck(
     excludeId: input.observationId,
   });
   const diff = buildBehaviorDiff(previous?.check ?? null, input.check, previous?.observationId ?? null);
+  if (input.check.discovery?.rendered_page) {
+    const { data } = await supabase
+      .from("observations")
+      .select("capture_conditions")
+      .eq("id", input.observationId)
+      .eq("user_id", input.userId)
+      .maybeSingle();
+    const conditions = parseCaptureConditionsFromDb(data?.capture_conditions);
+    if (conditions) {
+      const next = applyRenderedPageMeasurement(conditions, input.check);
+      if (next !== conditions) {
+        await supabase
+          .from("observations")
+          .update({ capture_conditions: next })
+          .eq("id", input.observationId)
+          .eq("user_id", input.userId);
+      }
+    }
+  }
   const saved = await saveObservationScrollInteraction(supabase, {
     userId: input.userId,
     observationId: input.observationId,

@@ -45,7 +45,12 @@ export default async function DashboardRegionSearchPage() {
           <ul className="mt-3 space-y-2">
             {recent.map((run) => (
               <li key={run.id}>
-                <Link href={`/dashboard/monitoring-runs/${run.id}`} className="text-sm text-ink underline">
+                <Link
+                  href={run.observationId
+                    ? `/dashboard/observations/${run.observationId}`
+                    : `/dashboard/monitoring-runs/${run.id}`}
+                  className="text-sm text-ink underline"
+                >
                   {run.targetUrl}
                   {" · "}
                   {run.execution === "not_executed"

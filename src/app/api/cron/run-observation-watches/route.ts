@@ -9,6 +9,7 @@ import {
 } from "@/lib/capture-conditions";
 import { runObservationPrimaryScreenshot } from "@/lib/observation-primary-capture";
 import { runUrlPreviewFetch } from "@/lib/url-preview-fetch";
+import { stampMeasurement } from "@/lib/measurement-record";
 import { seoFactsForObservation } from "@/lib/observation-seo-facts";
 import { collectObservationWebFacts } from "@/lib/observation-web-facts";
 import { isBrowserlessConfigured } from "@/lib/browserless-screenshot";
@@ -667,6 +668,7 @@ export async function POST(req: Request) {
           : undefined,
       });
       if (webFacts) captureConditions = { ...captureConditions, web_facts: webFacts };
+      captureConditions = stampMeasurement(captureConditions);
     } catch (err) {
       console.warn("[cron] web facts unavailable", {
         watchId,

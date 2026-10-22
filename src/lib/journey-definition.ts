@@ -16,6 +16,12 @@ export const JOURNEY_STEP_KINDS = [
 
 export type JourneyStepKind = (typeof JOURNEY_STEP_KINDS)[number];
 
+/** Authenticated flows need login, a capture, and the result page in one session. */
+export const JOURNEY_STEP_LIMIT = 12;
+
+/** A capture started from a Journey can take longer than a click. */
+export const JOURNEY_WAIT_MS_MAX = 120_000;
+
 export type JourneyDeviceClass = "desktop" | "mobile";
 
 export type JourneyGeoStage = "city" | "state" | "country" | "no_proxy" | "direct";
@@ -157,7 +163,7 @@ export function journeyStepHostAllowed(startUrl: string, nextUrl: string): boole
 export function parseJourneySteps(raw: unknown): JourneyStepDefinition[] {
   if (!Array.isArray(raw)) return [];
   const steps: JourneyStepDefinition[] = [];
-  for (const item of raw.slice(0, 8)) {
+  for (const item of raw.slice(0, JOURNEY_STEP_LIMIT)) {
     if (!item || typeof item !== "object") continue;
     const row = item as Record<string, unknown>;
     const kind = JOURNEY_STEP_KINDS.find((value) => value === row.kind);
@@ -169,7 +175,7 @@ export function parseJourneySteps(raw: unknown): JourneyStepDefinition[] {
       selector: typeof row.selector === "string" ? row.selector.trim().slice(0, 180) : "",
       value: typeof row.value === "string" ? row.value.slice(0, 240) : "",
       url: typeof row.url === "string" ? row.url.trim().slice(0, 500) : "",
-      wait_ms: Math.min(15000, Math.max(200, wait)),
+      wait_ms: Math.min(JOURNEY_WAIT_MS_MAX, Math.max(200, wait)),
       permitted_side_effect: journeySideEffectName(row.permitted_side_effect),
       expect_selector: typeof row.expect_selector === "string" ? row.expect_selector.trim().slice(0, 180) : "",
       expect_text: typeof row.expect_text === "string" ? row.expect_text.slice(0, 180) : "",
@@ -249,6 +255,23 @@ const STEP_STATUS_LABEL: Record<Locale, Record<string, string>> = {
     blocked: "Blocked",
   },
 };
+
+export type JourneyPurpose = "production" | "test" | "fixture";
+
+export function parseJourneyPurpose(value: unknown): JourneyPurpose {
+  return value === "test" || value === "fixture" ? value : "production";
+}
+
+export function journeyPurposeLabel(purpose: JourneyPurpose, locale: Locale): string {
+  if (locale === "ja") {
+    if (purpose === "test") return "テスト";
+    if (purpose === "fixture") return "Fixture";
+    return "本番";
+  }
+  if (purpose === "test") return "Test";
+  if (purpose === "fixture") return "Fixture";
+  return "Production";
+}
 
 export function journeyStatusLabel(status: string, locale: Locale): string {
   return STEP_STATUS_LABEL[locale][status] ?? status;

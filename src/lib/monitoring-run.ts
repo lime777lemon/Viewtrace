@@ -14,7 +14,11 @@ export type MonitoringCheckPlan = {
   total: number;
 };
 
-/** Page observations are one per region. Journey sessions run only when a step follows open URL. */
+/**
+ * One user check is one region × one environment.
+ * Page, metadata, and rendered behavior are inside that check.
+ * Journey steps run in the same check and do not add another one.
+ */
 export function monitoringCheckPlan(input: {
   regions: string[];
   environments: JourneyDeviceClass[];
@@ -30,14 +34,14 @@ export function monitoringCheckPlan(input: {
   for (const device of input.environments) {
     if ((device === "desktop" || device === "mobile") && !environments.includes(device)) environments.push(device);
   }
-  const pageObservations = regions.length;
-  const journeyRuns = input.workflowSteps > 0 ? regions.length * environments.length : 0;
+  const pageObservations = regions.length * environments.length;
+  const journeyRuns = input.workflowSteps > 0 ? pageObservations : 0;
   return {
     regions,
     environments,
     pageObservations,
     journeyRuns,
-    total: pageObservations + journeyRuns,
+    total: pageObservations,
   };
 }
 

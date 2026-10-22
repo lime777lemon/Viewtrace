@@ -13,13 +13,18 @@ export async function runObservationPrimaryScreenshot(params: {
   url: string;
   region: string;
   fullPage: boolean;
+  viewport?: { width: number; height: number; isMobile: boolean; hasTouch: boolean };
 }): Promise<
   | { engine: "playwright_worker"; result: ObservationWorkerCaptureResult }
   | { engine: "browserless"; result: BrowserlessScreenshotResult }
   | { engine: "none"; result: { ok: false; error: "no_capture_backend" } }
 > {
   if (isPlaywrightWorkerCaptureEnabled()) {
-    const result = await runObservationWorkerCapture(params);
+    const result = await runObservationWorkerCapture({
+      url: params.url,
+      region: params.region,
+      fullPage: params.fullPage,
+    });
     return { engine: "playwright_worker", result };
   }
   if (isBrowserlessConfigured()) {

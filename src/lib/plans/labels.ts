@@ -23,7 +23,7 @@ export function getPlanLabels(planId: PlanId, locale: Locale): {
   if (locale === "en") {
     if (planId === "pro") {
       return {
-        priceLabel: "$99/mo",
+        priceLabel: "$39/mo",
         audienceLabel: "Production, agencies & reporting workflows",
         coverageLabel: "All US states + major countries",
       };
@@ -36,14 +36,14 @@ export function getPlanLabels(planId: PlanId, locale: Locale): {
       };
     }
     return {
-      priceLabel: "$49/mo",
+      priceLabel: "$15/mo",
       audienceLabel: "Try-it-out & light validation",
       coverageLabel: "US + major countries",
     };
   }
   if (planId === "pro") {
     return {
-      priceLabel: "$99/月",
+      priceLabel: "$39/月",
       audienceLabel: "本番運用・代理店・報告・記録整理向け",
       coverageLabel: "米国全州＋主要国",
     };
@@ -56,7 +56,7 @@ export function getPlanLabels(planId: PlanId, locale: Locale): {
     };
   }
   return {
-    priceLabel: "$49/月",
+    priceLabel: "$15/月",
     audienceLabel: "試す・軽い検証用途向け",
     coverageLabel: "米国＋主要国",
   };

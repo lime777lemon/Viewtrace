@@ -11,6 +11,8 @@ import {
   sameObservationUrlIdentity,
   screenshotCompareField,
 } from "@/lib/observation-compare";
+import { pageSeoForCapture } from "@/lib/measurement-record";
+import { diffSearchSocial, presentSearchSocial, type SearchSocialChangeId } from "@/lib/search-social-presentation";
 
 export type ObservationsCsvMode = "standard" | "audit";
 
@@ -99,27 +101,49 @@ const AUDIT_EXTRA = ["captureConditionsJson"] as const;
 
 const CLIENT_COLUMNS = [
   "page",
-  "verified",
-  "unknownChanges",
-  "notClicked",
-  "notClickedDetail",
+  "interactionHealth",
+  "interactionProblems",
+  "interactionAreas",
+  "interactionWorking",
+  "interactionSkipped",
+  "searchTitle",
+  "socialTitle",
+  "seoScore",
+  "seoEarnedPoints",
+  "seoPossiblePoints",
+  "seoMeasuredSignals",
+  "seoScoringVersion",
+  "searchSocialChanges",
   "journey",
   "journeyResult",
 ] as const;
 
-function countCell(value: number | null): string {
-  return value == null ? "" : String(value);
-}
+const SEARCH_CHANGE_EN: Record<SearchSocialChangeId, string> = {
+  search_title: "Search title",
+  search_description: "Search description",
+  social_title: "Social title",
+  social_description: "Social description",
+  social_image: "Social image",
+  twitter_title: "Twitter title",
+  twitter_image: "Twitter image",
+  canonical: "Canonical",
+  noindex: "noindex",
+  http: "HTTP status",
+  lang: "Language",
+};
 
-function pageCell(row: Observation, rows: Observation[]): string {
-  if (row.status !== "success") return "";
-  const siblings = rows.filter(
+function sameRegionSiblings(row: Observation, rows: Observation[]): Observation[] {
+  return rows.filter(
     (other) =>
       other.id !== row.id &&
       sameObservationUrlIdentity(other.url, row.url) &&
       other.regionValue === row.regionValue,
   );
-  const previous = previousObservationForCompare(row, siblings);
+}
+
+function pageCell(row: Observation, rows: Observation[]): string {
+  if (row.status !== "success") return "";
+  const previous = previousObservationForCompare(row, sameRegionSiblings(row, rows));
   if (!previous) return clientPageLabel(row.status, null);
   const field = screenshotCompareField(previous, row);
   const verdict =
@@ -127,6 +151,49 @@ function pageCell(row: Observation, rows: Observation[]): string {
       ? field.verdict
       : null;
   return clientPageLabel(row.status, verdict);
+}
+
+function clientSearchCells(row: Observation, rows: Observation[]): {
+  searchTitle: string;
+  socialTitle: string;
+  seoScore: string;
+  seoEarnedPoints: string;
+  seoPossiblePoints: string;
+  seoMeasuredSignals: string;
+  seoScoringVersion: string;
+  changes: string;
+} {
+  const empty = {
+    searchTitle: "",
+    socialTitle: "",
+    seoScore: "",
+    seoEarnedPoints: "",
+    seoPossiblePoints: "",
+    seoMeasuredSignals: "",
+    seoScoringVersion: "",
+    changes: "",
+  };
+  const signals = row.captureConditions?.html_signals;
+  if (!signals) return empty;
+  const previous = previousObservationForCompare(row, sameRegionSiblings(row, rows));
+  const previousSignals = previous?.captureConditions?.html_signals ?? null;
+  const view = presentSearchSocial({ signals, requestedUrl: row.url, previous: previousSignals });
+  const seo = pageSeoForCapture(row.captureConditions);
+  const changes = !previousSignals
+    ? "No previous capture"
+    : diffSearchSocial(previousSignals, signals)
+        .map((change) => SEARCH_CHANGE_EN[change.id])
+        .join("; ") || "Same";
+  return {
+    searchTitle: view.search.title,
+    socialTitle: view.social.title,
+    seoScore: seo?.score == null ? "" : String(seo.score),
+    seoEarnedPoints: seo ? String(seo.earned_points) : "",
+    seoPossiblePoints: seo ? String(seo.possible_points) : "",
+    seoMeasuredSignals: seo ? String(seo.measured_signals) : "",
+    seoScoringVersion: seo?.scoring_version ?? "",
+    changes,
+  };
 }
 
 export function observationsToCsv(
@@ -156,6 +223,7 @@ export function observationsToCsv(
       const cap = captureFlatFields(r);
       const facts = measured?.get(r.id) ?? emptyClientMeasuredFacts();
       const journey = clientJourneyColumns(facts.journeys);
+      const search = clientSearchCells(r, rows);
       const base = [
         r.id,
         r.capturedAt,
@@ -185,10 +253,19 @@ export function observationsToCsv(
         cap.costScreenshotBytes,
         cap.costAttempts,
         pageCell(r, rows),
-        countCell(facts.verified),
-        countCell(facts.unknownChanges),
-        countCell(facts.notClicked),
-        facts.notClickedDetail ? csvCell(facts.notClickedDetail) : "",
+        facts.interactionHealth,
+        facts.interactionProblems ? csvCell(facts.interactionProblems) : "",
+        facts.interactionAreas ? csvCell(facts.interactionAreas) : "",
+        facts.interactionWorking ? csvCell(facts.interactionWorking) : "",
+        facts.interactionSkipped ? csvCell(facts.interactionSkipped) : "",
+        search.searchTitle ? csvCell(search.searchTitle) : "",
+        search.socialTitle ? csvCell(search.socialTitle) : "",
+        search.seoScore,
+        search.seoEarnedPoints,
+        search.seoPossiblePoints,
+        search.seoMeasuredSignals,
+        search.seoScoringVersion,
+        search.changes ? csvCell(search.changes) : "",
         journey.journey ? csvCell(journey.journey) : "",
         journey.result ? csvCell(journey.result) : "",
       ];

@@ -38,7 +38,7 @@ function scorePageSignals(signals) {
   if (!text(signals.document_title)) reasons.push({ id: "title_missing", points: IMPORTANT });
   if (!text(signals.meta_description)) reasons.push({ id: "description_missing", points: IMPORTANT });
   if (!text(signals.canonical_url)) reasons.push({ id: "canonical_missing", points: IMPORTANT });
-  if (!text(signals.robots_meta) && !text(signals.x_robots_tag)) {
+  if (signals.meta_robots_measured === false && signals.http_robots_measured === false) {
     reasons.push({ id: "robots_missing", points: IMPORTANT });
   }
   const ogTitle = text(signals.og_title);

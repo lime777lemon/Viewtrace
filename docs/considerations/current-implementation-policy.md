@@ -6,7 +6,7 @@
 - **カテゴリー:** Website Monitoring for Digital Agencies（Geo-aware Website QA）。Screenshot SaaS / Visualping 互換 / AI Website Audit にはしない。
 - **一文:** Know which client websites need attention before your clients do.
 - **下の説明:** Monitor visual changes, SEO issues and regional differences across all your client websites from one dashboard.
-- **一言（実装）:** エンジンは Observation（`URL × 地域 × 時点`）。顧客が毎日見るのは Agency Monitor。AI は最後の読み。Requested と Observed は混ぜない。$49 / $99 は動かさない。
+- **一言（実装）:** エンジンは Observation（`URL × 地域 × 時点`）。顧客が毎日見るのは Agency Monitor。AI は最後の読み。Requested と Observed は混ぜない。$15 / $39 は動かさない。
 - **今やること:** 36 事実レイアウト。隣に 41（既存ハッシュの見せ方）。次に 42（Changed の下のメタ差）。38 の構造化監査（What changed / Impact / Evidence）は Observation 詳細に載せる。19（Vision）は 38 の中。37（レイアウト AI）は 41 より先にしなくてよい。12（Client / Project / Agency 価格）は 38 のあと。Agency Monitor も磨く。50 州ネットワーク・RUM・Scout はしない。
 
 各段階は「機能が完成したか」ではなく、**次へ進む根拠となる行動データが出たか**で判断する。
@@ -126,7 +126,7 @@ Activation **計測**は固定。Activation **UI**は母数が小さいうちは
 
 追加 Observation が 0。根拠なしのスコアを出さない。Scout / RUM / 50 州 / クレジットパックは今は作らない。
 
-$49 / $99 は動かさない。表の主役を「500 Observations」から **Small agencies / Growing agencies（何社見られるか）** へ寄せる余地はある。Observation は内部の原価単位のまま。Change Audit は **AI を使ったから値上げ**しない。クレジットパックにはしない。Starter でも検出した事実（メタ差）は出す。Agency 利用と「Compare を毎回目視しなくて済んだ」が確認できてから **Agency $149〜$199** を試す余地がある。撮影範囲は trial / Starter / Pro ともフルページ。粗利監視は PNG 容量ではなく **Residential 転送 MB / Observation の中央値と P90**。500 回が変動費の防波堤。
+$15 / $39 は動かさない。表の主役を「500 Observations」から **Small agencies / Growing agencies（何社見られるか）** へ寄せる余地はある。Observation は内部の原価単位のまま。Change Audit は **AI を使ったから値上げ**しない。クレジットパックにはしない。Starter でも検出した事実（メタ差）は出す。Agency 利用と「Compare を毎回目視しなくて済んだ」が確認できてから **Agency $149〜$199** を試す余地がある。撮影範囲は trial / Starter / Pro ともフルページ。粗利監視は PNG 容量ではなく **Residential 転送 MB / Observation の中央値と P90**。500 回が変動費の防波堤。
 
 ---
 
@@ -237,7 +237,7 @@ Requested と Observed は分けて書く。自己申告の Node 所在地を Ob
 | --- | --- | --- |
 | 13 | 記録に混ぜない | 測っていない Performance / SEO / Accessibility の数字。数字を出すなら実測してから |
 | 14 | 監査側に出してよい | この Observation についての指摘。未撮影ページの要対応リストにはしない |
-| 15 | 記録に混ぜない。プラン内オプション | ラボ Core Web Vitals（Browserless `/performance`）。Observed ではない。毎回は走らせない。Starter 月 10 / Pro 月 30 / trial 月 2。$49 / $99 は動かさない。クレジットパックにしない。Watch では自動実行しない |
+| 15 | 記録に混ぜない。プラン内オプション | ラボ Core Web Vitals（Browserless `/performance`）。Observed ではない。毎回は走らせない。Starter 月 10 / Pro 月 30 / trial 月 2。$15 / $39 は動かさない。クレジットパックにしない。Watch では自動実行しない |
 | 15b | 記録に混ぜない。プラン内オプション。**完成** | フィールド CWV（CrUX API）。ラボと混ぜない。Lab LCP ≠ Field LCP。URL 単位 → Origin 単位 → no_data。no_data も正常な保存結果。再取得は手動の補助（数分では変わらない）。ラボ実行で既に保存済みなら CrUX を取り直さない。毎回の Observation には自動で載せない（枠は trial 10 / Starter 50 / Pro 150）。撮影・AI なし。Watch では自動実行しない。CrUX の代替測定は作らない |
 | 15d | 記録に混ぜない。プラン内オプション | 合成操作テスト（Browserless で安全なクリック 1〜3）。任意 URL。Field INP と呼ばない。表示は Interaction latency / Synthetic。購入・送信・削除・ログアウトは押さない。trial 月 2 / Starter 月 10 / Pro 月 30。Watch では自動実行しない。毎回の Observation には載せない |
 | 15c | 後回し。優先しない | ViewTrace RUM（自サイトへ `rum.js` を置く実ユーザー INP）。CrUX の穴埋めではない。第三者サイトには設置できない。本体は Agency Monitor / 外部 Observation なので今は上げない。合成操作を Field INP と呼ばない |
@@ -268,7 +268,7 @@ Requested と Observed は分けて書く。自己申告の Node 所在地を Ob
 
 月間上限に達したら自動停止。超過従量課金はしない。文言は “You've reached your monthly Observation limit. Upgrade to continue.”
 
-Starter $49 → **500 仮置き維持**。Pro $99 → **1,500 仮置き維持（確定しない）**。**2,000 には戻さない。** 撮影は trial も含めフルページ。上限の変更より先に、residential が通った Observation の **proxy MB → units → $/Observation** を実測する（PNG MB ではない）。`retry_without_proxy` の平均 units は将来原価に使わない（Geo 正常時を過小評価する）。
+Starter $15 → **500 仮置き維持**。Pro $39 → **1,500 仮置き維持（確定しない）**。**2,000 には戻さない。** 撮影は trial も含めフルページ。上限の変更より先に、residential が通った Observation の **proxy MB → units → $/Observation** を実測する（PNG MB ではない）。`retry_without_proxy` の平均 units は将来原価に使わない（Geo 正常時を過小評価する）。
 
 分布は Observation 単位の `cost_signals` から出す。**C = 1 件の成功 Observation を完成させるための全 billed attempts の総原価**（失敗した州/国試行も含む。各 /screenshot 呼び出しは別セッション）。`duration_ms` / `estimated_time_units` は最終成功だけでなく合計。`attempts_log` に試行ごとの duration / units / proxy_bytes を残す。
 
@@ -291,7 +291,7 @@ Starter $49 → **500 仮置き維持**。Pro $99 → **1,500 仮置き維持（
 
 `floor((Plan価格 × 25%) ÷ P75〜P90 の Observation 原価)`
 
-例: P90 の C = $0.020 なら Starter 500 は $10 / $49 = 20.4%（以内）、Pro 1,500 は $30 / $99 = 30.3%（超過）、Pro 1,000 は $20 / $99 = 20.2%（以内）→ その場合は Pro だけ ~1,000 に下げる。**2,000 には戻さない。** `retry_without_proxy` 行は C に使わない。
+例: P90 の C = $0.020 なら Starter 500 は $10 / $15 = 66.7%、Pro 1,500 は $30 / $39 = 76.9%。価格を $15 / $39 にしたあとは、100%消費で変動費 25% の目安を超える。件数はまだ動かさない。**2,000 には戻さない。** `retry_without_proxy` 行は C に使わない。
 
 **② Business economics / 損益分岐** — 実際の平均利用率。Browserless $200 は固定費で C に混ぜない。
 

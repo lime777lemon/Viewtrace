@@ -1,3 +1,4 @@
+import { behaviorEnvironmentsCompatible } from "@/lib/measurement-record";
 import { isUnknownChange, type UnknownChangeClass } from "@/lib/observation-behavior-discovery";
 import type {
   InteractionCheckType,
@@ -36,6 +37,8 @@ export type BehaviorDiffV1 = {
   previous_observation_id: string | null;
   transitions: BehaviorTransitionV1[];
   map_diffs: BehaviorMapDiffV1[];
+  /** Set when the previous check was a different device, viewport, pointer, locale, or motion setting. */
+  comparison?: "environment_mismatch";
 };
 
 const STATUS_LABEL: Record<ScrollInteractionStatus, string> = {
@@ -94,10 +97,12 @@ export function classifyBehaviorTransition(
     return previous === current ? "unchanged" : "not_comparable";
   }
   if (previous === current) return "unchanged";
-  if (previous === "working" && (current === "no_change_observed" || current === "failed")) {
+  if (
+    previous === "working" &&
+    (current === "no_change_observed" || current === "failed" || current === "not_detected")
+  ) {
     return "regression";
   }
-  if (previous === "working" && current === "not_detected") return "alert_candidate";
   if (previous === "not_detected" && current === "working") return "new_interaction";
   return "not_comparable";
 }
@@ -119,6 +124,27 @@ export function buildBehaviorDiff(
       schema_version: BEHAVIOR_DIFF_SCHEMA_VERSION,
       previous_observation_id: null,
       transitions: [],
+      map_diffs: [],
+    };
+  }
+  const regionMismatch =
+    Boolean(previous.requested_region) &&
+    Boolean(current.requested_region) &&
+    previous.requested_region !== current.requested_region;
+  const environmentMismatch =
+    regionMismatch ||
+    !behaviorEnvironmentsCompatible(previous.discovery?.environment, current.discovery?.environment);
+  if (environmentMismatch) {
+    return {
+      schema_version: BEHAVIOR_DIFF_SCHEMA_VERSION,
+      previous_observation_id: previousObservationId,
+      comparison: "environment_mismatch",
+      transitions: current.types.map((row) => ({
+        type: row.type,
+        previous: statusFor(previous, row.type),
+        current: row.status,
+        kind: "not_comparable" as const,
+      })),
       map_diffs: [],
     };
   }
@@ -331,6 +357,7 @@ export function parseBehaviorDiff(raw: unknown): BehaviorDiffV1 | null {
       typeof o.previous_observation_id === "string" ? o.previous_observation_id : null,
     transitions: parsed,
     map_diffs: mapDiffs,
+    ...(o.comparison === "environment_mismatch" ? { comparison: "environment_mismatch" as const } : {}),
   };
 }
 

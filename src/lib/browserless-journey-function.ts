@@ -1,15 +1,32 @@
 import { BROWSER_LIKE_ACCEPT_LANGUAGE, BROWSER_LIKE_USER_AGENT } from "@/lib/browser-fingerprint";
+import { JOURNEY_STEP_LIMIT, JOURNEY_WAIT_MS_MAX } from "@/lib/journey-definition";
 
 /** One Browserless session for a user-defined Journey. Discovery is not involved. */
 export function buildJourneyFunctionCode(): string {
   const ua = JSON.stringify(BROWSER_LIKE_USER_AGENT);
   const lang = JSON.stringify(BROWSER_LIKE_ACCEPT_LANGUAGE);
   return `export default async function({ page, context }) {
-  const steps = Array.isArray(context && context.steps) ? context.steps.slice(0, 8) : [];
+  const steps = Array.isArray(context && context.steps) ? context.steps.slice(0, ${JOURNEY_STEP_LIMIT}) : [];
   const credentials = context && context.credentials && typeof context.credentials === "object" ? context.credentials : {};
   const html = String(context && context.html ? context.html : "");
   const device = String(context && context.device_class ? context.device_class : "desktop") === "mobile" ? "mobile" : "desktop";
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  const regionToken = String(context && context.region ? context.region : "");
+  function stepBudget(step, fallback) {
+    const n = Number(step && step.wait_ms);
+    const raw = Number.isFinite(n) && n > 0 ? n : fallback;
+    return Math.min(${JOURNEY_WAIT_MS_MAX}, Math.max(200, raw));
+  }
+  async function until(ms, read) {
+    const deadline = Date.now() + ms;
+    let value = null;
+    try { value = await read(); } catch (e) { value = null; }
+    while (!value && Date.now() < deadline) {
+      await sleep(400);
+      try { value = await read(); } catch (e) { value = null; }
+    }
+    return value;
+  }
   const netLog = [];
   const runtimeLog = [];
   if (page.setDefaultTimeout) page.setDefaultTimeout(8000);
@@ -57,7 +74,9 @@ export function buildJourneyFunctionCode(): string {
   function resolveValue(value) {
     return String(value || "")
       .replace(/\\{\\{username\\}\\}/g, String(credentials.username || ""))
-      .replace(/\\{\\{password\\}\\}/g, String(credentials.password || ""));
+      .replace(/\\{\\{password\\}\\}/g, String(credentials.password || ""))
+      .replace(/\\{\\{region\\}\\}/g, regionToken)
+      .replace(/%7B%7Bregion%7D%7D/gi, regionToken);
   }
   function resolveOpen(raw) {
     const start = String(context && context.url ? context.url : "").trim();
@@ -112,7 +131,7 @@ export function buildJourneyFunctionCode(): string {
       continue;
     }
     const started = Date.now();
-    const selector = String(step && step.selector ? step.selector : "");
+    let selector = resolveValue(step && step.selector ? step.selector : "");
     const value = resolveValue(step && step.value ? step.value : "");
     const expectSelector = String(step && step.expect_selector ? step.expect_selector : "");
     let status = "pass";
@@ -133,7 +152,7 @@ export function buildJourneyFunctionCode(): string {
     }
     try {
       if (kind === "open_url") {
-        const requested = resolveOpen(step.url || context.url || "");
+        const requested = resolveOpen(resolveValue(step.url || context.url || ""));
         if (!requested) throw new Error("invalid URL");
         if (!html) {
           await page.goto(requested, { waitUntil: "networkidle2", timeout: 30000 });
@@ -159,6 +178,46 @@ export function buildJourneyFunctionCode(): string {
           detail = String(page.url() || "").slice(0, 180);
         }
       } else if (kind === "click") {
+        let opened = false;
+        if (selector.indexOf("open:") === 0) {
+          opened = true;
+          const target = selector.slice(5);
+          await page.evaluate((href) => { window.location.assign(href); }, target);
+          const landed = await until(stepBudget(step, 20000), async () => {
+            const href = String(page.url() || "");
+            const wantsUrl = String(step && step.expect_url ? step.expect_url : "");
+            if (wantsUrl && href.indexOf(wantsUrl) < 0) return "";
+            const ready = await page.evaluate(() => document.readyState).catch(() => "");
+            return ready === "complete" ? href : "";
+          });
+          if (!landed) {
+            status = "fail";
+            detail = "outcome_mismatch";
+            stopped = true;
+          } else {
+            detail = String(landed).slice(0, 180);
+          }
+        } else if (selector.indexOf("region:") === 0) {
+          const code = selector.slice(7);
+          const found = await page.evaluate((region) => {
+            const labels = Array.from(document.querySelectorAll("label"));
+            const label = labels.find((el) => {
+              if (!el.querySelector("input[type='checkbox']")) return false;
+              const text = String(el.innerText || "");
+              if (region === "US-CA") return text.indexOf("California") >= 0;
+              if (region === "JP-13") return text.indexOf("東京") >= 0 || text.indexOf("Tokyo") >= 0;
+              if (region === "GB") return text.indexOf("英国") >= 0 || text.indexOf("United Kingdom") >= 0;
+              return false;
+            });
+            const input = label ? label.querySelector("input") : null;
+            if (!input) return "";
+            if (!input.id) input.id = "vt-region-" + region;
+            return input.id;
+          }, code);
+          if (!found) throw new Error("region_missing");
+          selector = "#" + found;
+        }
+        if (!opened) {
         const label = await page.evaluate((sel) => {
           const el = document.querySelector(sel);
           if (!el) return "";
@@ -174,37 +233,104 @@ export function buildJourneyFunctionCode(): string {
           const before = await readState(expectSelector || selector);
           beforeText = before.text;
           beforeVisible = before.visible;
-          await page.click(selector, { timeout: 8000 });
-          await sleep(300);
-          const after = await readState(expectSelector || selector);
-          afterText = after.text;
-          afterVisible = after.visible;
+          const beforeUrl = String(page.url() || "");
           const wantsText = String(step && step.expect_text ? step.expect_text : "");
           const wantsVisible = step && step.expect_visible === true;
           const wantsUrl = String(step && step.expect_url ? step.expect_url : "");
-          const hasExpect = Boolean(wantsText || wantsVisible || wantsUrl);
+          const wantsChecked = value === "checked" ? true : value === "unchecked" ? false : null;
+          const hasExpect = Boolean(wantsText || wantsVisible || wantsUrl || wantsChecked !== null);
+          let submitted = "";
+          if (wantsChecked === null) {
+          submitted = await page.evaluate((sel) => {
+            if (String(sel).indexOf("open:") === 0) {
+              window.location.assign(String(sel).slice(5));
+              return "navigated";
+            }
+            const el = document.querySelector(sel);
+            if (!el) return "missing";
+            if (el.tagName === "A" && el.href) {
+              window.location.assign(el.href);
+              return "navigated";
+            }
+            const form = el.form || el.closest("form");
+            if (el.tagName === "BUTTON" && form && typeof form.requestSubmit === "function") {
+              const controls = Array.from(form.elements || []);
+              const invalid = controls.find((control) => control.willValidate && !control.checkValidity());
+              if (invalid) return "invalid:" + (invalid.id || invalid.name || invalid.tagName);
+              if (el.disabled) return "disabled";
+              form.requestSubmit(el);
+              return "submitted";
+            }
+            return "click";
+          }, selector).catch(() => "click");
+          if (submitted === "missing") throw new Error("selector_missing");
+          if (String(submitted).indexOf("invalid:") === 0) throw new Error(submitted);
+          if (submitted === "disabled") throw new Error("button_disabled");
+          if (submitted !== "submitted" && submitted !== "navigated") {
+            try {
+              await page.click(selector, { timeout: 8000 });
+            } catch (clickError) {
+              const message = String(clickError && clickError.message ? clickError.message : clickError);
+              if (!/destroyed|navigat|detached|Target closed/i.test(message)) throw clickError;
+            }
+          }
+          }
+          let nudged = false;
+          const outcome = await until(stepBudget(step, hasExpect ? 20000 : 300), async () => {
+            const href = String(page.url() || "");
+            const sawRedirect = netLog.some((row) => row.at >= started && String(row.method) === "POST" && Number(row.status) >= 300 && Number(row.status) < 400);
+            if (!nudged && submitted === "submitted" && sawRedirect && /^https?:\\/\\//.test(wantsUrl) && href.indexOf(wantsUrl) < 0) {
+              nudged = true;
+              await page.evaluate((next) => { window.location.assign(next); }, wantsUrl).catch(() => null);
+              return null;
+            }
+            const after = await readState(expectSelector || selector);
+            const textOk = !wantsText || (after.text.indexOf(wantsText) >= 0 && beforeText.indexOf(wantsText) < 0);
+            const visibleOk = !wantsVisible || (after.visible && !beforeVisible);
+            const urlOk = !wantsUrl || (href.indexOf(wantsUrl) >= 0 && href !== beforeUrl);
+            const checkedOk = wantsChecked === null || await page.evaluate((sel, want) => {
+              const el = document.querySelector(sel);
+              return Boolean(el && el.checked === want);
+            }, selector, wantsChecked).catch(() => false);
+            if (wantsChecked !== null && !checkedOk) {
+              await page.click(selector, { timeout: 2000 }).catch(() => null);
+              return null;
+            }
+            return textOk && visibleOk && urlOk && checkedOk ? { href: href, after: after } : null;
+          });
+          if (outcome) {
+            afterText = outcome.after.text;
+            afterVisible = outcome.after.visible;
+          }
           if (!hasExpect) {
             status = "incomplete";
             detail = "outcome_not_defined";
-          } else {
-            const textOk = !wantsText || (after.text.indexOf(wantsText) >= 0 && before.text.indexOf(wantsText) < 0);
-            const visibleOk = !wantsVisible || (after.visible && !before.visible);
-            const urlOk = !wantsUrl || String(page.url() || "").indexOf(wantsUrl) >= 0;
-            if (!(textOk && visibleOk && urlOk)) {
-              status = "fail";
-              detail = "outcome_mismatch";
-              stopped = true;
-            }
+          } else if (!outcome) {
+            status = "fail";
+            detail = "outcome_mismatch";
+            const hint = await page.evaluate(() => {
+              const alert = document.querySelector("[role='alert']");
+              const invalid = document.querySelector(":invalid");
+              const parts = [];
+              if (alert) parts.push(String(alert.innerText || "").replace(/\\s+/g, " ").trim().slice(0, 120));
+              if (invalid) parts.push(invalid.id || invalid.name || "invalid");
+              return parts.join(" | ");
+            }).catch(() => "");
+            if (hint) detail = hint.slice(0, 180);
+            stopped = true;
           }
+        }
         }
       } else if (kind === "fill") {
         await page.focus(selector);
         const matched = await page.evaluate((sel, expected) => {
           const el = document.querySelector(sel);
           if (!el) return false;
-          el.value = "";
-          el.value = expected;
+          const proto = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value");
+          if (proto && proto.set) proto.set.call(el, expected);
+          else el.value = expected;
           el.dispatchEvent(new Event("input", { bubbles: true }));
+          el.dispatchEvent(new Event("change", { bubbles: true }));
           return el.value === expected;
         }, selector, value);
         if (!matched) {
@@ -224,33 +350,39 @@ export function buildJourneyFunctionCode(): string {
           stopped = true;
         } else detail = "value_verified";
       } else if (kind === "wait") {
-        await sleep(Math.min(15000, Math.max(200, Number(step.wait_ms) || 1000)));
+        await sleep(stepBudget(step, 1000));
       } else if (kind === "assert_visible") {
-        const visible = await page.evaluate((sel) => {
+        const visible = await until(stepBudget(step, 1000), () => page.evaluate((sel) => {
           const el = document.querySelector(sel);
           if (!el) return false;
-          const rect = el.getBoundingClientRect();
           const st = getComputedStyle(el);
-          return rect.width >= 2 && rect.height >= 2 && st.visibility !== "hidden" && st.display !== "none" && !el.hidden;
-        }, selector);
+          if (st.visibility === "hidden" || st.display === "none" || el.hidden) return false;
+          if (el.tagName === "IMG") return el.complete && el.naturalWidth >= 2;
+          const rect = el.getBoundingClientRect();
+          return rect.width >= 2 && rect.height >= 2;
+        }, selector));
         if (!visible) {
           status = "fail";
           detail = "not_visible";
           stopped = true;
         }
       } else if (kind === "assert_text") {
-        const text = await page.evaluate((sel) => {
+        const text = await until(stepBudget(step, 1000), () => page.evaluate((sel, expected) => {
           const el = document.querySelector(sel);
-          return el ? String(el.innerText || "").replace(/\\s+/g, " ").trim().slice(0, 240) : "";
-        }, selector);
-        if (!text.includes(value)) {
+          const found = el ? String(el.innerText || "").replace(/\\s+/g, " ").trim().slice(0, 240) : "";
+          return found.includes(expected) ? found : "";
+        }, selector, value));
+        if (!text) {
           status = "fail";
           detail = "text_mismatch";
           stopped = true;
         }
       } else if (kind === "assert_url") {
-        const href = page.url();
-        if (!String(href || "").includes(value)) {
+        const href = await until(stepBudget(step, 1000), async () => {
+          const current = String(page.url() || "");
+          return current.includes(value) ? current : "";
+        });
+        if (!href) {
           status = "fail";
           detail = "url_mismatch";
           stopped = true;

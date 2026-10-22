@@ -69,7 +69,7 @@ export const tokushohoPageCopyJa: TokushohoPageCopy = {
     {
       title: "販売価格",
       paragraphs: [
-        "各プランの価格は米ドル（USD）表示です。Starter $49/月、Pro $99/月 等、最新の金額は料金ページに記載します。",
+        "各プランの価格は米ドル（USD）表示です。Starter $15/月、Pro $39/月 等、最新の金額は料金ページに記載します。",
         "プラン上限を超える観測について、従量単価を料金ページに表示している場合は、その単価に従い追加課金されることがあります。",
       ],
       footerLink: {
@@ -205,7 +205,7 @@ export const tokushohoPageCopyEn: TokushohoPageCopy = {
     {
       title: "Price",
       paragraphs: [
-        "Prices are shown in USD (e.g., Starter $49/month, Pro $99/month). See the pricing page for current amounts.",
+        "Prices are shown in USD (e.g., Starter $15/month, Pro $39/month). See the pricing page for current amounts.",
         "If usage-based overage pricing is published, additional observations may be billed at the stated unit rate.",
       ],
       footerLink: {

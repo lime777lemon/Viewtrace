@@ -55,6 +55,7 @@ export type MonitoringRunObservationFact = {
   id: string;
   region: string;
   regionLabel: string;
+  device: "desktop" | "mobile" | null;
   page: MonitoringPageFact;
   working: number | null;
   newUnknown: boolean;
@@ -83,7 +84,35 @@ export async function countMeteredChecksThisUtcMonth(
     .eq("user_id", userId)
     .gte("created_at", utcMonthStartIso());
   if (error) return null;
-  return observations + (count ?? 0);
+  const included = await countJourneyRunsIncludedInChecks(supabase, userId);
+  if (included == null) return null;
+  return observations + Math.max(0, (count ?? 0) - included);
+}
+
+/** Journey sessions that already belong to a region × environment check are not a second check. */
+async function countJourneyRunsIncludedInChecks(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<number | null> {
+  const { data, error } = await supabase
+    .from("monitoring_runs")
+    .select("id,plan")
+    .eq("user_id", userId)
+    .gte("started_at", utcMonthStartIso());
+  if (error) return null;
+  const runIds = (data ?? [])
+    .filter((row) => {
+      const plan = (row as { plan?: unknown }).plan;
+      return Boolean(plan && typeof plan === "object" && (plan as { journeyIncluded?: unknown }).journeyIncluded === true);
+    })
+    .map((row) => String((row as { id: string }).id));
+  if (!runIds.length) return 0;
+  const { count, error: linkError } = await supabase
+    .from("monitoring_run_journey_runs")
+    .select("journey_run_id", { count: "exact", head: true })
+    .in("monitoring_run_id", runIds);
+  if (linkError) return null;
+  return count ?? 0;
 }
 
 export async function createMonitoringRun(
@@ -95,7 +124,7 @@ export async function createMonitoringRun(
     requiredChecks: number;
     availableChecks: number | null;
     journeyId?: string | null;
-    plan: { regions: string[]; environments: string[]; workflowSteps: number };
+    plan: { regions: string[]; environments: string[]; workflowSteps: number; journeyIncluded?: boolean };
   },
 ): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
   const { data, error } = await supabase
@@ -144,20 +173,53 @@ export async function linkMonitoringJourneyRuns(
 export async function listRecentMonitoringRuns(
   supabase: SupabaseClient,
   userId: string,
-): Promise<Array<{ id: string; targetUrl: string; startedAt: string; execution: "executed" | "not_executed" }>> {
+): Promise<Array<{
+  id: string;
+  targetUrl: string;
+  startedAt: string;
+  execution: "executed" | "not_executed";
+  observationId: string | null;
+}>> {
   const { data, error } = await supabase
     .from("monitoring_runs")
-    .select("id,target_url,started_at,execution")
+    .select("id,target_url,started_at,execution,plan")
     .eq("user_id", userId)
     .order("started_at", { ascending: false })
     .limit(8);
   if (error || !data) return [];
-  return (data as Array<Record<string, unknown>>).map((row) => ({
+  const runs = (data as Array<Record<string, unknown>>).map((row) => ({
     id: String(row.id),
     targetUrl: String(row.target_url ?? ""),
     startedAt: String(row.started_at ?? ""),
-    execution: row.execution === "not_executed" ? "not_executed" : "executed",
+    execution: row.execution === "not_executed" ? "not_executed" as const : "executed" as const,
+    regions: parseMonitoringRunPlan(row.plan).regions,
   }));
+  const ids = runs.map((run) => run.id);
+  const { data: links } = ids.length
+    ? await supabase
+        .from("monitoring_run_observations")
+        .select("monitoring_run_id,observation_id,region")
+        .in("monitoring_run_id", ids)
+    : { data: [] };
+  const grouped = new Map<string, Array<{ observationId: string; region: string }>>();
+  for (const raw of links ?? []) {
+    const row = raw as { monitoring_run_id?: unknown; observation_id?: unknown; region?: unknown };
+    if (typeof row.monitoring_run_id !== "string" || typeof row.observation_id !== "string") continue;
+    const list = grouped.get(row.monitoring_run_id) ?? [];
+    list.push({ observationId: row.observation_id, region: typeof row.region === "string" ? row.region : "" });
+    grouped.set(row.monitoring_run_id, list);
+  }
+  return runs.map((run) => {
+    const linked = grouped.get(run.id) ?? [];
+    const primary = linked.find((row) => row.region === run.regions[0]) ?? linked[0];
+    return {
+      id: run.id,
+      targetUrl: run.targetUrl,
+      startedAt: run.startedAt,
+      execution: run.execution,
+      observationId: primary?.observationId ?? null,
+    };
+  });
 }
 
 function runRecord(row: Record<string, unknown>): MonitoringRunRecord | null {
@@ -236,10 +298,14 @@ export async function loadMonitoringRun(
       const measured = stored ? clientMeasuredFromCheck(stored.result) : null;
       const working = measured?.verified ?? null;
       const newUnknown = stored?.behavior_diff?.map_diffs.some((row) => row.section === "new") ?? false;
+      const device = current.captureConditions?.device_class === "mobile" || current.captureConditions?.device_class === "desktop"
+        ? current.captureConditions.device_class
+        : null;
       observations.push({
         id: current.id,
         region,
         regionLabel: current.regionLabel,
+        device,
         page: monitoringPageFact({ captured, verdict }),
         working,
         newUnknown,
@@ -360,6 +426,39 @@ export async function loadMonitoringRun(
     alerts: diffStored && storedAlerts ? storedAlerts : computedAlerts,
     diffStored,
   };
+}
+
+export type MonitoringRunLoaded = NonNullable<Awaited<ReturnType<typeof loadMonitoringRun>>>;
+
+/** Latest check that recorded this Observation. */
+export async function loadMonitoringRunForObservation(
+  supabase: SupabaseClient,
+  userId: string,
+  observationId: string,
+): Promise<MonitoringRunLoaded | null> {
+  const { data: links, error } = await supabase
+    .from("monitoring_run_observations")
+    .select("monitoring_run_id")
+    .eq("observation_id", observationId);
+  if (error || !links?.length) return null;
+  const ids = links
+    .map((row) => (typeof (row as { monitoring_run_id?: unknown }).monitoring_run_id === "string"
+      ? (row as { monitoring_run_id: string }).monitoring_run_id
+      : ""))
+    .filter(Boolean);
+  if (!ids.length) return null;
+  const { data: runs } = await supabase
+    .from("monitoring_runs")
+    .select("id")
+    .in("id", ids)
+    .eq("user_id", userId)
+    .order("started_at", { ascending: false })
+    .limit(1);
+  const runId = typeof (runs?.[0] as { id?: unknown } | undefined)?.id === "string"
+    ? (runs?.[0] as { id: string }).id
+    : "";
+  if (!runId) return null;
+  return loadMonitoringRun(supabase, userId, runId);
 }
 
 function journeyInput(

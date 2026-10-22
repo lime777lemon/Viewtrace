@@ -1,3 +1,4 @@
+import { measureHtmlFields, pageSeoFromSignals } from "@/lib/measurement-record";
 import type { HtmlHeadSignalsV1 } from "@/lib/url-preview";
 import { htmlHeadSignalsHasAny } from "@/lib/url-preview";
 
@@ -31,6 +32,8 @@ export type PageSignalReason = {
   severity: PageSignalSeverity;
   points: number;
   httpStatus?: number | null;
+  canonical?: string | null;
+  finalUrl?: string | null;
 };
 
 export type PageSignalReasonMessages = Record<PageSignalReasonId, string>;
@@ -41,7 +44,10 @@ export function formatPageSignalReason(
   messages: Partial<PageSignalReasonMessages> | null | undefined,
 ): string {
   const template = messages?.[reason.id] ?? reason.id;
-  return template.replace("{status}", String(reason.httpStatus ?? "—"));
+  return template
+    .replace("{status}", String(reason.httpStatus ?? "—"))
+    .replace("{canonical}", reason.canonical ?? "—")
+    .replace("{final}", reason.finalUrl ?? "—");
 }
 
 export function formatPageSignalSeverity(
@@ -61,7 +67,10 @@ function text(value: string | null | undefined): string {
   return value?.replace(/\s+/g, " ").trim() ?? "";
 }
 
-function critical(id: PageSignalReasonId, extra?: Pick<PageSignalReason, "httpStatus">): PageSignalReason {
+function critical(
+  id: PageSignalReasonId,
+  extra?: Pick<PageSignalReason, "httpStatus" | "canonical" | "finalUrl">,
+): PageSignalReason {
   return { id, severity: "critical", points: PAGE_SIGNALS_CRITICAL, ...extra };
 }
 
@@ -112,13 +121,25 @@ export function scorePageSignals(
   if (typeof signals.http_status === "number" && signals.http_status >= 400) {
     reasons.push(critical("http_error", { httpStatus: signals.http_status }));
   }
+  const measured = measureHtmlFields(signals, null);
   if (signals.noindex === true) reasons.push(critical("noindex"));
-  if (signals.canonical_mismatch === true) reasons.push(critical("canonical_mismatch"));
+  if (
+    measured.canonical.status === "observed" &&
+    measured.final_url.status === "observed" &&
+    signals.canonical_mismatch === true
+  ) {
+    reasons.push(
+      critical("canonical_mismatch", {
+        canonical: measured.canonical.value,
+        finalUrl: measured.final_url.value,
+      }),
+    );
+  }
 
   if (!text(signals.document_title)) reasons.push(important("title_missing"));
   if (!text(signals.meta_description)) reasons.push(important("description_missing"));
   if (!text(signals.canonical_url)) reasons.push(important("canonical_missing"));
-  if (!text(signals.robots_meta) && !text(signals.x_robots_tag)) {
+  if (measured.meta_robots.status === "not_measured" && measured.http_robots.status === "not_measured") {
     reasons.push(important("robots_missing"));
   }
 
@@ -176,9 +197,9 @@ export function pageSignalsScoreDelta(
   previous: HtmlHeadSignalsV1 | null | undefined,
   current: HtmlHeadSignalsV1 | null | undefined,
 ): { from: number; to: number } | null {
-  const left = scorePageSignals(previous);
-  const right = scorePageSignals(current);
-  if (!left || !right) return null;
+  const left = pageSeoFromSignals(previous);
+  const right = pageSeoFromSignals(current);
+  if (left?.score == null || right?.score == null) return null;
   return { from: left.score, to: right.score };
 }
 
@@ -188,7 +209,7 @@ export function pageSignalsWatchEmailLines(delta: { from: number; to: number }):
   html: string;
 } {
   return {
-    text: `Site score (html_signals): ${delta.from} → ${delta.to}`,
-    html: `<p><strong>サイト採点</strong>（この記録の html_signals）<br/>${delta.from} → ${delta.to}</p>`,
+    text: `page-seo-v1: ${delta.from} → ${delta.to}`,
+    html: `<p><strong>page-seo-v1</strong><br/>${delta.from} → ${delta.to}</p>`,
   };
 }

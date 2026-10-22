@@ -3,10 +3,12 @@ import { credentialsSatisfyJourney } from "@/lib/monitoring-watch";
 import { computeNextRunAfter, type WatchFrequency } from "@/lib/observation-watch-schedule";
 import { countObservationsThisUtcMonth, utcMonthStartIso } from "@/lib/observation-quota";
 import {
+  parseJourneyPurpose,
   parseJourneySteps,
   resolveJourneySteps,
   validateJourneySteps,
   type JourneyDeviceClass,
+  type JourneyPurpose,
   type JourneyStepDefinition,
 } from "@/lib/journey-definition";
 import { journeyAlert, runJourneyInBrowserless, type JourneyStepEvidence } from "@/lib/journey-runner";
@@ -19,6 +21,7 @@ export type JourneyDefinitionPublic = {
   steps: JourneyStepDefinition[];
   regions: string[];
   device_classes: JourneyDeviceClass[];
+  purpose: JourneyPurpose;
   watch_enabled: boolean;
   watch_frequency: "daily" | "weekly";
   next_run_at: string | null;
@@ -39,7 +42,7 @@ export type JourneyRunPublic = {
   created_at: string;
 };
 
-const DEFINITION_COLUMNS = "id, name, start_url, steps, regions, device_classes, watch_enabled, watch_frequency, next_run_at, last_run_at, secret_credentials, created_at";
+const DEFINITION_COLUMNS = "id, name, start_url, steps, regions, device_classes, purpose, watch_enabled, watch_frequency, next_run_at, last_run_at, secret_credentials, created_at";
 
 function asDevices(raw: unknown): JourneyDeviceClass[] {
   const values = Array.isArray(raw) ? raw : [];
@@ -59,6 +62,7 @@ function toPublic(row: Record<string, unknown>): JourneyDefinitionPublic {
     steps,
     regions: Array.isArray(row.regions) ? row.regions.filter((value): value is string => typeof value === "string").slice(0, 4) : [],
     device_classes: asDevices(row.device_classes),
+    purpose: parseJourneyPurpose(row.purpose),
     watch_enabled: row.watch_enabled === true,
     watch_frequency: row.watch_frequency === "weekly" ? "weekly" : "daily",
     next_run_at: typeof row.next_run_at === "string" ? row.next_run_at : null,
@@ -137,6 +141,7 @@ export async function saveJourney(
     steps: JourneyStepDefinition[];
     regions: string[];
     deviceClasses: JourneyDeviceClass[];
+    purpose?: JourneyPurpose;
     watchEnabled: boolean;
     watchFrequency: "daily" | "weekly";
     username?: string;
@@ -163,6 +168,7 @@ export async function saveJourney(
     steps,
     regions,
     device_classes: devices,
+    purpose: parseJourneyPurpose(input.purpose),
     updated_at: new Date().toISOString(),
   };
   if (!(input.preserveWatch && input.id)) {
@@ -208,6 +214,8 @@ export async function executeJourney(
     pairs?: Array<{ region: string; device: JourneyDeviceClass }>;
     /** Manual runs move a legacy Journey Watch. A Monitoring Watch advances its own schedule. */
     advanceSchedule?: boolean;
+    /** The parent check already counted this region × environment. */
+    skipQuota?: boolean;
   },
 ): Promise<{ ok: true; runs: number; runIds: string[] } | { ok: false; error: string; runIds: string[] }> {
   const { data, error } = await supabase
@@ -238,9 +246,11 @@ export async function executeJourney(
     .filter((pair) => pair.region.trim() && (pair.device === "desktop" || pair.device === "mobile"))
     .slice(0, 8);
   if (!pairs.length) return { ok: false, error: "region_required", runIds: [] };
-  const observations = await countObservationsThisUtcMonth(supabase, userId);
-  const used = (observations ?? 0) + await monthlyJourneyRuns(supabase, userId);
-  if (observations == null || used + pairs.length > monthlyLimit) return { ok: false, error: "quota", runIds: [] };
+  if (!options?.skipQuota) {
+    const observations = await countObservationsThisUtcMonth(supabase, userId);
+    const used = (observations ?? 0) + await monthlyJourneyRuns(supabase, userId);
+    if (observations == null || used + pairs.length > monthlyLimit) return { ok: false, error: "quota", runIds: [] };
+  }
 
   const runIds: string[] = [];
   let runs = 0;

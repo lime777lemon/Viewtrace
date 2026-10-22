@@ -3,6 +3,7 @@ import { buildCaptureConditionsFromBrowserless, buildCaptureConditionsFromPlaywr
 import type { Observation } from "@/lib/demo/observations";
 import { computeObservationContentHash } from "@/lib/observation-content-hash";
 import { runObservationPrimaryScreenshot } from "@/lib/observation-primary-capture";
+import { stampMeasurement } from "@/lib/measurement-record";
 import { seoFactsForObservation } from "@/lib/observation-seo-facts";
 import { uploadObservationSnapshotPng } from "@/lib/observation-snapshot-storage";
 import { collectObservationWebFacts } from "@/lib/observation-web-facts";
@@ -122,6 +123,7 @@ export async function recordMonitoringPageObservation(
         : undefined,
     });
     if (webFacts) captureConditions = { ...captureConditions, web_facts: webFacts };
+    captureConditions = stampMeasurement(captureConditions);
   } catch {
     /* Signals stay absent when the fetch record is unavailable. */
   }

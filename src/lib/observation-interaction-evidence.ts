@@ -37,6 +37,18 @@ export type InteractionElementState = {
   className?: string;
 };
 
+/** One real-browser action: before, the action, then later samples. Network success is not a rendered change. */
+export type ActionEvidenceWindow = {
+  executed: boolean;
+  samples: Array<{ at_ms: number; changed: boolean }>;
+  rendered_changes: string[];
+  visual_changed: boolean | null;
+  network_count: number;
+  runtime_errors: number;
+  request_failed: number;
+  duration_ms: number;
+};
+
 export type InteractionEvidence = {
   actions?: InteractionAction[];
   selector?: string;
@@ -46,6 +58,7 @@ export type InteractionEvidence = {
   frame_hashes?: string[];
   note?: string;
   restore?: "ok" | "failed";
+  window?: ActionEvidenceWindow;
 };
 
 export function isCookieNoiseKey(key: string): boolean {
@@ -135,5 +148,54 @@ export function parseInteractionEvidence(raw: unknown): InteractionEvidence | nu
     frame_hashes,
     note: typeof o.note === "string" ? o.note.slice(0, 180) : undefined,
     restore: o.restore === "ok" || o.restore === "failed" ? o.restore : undefined,
+    window: parseActionWindow(o.window),
   };
+}
+
+function parseActionWindow(raw: unknown): ActionEvidenceWindow | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const row = raw as Record<string, unknown>;
+  const samples = Array.isArray(row.samples)
+    ? row.samples.flatMap((sample) => {
+        if (!sample || typeof sample !== "object") return [];
+        const point = sample as Record<string, unknown>;
+        const at = point.at_ms;
+        if (typeof at !== "number" || !Number.isFinite(at)) return [];
+        return [{ at_ms: Math.max(0, Math.round(at)), changed: point.changed === true }];
+      }).slice(0, 6)
+    : [];
+  const rendered = Array.isArray(row.rendered_changes)
+    ? row.rendered_changes.filter((item): item is string => typeof item === "string").slice(0, 8)
+    : [];
+  const count = (value: unknown) =>
+    typeof value === "number" && Number.isFinite(value) ? Math.max(0, Math.round(value)) : 0;
+  return {
+    executed: row.executed === true,
+    samples,
+    rendered_changes: rendered,
+    visual_changed: row.visual_changed === true ? true : row.visual_changed === false ? false : null,
+    network_count: count(row.network_count),
+    runtime_errors: count(row.runtime_errors),
+    request_failed: count(row.request_failed),
+    duration_ms: count(row.duration_ms),
+  };
+}
+
+/**
+ * Working requires a rendered or visual change from the action window.
+ * A stored row with no window keeps its status.
+ * HTTP success alone does not keep Working.
+ */
+export function confirmMeasuredStatus(
+  status: "working" | "no_change_observed" | "failed" | "not_measured" | "not_detected" | "blocked_for_safety" | "playback_not_verifiable",
+  evidence: InteractionEvidence | null | undefined,
+): typeof status {
+  if (status !== "working" || !evidence?.window?.executed) return status;
+  const rendered =
+    evidence.window.rendered_changes.length > 0 ||
+    evidence.window.samples.some((row) => row.changed) ||
+    (evidence.changes?.length ?? 0) > 0 ||
+    (evidence.frame_hashes?.length ?? 0) >= 2;
+  if (rendered || evidence.window.visual_changed === true) return "working";
+  return "no_change_observed";
 }

@@ -7,6 +7,7 @@ import { resolveBrowserlessResidentialTarget } from "@/lib/regions";
 import type { HtmlHeadSignalsV1 } from "@/lib/url-preview";
 import type { LabCwvV1 } from "@/lib/observation-lab-cwv";
 import type { SubpageScoresV1 } from "@/lib/observation-subpages";
+import type { MeasurementRecordV1 } from "@/lib/measurement-record";
 import type { ObservationSeoFactsV1 } from "@/lib/observation-seo-facts";
 import type { ObservationWebFactsV1 } from "@/lib/observation-web-facts";
 import {
@@ -40,9 +41,12 @@ export type CaptureEngineName =
 
 export type CaptureViewportSource =
   | "browserless_implicit_default"
+  | "requested_environment"
   | "playwright_worker_1280x800"
   | "microlink_default"
   | "not_applicable";
+
+export type RequestedDeviceClass = "desktop" | "mobile";
 
 export type BrowserlessApiSurface = "screenshot_v2" | "live_bql" | "screencast_v2";
 
@@ -60,6 +64,8 @@ export type CaptureConditionsV1 = {
   region_input: string;
   region_label: string;
   full_page_requested: boolean;
+  /** Set when the check chose Desktop or Mobile. Older rows omit it. */
+  device_class?: RequestedDeviceClass;
   browser: {
     family: "chromium";
     channel: "headless";
@@ -121,6 +127,11 @@ export type CaptureConditionsV1 = {
    * Score ではない。content_hash には含めない。
    */
   seo_facts?: ObservationSeoFactsV1;
+  /**
+   * 測定状態と page-seo-v1 の結果。content_hash には含めない。
+   * 未測定は 0 点にせず、分母から外す。
+   */
+  measurement?: MeasurementRecordV1;
   /** Observation 原価の実測用。content_hash には含めない。 */
   cost_signals?: CaptureCostSignalsV1;
   /**
@@ -192,6 +203,29 @@ function browserBase() {
     channel: "headless" as const,
     user_agent: BROWSER_LIKE_USER_AGENT,
     accept_language: BROWSER_LIKE_ACCEPT_LANGUAGE,
+  };
+}
+
+export const REQUESTED_DEVICE_VIEWPORT: Record<RequestedDeviceClass, { width: number; height: number }> = {
+  desktop: { width: 1440, height: 900 },
+  mobile: { width: 390, height: 844 },
+};
+
+/** Desktop and Mobile checks record an explicit viewport. Other captures keep the implicit default. */
+export function applyRequestedDevice(
+  conditions: CaptureConditionsV1,
+  device: RequestedDeviceClass,
+): CaptureConditionsV1 {
+  const size = REQUESTED_DEVICE_VIEWPORT[device];
+  return {
+    ...conditions,
+    device_class: device,
+    viewport: {
+      width: size.width,
+      height: size.height,
+      device_scale_factor: 1,
+      source: "requested_environment",
+    },
   };
 }
 

@@ -194,6 +194,7 @@ export default async function PublicVerifyPage({ params }: Props) {
               signals={obs.htmlSignals}
               copy={htmlHeadSignalsCopy}
               requestedUrl={obs.url}
+              locale={locale === "ja" ? "ja" : "en"}
             />
           </div>
         ) : null}

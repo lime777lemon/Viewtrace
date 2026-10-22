@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth/session";
 import { getPlan } from "@/lib/plans";
 import { discoveryJourneyCandidates, journeyStepsFromCandidates } from "@/lib/discovery-to-journey";
-import { journeyStepHostAllowed, parseJourneySteps, type JourneyDeviceClass, type JourneyStepDefinition } from "@/lib/journey-definition";
+import { JOURNEY_STEP_LIMIT, journeyStepHostAllowed, parseJourneySteps, type JourneyDeviceClass, type JourneyStepDefinition } from "@/lib/journey-definition";
 import { loadObservationScrollInteraction } from "@/lib/observation-optional-metrics-store";
 import { isValidObservationRegionForPlan } from "@/lib/regions";
 import { normalizeUserUrlInput } from "@/lib/url-preview";
@@ -22,6 +22,7 @@ export type JourneySaveInput = {
   deviceClasses: JourneyDeviceClass[];
   watchEnabled: boolean;
   watchFrequency: "daily" | "weekly";
+  purpose?: "production" | "test" | "fixture";
   username?: string;
   password?: string;
   preserveWatch?: boolean;
@@ -88,7 +89,7 @@ export async function addDiscoveryToJourneyAction(input: {
     if (!journey || !journeyStepHostAllowed(journey.start_url, startUrl)) return { ok: false, error: "host" };
     const known = new Set(journey.steps.map((step) => step.selector));
     const added = journeyStepsFromCandidates(startUrl, selected).filter((step) => step.kind === "click" && !known.has(step.selector));
-    const steps = [...journey.steps, ...added].slice(0, 8);
+    const steps = [...journey.steps, ...added].slice(0, JOURNEY_STEP_LIMIT);
     if (steps.length === journey.steps.length) return { ok: false, error: "already_added" };
     const saved = await saveJourney(supabase, session.userId, {
       id: journey.id,
@@ -99,6 +100,7 @@ export async function addDiscoveryToJourneyAction(input: {
       deviceClasses: journey.device_classes,
       watchEnabled: journey.watch_enabled,
       watchFrequency: journey.watch_frequency,
+      purpose: journey.purpose,
       watchAllowed: plan.autoObservationWatch,
       preserveWatch: true,
     });

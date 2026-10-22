@@ -22,6 +22,8 @@ import { discoveryJourneyCandidates } from "@/lib/discovery-to-journey";
 import { journeyStepHostAllowed } from "@/lib/journey-definition";
 import { clientBlockedLabel } from "@/lib/measured-client-summary";
 import { summarizeBehaviorScan } from "@/lib/observation-behavior-discovery";
+import { presentInteractionHealth } from "@/lib/interaction-health-presentation";
+import { InteractionHealthSummary } from "@/components/dashboard/InteractionHealthSummary";
 import { interactionEvidenceCard } from "@/lib/interaction-evidence-card";
 import { summarizeInteractionMeasurement } from "@/lib/observation-interaction-plan";
 import { SCROLL_CHECK_MAX_REGIONS, type ScrollInteractionStatus } from "@/lib/observation-scroll-interaction";
@@ -424,6 +426,7 @@ export function ObservationInteractionCheckPanel({
     : [];
   const journeyPickedIds = journeyPicked ?? journeyCandidates.filter((candidate) => !candidate.sideEffect).map((candidate) => candidate.id);
   const matchingJourneys = journeyTargets.filter((row) => observationUrl && journeyStepHostAllowed(row.startUrl, observationUrl));
+  const presentation = presentInteractionHealth({ diff: behaviorDiff, check: current, previous: previousCheck });
   const blockedGroups = new Map<string, number>();
   for (const row of current?.discovery?.safety.blocked ?? []) {
     blockedGroups.set(row.text, (blockedGroups.get(row.text) ?? 0) + 1);
@@ -463,6 +466,29 @@ export function ObservationInteractionCheckPanel({
         <p className="mt-1 text-xs leading-relaxed text-ink-muted">{t.interactionHint}</p>
       </details>
       {watchIncluded ? <p className="mt-2 text-xs text-ink-muted">{t.interactionWatchNote}</p> : null}
+      {presentation ? (
+        <InteractionHealthSummary
+          presentation={presentation}
+          t={t}
+          typeLabel={(type) => typeLabel(type, t)}
+          renderProblem={(type) => (
+            <div className="mt-3 grid gap-3 lg:grid-cols-2">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-muted">{t.interactionPrevious}</p>
+                <EvidenceCard type={type} row={typeRow(previousCheck, type)} t={t} empty={t.interactionPreviousEvidenceUnavailable} />
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-muted">{t.interactionCurrent}</p>
+                <EvidenceCard type={type} row={typeRow(current, type)} t={t} empty={t.interactionCurrentEvidenceUnavailable} />
+              </div>
+            </div>
+          )}
+        />
+      ) : null}
+      <details className="mt-4" open={presentation ? undefined : true}>
+        {presentation ? (
+          <summary className="cursor-pointer text-xs font-semibold text-ink-muted">{t.interactionPresentTechnical}</summary>
+        ) : null}
       {current?.discovery ? (
         <div className="mt-3 rounded-lg border border-border bg-surface px-3 py-3">
           <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">{t.interactionBehaviorScan}</p>
@@ -804,6 +830,7 @@ export function ObservationInteractionCheckPanel({
           </ul>
         </div>
       ) : null}
+      </details>
       <p className="mt-2 text-xs text-ink-muted">
         {t.interactionQuota.replace("{used}", String(usedCount)).replace("{limit}", String(limit))}
       </p>

@@ -156,6 +156,15 @@ export function screenshotCaptureComparability(
     return { comparable: false, reason: "scope" };
   }
 
+  const leftSource = left.captureConditions?.viewport?.source ?? null;
+  const rightSource = right.captureConditions?.viewport?.source ?? null;
+  if (leftSource === "requested_environment" || rightSource === "requested_environment") {
+    if (leftSource !== rightSource) return { comparable: false, reason: "viewport" };
+    const leftDevice = left.captureConditions?.device_class ?? null;
+    const rightDevice = right.captureConditions?.device_class ?? null;
+    if (leftDevice && rightDevice && leftDevice !== rightDevice) return { comparable: false, reason: "viewport" };
+  }
+
   const leftView = left.captureConditions?.viewport;
   const rightView = right.captureConditions?.viewport;
   const leftW = leftView?.width ?? null;

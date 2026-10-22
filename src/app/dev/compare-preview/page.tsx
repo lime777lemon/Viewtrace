@@ -422,6 +422,8 @@ export default async function DevComparePreviewPage({ searchParams }: Props) {
                 signals={compareFixtureTimeRight.captureConditions?.html_signals}
                 copy={htmlCopy}
                 requestedUrl={compareFixtureTimeRight.url}
+                locale={locale === "ja" ? "ja" : "en"}
+                previous={compareFixtureTimeLeft.captureConditions?.html_signals ?? null}
               />
               <ObservationPageSignalsPanel
                 signals={previewAuditObservation().captureConditions?.html_signals}

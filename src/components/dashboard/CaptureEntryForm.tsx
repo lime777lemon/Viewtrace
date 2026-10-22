@@ -19,6 +19,18 @@ import { DEFAULT_OBSERVATION_REGION, getRegionLabelForLocale, getRegionOptions }
 const TEXT = {
   ja: {
     extraRegions: "ほかの地域",
+    environment: "環境",
+    desktop: "Desktop",
+    mobile: "Mobile",
+    both: "Desktop + Mobile",
+    thisCheck: "今回の確認",
+    region: "地域",
+    page: "ページ",
+    behavior: "挙動",
+    behaviorAuto: "自動確認",
+    stepsNone: "なし",
+    stepsSome: "手順",
+    uses: "使用",
     run: "確認する",
     runPending: "確認しています…",
     checks: "この確認は",
@@ -57,6 +69,18 @@ const TEXT = {
   },
   en: {
     extraRegions: "More regions",
+    environment: "Environment",
+    desktop: "Desktop",
+    mobile: "Mobile",
+    both: "Desktop + Mobile",
+    thisCheck: "This check",
+    region: "Region",
+    page: "Page",
+    behavior: "Behavior",
+    behaviorAuto: "Measured automatically",
+    stepsNone: "None",
+    stepsSome: "steps",
+    uses: "Uses",
     run: "Run check",
     runPending: "Running the check…",
     checks: "This check will use",
@@ -136,15 +160,22 @@ export function CaptureEntryForm({
     ? DEFAULT_OBSERVATION_REGION
     : options[0]?.value ?? "";
   const [region, setRegion] = useState(defaultRegion);
+  const [environment, setEnvironment] = useState<"desktop" | "mobile" | "both">("desktop");
   const [extraRegions, setExtraRegions] = useState<string[]>([]);
   const [steps, setSteps] = useState<JourneyStepDefinition[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const environments = environment === "both" ? (["desktop", "mobile"] as const) : ([environment] as const);
   const plan = monitoringCheckPlan({
     regions: [region, ...extraRegions],
-    environments: ["desktop", "mobile"],
+    environments: [...environments],
     workflowSteps: steps.length,
   });
+  const regionLine = [region, ...extraRegions]
+    .map((value) => options.find((option) => option.value === value)?.label ?? value)
+    .filter(Boolean)
+    .join(", ");
+  const environmentLine = environment === "both" ? copy.both : environment === "mobile" ? copy.mobile : copy.desktop;
 
   function readUrl() {
     return formRef.current?.querySelector<HTMLInputElement>('[name="url"]')?.value.trim() ?? "";
@@ -173,6 +204,7 @@ export function CaptureEntryForm({
     const result = await runMonitoringCheckAction({
       url,
       regions: [region, ...extraRegions],
+      environments: [...environments],
       steps,
     });
     if (!result.ok) {
@@ -192,7 +224,9 @@ export function CaptureEntryForm({
       setError(copy.errors[result.error] ?? result.error);
       return;
     }
-    router.push(`/dashboard/monitoring-runs/${result.id}`);
+    router.push(result.observationId
+      ? `/dashboard/observations/${result.observationId}`
+      : `/dashboard/monitoring-runs/${result.id}`);
   }
 
   return (
@@ -247,6 +281,28 @@ export function CaptureEntryForm({
           />
         </div>
       </div>
+
+      <fieldset className="mt-8">
+        <legend className="text-sm font-medium text-ink">{copy.environment}</legend>
+        <div className="mt-2 flex flex-wrap gap-4 text-sm text-ink">
+          {([
+            ["desktop", copy.desktop],
+            ["mobile", copy.mobile],
+            ["both", copy.both],
+          ] as const).map(([value, label]) => (
+            <label key={value} className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="environment"
+                value={value}
+                checked={environment === value}
+                onChange={() => setEnvironment(value)}
+              />
+              {label}
+            </label>
+          ))}
+        </div>
+      </fieldset>
 
       <fieldset className="mt-8">
         <legend className="text-sm font-medium text-ink">{copy.extraRegions}</legend>
@@ -380,14 +436,15 @@ export function CaptureEntryForm({
 
       {error ? <p className="mt-3 text-xs font-medium text-red-700" role="alert">{error}</p> : null}
 
-      <div className="mt-6">
-        <p className="text-sm font-semibold text-ink">
-          {copy.checks} {plan.total} {locale === "en" && plan.total === 1 ? "check" : copy.checksUnit}
-        </p>
-        <p className="mt-1 text-xs text-ink-muted">
-          {copy.pageObservations}: {plan.pageObservations}
-          {" · "}
-          {copy.journeyRuns}: {plan.journeyRuns}
+      <div className="mt-6 space-y-1 text-sm text-ink">
+        <p className="font-semibold">{copy.thisCheck}</p>
+        <p>{copy.region} {regionLine}</p>
+        <p>{copy.environment} {environmentLine}</p>
+        <p>{copy.page} {plan.pageObservations}</p>
+        <p>{copy.behavior} {copy.behaviorAuto}</p>
+        <p>{copy.steps} {steps.length ? String(steps.length) : copy.stepsNone}</p>
+        <p className="pt-1 font-semibold">
+          {copy.uses} {plan.total} check
           {remaining != null ? ` · ${copy.available}: ${remaining}` : ""}
         </p>
         <button

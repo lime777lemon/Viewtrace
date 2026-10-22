@@ -41,6 +41,10 @@ export function buildInteractionFunctionCode(): string {
   const lightScan = String(context && context.scan ? context.scan : "") === "light";
   const requestedDevice = String(context && context.environment && context.environment.device_class ? context.environment.device_class : "desktop") === "mobile" ? "mobile" : "desktop";
   let environment = null;
+  let navigation = null;
+  let rendered = null;
+  let visualCaptures = 0;
+  let actionDurationMs = 0;
   let temporal = { ran: false, window_ms: 0, completed_through_ms: 0, reason: "skipped", behaviors: [] };
   let pendingRegions = [];
   let regionTrack = { ran: false, samples: 0, active_cells: 0, error: "" };
@@ -340,7 +344,27 @@ export function buildInteractionFunctionCode(): string {
     const inline = "<script>(" + installSampler.toString() + ")(" + (lightScan ? "true" : "false") + ")</script>";
     const tagged = html.indexOf("<head>") >= 0 ? html.replace("<head>", "<head>" + inline) : inline + html;
     await page.setContent(tagged, { waitUntil: "domcontentloaded", timeout: 20000 });
-  } else await page.goto(url, { waitUntil: "domcontentloaded", timeout: 25000 });
+  } else {
+    const response = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 25000 });
+    try {
+      if (response) {
+        const headers = typeof response.headers === "function" ? response.headers() : {};
+        const chain = [];
+        try {
+          const req = response.request && response.request();
+          const hops = req && req.redirectChain ? req.redirectChain() : [];
+          for (const hop of hops) chain.push(String(hop.url()));
+        } catch (e) {}
+        navigation = {
+          status: response.status(),
+          final_url: String(response.url() || page.url() || ""),
+          content_type: String(headers["content-type"] || ""),
+          robots_header: String(headers["x-robots-tag"] || ""),
+          redirect_chain: chain.slice(0, 8),
+        };
+      }
+    } catch (e) {}
+  }
   try {
     if (page.setViewport) {
       await page.setViewport({
@@ -365,6 +389,10 @@ export function buildInteractionFunctionCode(): string {
         locale: String(navigator.language || ""),
         timezone: timezone,
         prefers_reduced_motion: Boolean(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches),
+        dpr: Number(window.devicePixelRatio || 1),
+        document_lang: String(document.documentElement.lang || ""),
+        user_agent: String(navigator.userAgent || ""),
+        touch_points: Number(navigator.maxTouchPoints || 0),
       };
     });
     environment = {
@@ -375,8 +403,70 @@ export function buildInteractionFunctionCode(): string {
       locale: measured.locale || "",
       timezone: measured.timezone || "",
       prefers_reduced_motion: measured.prefers_reduced_motion === true,
+      dpr: measured.dpr || 1,
+      document_lang: measured.document_lang || "",
+      user_agent: measured.user_agent || "",
+      touch_points: measured.touch_points || 0,
     };
   } catch (e) {}
+  try {
+    rendered = await page.evaluate(async () => {
+      const meta = (selector) => {
+        const el = document.querySelector(selector);
+        return el && "content" in el ? String(el.content || "") : "";
+      };
+      const textOrNull = (value) => {
+        const trimmed = String(value || "").replace(/\\s+/g, " ").trim();
+        return trimmed || null;
+      };
+      let robotsTxt = { status: "not_measured", http_status: null };
+      try {
+        const res = await fetch(new URL("/robots.txt", location.href).href, { credentials: "omit" });
+        robotsTxt = {
+          status: res.status === 404 ? "observed_absent" : res.ok ? "observed" : "not_verifiable",
+          http_status: res.status,
+        };
+      } catch (e) {
+        robotsTxt = { status: "not_verifiable", http_status: null };
+      }
+      const h1 = Array.from(document.querySelectorAll("h1")).map((el) => textOrNull(el.textContent)).filter(Boolean).slice(0, 8);
+      const jsonLd = [];
+      for (const node of Array.from(document.querySelectorAll('script[type="application/ld+json"]')).slice(0, 8)) {
+        try {
+          const parsed = JSON.parse(node.textContent || "");
+          const rows = Array.isArray(parsed) ? parsed : [parsed];
+          for (const item of rows) {
+            const type = item && item["@type"];
+            if (typeof type === "string") jsonLd.push(type);
+            else if (Array.isArray(type)) {
+              for (const name of type) if (typeof name === "string") jsonLd.push(name);
+            }
+          }
+        } catch (e) {}
+      }
+      const canonical = document.querySelector('link[rel="canonical"]');
+      return {
+        title: textOrNull(document.title),
+        description: textOrNull(meta('meta[name="description"]')),
+        canonical: canonical && canonical.href ? String(canonical.href) : null,
+        robots: textOrNull(meta('meta[name="robots"]')),
+        viewport: textOrNull(meta('meta[name="viewport"]')),
+        lang: textOrNull(document.documentElement.lang),
+        og_title: textOrNull(meta('meta[property="og:title"]')),
+        og_description: textOrNull(meta('meta[property="og:description"]')),
+        og_image: textOrNull(meta('meta[property="og:image"]')),
+        twitter_card: textOrNull(meta('meta[name="twitter:card"]')),
+        twitter_title: textOrNull(meta('meta[name="twitter:title"]')),
+        twitter_description: textOrNull(meta('meta[name="twitter:description"]')),
+        twitter_image: textOrNull(meta('meta[name="twitter:image"]')),
+        h1: h1,
+        json_ld_types: jsonLd.slice(0, 8),
+        robots_txt: robotsTxt,
+      };
+    });
+  } catch (e) {
+    rendered = null;
+  }
   let surfaceInfo = {
     traversal: { shadow_open: 0, shadow_closed: 0, same_origin_frames: 0, cross_origin_frames: 0 },
     unreadable: [],
@@ -983,6 +1073,55 @@ export function buildInteractionFunctionCode(): string {
       Math.abs(a.x - b.x) >= 2 || Math.abs(a.y - b.y) >= 2 || Math.abs(a.w - b.w) >= 2 || Math.abs(a.h - b.h) >= 2;
   }
 
+  function windowSince(since) {
+    const network = netLog.filter((row) => row.started >= since).slice(0, 8);
+    const runtime = runtimeLog.filter((row) => row.at >= since).slice(0, 8);
+    return {
+      network_count: network.length,
+      runtime_errors: runtime.filter((row) => row.kind === "console_error" || row.kind === "pageerror").length,
+      request_failed: runtime.filter((row) => row.kind === "requestfailed").length,
+    };
+  }
+
+  async function regionHash(box) {
+    if (!box || visualCaptures >= 16) return null;
+    const width = Math.floor(box.w || box.width || 0);
+    const height = Math.floor(box.h || box.height || 0);
+    if (width < 8 || height < 8) return null;
+    try {
+      const shot = await page.screenshot({
+        clip: {
+          x: Math.max(0, Math.floor(box.x || 0)),
+          y: Math.max(0, Math.floor(box.y || 0)),
+          width: Math.min(480, width),
+          height: Math.min(320, height),
+        },
+        type: "jpeg",
+        quality: 30,
+      });
+      visualCaptures += 1;
+      const buf = Buffer.isBuffer(shot) ? shot : Buffer.from(shot);
+      let hash = 2166136261;
+      const step = Math.max(1, Math.floor(buf.length / 64));
+      for (let i = 0; i < buf.length; i += step) hash = Math.imul(hash ^ buf[i], 16777619);
+      return (hash >>> 0).toString(16);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function actionWindow(since, samples, renderedChanges, visualChanged) {
+    actionDurationMs += Math.max(0, Date.now() - since);
+    return {
+      executed: true,
+      samples: samples,
+      rendered_changes: renderedChanges,
+      visual_changed: visualChanged,
+      ...windowSince(since),
+      duration_ms: Math.max(0, Date.now() - since),
+    };
+  }
+
   async function overlayOpen(kind) {
     return page.evaluate((k) => {
       const sel = k === "menu"
@@ -1191,18 +1330,39 @@ export function buildInteractionFunctionCode(): string {
     }
     const beforeTrack = trackSel ? await styleSnap(trackSel) : null;
     const beforeNear = extraNear ? await nearbySnap(hit.selector) : null;
+    const beforeHash = await regionHash(before);
+    const actionStarted = Date.now();
     const clicked = await safeClick(hit.selector);
     if (!clicked.ok) { pushType(type, true, "blocked_for_safety"); return; }
-    await sleep(450);
-    const after = await styleSnap(hit.selector);
-    const afterOverlay = kind ? await overlaySnap(kind) : null;
-    const afterTrack = trackSel ? await styleSnap(trackSel) : null;
-    const afterNear = beforeNear ? await nearbySnap(hit.selector) : null;
-    const opened = kind ? await overlayOpen(kind) : false;
-    const nearChanged = Boolean(beforeNear && afterNear && JSON.stringify(beforeNear) !== JSON.stringify(afterNear));
-    const trackChanged = styleChanged(beforeTrack, afterTrack);
-    const overlayChanged = Boolean(beforeOverlay && afterOverlay && JSON.stringify(beforeOverlay) !== JSON.stringify(afterOverlay));
-    const ok = (kind && opened && !beforeOpen) || styleChanged(before, after) || nearChanged || trackChanged || overlayChanged;
+    const samples = [];
+    let after = before;
+    let afterOverlay = beforeOverlay;
+    let afterTrack = beforeTrack;
+    let afterNear = beforeNear;
+    let opened = beforeOpen;
+    let nearChanged = false;
+    let trackChanged = false;
+    let overlayChanged = false;
+    let waited = 0;
+    for (const mark of [100, 300, 1000]) {
+      const gap = mark - waited;
+      if (gap > 0) await sleep(gap);
+      waited = mark;
+      after = await styleSnap(hit.selector);
+      afterOverlay = kind ? await overlaySnap(kind) : null;
+      afterTrack = trackSel ? await styleSnap(trackSel) : null;
+      afterNear = beforeNear ? await nearbySnap(hit.selector) : null;
+      opened = kind ? await overlayOpen(kind) : false;
+      nearChanged = Boolean(beforeNear && afterNear && JSON.stringify(beforeNear) !== JSON.stringify(afterNear));
+      trackChanged = styleChanged(beforeTrack, afterTrack);
+      overlayChanged = Boolean(beforeOverlay && afterOverlay && JSON.stringify(beforeOverlay) !== JSON.stringify(afterOverlay));
+      const changedNow = (kind && opened && !beforeOpen) || styleChanged(before, after) || nearChanged || trackChanged || overlayChanged;
+      samples.push({ at_ms: mark, changed: Boolean(changedNow) });
+      if (changedNow && mark >= 300) break;
+    }
+    const afterHash = await regionHash(after);
+    const visualChanged = Boolean(beforeHash && afterHash && beforeHash !== afterHash);
+    const ok = samples.some((row) => row.changed) || visualChanged;
     let evidenceT0 = before;
     let evidenceT1 = after;
     let evidenceSel = hit.selector;
@@ -1216,12 +1376,18 @@ export function buildInteractionFunctionCode(): string {
       evidenceT1 = afterOverlay;
       evidenceSel = afterOverlay.selector || hit.selector;
     }
+    const renderedChanges = [];
+    if (ok && ((kind && opened && !beforeOpen) || overlayChanged)) renderedChanges.push("visibility");
+    if (ok && styleChanged(before, after)) renderedChanges.push("style");
+    if (ok && (nearChanged || trackChanged)) renderedChanges.push("region");
+    if (visualChanged) renderedChanges.push("visual");
     pushType(type, true, ok ? "working" : "no_change_observed", {
       actions: ["SAFE_CLICK"],
       selector: evidenceSel,
       t0: evidenceT0,
       t1: evidenceT1,
-      changes: ok ? ["state"] : [],
+      changes: renderedChanges,
+      window: actionWindow(actionStarted, samples, renderedChanges, beforeHash && afterHash ? visualChanged : null),
     });
   }
 
@@ -1320,6 +1486,8 @@ export function buildInteractionFunctionCode(): string {
       return sel;
     }, hit.selector);
     const beforeStyle = await styleSnap(moving);
+    const beforeHash = await regionHash(beforeStyle);
+    const actionStarted = Date.now();
     const box = await page.evaluate((sel) => {
       const el = document.querySelector(sel);
       if (!el) return null;
@@ -1337,16 +1505,34 @@ export function buildInteractionFunctionCode(): string {
       if (!el) return;
       el.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, clientX: x, clientY: y }));
     }, hit.selector, box.x + dx, box.y + dy);
-    await sleep(350);
-    const after = await nearbySnap(hit.selector);
-    const afterStyle = await styleSnap(moving);
-    const ok = styleChanged(beforeStyle, afterStyle) || JSON.stringify(before) !== JSON.stringify(after);
+    const samples = [];
+    let after = before;
+    let afterStyle = beforeStyle;
+    let waited = 0;
+    for (const mark of [100, 300, 1000]) {
+      const gap = mark - waited;
+      if (gap > 0) await sleep(gap);
+      waited = mark;
+      after = await nearbySnap(hit.selector);
+      afterStyle = await styleSnap(moving);
+      const changedNow = styleChanged(beforeStyle, afterStyle) || JSON.stringify(before) !== JSON.stringify(after);
+      samples.push({ at_ms: mark, changed: Boolean(changedNow) });
+      if (changedNow && mark >= 300) break;
+    }
+    const afterHash = await regionHash(afterStyle);
+    const visualChanged = Boolean(beforeHash && afterHash && beforeHash !== afterHash);
+    const ok = samples.some((row) => row.changed) || visualChanged;
+    const renderedChanges = [];
+    if (ok && styleChanged(beforeStyle, afterStyle)) renderedChanges.push("transform");
+    if (ok && JSON.stringify(before) !== JSON.stringify(after)) renderedChanges.push("region");
+    if (visualChanged) renderedChanges.push("visual");
     pushType(type, true, ok ? "working" : "no_change_observed", {
       actions: type === "swipe" ? ["SWIPE"] : ["DRAG"],
       selector: moving,
       t0: beforeStyle,
       t1: afterStyle,
-      changes: ok ? ["bounding_rect"] : [],
+      changes: renderedChanges,
+      window: actionWindow(actionStarted, samples, renderedChanges, beforeHash && afterHash ? visualChanged : null),
     });
   }
 
@@ -1632,12 +1818,24 @@ export function buildInteractionFunctionCode(): string {
       };
     }, hit.selector);
     const before = await snap();
+    const actionStarted = Date.now();
     const clicked = await safeClick(hit.selector);
     if (!clicked.ok) { pushType("tabs", true, "blocked_for_safety"); return; }
-    await sleep(400);
-    const after = await snap();
-    const selected = Boolean(before && after && before.selected !== "true" && after.selected === "true");
-    const panel = Boolean(before && after && (before.hidden !== after.hidden || before.h !== after.h || before.text !== after.text));
+    const samples = [];
+    let after = before;
+    let selected = false;
+    let panel = false;
+    let waited = 0;
+    for (const mark of [100, 300, 1000]) {
+      const gap = mark - waited;
+      if (gap > 0) await sleep(gap);
+      waited = mark;
+      after = await snap();
+      selected = Boolean(before && after && before.selected !== "true" && after.selected === "true");
+      panel = Boolean(before && after && (before.hidden !== after.hidden || before.h !== after.h || before.text !== after.text));
+      samples.push({ at_ms: mark, changed: selected || panel });
+      if (selected && panel && mark >= 300) break;
+    }
     const ok = selected && panel;
     const changes = [];
     if (selected) changes.push("aria-selected");
@@ -1648,6 +1846,7 @@ export function buildInteractionFunctionCode(): string {
       t0: before,
       t1: after,
       changes: changes,
+      window: actionWindow(actionStarted, samples, changes, null),
     });
   });
   await maybe("accordion", async () => {
@@ -1666,21 +1865,34 @@ export function buildInteractionFunctionCode(): string {
       return { expanded: el.getAttribute("aria-expanded"), hidden: hidden, h: Math.round(r.height || 0) };
     }, hit.selector);
     const before = await snap();
+    const actionStarted = Date.now();
     const clicked = await safeClick(hit.selector);
     if (!clicked.ok) { pushType("accordion", true, "blocked_for_safety"); return; }
-    await sleep(400);
-    const after = await snap();
-    const ok = Boolean(before && after && (
-      (before.expanded === "false" && after.expanded === "true") ||
-      (before.hidden && !after.hidden) ||
-      (after.h - before.h >= 8)
-    ));
+    const samples = [];
+    let after = before;
+    let ok = false;
+    let waited = 0;
+    for (const mark of [100, 300, 1000]) {
+      const gap = mark - waited;
+      if (gap > 0) await sleep(gap);
+      waited = mark;
+      after = await snap();
+      ok = Boolean(before && after && (
+        (before.expanded === "false" && after.expanded === "true") ||
+        (before.hidden && !after.hidden) ||
+        (after.h - before.h >= 8)
+      ));
+      samples.push({ at_ms: mark, changed: ok });
+      if (ok && mark >= 300) break;
+    }
+    const changes = ok ? ["aria-expanded"] : [];
     pushType("accordion", true, ok ? "working" : "no_change_observed", {
       actions: ["SAFE_CLICK"],
       selector: hit.selector,
       t0: before,
       t1: after,
-      changes: ok ? ["aria-expanded"] : [],
+      changes: changes,
+      window: actionWindow(actionStarted, samples, changes, null),
     });
   });
   await maybe("carousel", async () => { await runHit("carousel", detect.carousel || {}, null, true); });
@@ -1830,6 +2042,7 @@ export function buildInteractionFunctionCode(): string {
     }, hit.selector, unsafeSource);
     if (!probe.ok) { pushType("form", true, "blocked_for_safety"); return; }
     await scrollSel(hit.selector);
+    const actionStarted = Date.now();
     const beforeValue = await page.evaluate((sel) => {
       const el = document.querySelector(sel);
       return el && "value" in el ? String(el.value || "") : "";
@@ -1852,12 +2065,15 @@ export function buildInteractionFunctionCode(): string {
       const el = document.querySelector(sel);
       return el && "value" in el ? String(el.value || "") : "";
     }, hit.selector);
-    pushType("form", true, filled.indexOf("vt-check") >= 0 && cleared.indexOf("vt-check") < 0 ? "working" : "no_change_observed", {
+    const valueChanged = filled.indexOf("vt-check") >= 0 && cleared.indexOf("vt-check") < 0;
+    const formChanges = filled !== beforeValue ? ["value"] : [];
+    pushType("form", true, valueChanged ? "working" : "no_change_observed", {
       actions: ["FOCUS", "INPUT"],
       selector: hit.selector,
       t0: { value: beforeValue },
       t1: { value: filled },
-      changes: filled !== beforeValue ? ["value"] : [],
+      changes: formChanges,
+      window: actionWindow(actionStarted, [{ at_ms: 160, changed: filled !== beforeValue }], formChanges, null),
     });
   });
   await maybe("scroll_reveal", async () => {
@@ -2952,6 +3168,9 @@ export function buildInteractionFunctionCode(): string {
       chain_raw: chainRaw,
       region_track: regionTrack,
       environment: environment,
+      rendered: rendered,
+      navigation: navigation,
+      cost: { visual_captures: visualCaptures, action_duration_ms: actionDurationMs },
       temporal: temporal,
       exhaustion: exhaustion,
       unknown: [],
