@@ -115,7 +115,7 @@ const facts = new Map([
       unknownChanges: 12,
       notClicked: 8,
       notClickedDetail: "Log in × 2; Start for free × 5; Subscribe",
-      interactionHealth: "Problem",
+      interactionHealth: "Problem" as const,
       interactionProblems: "Swipe: worked → no response",
       interactionAreas: "Header 5; Main 1",
       interactionWorking: "Scroll; Menu",

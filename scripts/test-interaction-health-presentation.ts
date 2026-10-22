@@ -85,6 +85,8 @@ function check(map: BehaviorMapEntry[], swipe: "working" | "no_change_observed")
       transitions: null,
       region_track: null,
       environment: null,
+      rendered_page: null,
+      measurement_cost: null,
       temporal: null,
       exhaustion: null,
       coverage: null,
