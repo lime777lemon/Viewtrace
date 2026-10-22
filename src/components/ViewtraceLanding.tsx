@@ -71,7 +71,7 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
       <header className="sticky top-0 z-50 border-b border-border bg-surface/90 backdrop-blur-md">
         <div className="mx-auto max-w-6xl px-4 py-3 sm:px-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <a href="#top" className="inline-flex items-center transition hover:opacity-90">
+            <a href="/" className="inline-flex items-center transition hover:opacity-90">
               <ViewtraceLogo className="h-8 w-auto sm:h-9" />
             </a>
             <nav className="hidden items-center gap-6 text-sm font-medium text-ink-muted lg:flex xl:gap-8">

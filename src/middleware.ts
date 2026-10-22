@@ -1,6 +1,7 @@
 import { type NextFetchEvent, type NextRequest, NextResponse } from "next/server";
 import { SESSION_COOKIE } from "@/lib/auth/constants";
 import { getOpsSignalRouteSecret, isOpsMonitoringDisabled } from "@/lib/ops/alert-config";
+import { encodedHashRedirectPath } from "@/lib/encoded-hash-path";
 import { isSuspiciousRequestUrl } from "@/lib/ops/suspicious-request";
 import { hasSupabaseAuthSessionCookie } from "@/lib/supabase/auth-session-cookie";
 import { updateSupabaseSession } from "@/lib/supabase/update-session";
@@ -12,6 +13,10 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
   // 秘密ファイル・スキャナ経路は受け口を作らず、関数まで通さず 404。
   if (isSuspiciousRequestUrl(pathname, "")) {
     return new NextResponse(null, { status: 404 });
+  }
+  const hashTarget = encodedHashRedirectPath(pathname);
+  if (hashTarget && PAGE_SAFE_METHODS.has(request.method)) {
+    return NextResponse.redirect(new URL(hashTarget, request.url), 308);
   }
   // トップは静的ランディングのみ。スキャナの POST / を関数まで通さず 405 にする。
   // Next.js Server Action（Next-Action）だけは例外。
