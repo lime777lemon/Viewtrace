@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { redirect } from "next/navigation";
 import { DashboardOnboardingRegionHint } from "@/components/dashboard/DashboardOnboardingRegionHint";
+import { RegionSearchOnboarding } from "@/components/dashboard/RegionSearchOnboarding";
 import { CaptureEntryForm } from "@/components/dashboard/CaptureEntryForm";
 import { getSession } from "@/lib/auth/session";
 import { readUserObservations } from "@/lib/demo/user-observations";
@@ -31,12 +32,19 @@ export default async function DashboardRegionSearchPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
-      <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight text-ink">
-          {labels.title}
-        </h1>
-        <p className="mt-2 text-sm leading-relaxed text-ink-muted">{labels.dashboardIntro}</p>
-        {ownCount === 0 ? <DashboardOnboardingRegionHint /> : null}
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-ink">
+            {labels.title}
+          </h1>
+          <p className="mt-2 text-sm leading-relaxed text-ink-muted">{labels.dashboardIntro}</p>
+          {ownCount === 0 ? <DashboardOnboardingRegionHint /> : null}
+        </div>
+        <RegionSearchOnboarding
+          userId={session.userId}
+          locale={locale}
+          autoStart={ownCount > 0}
+        />
       </div>
       <CaptureEntryForm locale={locale} labels={labels} planId={session.plan} remaining={remaining} />
       {recent.length ? (

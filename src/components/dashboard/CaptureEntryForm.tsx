@@ -259,7 +259,7 @@ export function CaptureEntryForm({
       </p>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2 lg:gap-8">
-        <div>
+        <div data-onboarding="region">
           <label htmlFor="capture-entry-region" className="block text-sm font-medium text-ink">
             {labels.dashboardRegionLabel}
           </label>
@@ -279,7 +279,7 @@ export function CaptureEntryForm({
             ))}
           </select>
         </div>
-        <div>
+        <div data-onboarding="url">
           <label htmlFor="capture-entry-url" className="block text-sm font-medium text-ink">
             {labels.dashboardQueryLabel}
           </label>
@@ -299,7 +299,7 @@ export function CaptureEntryForm({
         </div>
       </div>
 
-      <fieldset className="mt-8">
+      <fieldset data-onboarding="environment" className="mt-8">
         <legend className="text-sm font-medium text-ink">{copy.environment}</legend>
         <div className="mt-2 flex flex-wrap gap-4 text-sm text-ink">
           {([
@@ -356,7 +356,7 @@ export function CaptureEntryForm({
         </div>
       </fieldset>
 
-      <div className="mt-6">
+      <div data-onboarding="steps" className="mt-6">
         <h2 className="text-sm font-medium text-ink">{copy.steps}</h2>
         <p className="text-xs leading-relaxed text-ink-muted">{copy.evidenceNote}</p>
         <p className="mt-1 text-xs text-ink-muted">{copy.stepOne}</p>
@@ -509,7 +509,7 @@ export function CaptureEntryForm({
 
       {error ? <p className="mt-3 text-xs font-medium text-red-700" role="alert">{error}</p> : null}
 
-      <div className="mt-6 space-y-1 text-sm text-ink">
+      <div data-onboarding="confirm" className="mt-6 space-y-1 text-sm text-ink">
         <p className="font-semibold">{copy.thisCheck}</p>
         <p>{copy.region} {regionLine}</p>
         <p>{copy.environment} {environmentLine}</p>
