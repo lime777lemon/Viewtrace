@@ -41,7 +41,7 @@ function statusText(status: JourneyStepStatus, t: (typeof copy)[Locale]["observa
 }
 
 function statusClass(status: JourneyStepStatus): string {
-  if (status === "pass") return "font-semibold text-emerald-800 dark:text-emerald-200";
+  if (status === "pass") return "font-semibold text-emerald-950";
   if (status === "fail") return "font-semibold text-red-800 dark:text-red-200";
   return "text-ink-muted";
 }

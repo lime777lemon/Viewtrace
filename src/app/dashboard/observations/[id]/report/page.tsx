@@ -294,6 +294,7 @@ export default async function ObservationReportPage({ params }: Props) {
             <ObservationAiAuditReadout
               copy={aiAuditCopy}
               audit={aiAudit}
+              locale={locale}
               generatedAtLabel={`${formatJaDateTime(aiAudit.createdAt, locale)} · ${formatUtcLabel(aiAudit.createdAt)}`}
             />
           </section>

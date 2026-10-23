@@ -226,6 +226,7 @@ export default async function PublicVerifyPage({ params }: Props) {
             <ObservationAiAuditReadout
               copy={aiAuditCopy}
               audit={obs.aiAudit}
+              locale={locale}
               generatedAtLabel={`${formatJaDateTime(obs.aiAudit.createdAt, locale)} · ${formatUtcLabel(obs.aiAudit.createdAt)}`}
             />
           </div>

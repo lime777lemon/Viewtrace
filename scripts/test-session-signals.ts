@@ -25,6 +25,13 @@ assert.equal(parsed.errors.console_error, 1);
 assert.equal(parsed.errors.unhandled_rejection, null);
 assert.equal(parsed.performance.lcp_ms, 320);
 assert.equal(parsed.structured_data.syntax_errors, 0);
+assert.equal(parsed.connection, null);
+const timed = parseSessionSignals({
+  connection: { dns_ms: 0, tls_ms: 18, protocol: "h2", secure: true },
+});
+assert.equal(timed?.connection?.dns_ms, 0);
+assert.equal(timed?.connection?.tls_ms, 18);
+assert.equal(timed?.connection?.protocol, "h2");
 assert.equal(parseSessionSignals(null), null);
 
 console.log("ok");

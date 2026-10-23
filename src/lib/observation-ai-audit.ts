@@ -493,6 +493,104 @@ export function buildRecordPageAudit(
   };
 }
 
+const AUDIT_PHRASES: Array<[string, string]> = [
+  ["この地域では取得に失敗しています。画面の指摘はできません。", "Capture failed in this region. There is no page to review."],
+  ["取得結果と HTTP ステータスを記録で確認する。", "Check the capture outcome and HTTP status on the record."],
+  ["スクリーンショットが残っていません。見えるものについての指摘はできません。", "No screenshot is stored. Visual notes cannot be made."],
+  ["スクリーンショット欄を確認する。期限切れならメタだけが残っています。", "Check the screenshot section. If retention ended, only metadata remains."],
+  ["noindex があります。検索に出さない指定です。", "noindex is present. The page asks not to be indexed."],
+  ["noindex が意図した設定か、記録の robots / noindex を確認する。", "Check robots / noindex on the record to see if this was intended."],
+  ["記録の HTTP ステータスと最終 URL を確認する。", "Check HTTP status and the final URL on the record."],
+  ["canonical が最終 URL と一致しません。", "canonical differs from the final URL."],
+  ["記録の canonical と最終 URL を見比べる。", "Compare canonical and final URL on the record."],
+  ["title が空です。", "title is empty."],
+  ["記録の document title が空のままか確認する。", "Check document title on the record."],
+  ["meta description が空です。", "meta description is empty."],
+  ["記録の meta description を確認する。", "Check the recorded meta description."],
+  ["Open Graph の title / description / image がありません。", "Open Graph title, description, and image are missing."],
+  ["記録の Open Graph 欄を確認する。", "Check Open Graph fields on the record."],
+  ["記録の html lang と指定地域を見比べる。", "Compare html lang with the requested region on the record."],
+  ["指定と実際の取得を記録の地域欄で確認する。Requested を Observed にコピーしない。", "Check requested vs observed on the region field. Do not copy Requested into Observed."],
+  ["スクリーンショットの内容が違います（Changed）。何が違うかの読みは推定です。", "Screenshot content differs (Changed). What differs on screen is inference."],
+  ["前後の画面を見比べ、ヒーロー・CTA・言語・通貨を確認する。", "Compare the two screenshots and check hero, CTA, language, and currency."],
+  ["スクリーンショットは比べられません（撮影条件が違います）。", "Screenshots are not comparable (capture conditions differ)."],
+  ["検出した事実の Not comparable 理由を確認する。", "Check the Not comparable reason under Detected facts."],
+  ["最終 URL が違います。", "Final URL differs."],
+  ["title が違います。", "title differs."],
+  ["meta description が違います。", "meta description differs."],
+  ["canonical が違います。", "canonical differs."],
+  ["robots が違います。", "robots differs."],
+  ["noindex の有無が違います。", "noindex presence differs."],
+  ["og:image が違います。", "og:image differs."],
+  ["検出した事実の前後値を確認する。", "Check previous vs this value under Detected facts."],
+  ["この記録から指摘できる差は見つかりませんでした。画面の読みは AI 設定後です。", "No record-based notes. Visual reading needs AI configuration."],
+  ["ページタイトルに変更はありませんが、キャノニカルURLが異なります。", "The page title is unchanged, but the canonical URL differs."],
+  ["キャノニカルURLの設定を確認すること。", "Check the canonical URL setting."],
+  ["OGタイトルは以前と変わらず、ページタイトルと同じです。", "The OG title is unchanged and matches the page title."],
+  ["OGタイトルの適切性を確認すること。", "Check whether the OG title is appropriate."],
+];
+
+function exactAuditPhrase(text: string, locale: Locale): string | null {
+  for (const [ja, en] of AUDIT_PHRASES) {
+    if (locale === "en" && text === ja) return en;
+    if (locale === "ja" && text === en) return ja;
+  }
+  return null;
+}
+
+function hasJapanese(text: string): boolean {
+  return /[\u3040-\u30ff\u4e00-\u9faf]/.test(text);
+}
+
+/** Stored audits keep the language they were written in. English view reads them in English. */
+function japaneseAuditToEnglish(text: string): string {
+  if (!hasJapanese(text)) return text;
+  let next = text;
+  next = next.replace(
+    /ウェブサイトのタイトルが ("[^"]*") から ("[^"]*") に変更されておらず、/g,
+    "The page title is unchanged ($1 to $2). ",
+  );
+  next = next.replace(
+    /オリジナルと比較してコンテンツは一貫していますが、/g,
+    "The content is consistent with the earlier record, but ",
+  );
+  next = next.replace(
+    /キャノニカルURLが ("[^"]*") から ("[^"]*") に異なります。?/g,
+    "the canonical URL differs from $1 to $2.",
+  );
+  next = next.replace(/ページタイトルに変更はありませんが、/g, "The page title is unchanged, but ");
+  next = next.replace(/キャノニカルURLが異なります。?/g, "the canonical URL differs.");
+  next = next.replace(/キャノニカルURLの設定を確認すること。?/g, "Check the canonical URL setting.");
+  next = next.replace(/OGタイトルは以前と変わらず、/g, "The OG title is unchanged, ");
+  next = next.replace(/ページタイトルと同じです。?/g, "and it matches the page title.");
+  next = next.replace(/OGタイトルの適切性を確認すること。?/g, "Check whether the OG title is appropriate.");
+  next = next.replace(/html lang は ([^。]+) です。指定地域は日本です。/g, "html lang is $1. The requested region is Japan.");
+  next = next.replace(/html lang は ([^。]+) です。指定地域は米国です。/g, "html lang is $1. The requested region is the United States.");
+  next = next.replace(/HTTP ([^。]+) が記録されています。/g, "HTTP $1 was recorded.");
+  next = next.replace(
+    /この記録から (\d+) 件の指摘です。Observed ではありません。点数ではありません。/g,
+    "$1 note(s) from this record. This is not Observed. Not a score.",
+  );
+  next = next.replace(/。/g, ".").replace(/、/g, ", ").replace(/\s+/g, " ").trim();
+  return hasJapanese(next) ? text : next;
+}
+
+function auditSentence(text: string, locale: Locale): string {
+  return exactAuditPhrase(text, locale) ?? (locale === "en" ? japaneseAuditToEnglish(text) : text);
+}
+
+export function presentObservationAiAudit(audit: ObservationAiAudit, locale: Locale): ObservationAiAudit {
+  return {
+    ...audit,
+    summary: auditSentence(audit.summary, locale),
+    notes: audit.notes.map((note) => ({
+      ...note,
+      text: auditSentence(note.text, locale),
+      check: note.check ? auditSentence(note.check, locale) : note.check,
+    })),
+  };
+}
+
 export function mergeAiAuditNotes(
   record: ObservationAiAudit,
   ai: { summary: string; notes: AiAuditNote[]; model: string },

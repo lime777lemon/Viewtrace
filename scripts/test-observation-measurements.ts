@@ -79,7 +79,7 @@ const reach = ledger.layers.find((layer) => layer.id === "reachability");
 assert.equal(reach?.lines.find((row) => row.id === "dns")?.state, "not_measured");
 assert.equal(reach?.lines.find((row) => row.id === "tls")?.state, "not_measured");
 assert.equal(reach?.lines.find((row) => row.id === "http")?.state, "observed");
-assert.match(ledger.dnsNote, /Host DNS records/);
+assert.match(ledger.dnsNote, /were not measured/);
 
 const session: SessionSignalsV1 = {
   http: { status: 200, final_url: "https://example.com/", redirect_count: 0, content_type: "text/html", robots_header: null, loaded: true, timed_out: false },
@@ -98,6 +98,35 @@ assert.equal(network?.id === "network" ? network.resources?.failed : null, 1);
 assert.equal(consoleRow?.presence, "recorded");
 assert.equal(consoleRow?.id === "console" ? consoleRow.behavior?.consoleErrors : null, 2);
 assert.equal(consoleRow?.id === "console" ? consoleRow.behavior?.pageErrors : null, 1);
+const connected = buildObservationMeasureLedger({
+  observation: liveObs,
+  locale: "en",
+  httpStatus: 200,
+  finalUrl: "https://example.com/",
+  redirected: false,
+  visual: "still",
+  session: {
+    ...session,
+    connection: { dns_ms: 0, tls_ms: 18, protocol: "h2", secure: true },
+  },
+});
+const connectedReach = connected.layers.find((layer) => layer.id === "reachability");
+assert.equal(connectedReach?.lines.find((row) => row.id === "dns")?.detail, "0 ms");
+assert.equal(connectedReach?.lines.find((row) => row.id === "tls")?.detail, "h2 · 18 ms");
+assert.match(connected.dnsNote, /Navigation Timing/);
+const plain = buildObservationMeasureLedger({
+  observation: liveObs,
+  locale: "en",
+  httpStatus: 200,
+  finalUrl: "http://example.com/",
+  redirected: false,
+  visual: "still",
+  session: {
+    ...session,
+    connection: { dns_ms: 4, tls_ms: null, protocol: "http/1.1", secure: false },
+  },
+});
+assert.equal(plain.layers.find((layer) => layer.id === "reachability")?.lines.find((row) => row.id === "tls")?.state, "observed_absent");
 
 const otherRegion = buildObservationMeasurements(liveObs, {
   journeyRuns: [{

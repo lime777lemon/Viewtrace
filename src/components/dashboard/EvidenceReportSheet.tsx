@@ -3,6 +3,7 @@ import { ObservationAiAuditReadout } from "@/components/dashboard/ObservationAiA
 import type { ObservationStatus } from "@/lib/demo/observations";
 import type { ObservationAiAuditCopy } from "@/lib/observation-ai-audit-copy";
 import type { ObservationAiAudit } from "@/lib/observation-ai-audit";
+import type { Locale } from "@/lib/i18n";
 
 export type EvidenceReportCopy = {
   title: string;
@@ -38,6 +39,7 @@ type Props = {
   aiAudit?: ObservationAiAudit | null;
   aiAuditCopy?: ObservationAiAuditCopy;
   aiAuditGeneratedAtLabel?: string;
+  locale?: Locale;
 };
 
 export function EvidenceReportSheet({
@@ -54,6 +56,7 @@ export function EvidenceReportSheet({
   aiAudit = null,
   aiAuditCopy,
   aiAuditGeneratedAtLabel,
+  locale = "en",
 }: Props) {
   const statusLabel =
     status === "success"
@@ -142,6 +145,7 @@ export function EvidenceReportSheet({
             <ObservationAiAuditReadout
               copy={aiAuditCopy}
               audit={aiAudit}
+              locale={locale}
               generatedAtLabel={aiAuditGeneratedAtLabel}
             />
           </div>

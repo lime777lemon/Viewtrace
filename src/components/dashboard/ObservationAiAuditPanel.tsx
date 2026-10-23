@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { generateObservationAiAuditAction } from "@/app/actions/observation-ai-audit";
 import { ObservationAiAuditFindings } from "@/components/dashboard/ObservationAiAuditFindings";
 import type { ObservationAiAuditCopy } from "@/lib/observation-ai-audit-copy";
-import type { ObservationAiAudit } from "@/lib/observation-ai-audit";
+import { presentObservationAiAudit, type ObservationAiAudit } from "@/lib/observation-ai-audit";
 
 type Props = {
   copy: ObservationAiAuditCopy;
@@ -25,6 +25,7 @@ export function ObservationAiAuditPanel({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const canGenerate = Boolean(observationId);
+  const shown = audit ? presentObservationAiAudit(audit, locale) : null;
 
   const run = () => {
     if (!observationId) return;
@@ -54,20 +55,20 @@ export function ObservationAiAuditPanel({
         <p className="rounded-full border border-border bg-surface px-2.5 py-0.5 text-xs font-semibold text-ink-muted">
           {copy.badge}
         </p>
-        {audit ? (
+        {shown ? (
           <p className="rounded-full border border-border bg-surface px-2.5 py-0.5 text-xs font-semibold text-ink-muted">
-            {audit.source === "ai" ? copy.sourceAi : copy.sourceRecord}
+            {shown.source === "ai" ? copy.sourceAi : copy.sourceRecord}
           </p>
         ) : null}
       </div>
       <p className="mt-1 text-sm leading-relaxed text-ink-muted">{copy.hint}</p>
 
-      {audit ? (
+      {shown ? (
         <div className="mt-3 space-y-3">
-          <p className="text-sm text-ink">{audit.summary}</p>
+          <p className="text-sm text-ink">{shown.summary}</p>
           <ObservationAiAuditFindings
             copy={copy}
-            notes={audit.notes}
+            notes={shown.notes}
             linkEvidence={Boolean(observationId) || Boolean(previewAudit)}
           />
           <p className="text-xs leading-relaxed text-ink-muted">{copy.onPdfHint}</p>

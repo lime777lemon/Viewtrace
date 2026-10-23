@@ -43,6 +43,13 @@ export type SessionSignalsV1 = {
     cls: number | null;
     long_tasks: number | null;
   };
+  /** Document navigation timing. Null when this session did not read it. */
+  connection?: {
+    dns_ms: number | null;
+    tls_ms: number | null;
+    protocol: string | null;
+    secure: boolean | null;
+  } | null;
   structured_data: {
     types: string[];
     syntax_errors: number | null;
@@ -53,6 +60,11 @@ export type SessionSignalsV1 = {
 
 function num(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function duration(value: unknown): number | null {
+  const n = num(value);
+  return n != null && n >= 0 ? n : null;
 }
 
 function count(value: unknown): number {
@@ -128,7 +140,20 @@ export function parseSessionSignals(raw: unknown): SessionSignalsV1 | null {
       types,
       syntax_errors: num(structured.syntax_errors),
     },
+    connection: connectionFacts(row.connection),
     requests: selectResourceRequests(row.requests),
+  };
+}
+
+function connectionFacts(raw: unknown): SessionSignalsV1["connection"] {
+  if (!raw || typeof raw !== "object") return null;
+  const row = raw as Record<string, unknown>;
+  const protocol = text(row.protocol, 24);
+  return {
+    dns_ms: duration(row.dns_ms),
+    tls_ms: duration(row.tls_ms),
+    protocol,
+    secure: typeof row.secure === "boolean" ? row.secure : null,
   };
 }
 
@@ -230,6 +255,7 @@ export function buildSessionProbeFunctionCode(): string {
     }),
     errors: errors,
     performance: probe && probe.performance ? probe.performance : {},
+    connection: probe && probe.connection ? probe.connection : null,
     structured_data: structured,
   };
 }`;
@@ -255,7 +281,25 @@ export const SESSION_PROBE_READ = `function readSessionProbe() {
   }
   const vitals = window.__vtSession || { lcp: null, cls: 0, longTasks: 0 };
   const round = (value) => typeof value === "number" && isFinite(value) ? Math.round(value) : null;
+  const span = (end, start) => {
+    if (typeof end !== "number" || typeof start !== "number" || !isFinite(end) || !isFinite(start) || end < start) return null;
+    return Math.round(end - start);
+  };
+  const protocol = nav && nav.nextHopProtocol ? String(nav.nextHopProtocol).slice(0, 24) : "";
+  const address = nav && nav.name ? String(nav.name) : "";
+  const secureStart = nav && typeof nav.secureConnectionStart === "number" ? nav.secureConnectionStart : 0;
+  const secure = secureStart > 0 || protocol === "h2" || protocol === "h3" || address.indexOf("https:") === 0
+    ? true
+    : address.indexOf("http:") === 0
+      ? false
+      : null;
   return {
+    connection: nav ? {
+      dns_ms: span(nav.domainLookupEnd, nav.domainLookupStart),
+      tls_ms: secureStart > 0 ? span(nav.connectEnd, secureStart) : null,
+      protocol: protocol || null,
+      secure: secure,
+    } : null,
     performance: {
       ttfb_ms: nav ? round(nav.responseStart) : null,
       dom_content_loaded_ms: nav ? round(nav.domContentLoadedEventEnd) : null,

@@ -160,7 +160,7 @@ export function InteractionHealthSummary({ presentation, t, typeLabel, renderPro
 
       {areas.length > 0 ? (
         <section aria-label={t.interactionPresentChangedAreas}>
-          <p className="text-xs font-semibold uppercase tracking-wider text-amber-800 dark:text-amber-200">
+          <p className="text-xs font-semibold uppercase tracking-wider text-orange-700">
             {t.interactionPresentChangedAreas}
           </p>
           <p className="mt-1 text-xs text-ink-muted">{t.interactionPresentNotAFailure}</p>
@@ -191,7 +191,7 @@ export function InteractionHealthSummary({ presentation, t, typeLabel, renderPro
 
       {working.length > 0 ? (
         <section aria-label={t.interactionPresentWorkingTitle}>
-          <p className="text-xs font-semibold uppercase tracking-wider text-emerald-800 dark:text-emerald-200">
+          <p className="text-xs font-semibold uppercase tracking-wider text-emerald-950">
             {t.interactionPresentWorkingTitle}
           </p>
           <p className="mt-1 text-sm text-ink">{working.map((type) => typeLabel(type)).join(" · ")}</p>

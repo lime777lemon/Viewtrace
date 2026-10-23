@@ -3354,6 +3354,7 @@ export function buildInteractionFunctionCode(): string {
       unhandled_rejection: runtimeLog.filter((row) => row.kind === "unhandled_rejection").length,
     },
     performance: probe && probe.performance ? probe.performance : {},
+    connection: probe && probe.connection ? probe.connection : null,
     structured_data: {
       types: rendered && Array.isArray(rendered.json_ld_types) ? rendered.json_ld_types : [],
       syntax_errors: rendered && typeof rendered.json_ld_syntax_errors === "number" ? rendered.json_ld_syntax_errors : null,

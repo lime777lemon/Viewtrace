@@ -479,6 +479,7 @@ export default async function DevComparePreviewPage({ searchParams }: Props) {
                     locale,
                     compareFixtureTimeLeft,
                   )}
+                  locale={locale}
                   generatedAtLabel={`${formatJaDateTime(compareFixtureTimeRight.capturedAt, locale)} · ${formatUtcLabel(compareFixtureTimeRight.capturedAt)}`}
                 />
               </div>

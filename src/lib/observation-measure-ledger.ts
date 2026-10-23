@@ -124,6 +124,9 @@ const COPY = {
     stateNotMeasured: "未測定",
     stateNotVerifiable: "確認できない",
     dnsNote: "ページ読み込みの DNS と TLS は未測定です。ホストの DNS レコード（A / MX / NS）は、この到達確認に含めていません。",
+    dnsMeasuredNote: "DNS と TLS は、このブラウザがページを開いたときの Navigation Timing です。DNS の 0 ms は、この読み込みで名前解決の時間が無かったことです。ホストの DNS レコード（A / MX / NS）は含めていません。",
+    tlsNone: "TLS なし",
+    tlsReused: "この読み込みではハンドシェイクなし",
     behaviorSource: "挙動確認",
     journeySource: "Journey",
   },
@@ -184,6 +187,9 @@ const COPY = {
     stateNotMeasured: "Not measured",
     stateNotVerifiable: "Not verifiable",
     dnsNote: "DNS and TLS for this page load were not measured. Host DNS records (A / MX / NS) are not part of this reachability check.",
+    dnsMeasuredNote: "DNS and TLS are the Navigation Timing of this browser page load. DNS 0 ms means this load spent no time on name lookup. Host DNS records (A / MX / NS) are not included.",
+    tlsNone: "No TLS",
+    tlsReused: "No handshake on this load",
     behaviorSource: "Behavior check",
     journeySource: "Journey",
   },
@@ -334,6 +340,19 @@ function countStatus(types: BehaviorTypeFact[], status: string): number {
   return types.filter((row) => row.status === status).length;
 }
 
+function tlsLine(
+  connection: NonNullable<SessionSignalsV1["connection"]> | null | undefined,
+  copy: (typeof COPY)[Locale],
+): LedgerLine {
+  if (!connection || (connection.tls_ms == null && connection.secure == null && !connection.protocol)) {
+    return line("tls", "not_measured");
+  }
+  if (connection.secure === false) return line("tls", "observed_absent", copy.tlsNone);
+  const protocol = connection.protocol || "https";
+  if (typeof connection.tls_ms === "number") return line("tls", "observed", `${protocol} · ${connection.tls_ms} ms`);
+  return line("tls", "observed", `${protocol} · ${copy.tlsReused}`);
+}
+
 function headingState(rendered: RenderedPageMeasurementV1 | null, runs: JourneyRunFacts[]): LedgerLine {
   if (rendered) {
     return rendered.h1.length
@@ -373,6 +392,11 @@ export function buildObservationMeasureLedger(input: {
   const finalUrl = input.finalUrl
     ? line("finalUrl", "observed", input.finalUrl)
     : line("finalUrl", "not_measured");
+  const connection = input.session?.connection;
+  const dns = connection && typeof connection.dns_ms === "number"
+    ? line("dns", "observed", `${connection.dns_ms} ms`)
+    : line("dns", "not_measured");
+  const tls = tlsLine(connection, copy);
 
   const screenshot = input.visual === "none"
     ? line("screenshot", "not_measured")
@@ -471,7 +495,7 @@ export function buildObservationMeasureLedger(input: {
     : line("verification", "not_measured");
 
   return {
-    dnsNote: copy.dnsNote,
+    dnsNote: dns.state === "not_measured" && tls.state === "not_measured" ? copy.dnsNote : copy.dnsMeasuredNote,
     layers: [
       {
         id: "reachability",
@@ -479,8 +503,8 @@ export function buildObservationMeasureLedger(input: {
           http,
           redirect,
           finalUrl,
-          line("dns", "not_measured"),
-          line("tls", "not_measured"),
+          dns,
+          tls,
         ],
       },
       {

@@ -142,6 +142,7 @@ export default async function ObservationVerificationReportPage({ params }: Prop
         verifyUrl={verifyUrl}
         aiAudit={aiAudit}
         aiAuditCopy={aiAuditCopy}
+        locale={locale}
         aiAuditGeneratedAtLabel={
           aiAudit
             ? `${formatJaDateTime(aiAudit.createdAt, locale)} · ${formatUtcLabel(aiAudit.createdAt)}`

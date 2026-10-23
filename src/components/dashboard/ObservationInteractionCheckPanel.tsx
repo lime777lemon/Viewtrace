@@ -126,7 +126,7 @@ function statusText(
   status: ScrollInteractionStatus,
   t: (typeof copy)[Locale]["observationDetail"],
 ): string {
-  if (status === "working") return t.interactionWorking;
+  if (status === "working") return `✅ ${t.interactionWorking}`;
   if (status === "no_change_observed") return t.interactionNoChange;
   if (status === "failed") return t.interactionFailed;
   if (status === "not_detected") return t.interactionNotDetected;
@@ -136,7 +136,7 @@ function statusText(
 }
 
 function statusClass(status: ScrollInteractionStatus): string {
-  if (status === "working") return "font-semibold text-emerald-800 dark:text-emerald-200";
+  if (status === "working") return "font-semibold text-emerald-950";
   if (status === "failed") return "font-semibold text-red-800 dark:text-red-200";
   if (status === "no_change_observed") return "font-semibold text-amber-950";
   if (status === "blocked_for_safety") return "font-semibold text-amber-800 dark:text-amber-200";

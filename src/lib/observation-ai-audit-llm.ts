@@ -79,6 +79,7 @@ export async function tryLlmPageAudit(input: {
         "Each note needs text (What changed), impact (high|medium|low, not a score), evidence (one of allowed_evidence), and check (what to verify).",
         "Visible screenshot differences: kind=visible, evidence=screenshot. Requested vs observed region: kind=region_time, evidence=geo.",
         "Never copy requested US-XX into Observed. Name a state only when observed_state is present.",
+        "Write the summary, each note text, and each check in English.",
       ].join("\n");
 
   const userText = `${ja ? "記録の事実" : "Recorded facts"}:\n${JSON.stringify(input.facts)}`;
