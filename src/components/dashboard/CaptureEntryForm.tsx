@@ -9,6 +9,7 @@ import { JourneyCommerceFields } from "@/components/dashboard/JourneyCommerceFie
 import {
   commerceJourneyInputs,
   isJourneyCommerceKind,
+  isJourneyPurposeKind,
   JOURNEY_STEP_KINDS,
   JOURNEY_STEP_LIMIT,
   journeyKindLabel,
@@ -68,7 +69,7 @@ const TEXT = {
       region_required: "地域を選んでください。",
       environment_required: "Desktop か Mobile を選んでください。",
       selector_required: "この手順にはセレクタが必要です。",
-      outcome_required: "Login、Signup、カート、Checkout には最終状態を指定してください。",
+      outcome_required: "Login、Checkout、言語、通貨、地域、アップロードの送信とドロップには、成立したことを確認する条件を指定してください。",
       value_required: "この手順には値が必要です。",
       url_host: "手順の URL は開始 URL と同じホストにしてください。",
       save_failed: "Journey を保存できませんでした。",
@@ -122,7 +123,7 @@ const TEXT = {
       region_required: "Choose a region.",
       environment_required: "Choose Desktop or Mobile.",
       selector_required: "This step needs a selector.",
-      outcome_required: "Login, Signup, Add to cart, and Checkout need a final state.",
+      outcome_required: "Login, Checkout, language, currency, region, and an upload submit or drop need a condition that proves the step worked.",
       value_required: "This step needs a value.",
       url_host: "Step URLs stay on the same host as the start URL.",
       save_failed: "Could not save the Journey.",
@@ -145,6 +146,7 @@ function emptyStep(index: number): JourneyStepDefinition {
     expect_text: "",
     expect_visible: false,
     expect_url: "",
+    expect_lang: "",
   };
 }
 
@@ -398,6 +400,14 @@ export function CaptureEntryForm({
                     className="min-w-40 flex-1 rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
                   />
                 ) : null}
+                {step.kind === "search" ? (
+                  <input
+                    value={step.value}
+                    placeholder={locale === "ja" ? "検索語" : "Query"}
+                    onChange={(event) => updateStep(index, { value: event.target.value })}
+                    className="min-w-32 flex-1 rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
+                  />
+                ) : null}
                 {step.kind === "fill" || step.kind === "select" || step.kind === "assert_text" ? (
                   <input
                     value={step.value}
@@ -435,7 +445,7 @@ export function CaptureEntryForm({
                   {copy.evidenceVideo}
                 </label>
               </div>
-              {step.kind === "click" ? (
+              {step.kind === "click" || isJourneyPurposeKind(step.kind) ? (
                 <div className="mt-2 flex flex-wrap gap-2">
                   <input
                     value={step.expect_selector}

@@ -6,6 +6,8 @@ import {
 } from "@/lib/browserless-geo-endpoint";
 import { buildJourneyFunctionCode } from "@/lib/browserless-journey-function";
 import { journeyNetworkEvidence, type JourneyDeviceClass, type JourneyGeoStage, type JourneyStepDefinition } from "@/lib/journey-definition";
+import type { ResourceRequestV1 } from "@/lib/resource-request";
+import { parseStepVisual, type StepVisualEvidence } from "@/lib/visual-evidence";
 import { parseJourneyEvidence, type JourneyEvidenceItem } from "@/lib/journey-step-evidence";
 import { resolveBrowserlessResidentialTarget } from "@/lib/regions";
 import { normalizeUserUrlInput } from "@/lib/url-preview";
@@ -17,7 +19,7 @@ export type JourneyRunStatus = "passed" | "failed" | "blocked" | "incomplete";
 export type JourneyStepEvidence = {
   id: string;
   kind: string;
-  status: "pass" | "fail" | "blocked_for_safety" | "not_run" | "incomplete";
+  status: "pass" | "fail" | "blocked_for_safety" | "not_run" | "incomplete" | "not_measured";
   duration_ms: number;
   url_after: string | null;
   detail: string | null;
@@ -26,8 +28,11 @@ export type JourneyStepEvidence = {
   after_text: string | null;
   before_visible: boolean | null;
   after_visible: boolean | null;
-  network: Array<{ method: string; path: string; status: number | null }>;
+  network: ResourceRequestV1[];
   runtime: Array<{ kind: string; message: string }>;
+  /** True when this run listened for console, uncaught, and unhandled rejection. */
+  runtime_observed?: boolean;
+  visual?: StepVisualEvidence | null;
   /** Evidence observed during this step. Absent kinds were not observed. */
   evidence?: JourneyEvidenceItem[];
   /** open_url の画面。viewport の JPEG を base64。Observation のフルページ画像ではない。 */
@@ -42,6 +47,10 @@ export type JourneyEnvironmentObserved = {
   locale: string;
   timezone: string;
   prefers_reduced_motion: boolean;
+  dpr?: number | null;
+  languages?: string;
+  document_lang?: string;
+  user_agent?: string;
   geo?: {
     requested_region: string;
     stage: JourneyGeoStage;
@@ -68,20 +77,10 @@ function parseSteps(raw: unknown): JourneyStepEvidence[] {
     if (!item || typeof item !== "object") return [];
     const row = item as Record<string, unknown>;
     const status = row.status;
-    if (status !== "pass" && status !== "fail" && status !== "blocked_for_safety" && status !== "not_run" && status !== "incomplete") return [];
-    const network = Array.isArray(row.network)
-      ? row.network.slice(0, 8).flatMap((event) => {
-          if (!event || typeof event !== "object") return [];
-          const net = event as Record<string, unknown>;
-          return [{
-            method: typeof net.method === "string" ? net.method.slice(0, 12) : "GET",
-            path: typeof net.path === "string" ? net.path.slice(0, 120) : "",
-            status: typeof net.status === "number" ? net.status : null,
-          }];
-        })
-      : [];
+    if (status !== "pass" && status !== "fail" && status !== "blocked_for_safety" && status !== "not_run" && status !== "incomplete" && status !== "not_measured") return [];
+    const network = journeyNetworkEvidence(row.network);
     const runtime = Array.isArray(row.runtime)
-      ? row.runtime.slice(0, 6).flatMap((event) => {
+      ? row.runtime.slice(0, 8).flatMap((event) => {
           if (!event || typeof event !== "object") return [];
           const log = event as Record<string, unknown>;
           return [{
@@ -104,6 +103,8 @@ function parseSteps(raw: unknown): JourneyStepEvidence[] {
       after_visible: typeof row.after_visible === "boolean" ? row.after_visible : null,
       network: journeyNetworkEvidence(network),
       runtime,
+      runtime_observed: row.runtime_observed === true,
+      visual: parseStepVisual(row.visual),
       evidence: parseJourneyEvidence(row.evidence),
       frame_jpeg: typeof row.frame_jpeg === "string" && row.frame_jpeg.length > 32 && row.frame_jpeg.length < 180_000
         ? row.frame_jpeg
@@ -113,10 +114,11 @@ function parseSteps(raw: unknown): JourneyStepEvidence[] {
 }
 
 export function journeyRunStatus(steps: JourneyStepEvidence[]): JourneyRunStatus {
-  if (steps.some((step) => step.status === "fail")) return "failed";
-  if (steps.some((step) => step.status === "blocked_for_safety")) return "blocked";
-  if (steps.some((step) => step.status === "incomplete" || step.status === "not_run")) return "incomplete";
-  if (steps.length > 0 && steps.every((step) => step.status === "pass")) return "passed";
+  const measured = steps.filter((step) => step.status !== "not_measured");
+  if (measured.some((step) => step.status === "fail")) return "failed";
+  if (measured.some((step) => step.status === "blocked_for_safety")) return "blocked";
+  if (measured.some((step) => step.status === "incomplete" || step.status === "not_run")) return "incomplete";
+  if (measured.length > 0 && measured.every((step) => step.status === "pass")) return "passed";
   return "incomplete";
 }
 
@@ -203,6 +205,10 @@ export async function runJourneyInBrowserless(params: {
         locale: typeof envRaw?.locale === "string" ? envRaw.locale : "",
         timezone: typeof envRaw?.timezone === "string" ? envRaw.timezone : "",
         prefers_reduced_motion: envRaw?.prefers_reduced_motion === true,
+        dpr: typeof envRaw?.dpr === "number" && Number.isFinite(envRaw.dpr) && envRaw.dpr > 0 ? envRaw.dpr : null,
+        languages: typeof envRaw?.languages === "string" ? envRaw.languages.slice(0, 80) : "",
+        document_lang: typeof envRaw?.document_lang === "string" ? envRaw.document_lang.slice(0, 32) : "",
+        user_agent: typeof envRaw?.user_agent === "string" ? envRaw.user_agent.slice(0, 180) : "",
         geo: geoRecord,
       } : { geo: geoRecord };
       return { ok: true as const, status: journeyRunStatus(steps), durationMs, environment, steps };

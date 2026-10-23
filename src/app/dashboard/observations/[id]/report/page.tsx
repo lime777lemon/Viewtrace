@@ -26,7 +26,6 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getObservationMergedForPlan } from "@/lib/demo/user-observations";
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
 import { copy } from "@/lib/i18n";
-import { localizeObservationNote } from "@/lib/i18n/observation-persisted-copy";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { sanitizeObservationRouteId } from "@/lib/observation-route-id";
 import { resolveObservationCaptureTier } from "@/lib/observation-capture-tier";
@@ -230,13 +229,6 @@ export default async function ObservationReportPage({ params }: Props) {
             <p className="mt-2 text-sm text-ink">{obs.pageTitle}</p>
           </section>
         ) : null}
-
-        <section>
-          <h2 className="text-sm font-semibold text-ink">{t.sectionNote}</h2>
-          <p className="mt-2 whitespace-pre-wrap text-sm text-ink">
-            {obs.note ? localizeObservationNote(obs.note, locale) : "—"}
-          </p>
-        </section>
 
         {reportSnapshotUrl ? (
           <section>

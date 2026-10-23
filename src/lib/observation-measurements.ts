@@ -10,6 +10,14 @@ import {
   isHomepageVideoContentType,
 } from "@/lib/observation-homepage-mode";
 import { buildJourneyRun } from "@/lib/observation-journey";
+import {
+  observationRuntimeFacts,
+  selectJourneyRunsForObservation,
+  type JourneyRunFacts,
+  type ResourceCounts,
+  type JourneyTraffic,
+} from "@/lib/observation-measure-ledger";
+import type { SessionSignalsV1 } from "@/lib/session-signals";
 import type { SyntheticInteractionV1 } from "@/lib/observation-synthetic-interaction";
 
 export const OBSERVATION_MEASUREMENT_IDS = [
@@ -61,11 +69,15 @@ export type ObservationMeasurementRow =
     }
   | {
       id: "network";
-      presence: "not_measured";
+      presence: "recorded" | "not_measured";
+      resources: ResourceCounts | null;
+      journey: Pick<JourneyTraffic, "requests" | "failed"> | null;
     }
   | {
       id: "console";
-      presence: "not_measured";
+      presence: "recorded" | "not_measured";
+      behavior: { consoleErrors: number; pageErrors: number } | null;
+      journey: { consoleErrors: number; pageErrors: number } | null;
     }
   | {
       id: "performance";
@@ -170,7 +182,11 @@ function htmlSample(obs: Observation): { sha256: string | null; bytes: number | 
 
 export function buildObservationMeasurements(
   obs: Observation,
-  opts?: { synthetic?: SyntheticInteractionV1 | null },
+  opts?: {
+    synthetic?: SyntheticInteractionV1 | null;
+    session?: SessionSignalsV1 | null;
+    journeyRuns?: JourneyRunFacts[];
+  },
 ): ObservationMeasurementRow[] {
   const visualKind = observationVisualKind(obs);
   const httpStatus = observationHttpStatus(obs);
@@ -183,6 +199,9 @@ export function buildObservationMeasurements(
     observationStatus: obs.status,
     synthetic: opts?.synthetic,
   });
+  const matchedJourneys = selectJourneyRunsForObservation(obs, opts?.journeyRuns ?? []);
+  const traffic = observationRuntimeFacts({ session: opts?.session, journeys: matchedJourneys });
+  const consoleRecorded = Boolean(opts?.session) || Boolean(traffic.journey);
 
   return [
     {
@@ -214,7 +233,12 @@ export function buildObservationMeasurements(
       sampleSha256: sample.sha256,
       sampleBytes: sample.bytes,
     },
-    { id: "network", presence: "not_measured" },
+    {
+      id: "network",
+      presence: traffic.resources || traffic.journey ? "recorded" : "not_measured",
+      resources: traffic.resources,
+      journey: traffic.journey ? { requests: traffic.journey.requests, failed: traffic.journey.failed } : null,
+    },
     hasLab
       ? {
           id: "performance",
@@ -223,7 +247,16 @@ export function buildObservationMeasurements(
           cls: lab?.cls ?? null,
         }
       : { id: "performance", presence: "not_measured", lcpMs: null, cls: null },
-    { id: "console", presence: "not_measured" },
+    {
+      id: "console",
+      presence: consoleRecorded ? "recorded" : "not_measured",
+      behavior: opts?.session
+        ? { consoleErrors: opts.session.errors.console_error, pageErrors: opts.session.errors.pageerror }
+        : null,
+      journey: traffic.journey
+        ? { consoleErrors: traffic.journey.consoleErrors, pageErrors: traffic.journey.pageErrors }
+        : null,
+    },
   ];
 }
 

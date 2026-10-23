@@ -16,6 +16,8 @@ import { discoveryJourneyCandidates, journeyStepsFromCandidates } from "../src/l
 import { normalizeUserUrlInput } from "../src/lib/url-preview";
 import { journeyAlert, journeyRunStatus, type JourneyStepEvidence } from "../src/lib/journey-runner";
 import { parseJourneyEvidence } from "../src/lib/journey-step-evidence";
+import { journeyRecipe } from "../src/lib/journey-verifiers";
+import { journeyMeasurementLines, journeyRegionStatusDiff } from "../src/lib/journey-measurement";
 import type { DiscoveryTransitionV1 } from "../src/lib/observation-behavior-discovery";
 
 assert.equal(journeyCaptureLine("US-CA", "city", "en"), "Requested United States · California · Observed United States · California");
@@ -138,11 +140,11 @@ assert.equal(normalizeUserUrlInput("https://"), null);
 assert.deepEqual(
   journeyNetworkEvidence([
     { method: "GET", path: "/", status: 200 },
-    { method: "GET", path: "/_next/static/chunks/app.js", status: 200 },
-    { method: "GET", path: "/_next/image", status: 200 },
-    { method: "GET", path: "/brand/logo.png", status: 200 },
-  ]).map((event) => event.path),
-  ["/"],
+    { method: "GET", path: "/_next/static/chunks/app.js", status: 200, type: "script" },
+    { method: "GET", path: "/brand/logo.png?w=10", status: 200, type: "image" },
+    { method: "POST", path: "/api/checkout?token=secret", status: 500, type: "fetch" },
+  ]).map((event) => `${event.method} ${event.path} ${event.status}`),
+  ["GET / 200", "GET /_next/static/chunks/app.js 200", "GET /brand/logo.png 200", "POST /api/checkout 500"],
 );
 assert.equal(journeyStepHostAllowed("https://example.com/product", "https://example.com/cart"), true);
 assert.equal(journeyStepHostAllowed("https://example.com/product", "https://evil.example/cart"), false);
@@ -253,5 +255,112 @@ assert.equal(gated[0]?.evidence_screenshot, false);
 assert.equal(gated[0]?.evidence_video, false);
 assert.equal(gated[1]?.evidence_screenshot, true);
 assert.equal(gated[1]?.evidence_video, false);
+
+const searchSteps = parseJourneySteps([
+  { kind: "open_url", url: "https://example.com/" },
+  { kind: "search", selector: "#q", value: "coat" },
+]);
+assert.equal(validateJourneySteps("https://example.com/", searchSteps), "outcome_required");
+searchSteps[1] = { ...searchSteps[1]!, expect_url: "/search" };
+assert.equal(validateJourneySteps("https://example.com/", searchSteps), null);
+
+const open = { kind: "open_url" as const, url: "https://example.com/" };
+const language = parseJourneySteps([open, { kind: "language_switch", selector: "#lang" }]);
+assert.equal(validateJourneySteps("https://example.com/", language), "outcome_required");
+language[1] = { ...language[1]!, expect_lang: "en" };
+assert.equal(validateJourneySteps("https://example.com/", language), null);
+const currency = parseJourneySteps([open, { kind: "currency_switch", selector: "#usd" }]);
+assert.equal(validateJourneySteps("https://example.com/", currency), "outcome_required");
+currency[1] = { ...currency[1]!, expect_text: "$10.00" };
+assert.equal(validateJourneySteps("https://example.com/", currency), null);
+const region = parseJourneySteps([open, { kind: "region_switch", selector: "#region", value: "New York" }]);
+assert.equal(validateJourneySteps("https://example.com/", region), null);
+const download = parseJourneySteps([open, { kind: "download", selector: "#file" }]);
+assert.equal(validateJourneySteps("https://example.com/", download), null);
+assert.deepEqual(journeyRecipe("language_switch")?.pass, ["html_lang", "visible_text", "url"]);
+assert.equal(journeyRecipe("language_switch")?.action, "click_or_select");
+assert.deepEqual(journeyRecipe("currency_switch")?.pass, ["currency_display", "visible_text"]);
+assert.deepEqual(journeyRecipe("region_switch")?.pass, ["element_state", "visible_text", "url"]);
+assert.deepEqual(journeyRecipe("download")?.pass, ["download"]);
+assert.equal(journeyRecipe("download")?.action, "click");
+assert.deepEqual(journeyRecipe("language_switch")?.record, ["network", "runtime", "dom"]);
+const upload = parseJourneySteps([open, { kind: "upload", selector: "input[type=file]" }]);
+assert.equal(validateJourneySteps("https://example.com/", upload), null);
+assert.equal(upload[1]?.upload_custom, null);
+const uploadSubmit = parseJourneySteps([open, { kind: "upload", selector: "#file", upload_submit: true }]);
+assert.equal(validateJourneySteps("https://example.com/", uploadSubmit), "upload_file_required");
+const uploadSample = parseJourneySteps([open, { kind: "upload", selector: "#file", upload_sample: "sample_txt", upload_submit: true }]);
+assert.equal(validateJourneySteps("https://example.com/", uploadSample), "upload_confirm_required");
+uploadSample[1] = { ...uploadSample[1]!, confirm_selector: "#send", expect_text: "Upload complete" };
+assert.equal(validateJourneySteps("https://example.com/", uploadSample), null);
+const huge = parseJourneySteps([open, { kind: "upload", selector: "#file", upload_custom: { name: "big.txt", mime: "text/plain", base64: "A".repeat(90_000) } }]);
+assert.equal(huge[1]?.upload_custom, null);
+const uploadDrop = parseJourneySteps([open, { kind: "upload", selector: "#pad", upload_sample: "sample_csv", upload_drop: true }]);
+assert.equal(uploadDrop[1]?.upload_sample, "sample_csv");
+assert.equal(validateJourneySteps("https://example.com/", uploadDrop), "outcome_required");
+uploadDrop[1] = { ...uploadDrop[1]!, expect_text: "Imported" };
+assert.equal(validateJourneySteps("https://example.com/", uploadDrop), null);
+const png = parseJourneySteps([open, { kind: "upload", selector: "#file", upload_sample: "sample_png" }]);
+assert.equal(png[1]?.upload_sample, "sample_png");
+const dropReport = journeyStepReport({
+  kind: "upload",
+  status: "not_measured",
+  detail: "drop_not_permitted",
+  url_after: "https://example.com/",
+}, { selector: "#pad", url: "", value: "", expect_text: "", expect_visible: false, expect_url: "", permitted_side_effect: null }, 0, "en");
+assert.equal(dropReport.lines.find((line) => line.label === "Result")?.value, "Not measured — dropping a file can send it to the target website. Permit drop to measure this.");
+const uploadReport = journeyStepReport({
+  kind: "upload",
+  status: "not_measured",
+  detail: "file_not_provided",
+  url_after: "https://example.com/",
+}, { selector: "input[type=file]", url: "", value: "", expect_text: "", expect_visible: false, expect_url: "", permitted_side_effect: null }, 0, "en");
+assert.equal(uploadReport.lines.some((line) => line.label === "Result" && line.value === "Not measured — file upload requires an explicitly provided test file."), true);
+const downloadFacts = journeyStepReport({
+  kind: "download",
+  status: "pass",
+  detail: null,
+  url_after: "https://example.com/",
+  evidence: [{ kind: "download", summary: "download=started | status=200 | type=text/csv | filename=prices.csv | disposition=attachment; filename=\"prices.csv\"" }],
+}, { selector: "#file", url: "", value: "", expect_text: "", expect_visible: false, expect_url: "", permitted_side_effect: null }, 0, "en");
+assert.equal(downloadFacts.lines.find((line) => line.label === "Content-Disposition")?.value, "attachment; filename=\"prices.csv\"");
+assert.equal(downloadFacts.lines.find((line) => line.label === "Content-Type")?.value, "text/csv");
+assert.equal(downloadFacts.lines.find((line) => line.label === "filename")?.value, "prices.csv");
+assert.equal(downloadFacts.lines.find((line) => line.label === "response status")?.value, "200");
+assert.equal(downloadFacts.lines.find((line) => line.label === "download")?.value, "started");
+const downloadReport = journeyStepReport({
+  kind: "download",
+  status: "fail",
+  detail: "download_not_started",
+  url_after: "https://example.com/",
+}, { selector: "#file", url: "", value: "", expect_text: "", expect_visible: false, expect_url: "", permitted_side_effect: null }, 0, "en");
+assert.equal(downloadReport.lines.some((line) => line.value === "Download did not start"), true);
+
+const ledger = journeyMeasurementLines({
+  status: "fail",
+  evidence: [
+    { kind: "request_failed", summary: "POST /checkout 500" },
+    { kind: "console_error", summary: "checkout" },
+    { kind: "rendered_heading", summary: "visible" },
+  ],
+  network: [{ status: 500 }, { status: 200 }],
+  evidenceScreenshot: false,
+  evidenceVideo: false,
+  locale: "en",
+});
+assert.equal(ledger.find((line) => line.label === "Measured · Video")?.value, "not applicable");
+assert.equal(ledger.find((line) => line.label === "Measured · Visual")?.value, "not applicable");
+assert.equal(ledger.find((line) => line.label === "Measured · Network")?.value, "measured");
+assert.equal(ledger.find((line) => line.label === "Observed · Failed requests")?.value, "1");
+assert.equal(ledger.find((line) => line.label === "Observed · Heading")?.value, "visible");
+const blockedLedger = journeyMeasurementLines({ status: "blocked_for_safety", locale: "ja" });
+assert.equal(blockedLedger.every((line) => line.value === "測っていない"), true);
+
+const regionDiff = journeyRegionStatusDiff([
+  { region: "Tokyo", steps: [{ id: "checkout", kind: "checkout", status: "pass" }] },
+  { region: "New York", steps: [{ id: "checkout", kind: "checkout", status: "fail" }] },
+]);
+assert.equal(regionDiff.length, 1);
+assert.equal(regionDiff[0]?.differs, true);
 
 console.log("ok");

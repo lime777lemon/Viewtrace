@@ -1,4 +1,5 @@
 import type { InteractionCheckType } from "@/lib/observation-regional-interaction";
+import { selectResourceRequests, type ResourceRequestV1 } from "@/lib/resource-request";
 
 /** Independent ways a page can reveal behavior before it is classified. */
 export const DISCOVERY_SOURCES = [
@@ -79,6 +80,7 @@ export type DiscoveryEnvironmentV1 = {
   /** Observed in the page, when the browser reported them. */
   dpr?: number;
   document_lang?: string;
+  languages?: string;
   user_agent?: string;
   touch_points?: number;
 };
@@ -271,16 +273,12 @@ export function parseUnreadableSurfaces(raw: unknown): UnreadableSurfaceV1[] {
   });
 }
 
-export type DiscoveryNetworkEvidenceV1 = {
-  method: string;
-  path: string;
-  status: number | null;
+export type DiscoveryNetworkEvidenceV1 = ResourceRequestV1 & {
   failed: boolean;
-  duration_ms: number | null;
 };
 
 export type DiscoveryRuntimeEvidenceV1 = {
-  kind: "console_error" | "pageerror" | "requestfailed";
+  kind: "console_error" | "pageerror" | "uncaught" | "unhandled_rejection" | "requestfailed";
   message: string;
 };
 
@@ -329,22 +327,11 @@ function parseRenderedEvidence(value: unknown): DiscoveryRenderedEvidenceV1[] {
   });
 }
 
-function parseNetworkEvidence(value: unknown, cap = 4): DiscoveryNetworkEvidenceV1[] {
-  if (!Array.isArray(value)) return [];
-  return value.slice(0, cap).flatMap((item) => {
-    const row = asRecord(item);
-    if (!row || typeof row.method !== "string" || typeof row.path !== "string") return [];
-    const status = typeof row.status === "number" && Number.isFinite(row.status) ? row.status : null;
-    return [
-      {
-        method: row.method.slice(0, 12),
-        path: row.path.slice(0, 120),
-        status,
-        failed: row.failed === true || (status != null && status >= 400),
-        duration_ms: typeof row.duration_ms === "number" && Number.isFinite(row.duration_ms) ? Math.max(0, Math.round(row.duration_ms)) : null,
-      },
-    ];
-  });
+function parseNetworkEvidence(value: unknown, cap = 8): DiscoveryNetworkEvidenceV1[] {
+  return selectResourceRequests(value, cap).map((row) => ({
+    ...row,
+    failed: row.failure != null || row.status == null || row.status >= 400,
+  }));
 }
 
 function parseRuntimeEvidence(value: unknown, cap = 4): DiscoveryRuntimeEvidenceV1[] {
@@ -352,7 +339,7 @@ function parseRuntimeEvidence(value: unknown, cap = 4): DiscoveryRuntimeEvidence
   return value.slice(0, cap).flatMap((item) => {
     const row = asRecord(item);
     if (!row || typeof row.message !== "string" || !row.message) return [];
-    if (row.kind !== "console_error" && row.kind !== "pageerror" && row.kind !== "requestfailed") return [];
+    if (row.kind !== "console_error" && row.kind !== "pageerror" && row.kind !== "uncaught" && row.kind !== "unhandled_rejection" && row.kind !== "requestfailed") return [];
     return [{ kind: row.kind, message: row.message.slice(0, 160) }];
   });
 }
@@ -402,7 +389,8 @@ export function refineActionChains(raw: unknown): DiscoveryTransitionV1[] | null
       const known = seenPaths.has(key);
       seenPaths.add(key);
       if (noisy || known) continue;
-      if (!event.failed && rendered.length === 0) continue;
+      const api = event.api || event.type === "xhr" || event.type === "fetch";
+      if (!event.failed && rendered.length === 0 && !api) continue;
       network.push(event);
       if (network.length >= 4) break;
     }
@@ -459,6 +447,7 @@ export function parseDiscoveryEnvironment(raw: unknown): DiscoveryEnvironmentV1 
   if (!width || !height) return null;
   const dpr = typeof row.dpr === "number" && Number.isFinite(row.dpr) ? row.dpr : undefined;
   const documentLang = typeof row.document_lang === "string" ? row.document_lang.slice(0, 32) : "";
+  const languages = typeof row.languages === "string" ? row.languages.slice(0, 80) : "";
   const userAgent = typeof row.user_agent === "string" ? row.user_agent.slice(0, 180) : "";
   const touchPoints = typeof row.touch_points === "number" && Number.isFinite(row.touch_points) ? Math.max(0, Math.round(row.touch_points)) : undefined;
   return {
@@ -471,6 +460,7 @@ export function parseDiscoveryEnvironment(raw: unknown): DiscoveryEnvironmentV1 
     prefers_reduced_motion: row.prefers_reduced_motion === true,
     ...(dpr != null ? { dpr } : {}),
     ...(documentLang ? { document_lang: documentLang } : {}),
+    ...(languages ? { languages } : {}),
     ...(userAgent ? { user_agent: userAgent } : {}),
     ...(touchPoints != null ? { touch_points: touchPoints } : {}),
   };

@@ -1,5 +1,7 @@
 /** Facts read inside the Browserless page session. Null means that signal was not measured. */
 
+import { selectResourceRequests, type ResourceRequestV1 } from "@/lib/resource-request";
+
 export type SessionResourceCounts = {
   script: number;
   stylesheet: number;
@@ -29,6 +31,8 @@ export type SessionSignalsV1 = {
     console_error: number;
     pageerror: number;
     request_failed: number;
+    /** Null when this session did not listen for unhandled rejection. */
+    unhandled_rejection: number | null;
   };
   performance: {
     ttfb_ms: number | null;
@@ -43,6 +47,8 @@ export type SessionSignalsV1 = {
     types: string[];
     syntax_errors: number | null;
   };
+  /** Page-load requests, before the first action. Empty when that window was not recorded. */
+  requests: ResourceRequestV1[];
 };
 
 function num(value: unknown): number | null {
@@ -105,6 +111,9 @@ export function parseSessionSignals(raw: unknown): SessionSignalsV1 | null {
       console_error: count(errors.console_error),
       pageerror: count(errors.pageerror),
       request_failed: count(errors.request_failed),
+      unhandled_rejection: typeof errors.unhandled_rejection === "number" && Number.isFinite(errors.unhandled_rejection)
+        ? Math.max(0, Math.round(errors.unhandled_rejection))
+        : null,
     },
     performance: {
       ttfb_ms: num(performance.ttfb_ms),
@@ -119,6 +128,7 @@ export function parseSessionSignals(raw: unknown): SessionSignalsV1 | null {
       types,
       syntax_errors: num(structured.syntax_errors),
     },
+    requests: selectResourceRequests(row.requests),
   };
 }
 
@@ -145,7 +155,7 @@ export function buildSessionProbeFunctionCode(): string {
   ${SESSION_PROBE_READ}
   const url = String(context && context.url ? context.url : "");
   const net = [];
-  const errors = { console_error: 0, pageerror: 0, request_failed: 0 };
+  const errors = { console_error: 0, pageerror: 0, request_failed: 0, unhandled_rejection: 0 };
   page.on("console", (msg) => { if (msg && msg.type() === "error") errors.console_error += 1; });
   page.on("pageerror", () => { errors.pageerror += 1; });
   page.on("response", (res) => {
@@ -154,6 +164,11 @@ export function buildSessionProbeFunctionCode(): string {
   });
   page.on("requestfailed", () => { errors.request_failed += 1; net.push({ failed: true, status: null }); });
   await page.evaluateOnNewDocument(installSessionProbe);
+  await page.evaluateOnNewDocument(() => {
+    window.addEventListener("unhandledrejection", () => {
+      window.__vtUnhandled = (window.__vtUnhandled || 0) + 1;
+    });
+  });
   let navigation = null;
   let timedOut = false;
   try {
@@ -174,6 +189,10 @@ export function buildSessionProbeFunctionCode(): string {
     timedOut = /timeout/i.test(String(e && e.message ? e.message : e));
   }
   await new Promise((resolve) => setTimeout(resolve, 800));
+  try {
+    const unhandled = await page.evaluate(() => window.__vtUnhandled || 0);
+    if (typeof unhandled === "number") errors.unhandled_rejection = unhandled;
+  } catch (e) {}
   let probe = null;
   try { probe = await page.evaluate(readSessionProbe); } catch (e) {}
   let structured = { types: [], syntax_errors: 0 };

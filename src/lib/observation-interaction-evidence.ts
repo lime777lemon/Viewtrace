@@ -1,5 +1,8 @@
 /** Shared verify helpers. Detected is never Working. Cookie chrome is not Load animation. */
 
+import { parseAnimationObservation, parseVideoObservation, type AnimationObservation, type VideoObservation } from "@/lib/behavior-observation";
+import { selectResourceRequests, type ResourceRequestV1 } from "@/lib/resource-request";
+
 export const COOKIE_NOISE_PATTERN_SOURCE =
   "cookie|consent|gdpr|onetrust|privacy.?banner|cookie-banner|cookiebanner";
 
@@ -44,6 +47,7 @@ export type ActionEvidenceWindow = {
   rendered_changes: string[];
   visual_changed: boolean | null;
   network_count: number;
+  requests?: ResourceRequestV1[];
   runtime_errors: number;
   request_failed: number;
   duration_ms: number;
@@ -59,6 +63,8 @@ export type InteractionEvidence = {
   note?: string;
   restore?: "ok" | "failed";
   window?: ActionEvidenceWindow;
+  animation?: AnimationObservation;
+  video?: VideoObservation;
 };
 
 export function isCookieNoiseKey(key: string): boolean {
@@ -149,6 +155,8 @@ export function parseInteractionEvidence(raw: unknown): InteractionEvidence | nu
     note: typeof o.note === "string" ? o.note.slice(0, 180) : undefined,
     restore: o.restore === "ok" || o.restore === "failed" ? o.restore : undefined,
     window: parseActionWindow(o.window),
+    animation: parseAnimationObservation(o.animation) ?? undefined,
+    video: parseVideoObservation(o.video) ?? undefined,
   };
 }
 
@@ -175,6 +183,7 @@ function parseActionWindow(raw: unknown): ActionEvidenceWindow | undefined {
     rendered_changes: rendered,
     visual_changed: row.visual_changed === true ? true : row.visual_changed === false ? false : null,
     network_count: count(row.network_count),
+    requests: selectResourceRequests(row.requests),
     runtime_errors: count(row.runtime_errors),
     request_failed: count(row.request_failed),
     duration_ms: count(row.duration_ms),

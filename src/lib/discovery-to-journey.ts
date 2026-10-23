@@ -33,6 +33,7 @@ function blankStep(id: string, kind: JourneyStepDefinition["kind"]): JourneyStep
     expect_text: "",
     expect_visible: false,
     expect_url: "",
+    expect_lang: "",
   };
 }
 

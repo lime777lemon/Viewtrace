@@ -110,7 +110,7 @@ export type MonitoringJourneyStepInput = {
   id: string;
   label: string;
   expected: string;
-  status: "pass" | "fail" | "blocked_for_safety" | "not_run" | "incomplete";
+  status: "pass" | "fail" | "blocked_for_safety" | "not_run" | "incomplete" | "not_measured";
   before: string | null;
   after: string | null;
 };

@@ -1,5 +1,11 @@
 import type { Locale } from "@/lib/i18n";
-import { journeyEvidenceLabel, type JourneyEvidenceItem } from "@/lib/journey-step-evidence";
+import { journeyMeasurementLines } from "@/lib/journey-measurement";
+import { formatResourceRequest, selectResourceRequests, type ResourceRequestV1 } from "@/lib/resource-request";
+import { journeyRuntimeObservedLines } from "@/lib/runtime-observation";
+import { visualEvidenceLines, type StepVisualEvidence } from "@/lib/visual-evidence";
+import { downloadObservedLines, journeyEvidenceLabel, type JourneyEvidenceItem } from "@/lib/journey-step-evidence";
+import { journeyRecipe, journeyRecipeReady } from "@/lib/journey-verifiers";
+import { parseUploadCustom, parseUploadSample, type JourneyTestFile, type UploadSampleId } from "@/lib/journey-sample-files";
 import { countryCodeDisplayName } from "@/lib/observation-geo-readout";
 import { resolveBrowserlessResidentialTarget, usStateDisplayName } from "@/lib/regions";
 import { normalizeUserUrlInput } from "@/lib/url-preview";
@@ -17,6 +23,19 @@ export const JOURNEY_STEP_KINDS = [
   "signup",
   "add_to_cart",
   "checkout",
+  "search",
+  "navigation",
+  "contact",
+  "lead",
+  "newsletter",
+  "booking",
+  "password_reset",
+  "logout",
+  "download",
+  "language_switch",
+  "region_switch",
+  "currency_switch",
+  "upload",
 ] as const;
 
 export type JourneyStepKind = (typeof JOURNEY_STEP_KINDS)[number];
@@ -30,9 +49,6 @@ export const JOURNEY_WAIT_MS_MAX = 120_000;
 export type JourneyDeviceClass = "desktop" | "mobile";
 
 export type JourneyGeoStage = "city" | "state" | "country" | "no_proxy" | "direct";
-
-const JOURNEY_ASSET_PATH = /\/_next\/(?:static|image)|\.(?:css|js|map|woff2?|png|jpe?g|gif|svg|ico|webp)$/i;
-const JOURNEY_NOISE_PATH = /analytics|beacon|collect|gtm|googletagmanager|doubleclick|hotjar|segment|mixpanel|favicon/i;
 
 /** open_url がページを表示したか。about:blank は未表示。 */
 export function journeyOpenPageState(
@@ -55,12 +71,9 @@ export function journeyOpenPageState(
   return { displayed, headline, reason };
 }
 
-export function journeyNetworkEvidence(
-  events: Array<{ method: string; path: string; status: number | null }>,
-): Array<{ method: string; path: string; status: number | null }> {
-  return events
-    .filter((event) => event.path && !JOURNEY_ASSET_PATH.test(event.path) && !JOURNEY_NOISE_PATH.test(event.path))
-    .slice(0, 4);
+/** Requests observed during the step. JS, CSS, images, fonts, XHR, fetch, API, and third-party stay. */
+export function journeyNetworkEvidence(events: unknown): ResourceRequestV1[] {
+  return selectResourceRequests(events);
 }
 
 /** Same residential outcome as an Observation capture. A country fallback is not the requested state. */
@@ -101,6 +114,28 @@ export function isJourneyCommerceKind(kind: string): kind is JourneyCommerceKind
   return (JOURNEY_COMMERCE_KINDS as readonly string[]).includes(kind);
 }
 
+export const JOURNEY_PURPOSE_KINDS = [
+  "search",
+  "navigation",
+  "contact",
+  "lead",
+  "newsletter",
+  "booking",
+  "password_reset",
+  "logout",
+  "download",
+  "language_switch",
+  "region_switch",
+  "currency_switch",
+  "upload",
+] as const;
+
+export type JourneyPurposeKind = (typeof JOURNEY_PURPOSE_KINDS)[number];
+
+export function isJourneyPurposeKind(kind: string): kind is JourneyPurposeKind {
+  return (JOURNEY_PURPOSE_KINDS as readonly string[]).includes(kind);
+}
+
 export type JourneyStepDefinition = {
   id: string;
   kind: JourneyStepKind;
@@ -114,6 +149,8 @@ export type JourneyStepDefinition = {
   expect_text: string;
   expect_visible: boolean;
   expect_url: string;
+  /** HTML lang a language switch must reach, such as en. */
+  expect_lang?: string;
   /** Login, signup, and checkout fields. Password values stay {{password}}. */
   inputs?: JourneyInput[];
   /** Checkout confirm control. Place order and payment still require permission. */
@@ -122,6 +159,14 @@ export type JourneyStepDefinition = {
   evidence_screenshot?: boolean;
   /** Video currentTime and paused on this step. Off unless the step turns it on. */
   evidence_video?: boolean;
+  /** ViewTrace sample placed on the file input. */
+  upload_sample?: UploadSampleId | "";
+  /** User-provided test file. Sent only when upload_submit is set. */
+  upload_custom?: JourneyTestFile | null;
+  /** When true, the step may click the confirm control after the file is selected. */
+  upload_submit?: boolean;
+  /** When true, the step may drop the test file. A drop can send the file. */
+  upload_drop?: boolean;
 };
 
 export type JourneySideEffect = "payment" | "place_order" | "delete" | "external_send";
@@ -243,20 +288,28 @@ export function parseJourneySteps(raw: unknown): JourneyStepDefinition[] {
       expect_text: typeof row.expect_text === "string" ? row.expect_text.slice(0, 180) : "",
       expect_visible: row.expect_visible === true,
       expect_url: typeof row.expect_url === "string" ? row.expect_url.trim().slice(0, 240) : "",
+      expect_lang: typeof row.expect_lang === "string" ? row.expect_lang.trim().slice(0, 32) : "",
       inputs: parseJourneyInputs(row.inputs),
       confirm_selector: typeof row.confirm_selector === "string" ? row.confirm_selector.trim().slice(0, 180) : "",
       evidence_screenshot: row.evidence_screenshot === true,
       evidence_video: row.evidence_video === true,
+      upload_sample: parseUploadSample(row.upload_sample),
+      upload_custom: parseUploadCustom(row.upload_custom),
+      upload_submit: row.upload_submit === true,
+      upload_drop: row.upload_drop === true,
     });
   }
   return steps;
 }
 
 export function journeyStepNeedsSelector(kind: JourneyStepKind): boolean {
-  return kind === "click" || kind === "fill" || kind === "select" || kind === "assert_visible" || kind === "assert_text" || isJourneyCommerceKind(kind);
+  return kind === "click" || kind === "fill" || kind === "select" || kind === "assert_visible" || kind === "assert_text" || isJourneyCommerceKind(kind) || isJourneyPurposeKind(kind);
 }
 
 function journeyExpectsOutcome(step: JourneyStepDefinition): boolean {
+  if (step.kind === "upload") return true;
+  if (journeyRecipeReady(step)) return true;
+  if (journeyRecipe(step.kind)) return false;
   return Boolean(step.expect_text || step.expect_visible || step.expect_url);
 }
 
@@ -279,7 +332,12 @@ export function validateJourneySteps(startUrl: string, steps: JourneyStepDefinit
     if (step.kind === "signup" && (!journeyInputSelector(step, "email") || !journeyInputSelector(step, "password"))) {
       return "selector_required";
     }
-    if (isJourneyCommerceKind(step.kind) && !journeyExpectsOutcome(step)) return "outcome_required";
+    if ((isJourneyCommerceKind(step.kind) || isJourneyPurposeKind(step.kind)) && !journeyExpectsOutcome(step)) return "outcome_required";
+    if (step.kind === "upload" && (step.upload_submit || step.upload_drop)) {
+      if (!step.upload_sample && !step.upload_custom) return "upload_file_required";
+      if (step.upload_submit && !step.confirm_selector) return "upload_confirm_required";
+      if (!step.expect_text && !step.expect_visible && !step.expect_url) return "outcome_required";
+    }
   }
   return null;
 }
@@ -309,6 +367,19 @@ const STEP_KIND_LABEL: Record<Locale, Record<JourneyStepKind, string>> = {
     signup: "アカウント作成",
     add_to_cart: "カートに追加",
     checkout: "チェックアウト",
+    search: "検索",
+    navigation: "移動",
+    contact: "問い合わせ",
+    lead: "リード送信",
+    newsletter: "ニュースレター",
+    booking: "予約",
+    password_reset: "パスワード再設定",
+    logout: "ログアウト",
+    download: "ダウンロード",
+    language_switch: "言語の切替",
+    region_switch: "地域の切替",
+    currency_switch: "通貨の切替",
+    upload: "アップロード",
   },
   en: {
     open_url: "Open URL",
@@ -323,6 +394,19 @@ const STEP_KIND_LABEL: Record<Locale, Record<JourneyStepKind, string>> = {
     signup: "Signup",
     add_to_cart: "Add to cart",
     checkout: "Checkout",
+    search: "Search",
+    navigation: "Navigation",
+    contact: "Contact",
+    lead: "Lead form",
+    newsletter: "Newsletter",
+    booking: "Booking",
+    password_reset: "Password reset",
+    logout: "Logout",
+    download: "Download",
+    language_switch: "Language switch",
+    region_switch: "Region switch",
+    currency_switch: "Currency switch",
+    upload: "Upload",
   },
 };
 
@@ -333,6 +417,7 @@ const STEP_STATUS_LABEL: Record<Locale, Record<string, string>> = {
     blocked_for_safety: "未実行",
     not_run: "未実行",
     incomplete: "未完了",
+    not_measured: "未測定",
     passed: "成功",
     failed: "失敗",
     blocked: "未実行",
@@ -343,6 +428,7 @@ const STEP_STATUS_LABEL: Record<Locale, Record<string, string>> = {
     blocked_for_safety: "Blocked",
     not_run: "Not run",
     incomplete: "Incomplete",
+    not_measured: "Not measured",
     passed: "Passed",
     failed: "Failed",
     blocked: "Blocked",
@@ -382,6 +468,8 @@ function journeyFailureReason(detail: string | null, locale: Locale): string | n
   if (detail === "outcome_mismatch") return locale === "ja" ? "期待した変化がなかった" : "Expected change was not observed";
   if (detail === "outcome_not_defined") return locale === "ja" ? "期待する結果が未定義" : "Expected outcome is not defined";
   if (detail === "value_not_set") return locale === "ja" ? "入力が残らなかった" : "Entered value did not stick";
+  if (detail === "file_input" || detail === "file_input_missing") return locale === "ja" ? "ファイル入力が見つからない" : "The target is not a file input";
+  if (detail === "download_not_started") return locale === "ja" ? "ファイルの取得は始まっていない" : "Download did not start";
   if (/^https?:\/\//i.test(detail)) return null;
   return null;
 }
@@ -402,10 +490,26 @@ export function journeyStepReport(
     before_visible?: boolean | null;
     after_visible?: boolean | null;
     duration_ms?: number | null;
-    network?: Array<{ method: string; path: string; status: number | null }>;
+    network?: Array<{
+      method: string;
+      path: string;
+      status: number | null;
+      type?: string;
+      duration_ms?: number | null;
+      transfer_bytes?: number | null;
+      failure?: string | null;
+      third_party?: boolean;
+      api?: boolean;
+    }>;
+    runtime?: Array<{ kind: string; message: string }>;
+    runtime_observed?: boolean;
+    visual?: StepVisualEvidence | null;
     evidence?: JourneyEvidenceItem[];
   },
-  defined: Pick<JourneyStepDefinition, "selector" | "url" | "value" | "expect_text" | "expect_visible" | "expect_url" | "permitted_side_effect"> | null,
+  defined: (Pick<JourneyStepDefinition, "selector" | "url" | "value" | "expect_text" | "expect_visible" | "expect_url" | "permitted_side_effect"> & {
+    evidence_screenshot?: boolean;
+    evidence_video?: boolean;
+  }) | null,
   index: number,
   locale: Locale,
 ): { title: string; lines: JourneyStepReportLine[] } {
@@ -418,8 +522,8 @@ export function journeyStepReport(
   if (step.kind === "open_url") {
     if (target) lines.push({ label: ja ? "対象" : "Target", value: target });
     lines.push({ label: ja ? "現在の URL" : "Current URL", value: step.url_after || "about:blank" });
-  } else if (isJourneyCommerceKind(step.kind) || step.kind === "click" || step.kind === "fill" || step.kind === "select") {
-    const action = isJourneyCommerceKind(step.kind)
+  } else if (isJourneyCommerceKind(step.kind) || isJourneyPurposeKind(step.kind) || step.kind === "click" || step.kind === "fill" || step.kind === "select") {
+    const action = isJourneyCommerceKind(step.kind) || isJourneyPurposeKind(step.kind)
       ? journeyKindLabel(step.kind, locale)
       : step.kind === "click"
         ? (ja ? "クリック" : "Click")
@@ -436,6 +540,15 @@ export function journeyStepReport(
     });
     lines.push({ label: ja ? "許可" : "Permission", value: ja ? "付与されていない" : "Not granted" });
     lines.push({ label: ja ? "結果" : "Result", value: ja ? "クリックは実行していない" : "No click was executed" });
+    lines.push(...journeyMeasurementLines({
+      status: step.status,
+      evidence: step.evidence,
+      network: step.network,
+      runtime: step.runtime,
+      evidenceScreenshot: defined?.evidence_screenshot,
+      evidenceVideo: defined?.evidence_video,
+      locale,
+    }));
   } else {
     const expected = defined?.expect_text
       ? (ja ? `文言が「${defined.expect_text}」になる` : `Text becomes “${defined.expect_text}”`)
@@ -447,13 +560,50 @@ export function journeyStepReport(
             ? (ja ? "対象の URL を開く" : "Open the target URL")
             : "";
     if (expected) lines.push({ label: ja ? "期待" : "Expected", value: expected });
+    lines.push(...journeyRuntimeObservedLines({
+      kind: step.kind,
+      status: step.status,
+      afterText: step.after_text,
+      afterVisible: step.after_visible,
+      expectText: defined?.expect_text,
+      expectVisible: defined?.expect_visible,
+      expectUrl: defined?.expect_url,
+      evidence: step.evidence,
+      network: journeyNetworkEvidence(step.network ?? []),
+      runtime: step.runtime,
+      runtimeObserved: step.runtime_observed === true,
+      locale,
+    }));
+    lines.push(...visualEvidenceLines(step.visual ?? null, locale));
+    lines.push(...journeyMeasurementLines({
+      status: step.status,
+      evidence: step.evidence,
+      network: step.network,
+      runtime: step.runtime,
+      evidenceScreenshot: defined?.evidence_screenshot,
+      visual: step.visual,
+      evidenceVideo: defined?.evidence_video,
+      locale,
+    }));
 
     const reason = journeyFailureReason(step.detail, locale);
     if (reason) lines.push({ label: ja ? "理由" : "Reason", value: reason });
 
     if (step.evidence?.length) {
       for (const item of step.evidence) {
-        lines.push({ label: journeyEvidenceLabel(item.kind, locale), value: item.summary });
+        const playback = item.kind === "video_playing"
+          ? (ja
+            ? `再生が進んだ（${item.summary}）。画面への表示の正常さは測っていない`
+            : `Playback progressed (${item.summary}). The picture was not judged.`)
+          : item.summary;
+        if (item.kind === "download") {
+          const downloadLines = downloadObservedLines(item.summary, locale);
+          if (downloadLines.length) {
+            lines.push(...downloadLines);
+            continue;
+          }
+        }
+        lines.push({ label: journeyEvidenceLabel(item.kind, locale), value: playback });
       }
     } else if (step.before_text != null || step.after_text != null) {
       lines.push({ label: "Evidence", value: `${step.before_text ?? ""} → ${step.after_text ?? ""}` });
@@ -462,16 +612,22 @@ export function journeyStepReport(
     } else if (step.kind === "open_url" && step.rendered_text) {
       lines.push({ label: "Evidence", value: step.rendered_text });
     }
-    const coded = step.detail === "url_mismatch" || step.detail === "outcome_mismatch" || step.detail === "outcome_not_defined" || step.detail === "value_not_set";
+    const uploadNote = step.detail === "file_not_provided" || step.detail === "file_input"
+      ? (ja ? "未測定 — テストファイルを指定した場合だけアップロードを測る。" : "Not measured — file upload requires an explicitly provided test file.")
+      : step.detail === "drop_not_permitted"
+        ? (ja ? "未測定 — ファイルをドロップすると対象サイトへ送られることがある。測るにはドロップを許可する。" : "Not measured — dropping a file can send it to the target website. Permit drop to measure this.")
+        : "";
+    lines.push({ label: ja ? "結果" : "Result", value: uploadNote || journeyStatusLabel(step.status, locale) });
+    const coded = step.detail === "url_mismatch" || step.detail === "outcome_mismatch" || step.detail === "outcome_not_defined" || step.detail === "value_not_set" || step.detail === "file_input" || step.detail === "file_input_missing" || step.detail === "file_not_provided" || step.detail === "file_selected" || step.detail === "file_dropped" || step.detail === "drop_not_permitted" || step.detail === "download_not_started";
     if (step.detail && !coded && step.detail !== reason && !/^https?:\/\//i.test(step.detail) && step.detail !== step.url_after) {
       lines.push({ label: "Evidence", value: step.detail });
     }
   }
 
-  for (const event of journeyNetworkEvidence(step.network ?? []).slice(0, 4)) {
+  for (const event of journeyNetworkEvidence(step.network ?? [])) {
     lines.push({
       label: "Network",
-      value: `${event.method} ${event.path} · ${event.status ?? "failed"}`,
+      value: formatResourceRequest(event),
     });
   }
   if (step.duration_ms != null) {

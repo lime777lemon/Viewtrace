@@ -147,7 +147,7 @@ export const copy = {
     },
     compare: {
       title: "同じ着地ページを、配信先の地域から見る",
-      body: "地域ごとにオブザベーションを実行します。ダッシュボードには URL・地域・時刻・ステータス（成功 / 失敗）が残ります。一覧は URL やタグで検索でき、タグはその URL の記録すべてに保存されます。",
+      body: "地域ごとにオブザベーションを実行します。ダッシュボードには URL・地域・時刻・ステータス（成功 / 失敗）が残ります。一覧は URL と地域で探せます。",
       url: "https://example.com/campaign",
       exampleTag: "campaign",
       rows: [
@@ -566,7 +566,7 @@ export const copy = {
           "SEO・SNSに関係するページメタデータも記録（title、description、canonical、robots、OG）",
           "フルページのスクリーンショット（保存は7日間）",
           "公開Verifyリンク（クライアント共有）",
-          "URL・タグで検索・整理",
+          "URL・地域で検索",
           "ステータス履歴",
           "サーバー記録・記録内容のチェック用コード（ずれ検知の補助）",
           "自動観測（日／週／月の回数を設定）とメール通知",
@@ -591,7 +591,7 @@ export const copy = {
           "SEO・SNSに関係するページメタデータも記録（title、description、canonical、robots、OG）",
           "存証向けフルページのビジュアル記録",
           "公開Verifyリンク（クライアント共有）",
-          "URL・タグで検索・整理",
+          "URL・地域で検索",
           "継続監視（日／週／月・回数設定）",
           "メール通知（毎回または差分が大きいとき）",
           "差分検知（画像）",
@@ -752,11 +752,11 @@ export const copy = {
           },
           records: {
             title: "オブザベーション一覧",
-            body: "このページでは URL・地域・タグで記録を探せます。タグはその URL の記録すべてに保存されます。スクリーンショットはプランの保存期間後に削除され、メタデータは残ります。",
+            body: "このページでは URL・地域で記録を探せます。スクリーンショットはプランの保存期間後に削除され、メタデータは残ります。",
           },
           recordsScreen: {
             title: "この画面の見方",
-            body: "検索は URL・ページ名・地域・タグです。下のチップでタグを絞ります。Share Collection は既存の記録を選んで 1 リンクにします。新しい撮影はありません。表は取得時刻・URL・地域・ステータス・タグ・詳細です。",
+            body: "検索は URL・ページ名・地域です。Share Collection は既存の記録を選んで 1 リンクにします。新しい撮影はありません。表は取得時刻・URL・地域・ステータス・詳細です。",
           },
           recordDetail: {
             title: "詳細で結果を見る",
@@ -1014,13 +1014,18 @@ export const copy = {
       pageTitleCaptured: "ページタイトル（取得時点）",
       url: "URL",
       recordSectionTitle: "記録",
-      recordSectionHint:
-        "この地域・この時点で観測できた事実です。監査ではありません。Observation は1回の測定セッションで、配下に Visual / HTTP / Page Signals などが入ります。順は記録 → 検出した事実 → 監査（AI）です。",
       measurementsTitle: "Measurements",
       measurementsHint:
         "この Observation で測れた項目です。測っていない項目は未測定です。ページが変わったとは言いません。",
       measurementsNotMeasuredHint:
-        "Network・Console・フル DOM は、この Observation では測っていません。スクリーンショットの連続ショットも使いません。",
+        "測っていない項目は未測定です。ページ読み込みの DNS・TLS、unhandled rejection、レイアウト、フル DOM は未測定です。ホストの DNS レコードは到達確認に含めていません。連続ショットは使いません。",
+      measurementLedgerTitle: "実測台帳",
+      measurementBehaviorSource: "挙動確認",
+      measurementJourneySource: "Journey",
+      measurementResourceImage: "画像",
+      measurementResourceFont: "フォント",
+      measurementFailedRequests: "失敗",
+      measurementRequests: "リクエスト",
       measurementsPreviousNote: "前回（{when}）との差は、下の検出した事実です。",
       measurementVisual: "Visual",
       measurementVisualStill: "静止画を保存",
@@ -1479,7 +1484,7 @@ export const copy = {
       watchCsvExportPending: "準備中…",
       integrityTitle: "記録メタデータの整合性（content_hash）",
       integritySubtitle:
-        "画像 SHA-256 とは別レイヤーです。証跡フィールド（URL・地域・取得時刻・スクリーンショット等）が保存後に改ざんされていないかを示します。メモやタグは含みません。",
+        "画像 SHA-256 とは別レイヤーです。証跡フィールド（URL・地域・取得時刻・スクリーンショット等）が保存後に改ざんされていないかを示します。",
       integrityOk:
         "保存した情報どうしが一致しています。共有や説明の土台として使えます（確認方式 v{version}）。",
       integrityMissing:
@@ -1744,7 +1749,7 @@ export const copy = {
       metaTitle: "オブザベーション | Viewtrace",
       title: "オブザベーション",
       subtitle:
-        "URL・地域・タグで一覧を探せます。タグはその URL の記録すべてに保存されます。スクリーンショットはプランの保存期間後に削除され、メタデータは残ります。",
+        "URL・地域で一覧を探せます。スクリーンショットはプランの保存期間後に削除され、メタデータは残ります。",
       planSuffix: " 現在のプラン：{plan}。",
       csvProHint: "一覧を CSV でエクスポートできます。",
       csvUpgradeHint: "一覧を CSV でエクスポートできます。",
@@ -1752,7 +1757,7 @@ export const copy = {
       newObservation: "新規オブザベーション",
       newObservationPending: "処理中…",
       searchLabel: "検索",
-      searchPlaceholder: "URL、ページ名、地域、タグ",
+      searchPlaceholder: "URL、ページ名、地域",
       allTags: "すべて",
       filtering: "処理中…",
       untagged: "タグなし",
@@ -1937,7 +1942,7 @@ export const copy = {
       cardMonthlyOverageNone:
         "デモでは上限に達しても記録を続けられます。従量単価は環境変数で公開設定したときだけダッシュボードに表示されます。",
       recentTitle: "直近の記録",
-      searchAndTag: "検索・タグで整理",
+      searchAndTag: "一覧を検索",
       newObservation: "新規オブザベーション",
       purchaseTitle: "購入履歴",
       purchaseIntro: "毎月の Stripe 請求です。確定した課金が新しい順に並びます。",
@@ -2228,7 +2233,7 @@ export const copy = {
     },
     compare: {
       title: "See the same landing page from the markets you buy",
-      body: "Run an observation from each region. The dashboard keeps URL, region, time, and status—Success or Failure. Search the list by URL or tag. A tag is saved on every record of that URL.",
+      body: "Run an observation from each region. The dashboard keeps URL, region, time, and status—Success or Failure. Search the list by URL or region.",
       url: "https://example.com/campaign",
       exampleTag: "campaign",
       rows: [
@@ -2647,7 +2652,7 @@ export const copy = {
           "Also records SEO- and social-related page metadata (title, description, canonical, robots, OG)",
           "Full-page screenshots (7-day retention)",
           "Public verify links for client sharing",
-          "Search and organize by URL and tags",
+          "Search by URL and region",
           "Status history",
           "Server timestamps & record check codes (drift detection aid)",
           "Auto-observation (set daily / weekly / monthly run counts) with email notifications",
@@ -2673,7 +2678,7 @@ export const copy = {
           "Also records SEO- and social-related page metadata (title, description, canonical, robots, OG)",
           "Complete archival captures (full-page screenshots)",
           "Public verify links for client sharing",
-          "Search and organize by URL and tags",
+          "Search by URL and region",
           "Scheduled monitoring (day / week / month with run count)",
           "Email: every run or only on large visual change (threshold)",
           "Pixel-based diff detection",
@@ -2837,11 +2842,11 @@ export const copy = {
           },
           records: {
             title: "Observations list",
-            body: "Search this page by URL, region, or tag. A tag is saved on every record of that URL. Screenshots are removed after the plan window; metadata remains.",
+            body: "Search this page by URL or region. Screenshots are removed after the plan window; metadata remains.",
           },
           recordsScreen: {
             title: "How to read this screen",
-            body: "Search is URL, page title, region, or tag. Chips filter by tag. Share Collection turns selected existing records into one link—no new capture. The table shows capture time, URL, region, status, tags, and Details.",
+            body: "Search is URL, page title, or region. Share Collection turns selected existing records into one link—no new capture. The table shows capture time, URL, region, status, and Details.",
           },
           recordDetail: {
             title: "Open the result with Details",
@@ -3102,13 +3107,18 @@ export const copy = {
       pageTitleCaptured: "Page title (captured)",
       url: "URL",
       recordSectionTitle: "Record",
-      recordSectionHint:
-        "Facts observed from this region at this time. Not an audit. An Observation is one measurement session: Visual / HTTP / Page Signals sit under it. Order is record → detected facts → AI audit.",
       measurementsTitle: "Measurements",
       measurementsHint:
         "What this Observation measured. Unmeasured items stay unmeasured. This does not say the page changed.",
       measurementsNotMeasuredHint:
-        "Network, console, and a full DOM snapshot were not measured on this Observation. Sequential stills are not used.",
+        "Unmeasured items stay unmeasured. Page-load DNS, TLS, unhandled rejection, layout, and a full DOM snapshot stay unmeasured. Host DNS records are not part of reachability. Sequential stills are not used.",
+      measurementLedgerTitle: "Measurement ledger",
+      measurementBehaviorSource: "Behavior check",
+      measurementJourneySource: "Journey",
+      measurementResourceImage: "image",
+      measurementResourceFont: "font",
+      measurementFailedRequests: "failed",
+      measurementRequests: "requests",
       measurementsPreviousNote: "Differences from {when} are in detected facts below.",
       measurementVisual: "Visual",
       measurementVisualStill: "Still saved",
@@ -3569,7 +3579,7 @@ export const copy = {
       watchCsvExportPending: "Preparing…",
       integrityTitle: "Record metadata integrity (content_hash)",
       integritySubtitle:
-        "Separate from image SHA-256. Covers evidence fields only—not notes, tags, or folders.",
+        "Separate from image SHA-256. Covers the evidence fields saved with this capture.",
       integrityOk:
         "Saved details line up—ready to share or report with confidence (check v{version}).",
       integrityMissing:
@@ -3834,7 +3844,7 @@ export const copy = {
       metaTitle: "Observations | Viewtrace",
       title: "Observations",
       subtitle:
-        "Search by URL, region, or tag. Screenshots are removed after the plan window; URL, region, time, and hashes remain.",
+        "Search by URL or region. Screenshots are removed after the plan window; URL, region, time, and hashes remain.",
       planSuffix: " Current plan: {plan}.",
       csvProHint: "You can export this list as CSV.",
       csvUpgradeHint: "You can export this list as CSV.",
@@ -3842,7 +3852,7 @@ export const copy = {
       newObservation: "New observation",
       newObservationPending: "Processing…",
       searchLabel: "Search",
-      searchPlaceholder: "URL, page title, region, or tag",
+      searchPlaceholder: "URL, page title, or region",
       allTags: "All",
       filtering: "Processing…",
       untagged: "Untagged",
@@ -4049,7 +4059,7 @@ export const copy = {
       cardMonthlyOverageNone:
         "In this demo you can keep recording past the limit. Per-check overage pricing appears here only when configured via environment.",
       recentTitle: "Recent records",
-      searchAndTag: "Search and tag",
+      searchAndTag: "Search the list",
       newObservation: "New observation",
       purchaseTitle: "Purchase history",
       purchaseIntro: "Monthly Stripe invoices, newest first.",

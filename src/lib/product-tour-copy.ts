@@ -62,11 +62,11 @@ const en: ProductTourCopy = {
     },
     records: {
       title: "Observations list",
-      body: "Search this page by URL, region, or tag. A tag is saved on every record of that URL. Screenshots are removed after the plan window; metadata remains.",
+      body: "Search this page by URL or region. Screenshots are removed after the plan window; metadata remains.",
     },
     recordsScreen: {
       title: "How to read this screen",
-      body: "Search is URL, page title, region, or tag. Chips filter by tag. Share Collection turns selected existing records into one link—no new capture. The table shows capture time, URL, region, status, tags, and Details.",
+      body: "Search is URL, page title, or region. Share Collection turns selected existing records into one link—no new capture. The table shows capture time, URL, region, status, and Details.",
     },
     recordDetail: {
       title: "Open the result with Details",
@@ -120,11 +120,11 @@ export const productTourCopy: Record<OnboardingLang, ProductTourCopy> = {
       },
       records: {
         title: "オブザベーション一覧",
-        body: "このページでは URL・地域・タグで記録を探せます。タグはその URL の記録すべてに保存されます。スクリーンショットはプランの保存期間後に削除され、メタデータは残ります。",
+        body: "このページでは URL・地域で記録を探せます。スクリーンショットはプランの保存期間後に削除され、メタデータは残ります。",
       },
       recordsScreen: {
         title: "この画面の見方",
-        body: "検索は URL・ページ名・地域・タグです。下のチップでタグを絞ります。Share Collection は既存の記録を選んで 1 リンクにします。新しい撮影はありません。表は取得時刻・URL・地域・ステータス・タグ・詳細です。",
+        body: "検索は URL・ページ名・地域です。Share Collection は既存の記録を選んで 1 リンクにします。新しい撮影はありません。表は取得時刻・URL・地域・ステータス・詳細です。",
       },
       recordDetail: {
         title: "詳細で結果を見る",
@@ -173,11 +173,11 @@ export const productTourCopy: Record<OnboardingLang, ProductTourCopy> = {
       },
       records: {
         title: "Observations 목록",
-        body: "이 페이지에서 URL, 지역, 태그로 검색합니다. 태그는 그 URL의 모든 기록에 저장됩니다. 스크린샷은 플랜 기간 후 삭제되고, 메타데이터는 남습니다.",
+        body: "이 페이지에서 URL과 지역으로 검색합니다. 스크린샷은 플랜 기간 후 삭제되고, 메타데이터는 남습니다.",
       },
       recordsScreen: {
         title: "이 화면 보는 법",
-        body: "검색은 URL, 페이지 제목, 지역, 태그입니다. 칩으로 태그를 필터합니다. Share Collection은 선택한 기존 기록을 링크 하나로 만듭니다. 새 촬영은 없습니다. 표는 촬영 시각, URL, 지역, 상태, 태그, Details입니다.",
+        body: "검색은 URL, 페이지 제목, 지역입니다. Share Collection은 선택한 기존 기록을 링크 하나로 만듭니다. 새 촬영은 없습니다. 표는 촬영 시각, URL, 지역, 상태, Details입니다.",
       },
       recordDetail: {
         title: "Details로 결과 열기",
@@ -225,11 +225,11 @@ export const productTourCopy: Record<OnboardingLang, ProductTourCopy> = {
       },
       records: {
         title: "Observations 列表",
-        body: "可按 URL、地区或标签搜索本页。标签会保存在该 URL 的每条记录上。截图在套餐保存期后删除，元数据保留。",
+        body: "可按 URL 或地区搜索本页。截图在套餐保存期后删除，元数据保留。",
       },
       recordsScreen: {
         title: "如何阅读此屏幕",
-        body: "搜索范围是 URL、页面标题、地区或标签。芯片按标签筛选。Share Collection 把所选已有记录合成一条链接——不会再次拍摄。表格显示拍摄时间、URL、地区、状态、标签和 Details。",
+        body: "搜索范围是 URL、页面标题或地区。Share Collection 把所选已有记录合成一条链接——不会再次拍摄。表格显示拍摄时间、URL、地区、状态和 Details。",
       },
       recordDetail: {
         title: "用 Details 打开结果",
@@ -277,11 +277,11 @@ export const productTourCopy: Record<OnboardingLang, ProductTourCopy> = {
       },
       records: {
         title: "Observations 列表",
-        body: "可依 URL、地區或標籤搜尋本頁。標籤會保存在該 URL 的每筆紀錄上。截圖在方案保存期後刪除，中繼資料保留。",
+        body: "可依 URL 或地區搜尋本頁。截圖在方案保存期後刪除，中繼資料保留。",
       },
       recordsScreen: {
         title: "如何閱讀此畫面",
-        body: "搜尋範圍是 URL、頁面標題、地區或標籤。晶片依標籤篩選。Share Collection 把所選既有紀錄合成一條連結——不會再次拍攝。表格顯示拍攝時間、URL、地區、狀態、標籤和 Details。",
+        body: "搜尋範圍是 URL、頁面標題或地區。Share Collection 把所選既有紀錄合成一條連結——不會再次拍攝。表格顯示拍攝時間、URL、地區、狀態和 Details。",
       },
       recordDetail: {
         title: "用 Details 開啟結果",
@@ -330,11 +330,11 @@ export const productTourCopy: Record<OnboardingLang, ProductTourCopy> = {
       },
       records: {
         title: "Lista de Observations",
-        body: "Busca en esta página por URL, región o etiqueta. Una etiqueta se guarda en cada registro de esa URL. Las capturas se eliminan tras la ventana del plan; los metadatos permanecen.",
+        body: "Busca en esta página por URL o región. Las capturas se eliminan tras la ventana del plan; los metadatos permanecen.",
       },
       recordsScreen: {
         title: "Cómo leer esta pantalla",
-        body: "La búsqueda es URL, título de página, región o etiqueta. Los chips filtran por etiqueta. Share Collection convierte los registros existentes seleccionados en un enlace—sin captura nueva. La tabla muestra hora de captura, URL, región, estado, etiquetas y Details.",
+        body: "La búsqueda es URL, título de página o región. Share Collection convierte los registros existentes seleccionados en un enlace—sin captura nueva. La tabla muestra hora de captura, URL, región, estado y Details.",
       },
       recordDetail: {
         title: "Abrir el resultado con Details",
@@ -383,11 +383,11 @@ export const productTourCopy: Record<OnboardingLang, ProductTourCopy> = {
       },
       records: {
         title: "Liste des Observations",
-        body: "Recherchez sur cette page par URL, région ou tag. Un tag est enregistré sur chaque enregistrement de cette URL. Les captures sont retirées après la fenêtre du forfait ; les métadonnées restent.",
+        body: "Recherchez sur cette page par URL ou région. Les captures sont retirées après la fenêtre du forfait ; les métadonnées restent.",
       },
       recordsScreen: {
         title: "Comment lire cet écran",
-        body: "La recherche porte sur l’URL, le titre de page, la région ou le tag. Les puces filtrent par tag. Share Collection transforme les enregistrements existants sélectionnés en un lien — pas de nouvelle capture. Le tableau affiche l’heure de capture, l’URL, la région, le statut, les tags et Details.",
+        body: "La recherche porte sur l’URL, le titre de page ou la région. Share Collection transforme les enregistrements existants sélectionnés en un lien — pas de nouvelle capture. Le tableau affiche l’heure de capture, l’URL, la région, le statut et Details.",
       },
       recordDetail: {
         title: "Ouvrir le résultat avec Details",
@@ -436,11 +436,11 @@ export const productTourCopy: Record<OnboardingLang, ProductTourCopy> = {
       },
       records: {
         title: "Observations-Liste",
-        body: "Durchsuchen Sie diese Seite nach URL, Region oder Tag. Ein Tag wird auf jedem Datensatz dieser URL gespeichert. Screenshots werden nach dem Planfenster entfernt; Metadaten bleiben.",
+        body: "Durchsuchen Sie diese Seite nach URL oder Region. Screenshots werden nach dem Planfenster entfernt; Metadaten bleiben.",
       },
       recordsScreen: {
         title: "So lesen Sie diesen Bildschirm",
-        body: "Die Suche umfasst URL, Seitentitel, Region oder Tag. Chips filtern nach Tag. Share Collection macht aus ausgewählten vorhandenen Datensätzen einen Link — keine neue Aufnahme. Die Tabelle zeigt Aufnahmezeit, URL, Region, Status, Tags und Details.",
+        body: "Die Suche umfasst URL, Seitentitel oder Region. Share Collection macht aus ausgewählten vorhandenen Datensätzen einen Link — keine neue Aufnahme. Die Tabelle zeigt Aufnahmezeit, URL, Region, Status und Details.",
       },
       recordDetail: {
         title: "Ergebnis mit Details öffnen",
@@ -489,11 +489,11 @@ export const productTourCopy: Record<OnboardingLang, ProductTourCopy> = {
       },
       records: {
         title: "Lista de Observations",
-        body: "Pesquise nesta página por URL, região ou etiqueta. Uma etiqueta é guardada em cada registo desse URL. Os screenshots são removidos após a janela do plano; os metadados permanecem.",
+        body: "Pesquise nesta página por URL ou região. Os screenshots são removidos após a janela do plano; os metadados permanecem.",
       },
       recordsScreen: {
         title: "Como ler este ecrã",
-        body: "A pesquisa é URL, título da página, região ou etiqueta. Os chips filtram por etiqueta. Share Collection transforma os registos existentes selecionados num link — sem captura nova. A tabela mostra hora de captura, URL, região, estado, etiquetas e Details.",
+        body: "A pesquisa é URL, título da página ou região. Share Collection transforma os registos existentes selecionados num link — sem captura nova. A tabela mostra hora de captura, URL, região, estado e Details.",
       },
       recordDetail: {
         title: "Abrir o resultado com Details",
@@ -542,11 +542,11 @@ export const productTourCopy: Record<OnboardingLang, ProductTourCopy> = {
       },
       records: {
         title: "Elenco Observations",
-        body: "Cerca in questa pagina per URL, regione o tag. Un tag è salvato su ogni record di quell’URL. Gli screenshot vengono rimossi dopo la finestra del piano; i metadati restano.",
+        body: "Cerca in questa pagina per URL o regione. Gli screenshot vengono rimossi dopo la finestra del piano; i metadati restano.",
       },
       recordsScreen: {
         title: "Come leggere questa schermata",
-        body: "La ricerca è URL, titolo della pagina, regione o tag. I chip filtrano per tag. Share Collection trasforma i record esistenti selezionati in un link — nessuna nuova cattura. La tabella mostra ora di cattura, URL, regione, stato, tag e Details.",
+        body: "La ricerca è URL, titolo della pagina o regione. Share Collection trasforma i record esistenti selezionati in un link — nessuna nuova cattura. La tabella mostra ora di cattura, URL, regione, stato e Details.",
       },
       recordDetail: {
         title: "Apri il risultato con Details",
@@ -595,11 +595,11 @@ export const productTourCopy: Record<OnboardingLang, ProductTourCopy> = {
       },
       records: {
         title: "Observations-lijst",
-        body: "Zoek op deze pagina op URL, regio of tag. Een tag wordt op elk record van die URL bewaard. Screenshots worden na het planvenster verwijderd; metadata blijft.",
+        body: "Zoek op deze pagina op URL of regio. Screenshots worden na het planvenster verwijderd; metadata blijft.",
       },
       recordsScreen: {
         title: "Zo lees je dit scherm",
-        body: "Zoeken is URL, paginatitel, regio of tag. Chips filteren op tag. Share Collection maakt van geselecteerde bestaande records één link — geen nieuwe capture. De tabel toont capturetijd, URL, regio, status, tags en Details.",
+        body: "Zoeken is URL, paginatitel of regio. Share Collection maakt van geselecteerde bestaande records één link — geen nieuwe capture. De tabel toont capturetijd, URL, regio, status en Details.",
       },
       recordDetail: {
         title: "Open het resultaat met Details",
@@ -648,11 +648,11 @@ export const productTourCopy: Record<OnboardingLang, ProductTourCopy> = {
       },
       records: {
         title: "Lista Observations",
-        body: "Szukaj na tej stronie według URL, regionu lub tagu. Tag jest zapisywany na każdym rekordzie tego URL. Zrzuty są usuwane po oknie planu; metadane pozostają.",
+        body: "Szukaj na tej stronie według URL lub regionu. Zrzuty są usuwane po oknie planu; metadane pozostają.",
       },
       recordsScreen: {
         title: "Jak czytać ten ekran",
-        body: "Wyszukiwanie to URL, tytuł strony, region lub tag. Chipy filtrują według tagu. Share Collection zamienia wybrane istniejące rekordy w jeden link — bez nowego zrzutu. Tabela pokazuje czas zrzutu, URL, region, status, tagi i Details.",
+        body: "Wyszukiwanie to URL, tytuł strony lub region. Share Collection zamienia wybrane istniejące rekordy w jeden link — bez nowego zrzutu. Tabela pokazuje czas zrzutu, URL, region, status i Details.",
       },
       recordDetail: {
         title: "Otwórz wynik przez Details",
@@ -701,11 +701,11 @@ export const productTourCopy: Record<OnboardingLang, ProductTourCopy> = {
       },
       records: {
         title: "Observationslista",
-        body: "Sök på den här sidan efter URL, region eller tagg. En tagg sparas på varje post för den URL:en. Skärmbilder tas bort efter planfönstret; metadata finns kvar.",
+        body: "Sök på den här sidan efter URL eller region. Skärmbilder tas bort efter planfönstret; metadata finns kvar.",
       },
       recordsScreen: {
         title: "Så läser du den här skärmen",
-        body: "Sökningen är URL, sidtitel, region eller tagg. Chips filtrerar efter tagg. Share Collection gör valda befintliga poster till en länk — ingen ny capture. Tabellen visar capturetid, URL, region, status, taggar och Details.",
+        body: "Sökningen är URL, sidtitel eller region. Share Collection gör valda befintliga poster till en länk — ingen ny capture. Tabellen visar capturetid, URL, region, status och Details.",
       },
       recordDetail: {
         title: "Öppna resultatet med Details",
@@ -754,11 +754,11 @@ export const productTourCopy: Record<OnboardingLang, ProductTourCopy> = {
       },
       records: {
         title: "Observations listesi",
-        body: "Bu sayfada URL, bölge veya etiketle arayın. Etiket o URL’nin her kaydına yazılır. Ekran görüntüleri plan penceresinden sonra silinir; üst veri kalır.",
+        body: "Bu sayfada URL veya bölgeyle arayın. Ekran görüntüleri plan penceresinden sonra silinir; üst veri kalır.",
       },
       recordsScreen: {
         title: "Bu ekranı nasıl okursunuz",
-        body: "Arama URL, sayfa başlığı, bölge veya etikettir. Çipler etikete göre süzgeçler. Share Collection seçili mevcut kayıtları tek bağlantı yapar — yeni çekim yoktur. Tablo çekim zamanı, URL, bölge, durum, etiketler ve Details gösterir.",
+        body: "Arama URL, sayfa başlığı veya bölgedir. Share Collection seçili mevcut kayıtları tek bağlantı yapar — yeni çekim yoktur. Tablo çekim zamanı, URL, bölge, durum ve Details gösterir.",
       },
       recordDetail: {
         title: "Sonucu Details ile açın",
@@ -807,11 +807,11 @@ export const productTourCopy: Record<OnboardingLang, ProductTourCopy> = {
       },
       records: {
         title: "Список Observations",
-        body: "Ищите на этой странице по URL, региону или тегу. Тег сохраняется на каждой записи этого URL. Скриншоты удаляются после окна плана; метаданные остаются.",
+        body: "Ищите на этой странице по URL или региону. Скриншоты удаляются после окна плана; метаданные остаются.",
       },
       recordsScreen: {
         title: "Как читать этот экран",
-        body: "Поиск — это URL, заголовок страницы, регион или тег. Чипы фильтруют по тегу. Share Collection превращает выбранные существующие записи в одну ссылку — без новой съёмки. Таблица показывает время съёмки, URL, регион, статус, теги и Details.",
+        body: "Поиск — это URL, заголовок страницы или регион. Share Collection превращает выбранные существующие записи в одну ссылку — без новой съёмки. Таблица показывает время съёмки, URL, регион, статус и Details.",
       },
       recordDetail: {
         title: "Открыть результат через Details",
@@ -860,11 +860,11 @@ export const productTourCopy: Record<OnboardingLang, ProductTourCopy> = {
       },
       records: {
         title: "قائمة Observations",
-        body: "ابحث في هذه الصفحة حسب URL أو المنطقة أو الوسم. يُحفظ الوسم على كل سجل لذلك العنوان. تُحذف لقطات الشاشة بعد نافذة الخطة؛ وتبقى البيانات الوصفية.",
+        body: "ابحث في هذه الصفحة حسب URL أو المنطقة. تُحذف لقطات الشاشة بعد نافذة الخطة؛ وتبقى البيانات الوصفية.",
       },
       recordsScreen: {
         title: "كيف تقرأ هذه الشاشة",
-        body: "البحث هو URL أو عنوان الصفحة أو المنطقة أو الوسم. الرقائق تصفّي حسب الوسم. Share Collection يحوّل السجلات الموجودة المحددة إلى رابط واحد — بلا التقاط جديد. يعرض الجدول وقت الالتقاط وURL والمنطقة والحالة والوسوم وDetails.",
+        body: "البحث هو URL أو عنوان الصفحة أو المنطقة. Share Collection يحوّل السجلات الموجودة المحددة إلى رابط واحد — بلا التقاط جديد. يعرض الجدول وقت الالتقاط وURL والمنطقة والحالة وDetails.",
       },
       recordDetail: {
         title: "افتح النتيجة عبر Details",
@@ -913,11 +913,11 @@ export const productTourCopy: Record<OnboardingLang, ProductTourCopy> = {
       },
       records: {
         title: "Observations सूची",
-        body: "इस पृष्ठ पर URL, क्षेत्र या टैग से खोजें। टैग उस URL के हर रिकॉर्ड पर सहेजा जाता है। स्क्रीनशॉट योजना विंडो के बाद हटा दिए जाते हैं; मेटाडेटा रहता है।",
+        body: "इस पृष्ठ पर URL या क्षेत्र से खोजें। स्क्रीनशॉट योजना विंडो के बाद हटा दिए जाते हैं; मेटाडेटा रहता है।",
       },
       recordsScreen: {
         title: "इस स्क्रीन को कैसे पढ़ें",
-        body: "खोज URL, पृष्ठ शीर्षक, क्षेत्र या टैग है। चिप्स टैग से फ़िल्टर करते हैं। Share Collection चुने गए मौजूदा रिकॉर्ड को एक लिंक बनाता है — कोई नया कैप्चर नहीं। तालिका कैप्चर समय, URL, क्षेत्र, स्थिति, टैग और Details दिखाती है।",
+        body: "खोज URL, पृष्ठ शीर्षक या क्षेत्र है। Share Collection चुने गए मौजूदा रिकॉर्ड को एक लिंक बनाता है — कोई नया कैप्चर नहीं। तालिका कैप्चर समय, URL, क्षेत्र, स्थिति और Details दिखाती है।",
       },
       recordDetail: {
         title: "Details से परिणाम खोलें",
@@ -966,11 +966,11 @@ export const productTourCopy: Record<OnboardingLang, ProductTourCopy> = {
       },
       records: {
         title: "Daftar Observations",
-        body: "Cari di halaman ini menurut URL, wilayah, atau tag. Tag disimpan pada setiap catatan URL itu. Screenshot dihapus setelah jendela paket; metadata tetap ada.",
+        body: "Cari di halaman ini menurut URL atau wilayah. Screenshot dihapus setelah jendela paket; metadata tetap ada.",
       },
       recordsScreen: {
         title: "Cara membaca layar ini",
-        body: "Pencarian adalah URL, judul halaman, wilayah, atau tag. Chip memfilter menurut tag. Share Collection mengubah catatan yang ada yang dipilih menjadi satu tautan — tanpa pengambilan baru. Tabel menampilkan waktu pengambilan, URL, wilayah, status, tag, dan Details.",
+        body: "Pencarian adalah URL, judul halaman, atau wilayah. Share Collection mengubah catatan yang ada yang dipilih menjadi satu tautan — tanpa pengambilan baru. Tabel menampilkan waktu pengambilan, URL, wilayah, status, dan Details.",
       },
       recordDetail: {
         title: "Buka hasil dengan Details",
@@ -1019,11 +1019,11 @@ export const productTourCopy: Record<OnboardingLang, ProductTourCopy> = {
       },
       records: {
         title: "รายการ Observations",
-        body: "ค้นหาหน้านี้ตาม URL ภูมิภาค หรือแท็ก แท็กถูกบันทึกบนทุกบันทึกของ URL นั้น สกรีนช็อตถูกลบหลังหน้าต่างแพลน เมทาดาทายังคงอยู่",
+        body: "ค้นหาหน้านี้ตาม URL หรือภูมิภาค สกรีนช็อตถูกลบหลังหน้าต่างแพลน เมทาดาทายังคงอยู่",
       },
       recordsScreen: {
         title: "วิธีอ่านหน้าจอนี้",
-        body: "การค้นหาคือ URL ชื่อหน้า ภูมิภาค หรือแท็ก ชิปกรองตามแท็ก Share Collection เปลี่ยนบันทึกที่มีอยู่ที่เลือกเป็นลิงก์เดียว — ไม่มีการถ่ายใหม่ ตารางแสดงเวลาถ่าย URL ภูมิภาค สถานะ แท็ก และ Details",
+        body: "การค้นหาคือ URL ชื่อหน้า หรือภูมิภาค Share Collection เปลี่ยนบันทึกที่มีอยู่ที่เลือกเป็นลิงก์เดียว — ไม่มีการถ่ายใหม่ ตารางแสดงเวลาถ่าย URL ภูมิภาค สถานะ และ Details",
       },
       recordDetail: {
         title: "เปิดผลลัพธ์ด้วย Details",
@@ -1072,11 +1072,11 @@ export const productTourCopy: Record<OnboardingLang, ProductTourCopy> = {
       },
       records: {
         title: "Danh sách Observations",
-        body: "Tìm trên trang này theo URL, khu vực hoặc thẻ. Thẻ được lưu trên mọi bản ghi của URL đó. Ảnh chụp bị xóa sau cửa sổ gói; metadata còn lại.",
+        body: "Tìm trên trang này theo URL hoặc khu vực. Ảnh chụp bị xóa sau cửa sổ gói; metadata còn lại.",
       },
       recordsScreen: {
         title: "Cách đọc màn hình này",
-        body: "Tìm kiếm là URL, tiêu đề trang, khu vực hoặc thẻ. Chip lọc theo thẻ. Share Collection biến các bản ghi sẵn có đã chọn thành một liên kết — không chụp mới. Bảng hiện thời điểm chụp, URL, khu vực, trạng thái, thẻ và Details.",
+        body: "Tìm kiếm là URL, tiêu đề trang hoặc khu vực. Share Collection biến các bản ghi sẵn có đã chọn thành một liên kết — không chụp mới. Bảng hiện thời điểm chụp, URL, khu vực, trạng thái và Details.",
       },
       recordDetail: {
         title: "Mở kết quả bằng Details",

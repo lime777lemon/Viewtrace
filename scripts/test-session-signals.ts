@@ -22,6 +22,7 @@ assert.equal(parsed.http.status, 200);
 assert.equal(parsed.resources.script, 2);
 assert.equal(parsed.resources.failed, 1);
 assert.equal(parsed.errors.console_error, 1);
+assert.equal(parsed.errors.unhandled_rejection, null);
 assert.equal(parsed.performance.lcp_ms, 320);
 assert.equal(parsed.structured_data.syntax_errors, 0);
 assert.equal(parseSessionSignals(null), null);

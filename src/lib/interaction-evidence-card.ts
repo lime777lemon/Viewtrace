@@ -1,5 +1,7 @@
+import { behaviorFactLines } from "@/lib/behavior-observation";
 import type { InteractionCheckType } from "@/lib/observation-regional-interaction";
 import type { InteractionEvidence, InteractionElementState } from "@/lib/observation-interaction-evidence";
+import { formatResourceRequest } from "@/lib/resource-request";
 
 /** Presentation of stored Evidence. This does not decide Working. */
 export type EvidenceFacet = {
@@ -17,6 +19,8 @@ export type InteractionEvidenceCardModel = {
   frames: [string, string] | null;
   restore: "ok" | "failed" | null;
   note: string | null;
+  requests: string[];
+  facts: string[];
 };
 
 function text(value: unknown): string | null {
@@ -115,7 +119,9 @@ export function interactionEvidenceCard(
       : null;
   const action = evidence.actions?.length ? evidence.actions.join(" → ") : null;
   const target = evidence.selector ? shorten(evidence.selector) : null;
-  if (!facets.length && !frames && !action && !target && !evidence.note && !evidence.restore) return null;
+  const requests = (evidence.window?.requests ?? []).map((row) => formatResourceRequest(row));
+  const facts = behaviorFactLines({ animation: evidence.animation, video: evidence.video });
+  if (!facets.length && !frames && !action && !target && !evidence.note && !evidence.restore && !requests.length && !facts.length) return null;
   return {
     target,
     action,
@@ -124,6 +130,8 @@ export function interactionEvidenceCard(
     facets: facets.map((row) => ({ ...row, before: shorten(row.before), after: shorten(row.after) })),
     frames,
     restore: evidence.restore ?? null,
-    note: evidence.note ? shorten(evidence.note) : null,
+    note: evidence.note && !facts.some((line) => line.startsWith(evidence.note ?? "")) ? shorten(evidence.note) : null,
+    requests,
+    facts,
   };
 }

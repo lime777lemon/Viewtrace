@@ -4,9 +4,14 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { deleteJourneyAction, disableJourneyMonitoringAction, enableJourneyMonitoringAction, runJourneyNowAction, saveJourneyAction } from "@/app/actions/journeys";
 import { JourneyCommerceFields } from "@/components/dashboard/JourneyCommerceFields";
+import { JourneyRunSummary } from "@/components/dashboard/JourneyRunSummary";
+import { RegionEnvironmentMatrixView } from "@/components/dashboard/RegionEnvironmentMatrixView";
+import { parseJourneyGeoStage } from "@/lib/journey-conclusion";
+import { buildRegionEnvironmentMatrix, environmentFromJourneyRecord, keepLatestColumns, resourcesCellFromRequests } from "@/lib/region-environment-matrix";
 import {
   commerceJourneyInputs,
   isJourneyCommerceKind,
+  isJourneyPurposeKind,
   journeyPurposeLabel,
   JOURNEY_STEP_KINDS,
   JOURNEY_STEP_LIMIT,
@@ -40,6 +45,7 @@ const EMPTY_STEP = (index: number): JourneyStepDefinition => ({
   expect_text: "",
   expect_visible: false,
   expect_url: "",
+  expect_lang: "",
 });
 
 export function JourneyEditor({
@@ -75,6 +81,15 @@ export function JourneyEditor({
   const [preflightNote, setPreflightNote] = useState<MonitoringPreflight | null>(null);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [uploadCustomOpen, setUploadCustomOpen] = useState<Record<string, boolean>>({});
+  const regionMatrix = buildRegionEnvironmentMatrix(keepLatestColumns(runs.map((run) => ({
+    region: run.region,
+    stage: parseJourneyGeoStage(run.environment),
+    device: run.device_class,
+    environment: environmentFromJourneyRecord(run.environment),
+    resources: resourcesCellFromRequests(run.steps.flatMap((step) => step.network ?? [])),
+    steps: run.steps.map((step) => ({ kind: step.kind, status: step.status })),
+  }))), locale);
 
   function updateStep(index: number, patch: Partial<JourneyStepDefinition>) {
     setSteps((current) => current.map((step, i) => (i === index ? { ...step, ...patch } : step)));
@@ -299,6 +314,18 @@ export function JourneyEditor({
                     className="min-w-40 flex-1 rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
                   />
                 ) : null}
+                {step.kind === "search" || step.kind === "language_switch" || step.kind === "currency_switch" || step.kind === "region_switch" ? (
+                  <input
+                    value={step.value}
+                    placeholder={step.kind === "search"
+                      ? (locale === "ja" ? "検索語" : "Query")
+                      : step.kind === "region_switch"
+                        ? (locale === "ja" ? "選択後の地域" : "Selected region")
+                        : (locale === "ja" ? "select の値" : "Option value")}
+                    onChange={(event) => updateStep(index, { value: event.target.value })}
+                    className="min-w-32 flex-1 rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
+                  />
+                ) : null}
                 {step.kind === "fill" || step.kind === "select" || step.kind === "assert_text" ? (
                   <input
                     value={step.value}
@@ -343,18 +370,130 @@ export function JourneyEditor({
                   {locale === "ja" ? "動画の再生" : "Video playback"}
                 </label>
               </div>
-              {step.kind === "click" ? (
+              {step.kind === "upload" ? (
+                <div className="mt-2 space-y-2">
+                  <select
+                    value={step.upload_custom || uploadCustomOpen[step.id] ? "custom" : (step.upload_sample || "")}
+                    onChange={(event) => {
+                      const next = event.target.value;
+                      if (next === "custom") {
+                        setUploadCustomOpen((current) => ({ ...current, [step.id]: true }));
+                        updateStep(index, { upload_sample: "" });
+                      } else if (next === "sample_jpg" || next === "sample_png" || next === "sample_pdf" || next === "sample_csv" || next === "sample_txt") {
+                        setUploadCustomOpen((current) => ({ ...current, [step.id]: false }));
+                        updateStep(index, { upload_sample: next, upload_custom: null });
+                      } else {
+                        setUploadCustomOpen((current) => ({ ...current, [step.id]: false }));
+                        updateStep(index, { upload_sample: "", upload_custom: null, upload_submit: false, upload_drop: false });
+                      }
+                    }}
+                    className="rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
+                  >
+                    <option value="">{locale === "ja" ? "テストファイルなし" : "No test file"}</option>
+                    <option value="sample_jpg">viewtrace-test.jpg</option>
+                    <option value="sample_png">viewtrace-test.png</option>
+                    <option value="sample_pdf">viewtrace-test.pdf</option>
+                    <option value="sample_csv">viewtrace-test.csv</option>
+                    <option value="sample_txt">viewtrace-test.txt</option>
+                    <option value="custom">{locale === "ja" ? "自分のテストファイル" : "Custom test file"}</option>
+                  </select>
+                  {step.upload_custom || uploadCustomOpen[step.id] ? (
+                    <input
+                      type="file"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        event.target.value = "";
+                        if (!file) return;
+                        if (file.size > 60000) {
+                          setError(locale === "ja" ? "テストファイルは 60KB までです。" : "A test file can be up to 60KB.");
+                          return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          const text = typeof reader.result === "string" ? reader.result : "";
+                          const base64 = text.includes(",") ? text.slice(text.indexOf(",") + 1) : "";
+                          if (!base64) return;
+                          updateStep(index, {
+                            upload_sample: "",
+                            upload_custom: { name: file.name, mime: file.type || "application/octet-stream", base64 },
+                          });
+                        };
+                        reader.readAsDataURL(file);
+                      }}
+                      className="text-xs text-ink"
+                    />
+                  ) : null}
+                  {step.upload_custom ? <p className="text-xs text-ink-muted">{step.upload_custom.name}</p> : null}
+                  <label className="flex items-center gap-1 text-xs text-ink-muted">
+                    <input
+                      type="checkbox"
+                      checked={step.upload_drop === true}
+                      onChange={(event) => updateStep(index, { upload_drop: event.target.checked })}
+                    />
+                    {locale === "ja" ? "ファイルをドロップする" : "Drop the file"}
+                  </label>
+                  <p className="text-xs text-ink-muted">
+                    {locale === "ja"
+                      ? "ドロップを許可すると、テストファイルは対象へ置かれ、サイトが受け取る場合があります。許可しないドロップ領域は未測定です。"
+                      : "Dropping places the test file on the target, and the site may receive it. A drop zone stays not measured until drop is permitted."}
+                  </p>
+                  <label className="flex items-center gap-1 text-xs text-ink-muted">
+                    <input
+                      type="checkbox"
+                      checked={step.upload_submit === true}
+                      onChange={(event) => updateStep(index, { upload_submit: event.target.checked })}
+                    />
+                    {locale === "ja" ? "アップロードを送信する" : "Submit upload"}
+                  </label>
+                  <p className="text-xs text-ink-muted">
+                    {locale === "ja"
+                      ? "送信を許可すると、テストファイルは対象サイトへ送られます。ファイルを選ぶだけでは送りません。"
+                      : "Submit upload sends the test file to the target website. Selecting the file does not send it."}
+                  </p>
+                  {step.upload_submit ? (
+                    <input
+                      value={step.confirm_selector || ""}
+                      placeholder={locale === "ja" ? "送信ボタンのセレクタ" : "Submit button selector"}
+                      onChange={(event) => updateStep(index, { confirm_selector: event.target.value })}
+                      className="min-w-36 flex-1 rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
+                    />
+                  ) : null}
+                </div>
+              ) : null}
+              {step.kind === "click" || isJourneyPurposeKind(step.kind) ? (
                 <div className="mt-2 flex flex-wrap gap-2">
+                  {step.kind === "language_switch" ? (
+                    <input
+                      value={step.expect_lang}
+                      placeholder={locale === "ja" ? "期待する lang（en）" : "Expected lang (en)"}
+                      onChange={(event) => updateStep(index, { expect_lang: event.target.value })}
+                      className="min-w-36 flex-1 rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
+                    />
+                  ) : null}
                   <input
                     value={step.expect_selector}
-                    placeholder="expected selector"
+                    placeholder={step.kind === "currency_switch"
+                      ? (locale === "ja" ? "価格のセレクタ" : "Price selector")
+                      : step.kind === "language_switch"
+                        ? (locale === "ja" ? "見出しのセレクタ" : "Heading selector")
+                        : "expected selector"}
                     onChange={(event) => updateStep(index, { expect_selector: event.target.value })}
                     className="min-w-36 flex-1 rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
                   />
                   <input
                     value={step.expect_text}
-                    placeholder="expected text change"
+                    placeholder={step.kind === "currency_switch"
+                      ? (locale === "ja" ? "切替後の価格" : "Price after switch")
+                      : step.kind === "language_switch"
+                        ? (locale === "ja" ? "切替後の見出し" : "Heading after switch")
+                        : "expected text change"}
                     onChange={(event) => updateStep(index, { expect_text: event.target.value })}
+                    className="min-w-36 flex-1 rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
+                  />
+                  <input
+                    value={step.expect_url}
+                    placeholder={locale === "ja" ? "最終 URL に含む文字" : "Final URL contains"}
+                    onChange={(event) => updateStep(index, { expect_url: event.target.value })}
                     className="min-w-36 flex-1 rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
                   />
                   <label className="flex items-center gap-1 text-xs text-ink-muted">
@@ -470,6 +609,9 @@ export function JourneyEditor({
         <section className="rounded-xl border border-border bg-surface-elevated p-4 sm:p-5">
           <h2 className="text-sm font-semibold text-ink">Runs</h2>
           <p className="mt-1 text-xs text-ink-muted">Journey × Region × Environment × Run. Each row is one execution.</p>
+          <div className="mt-4">
+            <RegionEnvironmentMatrixView matrix={regionMatrix} />
+          </div>
           <ul className="mt-4 space-y-4">
             {runs.map((run) => {
               const env = run.environment && typeof run.environment.viewport === "object" ? run.environment.viewport as { width?: number; height?: number } : null;
@@ -500,6 +642,14 @@ export function JourneyEditor({
                   </p>
                   {captureLine ? <p className="mt-1 text-xs text-ink-muted">{captureLine}</p> : null}
                   {run.alert ? <p className="mt-1 text-xs font-medium text-red-700">Journey regression · {run.alert}</p> : null}
+                  <JourneyRunSummary
+                    region={run.region}
+                    environment={run.environment}
+                    device={run.device_class}
+                    steps={run.steps}
+                    defined={journey?.steps}
+                    locale={locale}
+                  />
                   <ol className="mt-3 space-y-3">
                     {run.steps.map((step, index) => {
                       const defined = journey?.steps.find((item) => item.id === step.id) ?? journey?.steps[index] ?? null;
@@ -532,8 +682,10 @@ export function JourneyEditor({
 function monitoringErrorText(error: string, locale: Locale): string {
   const ja = locale === "ja";
   if (error === "invalid_url") return ja ? "URLを https://viewtrace.net のように入力してください。" : "Enter a full URL, such as https://viewtrace.net";
-  if (error === "outcome_required") return ja ? "Login、Signup、カート、Checkout には最終状態を指定してください。" : "Login, Signup, Add to cart, and Checkout need a final state.";
+  if (error === "outcome_required") return ja ? "Login、Checkout、言語、通貨、地域、アップロードの送信とドロップには、成立したことを確認する条件を指定してください。Download はファイル応答を待ちます。" : "Login, Checkout, language, currency, region, and an upload submit or drop need a condition that proves the step worked. Download waits for the file response.";
   if (error === "selector_required") return ja ? "この手順にはセレクタが必要です。" : "This step needs a selector.";
+  if (error === "upload_file_required") return ja ? "送信するにはテストファイルを指定してください。" : "Submit upload needs a test file.";
+  if (error === "upload_confirm_required") return ja ? "送信ボタンのセレクタを指定してください。" : "Submit upload needs the submit button selector.";
   if (error === "preflight") return ja ? "監視をオンにする条件が揃っていません。" : "Monitoring preflight did not pass.";
   if (error === "test_run") return ja ? "テストRunは保存されましたが、成功していないため監視はオンにしていません。" : "The test run was saved. Monitoring stays off because it did not pass.";
   if (error === "plan") return ja ? "定期監視は Starter と Pro に含まれます。" : "Scheduled monitoring is included with Starter and Pro.";

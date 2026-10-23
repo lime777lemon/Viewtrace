@@ -25,6 +25,7 @@ import { summarizeBehaviorScan } from "@/lib/observation-behavior-discovery";
 import { presentInteractionHealth } from "@/lib/interaction-health-presentation";
 import { InteractionHealthSummary } from "@/components/dashboard/InteractionHealthSummary";
 import { interactionEvidenceCard } from "@/lib/interaction-evidence-card";
+import { formatResourceRequest } from "@/lib/resource-request";
 import { summarizeInteractionMeasurement } from "@/lib/observation-interaction-plan";
 import { SCROLL_CHECK_MAX_REGIONS, type ScrollInteractionStatus } from "@/lib/observation-scroll-interaction";
 
@@ -137,7 +138,7 @@ function statusText(
 function statusClass(status: ScrollInteractionStatus): string {
   if (status === "working") return "font-semibold text-emerald-800 dark:text-emerald-200";
   if (status === "failed") return "font-semibold text-red-800 dark:text-red-200";
-  if (status === "no_change_observed") return "font-semibold text-amber-800 dark:text-amber-200";
+  if (status === "no_change_observed") return "font-semibold text-amber-950";
   if (status === "blocked_for_safety") return "font-semibold text-amber-800 dark:text-amber-200";
   return "text-ink-muted";
 }
@@ -283,6 +284,24 @@ function EvidenceCard({
             ))}
           </ul>
         </div>
+      ) : null}
+      {card.requests.length > 0 ? (
+        <ul className="mt-2 space-y-0.5">
+          {card.requests.map((request) => (
+            <li key={request} className="font-mono text-[11px] text-ink">
+              {request}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {card.facts.length > 0 ? (
+        <ul className="mt-2 space-y-0.5">
+          {card.facts.map((fact) => (
+            <li key={fact} className="font-mono text-[11px] text-ink">
+              {fact}
+            </li>
+          ))}
+        </ul>
       ) : null}
       {card.note ? <p className="mt-2 text-[11px] text-ink-muted">{card.note}</p> : null}
       {card.restore ? (
@@ -618,8 +637,7 @@ export function ObservationInteractionCheckPanel({
                   )}
                   {row.network.map((event) => (
                     <p key={`${row.action_id}:${event.method}:${event.path}:${event.status ?? "failed"}`}>
-                      {event.method} {event.path} · {event.status ?? "failed"}
-                      {event.duration_ms != null ? ` · ${event.duration_ms} ms` : ""}
+                      {formatResourceRequest(event)}
                     </p>
                   ))}
                   <p>
@@ -634,6 +652,12 @@ export function ObservationInteractionCheckPanel({
                     {row.runtime.some((event) => event.kind === "requestfailed")
                       ? `requestfailed: ${row.runtime.filter((event) => event.kind === "requestfailed").map((event) => event.message).join("; ")}`
                       : t.interactionChainRequestFailedNone}
+                    {row.runtime.some((event) => event.kind === "unhandled_rejection")
+                      ? ` · unhandled rejection: ${row.runtime.filter((event) => event.kind === "unhandled_rejection").map((event) => event.message).join("; ")}`
+                      : ""}
+                    {row.runtime.some((event) => event.kind === "uncaught")
+                      ? ` · uncaught: ${row.runtime.filter((event) => event.kind === "uncaught").map((event) => event.message).join("; ")}`
+                      : ""}
                   </p>
                 </li>
               ))}

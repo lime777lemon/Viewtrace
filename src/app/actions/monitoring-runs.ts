@@ -77,6 +77,7 @@ export async function runMonitoringCheckAction(
     expect_text: "",
     expect_visible: false,
     expect_url: "",
+    expect_lang: "",
   };
   const steps = extraSteps.length ? resolveJourneySteps(startUrl, [openStep, ...extraSteps]) : [];
   if (steps.length) {

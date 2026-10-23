@@ -1,13 +1,9 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState } from "react";
 import type { Observation } from "@/lib/demo/observations";
 import { copy, type Locale } from "@/lib/i18n";
-import {
-  UNTAGGED_FILTER,
-  filterObservationsByLibrary,
-  uniqueObservationTags,
-} from "@/lib/observation-tags";
+import { filterObservationsByLibrary } from "@/lib/observation-tags";
 import { ObservationsTable } from "@/components/dashboard/ObservationsTable";
 import { ShareCollectionPanel } from "@/components/dashboard/ShareCollectionPanel";
 import type { OwnerShareCollectionSummary } from "@/lib/observation-share-collection-shared";
@@ -26,27 +22,14 @@ export function ObservationsLibrary({
   const t = copy[locale].observationsListPage;
   const tb = copy[locale].observationsTable;
   const [query, setQuery] = useState("");
-  const [tagFilter, setTagFilter] = useState<string | null>(null);
-  const [pendingTag, setPendingTag] = useState<string | null>(null);
-  const [filterPending, startFilter] = useTransition();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const availableTags = useMemo(() => uniqueObservationTags(rows), [rows]);
   const filtered = useMemo(
-    () => filterObservationsByLibrary(rows, query, tagFilter),
-    [rows, query, tagFilter],
+    () => filterObservationsByLibrary(rows, query, null),
+    [rows, query],
   );
 
-  const hasActiveFilter = query.trim().length > 0 || tagFilter !== null;
-
-  function chooseTag(key: string, value: string | null) {
-    setPendingTag(key);
-    startFilter(() => setTagFilter(value));
-  }
-
-  function tagLabel(key: string, label: string) {
-    return filterPending && pendingTag === key ? t.filtering : label;
-  }
+  const hasActiveFilter = query.trim().length > 0;
 
   function toggleSelect(id: string, selected: boolean) {
     setSelectedIds((prev) => {
@@ -83,54 +66,8 @@ export function ObservationsLibrary({
             className="mt-2 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-ink"
           />
         </label>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => chooseTag("all", null)}
-            aria-pressed={tagFilter === null}
-            aria-busy={filterPending && pendingTag === "all"}
-            className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-              tagFilter === null
-                ? "bg-ink text-white"
-                : "border border-border bg-surface text-ink-muted hover:text-ink"
-            }`}
-          >
-            {tagLabel("all", t.allTags)}
-          </button>
-          <button
-            type="button"
-            onClick={() => chooseTag(UNTAGGED_FILTER, UNTAGGED_FILTER)}
-            aria-pressed={tagFilter === UNTAGGED_FILTER}
-            aria-busy={filterPending && pendingTag === UNTAGGED_FILTER}
-            className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-              tagFilter === UNTAGGED_FILTER
-                ? "bg-ink text-white"
-                : "border border-border bg-surface text-ink-muted hover:text-ink"
-            }`}
-          >
-            {tagLabel(UNTAGGED_FILTER, t.untagged)}
-          </button>
-          {availableTags.map((tag) => (
-            <button
-              key={tag}
-              type="button"
-              onClick={() => chooseTag(tag, tag)}
-              aria-pressed={tagFilter?.toLowerCase() === tag.toLowerCase()}
-              aria-busy={filterPending && pendingTag === tag}
-              className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                tagFilter?.toLowerCase() === tag.toLowerCase()
-                  ? "bg-accent text-white"
-                  : "border border-border bg-surface text-ink-muted hover:text-ink"
-              }`}
-            >
-              {tagLabel(tag, tag)}
-            </button>
-          ))}
-        </div>
         <p className="mt-3 text-xs text-ink-muted">
           {t.resultCount.replace("{shown}", String(filtered.length)).replace("{total}", String(rows.length))}
-          {" · "}
-          {t.tagUrlHint}
         </p>
       </div>
 
@@ -144,8 +81,6 @@ export function ObservationsLibrary({
         rows={filtered}
         locale={locale}
         emptyMessage={hasActiveFilter ? t.noSearchMatch : tb.emptyDefault}
-        tagging
-        onTagClick={setTagFilter}
         retentionDays={retentionDays}
         selectedIds={selectedIds}
         onToggleSelect={toggleSelect}

@@ -1,5 +1,5 @@
 import type { CaptureConditionsV1 } from "@/lib/capture-conditions";
-import { formatViewportLabel } from "@/lib/capture-conditions";
+import { presentCaptureConditions } from "@/lib/capture-conditions-presentation";
 import type { Locale } from "@/lib/i18n";
 
 export type ObservationCaptureConditionsCopy = {
@@ -126,32 +126,9 @@ type Props = {
   conditions: CaptureConditionsV1 | null | undefined;
   copy: ObservationCaptureConditionsCopy;
   locale: Locale;
+  /** Host, units, proxy bytes, attempts, and stored image size. Admins only. */
+  internal?: boolean;
 };
-
-function engineLabel(
-  name: CaptureConditionsV1["engine"]["name"] | undefined,
-  copy: ObservationCaptureConditionsCopy,
-): string {
-  const map = {
-    browserless: copy.engineBrowserless,
-    playwright_worker: copy.enginePlaywrightWorker,
-    microlink: copy.engineMicrolink,
-    direct_fetch: copy.engineDirectFetch,
-    form_upload: copy.engineFormUpload,
-  } as const;
-  return (name && map[name]) || "—";
-}
-
-function proxyModeLabel(mode: CaptureConditionsV1["geo"]["proxy_mode"], copy: ObservationCaptureConditionsCopy) {
-  const map = {
-    none: copy.proxyModeNone,
-    browserless_residential: copy.proxyModeResidential,
-    external_proxy: copy.proxyModeExternal,
-    external_residential: copy.proxyModeExternalResidential,
-    retry_without_proxy: copy.proxyModeRetryWithout,
-  } as const;
-  return map[mode];
-}
 
 function formatByteSize(bytes: number | null | undefined): string {
   if (bytes == null || !Number.isFinite(bytes) || bytes < 0) return "—";
@@ -168,7 +145,7 @@ function formatProxyBytes(
   return formatByteSize(bytes);
 }
 
-export function ObservationCaptureConditionsPanel({ conditions, copy, locale }: Props) {
+export function ObservationCaptureConditionsPanel({ conditions, copy, locale, internal = false }: Props) {
   if (!conditions) {
     return (
       <div className="rounded-xl border border-border bg-surface-elevated p-4 sm:col-span-2">
@@ -178,104 +155,88 @@ export function ObservationCaptureConditionsPanel({ conditions, copy, locale }: 
     );
   }
 
-  const scopeLabel = conditions.full_page_requested
-    ? copy.captureScopeFullPage
-    : copy.captureScopeViewport;
-
-  const imageSize =
-    conditions.result?.image_width_px != null && conditions.result?.image_height_px != null
-      ? `${conditions.result.image_width_px}×${conditions.result.image_height_px}`
-      : "—";
-
-  const countryState = [conditions.geo?.country, conditions.geo?.state].filter(Boolean).join(" / ") || "—";
+  const view = presentCaptureConditions(conditions, locale);
   const cost = conditions.cost_signals;
+  const rows = [
+    [view.copy.region, view.customer.region],
+    [view.copy.environment, view.customer.environment],
+    [view.copy.viewport, view.customer.viewport],
+    [view.copy.capture, view.customer.capture],
+    [view.copy.measured, view.customer.measured],
+    [view.copy.regionalVerification, view.customer.regionalVerificationLabel],
+  ] as const;
 
   return (
     <div className="rounded-xl border border-border bg-surface-elevated p-4 sm:col-span-2">
       <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-muted">{copy.title}</h2>
       <dl className="mt-3 grid gap-3 sm:grid-cols-2">
-        <div>
-          <dt className="text-xs text-ink-muted">{copy.browser}</dt>
-          <dd className="mt-0.5 text-sm text-ink">
-            {conditions.browser?.family ?? "—"} · {conditions.browser?.channel ?? "—"}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-xs text-ink-muted">{copy.captureScope}</dt>
-          <dd className="mt-0.5 text-sm text-ink">{scopeLabel}</dd>
-        </div>
-        <div className="sm:col-span-2">
-          <dt className="text-xs text-ink-muted">{copy.userAgent}</dt>
-          <dd className="mt-0.5 break-all font-mono text-xs text-ink">{conditions.browser?.user_agent ?? "—"}</dd>
-        </div>
-        <div>
-          <dt className="text-xs text-ink-muted">{copy.country}</dt>
-          <dd className="mt-0.5 text-sm text-ink">{countryState}</dd>
-        </div>
-        <div>
-          <dt className="text-xs text-ink-muted">{copy.viewport}</dt>
-          <dd className="mt-0.5 text-sm text-ink">{formatViewportLabel(conditions)}</dd>
-        </div>
-        <div>
-          <dt className="text-xs text-ink-muted">{copy.proxyMode}</dt>
-          <dd className="mt-0.5 text-sm text-ink">
-            {conditions.geo ? proxyModeLabel(conditions.geo.proxy_mode, copy) : "—"}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-xs text-ink-muted">{copy.proxyProvider}</dt>
-          <dd className="mt-0.5 text-sm text-ink">{conditions.geo?.proxy_provider ?? "—"}</dd>
-        </div>
-        <div>
-          <dt className="text-xs text-ink-muted">{copy.engine}</dt>
-          <dd className="mt-0.5 text-sm text-ink">{engineLabel(conditions.engine?.name, copy)}</dd>
-        </div>
-        <div>
-          <dt className="text-xs text-ink-muted">{copy.imageSize}</dt>
-          <dd className="mt-0.5 text-sm text-ink">{imageSize}</dd>
-        </div>
-        {conditions.engine?.browserless ? (
-          <>
-            <div>
-              <dt className="text-xs text-ink-muted">{copy.browserlessHost}</dt>
-              <dd className="mt-0.5 font-mono text-xs text-ink">
-                {conditions.engine.browserless.endpoint_host}
-              </dd>
-            </div>
+        {rows.map(([label, value]) => (
+          <div key={label}>
+            <dt className="text-xs text-ink-muted">{label}</dt>
+            <dd className="mt-0.5 text-sm text-ink">{value}</dd>
+          </div>
+        ))}
+      </dl>
+      {view.customer.regionalNote ? (
+        <p className="mt-3 text-sm text-ink-muted">{view.customer.regionalNote}</p>
+      ) : null}
+      <details className="mt-4">
+        <summary className="cursor-pointer text-xs font-semibold text-ink-muted">{view.copy.technical}</summary>
+        <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div>
+            <dt className="text-xs text-ink-muted">{view.copy.browser}</dt>
+            <dd className="mt-0.5 text-sm text-ink">{view.technical.browser}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-ink-muted">{view.copy.engine}</dt>
+            <dd className="mt-0.5 text-sm text-ink">{view.technical.engine}</dd>
+          </div>
+          <div className="sm:col-span-2">
+            <dt className="text-xs text-ink-muted">{view.copy.userAgent}</dt>
+            <dd className="mt-0.5 break-all font-mono text-xs text-ink">{view.technical.userAgent}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-ink-muted">{view.copy.viewport}</dt>
+            <dd className="mt-0.5 text-sm text-ink">{view.technical.viewport}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-ink-muted">{view.copy.capture}</dt>
+            <dd className="mt-0.5 text-sm text-ink">{view.technical.capture}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-ink-muted">{view.copy.wait}</dt>
+            <dd className="mt-0.5 text-sm text-ink">{view.technical.wait}</dd>
+          </div>
+          {view.technical.api ? (
             <div>
               <dt className="text-xs text-ink-muted">{copy.browserlessApi}</dt>
-              <dd className="mt-0.5 font-mono text-xs text-ink">
-                {conditions.engine.browserless.api_surface} · {conditions.engine.browserless.wait_until}
-              </dd>
+              <dd className="mt-0.5 text-sm text-ink">{view.technical.api}</dd>
             </div>
-          </>
-        ) : null}
-      </dl>
-      {cost ? (
-        <>
-          <h3 className="mt-4 text-xs font-semibold uppercase tracking-wider text-ink-muted">
-            {copy.costTitle}
-          </h3>
+          ) : null}
+          <div>
+            <dt className="text-xs text-ink-muted">{copy.costDuration}</dt>
+            <dd className="mt-0.5 text-sm text-ink">
+              {view.technical.durationMs != null ? `${view.technical.durationMs} ms` : "—"}
+            </dd>
+          </div>
+        </dl>
+      </details>
+      {internal && cost ? (
+        <div className="mt-4 border-t border-border pt-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-ink-muted">{view.copy.internalTitle}</h3>
+          <p className="mt-1 text-xs text-ink-muted">{view.copy.internalHint}</p>
           <dl className="mt-3 grid gap-3 sm:grid-cols-2">
             <div>
+              <dt className="text-xs text-ink-muted">{copy.costAttempts}</dt>
+              <dd className="mt-0.5 text-sm text-ink">{cost.attempts ?? "—"}</dd>
+            </div>
+            <div>
               <dt className="text-xs text-ink-muted">{copy.costDuration}</dt>
-              <dd className="mt-0.5 text-sm text-ink">
-                {cost.duration_ms != null ? `${cost.duration_ms} ms` : "—"}
-              </dd>
+              <dd className="mt-0.5 text-sm text-ink">{cost.duration_ms != null ? `${cost.duration_ms} ms` : "—"}</dd>
             </div>
             <div>
               <dt className="text-xs text-ink-muted">{copy.costUnits}</dt>
               <dd className="mt-0.5 text-sm text-ink">{cost.estimated_time_units ?? "—"}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-ink-muted">{copy.costProxyBytes}</dt>
-              <dd className="mt-0.5 text-sm text-ink">{formatProxyBytes(cost.proxy_bytes, copy)}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-ink-muted">{copy.costFallback}</dt>
-              <dd className="mt-0.5 text-sm text-ink">
-                {cost.fallback ? copy.costFallbackYes : copy.costFallbackNo}
-              </dd>
             </div>
             <div>
               <dt className="text-xs text-ink-muted">{copy.costScreenshotBytes}</dt>
@@ -284,21 +245,25 @@ export function ObservationCaptureConditionsPanel({ conditions, copy, locale }: 
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-ink-muted">{copy.costAttempts}</dt>
-              <dd className="mt-0.5 text-sm text-ink">{cost.attempts ?? "—"}</dd>
+              <dt className="text-xs text-ink-muted">{copy.costProxyBytes}</dt>
+              <dd className="mt-0.5 text-sm text-ink">{formatProxyBytes(cost.proxy_bytes, copy)}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-ink-muted">{copy.costFallback}</dt>
+              <dd className="mt-0.5 text-sm text-ink">{cost.fallback ? copy.costFallbackYes : copy.costFallbackNo}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-ink-muted">{copy.browserlessHost}</dt>
+              <dd className="mt-0.5 break-all font-mono text-xs text-ink">
+                {conditions.engine?.browserless?.endpoint_host ?? "—"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-ink-muted">{copy.proxyProvider}</dt>
+              <dd className="mt-0.5 text-sm text-ink">{conditions.geo?.proxy_provider ?? "—"}</dd>
             </div>
           </dl>
-        </>
-      ) : null}
-      {locale === "ja" && conditions.viewport.source === "browserless_implicit_default" ? (
-        <p className="mt-3 text-xs text-ink-muted">
-          ビューポートは Browserless の既定値です（明示指定なし・既存キャプチャとの差分を抑えるため）。
-        </p>
-      ) : null}
-      {locale === "en" && conditions.viewport.source === "browserless_implicit_default" ? (
-        <p className="mt-3 text-xs text-ink-muted">
-          Viewport uses Browserless defaults (not overridden—to stay consistent with earlier captures).
-        </p>
+        </div>
       ) : null}
     </div>
   );

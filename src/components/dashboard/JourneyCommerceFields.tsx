@@ -128,7 +128,7 @@ export function JourneyCommerceFields({
         />
         <input
           value={step.expect_selector}
-          placeholder={ja ? "最終状態のセレクタ" : "Final state selector"}
+          placeholder={step.kind === "add_to_cart" ? (ja ? "カート件数のセレクタ" : "Cart count selector") : (ja ? "最終状態のセレクタ" : "Final state selector")}
           onChange={(event) => onChange({ expect_selector: event.target.value })}
           className={FIELD}
         />

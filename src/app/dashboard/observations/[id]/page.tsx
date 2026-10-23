@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ObservationAnnotationPanel } from "@/components/dashboard/ObservationAnnotationPanel";
 import { ObservationComparePrompt } from "@/components/dashboard/ObservationComparePrompt";
 import { ObservationDetectedFacts } from "@/components/dashboard/ObservationDetectedFacts";
 import { ObservationInteractionCheckPanel } from "@/components/dashboard/ObservationInteractionCheckPanel";
@@ -42,6 +41,7 @@ import { ObservationNotVisible } from "@/components/dashboard/ObservationNotVisi
 import { ObservationLivePageComparePanel } from "@/components/dashboard/ObservationLivePageComparePanel";
 import { isHomepageClipObservation, isHomepageLiveCheckObservation } from "@/lib/observation-homepage-mode";
 import { ObservationSnapshotBinaryPanel } from "@/components/dashboard/ObservationSnapshotBinaryPanel";
+import { isAdminSession } from "@/lib/admin";
 import { getSession } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCachedUrlPreviewForObservation } from "@/lib/demo/observation-snapshot";
@@ -372,12 +372,9 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
       />
 
       <section className="space-y-6" aria-labelledby="observation-record-heading" data-tour="recordScreen">
-        <div className="space-y-1">
-          <h2 id="observation-record-heading" className="font-display text-lg font-semibold text-ink">
-            {t.recordSectionTitle}
-          </h2>
-          <p className="text-sm text-ink-muted">{t.recordSectionHint}</p>
-        </div>
+        <h2 id="observation-record-heading" className="font-display text-lg font-semibold text-ink">
+          {t.recordSectionTitle}
+        </h2>
 
         <dl className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-xl border border-border bg-surface-elevated p-4">
@@ -439,6 +436,10 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
           timeSiblings={compareSiblings}
           locale={locale}
           synthetic={optionalSynthetic}
+          session={optionalScroll?.discovery?.session ?? null}
+          renderedPage={optionalScroll?.discovery?.rendered_page ?? null}
+          behaviorTypes={optionalScroll?.types ?? null}
+          journeyRuns={checkRun?.journeyRuns ?? []}
         />
 
         <ObservationLpVerdictCard
@@ -539,6 +540,7 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
             conditions={obs.captureConditions}
             copy={captureConditionsCopy}
             locale={locale}
+            internal={isAdminSession(session)}
           />
         </div>
 
@@ -706,15 +708,6 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
             />
           </dl>
         ) : null}
-
-        <ObservationAnnotationPanel
-          observationId={obs.id}
-          locale={locale}
-          initialNote={obs.note ?? ""}
-          initialTags={obs.tags ?? []}
-          initialFolder={obs.folder ?? ""}
-          initialReviewStatus={obs.reviewStatus}
-        />
       </section>
     </div>
   );

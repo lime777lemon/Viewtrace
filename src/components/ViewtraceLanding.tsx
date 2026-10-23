@@ -395,7 +395,6 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                       <th className="px-4 py-3">{t.observationsTable.colUrl}</th>
                       <th className="px-4 py-3">{t.observationsTable.colRegion}</th>
                       <th className="px-4 py-3">{t.observationsTable.colStatus}</th>
-                      <th className="px-4 py-3">{t.observationsTable.colTags}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -416,11 +415,6 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                         <td className="px-4 py-3 align-top">
                           <span className="inline-flex rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-900">
                             {t.observationDetail.statusSuccess}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 align-top">
-                          <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-ink">
-                            {t.compare.exampleTag}
                           </span>
                         </td>
                       </tr>

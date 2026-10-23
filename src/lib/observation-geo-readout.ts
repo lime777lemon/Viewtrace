@@ -117,6 +117,20 @@ export function observationGeoReadout(input: {
     };
   }
 
+  const mode = input.captureConditions.geo?.proxy_mode;
+  if (mode === "retry_without_proxy" || mode === "none") {
+    const notVerified = input.locale === "ja" ? "確認できていない" : "Not verified";
+    return {
+      requestedLabel,
+      observedLabel: notVerified,
+      headline: requestedLabel,
+      distinguish: true,
+      detailLine: input.copy.requestedObserved
+        .replace("{requested}", requestedLabel)
+        .replace("{observed}", notVerified),
+    };
+  }
+
   const headline =
     countryLabelFromRegionInput(input.captureConditions.region_input, input.locale) ??
     countryLabelFromRegionInput(input.regionValue ?? "", input.locale) ??

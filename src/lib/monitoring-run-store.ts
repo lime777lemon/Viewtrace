@@ -12,6 +12,15 @@ import { findPreviousObservationForCompare, observationFromCompareRow } from "@/
 import { countObservationsThisUtcMonth, utcMonthStartIso } from "@/lib/observation-quota";
 import { loadObservationScrollInteraction } from "@/lib/observation-optional-metrics-store";
 import type { JourneyStepDefinition } from "@/lib/journey-definition";
+import { parseJourneyGeoStage } from "@/lib/journey-conclusion";
+import {
+  behaviorCells,
+  pageLoadCell,
+  sessionResourcesCell,
+  stageFromProxy,
+  type RegionMatrixCell,
+  type RegionMatrixEnvironment,
+} from "@/lib/region-environment-matrix";
 import type { JourneyStepEvidence } from "@/lib/journey-runner";
 import {
   buildMonitoringRunDiff,
@@ -61,6 +70,14 @@ export type MonitoringRunObservationFact = {
   newUnknown: boolean;
   /** Null when this Observation has no stored behavior check. */
   behavior: MonitoringRunBehaviorFact | null;
+  coverage: {
+    stage: "city" | "state" | "country" | "no_proxy" | "direct" | null;
+    page: RegionMatrixCell;
+    resources: RegionMatrixCell;
+    behavior: RegionMatrixCell;
+    video: RegionMatrixCell;
+    environment: Partial<RegionMatrixEnvironment>;
+  };
 };
 
 export type MonitoringRunJourneyFactRow = {
@@ -70,6 +87,8 @@ export type MonitoringRunJourneyFactRow = {
   deviceClass: "desktop" | "mobile";
   status: string;
   steps: JourneyStepEvidence[];
+  geoStage: "city" | "state" | "country" | "no_proxy" | "direct" | null;
+  environment: unknown;
 };
 
 export async function countMeteredChecksThisUtcMonth(
@@ -301,6 +320,43 @@ export async function loadMonitoringRun(
       const device = current.captureConditions?.device_class === "mobile" || current.captureConditions?.device_class === "desktop"
         ? current.captureConditions.device_class
         : null;
+      const discovery = stored?.result.discovery;
+      const session = discovery?.session ?? null;
+      const observed = discovery?.environment ?? null;
+      const viewport = observed?.viewport.width && observed.viewport.height
+        ? `${observed.viewport.width}×${observed.viewport.height}`
+        : current.captureConditions?.viewport.width && current.captureConditions.viewport.height
+          ? `${current.captureConditions.viewport.width}×${current.captureConditions.viewport.height}`
+          : null;
+      const checked = behaviorCells(stored?.result.types);
+      const coverage = {
+        stage: stageFromProxy(region, current.captureConditions?.geo.proxy_mode),
+        page: pageLoadCell({
+          status: current.status,
+          loaded: session?.http.loaded,
+          httpStatus: session?.http.status,
+          timedOut: session?.http.timed_out,
+        }),
+        resources: sessionResourcesCell(session ? {
+          failed: session.resources.failed,
+          status4xx: session.resources.status_4xx,
+          status5xx: session.resources.status_5xx,
+          requestFailed: session.errors.request_failed,
+        } : null),
+        behavior: checked.behavior,
+        video: checked.video,
+        environment: {
+          viewport,
+          dpr: observed?.dpr ?? (current.captureConditions?.viewport.device_scale_factor && current.captureConditions.viewport.device_scale_factor > 0 ? current.captureConditions.viewport.device_scale_factor : null),
+          locale: observed?.locale || current.captureConditions?.browser.accept_language || null,
+          timezone: observed?.timezone || null,
+          language: observed?.document_lang || observed?.languages || null,
+          pointer: observed?.pointer ?? null,
+          touch: observed ? observed.touch : null,
+          userAgent: observed?.user_agent || current.captureConditions?.browser.user_agent || null,
+          reducedMotion: observed ? observed.prefers_reduced_motion : null,
+        },
+      };
       observations.push({
         id: current.id,
         region,
@@ -323,6 +379,7 @@ export async function loadMonitoringRun(
                 : emptyBehaviorFindings(),
             }
           : null,
+        coverage,
       });
     }
   }
@@ -338,7 +395,7 @@ export async function loadMonitoringRun(
   if (journeyRunIds.length) {
     const { data: runs } = await supabase
       .from("journey_runs")
-      .select("id,journey_id,region,device_class,status,steps")
+      .select("id,journey_id,region,device_class,status,steps,environment")
       .in("id", journeyRunIds)
       .eq("user_id", userId);
     for (const raw of runs ?? []) {
@@ -351,6 +408,8 @@ export async function loadMonitoringRun(
         deviceClass: device,
         status: String(row.status ?? ""),
         steps: Array.isArray(row.steps) ? row.steps as JourneyStepEvidence[] : [],
+        geoStage: parseJourneyGeoStage(row.environment),
+        environment: row.environment ?? null,
       });
     }
   }
@@ -477,7 +536,7 @@ function journeyInput(
 }
 
 function journeyStepInput(step: JourneyStepEvidence, defined: JourneyStepDefinition | null): MonitoringJourneyStepInput {
-  const status = step.status === "pass" || step.status === "fail" || step.status === "blocked_for_safety" || step.status === "not_run" || step.status === "incomplete"
+  const status = step.status === "pass" || step.status === "fail" || step.status === "blocked_for_safety" || step.status === "not_run" || step.status === "incomplete" || step.status === "not_measured"
     ? step.status
     : "incomplete";
   let before: string | null = null;
@@ -562,7 +621,7 @@ async function loadMonitoringScope(
   if (journeyRunIds.length) {
     const { data: runs } = await supabase
       .from("journey_runs")
-      .select("id,journey_id,region,device_class,status,steps")
+      .select("id,journey_id,region,device_class,status,steps,environment")
       .in("id", journeyRunIds)
       .eq("user_id", userId);
     for (const raw of runs ?? []) {
@@ -574,6 +633,8 @@ async function loadMonitoringScope(
         deviceClass: row.device_class === "mobile" ? "mobile" : "desktop",
         status: String(row.status ?? ""),
         steps: Array.isArray(row.steps) ? row.steps as JourneyStepEvidence[] : [],
+        geoStage: parseJourneyGeoStage(row.environment),
+        environment: row.environment ?? null,
       });
     }
   }

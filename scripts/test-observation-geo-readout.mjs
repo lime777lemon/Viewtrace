@@ -56,6 +56,16 @@ function observationGeoReadout({ requestedLabel, captureConditions }) {
   if (observedLabel) {
     return { headline: requestedLabel, distinguish: false, detailLine: null };
   }
+  const mode = captureConditions.geo?.proxy_mode;
+  if (mode === "retry_without_proxy" || mode === "none") {
+    return {
+      headline: requestedLabel,
+      distinguish: true,
+      detailLine: COPY.requestedObserved
+        .replace("{requested}", requestedLabel)
+        .replace("{observed}", "Not verified"),
+    };
+  }
   const headline =
     countryLabelFromRegionInput(captureConditions.region_input) ?? requestedLabel;
   return { headline, distinguish: false, detailLine: null };
@@ -93,10 +103,10 @@ const retry = observationGeoReadout({
     geo: { country: null, state: null, proxy_mode: "retry_without_proxy" },
   },
 });
-assert.equal(retry.distinguish, false);
-assert.equal(retry.headline, "United States");
-assert.equal(retry.headline.includes("California"), false);
-assert.equal(retry.headline.includes("geo proxy"), false);
+assert.equal(retry.distinguish, true);
+assert.equal(retry.headline, "US · California");
+assert.equal(retry.detailLine, "Requested: US · California / Observed via: Not verified");
+assert.equal(retry.detailLine.includes("California") && retry.detailLine.includes("Not verified"), true);
 
 const japan = observationGeoReadout({
   requestedLabel: "Japan",

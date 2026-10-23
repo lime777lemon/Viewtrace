@@ -48,6 +48,7 @@ export function buildInteractionFunctionCode(): string {
   let rendered = null;
   let visualCaptures = 0;
   let actionDurationMs = 0;
+  let firstActionAt = null;
   let temporal = { ran: false, window_ms: 0, completed_through_ms: 0, reason: "skipped", behaviors: [] };
   let pendingRegions = [];
   let regionTrack = { ran: false, samples: 0, active_cells: 0, error: "" };
@@ -250,20 +251,90 @@ export function buildInteractionFunctionCode(): string {
   const netLog = [];
   const runtimeLog = [];
   const pendingNet = new Map();
-  function requestPath(raw) {
-    try { return new URL(String(raw || "")).pathname.slice(0, 120); } catch (e) { return String(raw || "").split("?")[0].slice(0, 120); }
+  const corsNotes = [];
+  function requestLocation(raw) {
+    try {
+      const url = new URL(String(raw || ""));
+      return { path: (url.pathname || "/").slice(0, 100), host: url.host.slice(0, 80) };
+    } catch (e) {
+      const path = String(raw || "").split("?")[0].slice(0, 100);
+      return { path: path || "/", host: "" };
+    }
+  }
+  function mappedType(raw) {
+    if (raw === "script" || raw === "stylesheet" || raw === "image" || raw === "font" || raw === "xhr" || raw === "fetch" || raw === "document") return raw;
+    return "other";
+  }
+  function isApiPath(path) {
+    const value = String(path || "");
+    return value === "/api" || value.indexOf("/api/") === 0;
+  }
+  function failureKind(text, status) {
+    const raw = String(text || "");
+    if (/TIMED_OUT|ERR_CONNECTION_TIMED_OUT|timeout/i.test(raw)) return "timeout";
+    if (/ERR_ABORTED/i.test(raw)) return "aborted";
+    if (/BLOCKED_BY_CLIENT|BLOCKED_BY_RESPONSE|BLOCKED_BY_ORB|ERR_BLOCKED/i.test(raw)) return "blocked";
+    if (/CORS|Access-Control-Allow-Origin/i.test(raw)) return "cors";
+    if (status != null && status >= 400) return "failed";
+    if (raw) return "failed";
+    return null;
+  }
+  function contentLength(headers) {
+    const raw = headers && (headers["content-length"] || headers["Content-Length"]);
+    const size = Number(raw);
+    return Number.isFinite(size) && size >= 0 ? Math.round(size) : null;
   }
   function rememberRequest(req) {
     if (!req || pendingNet.has(req)) return pendingNet.get(req);
-    const row = { method: String(req.method ? req.method() : "GET"), path: requestPath(req.url ? req.url() : ""), type: String(req.resourceType ? req.resourceType() : "other"), started: Date.now(), done: false };
+    const located = requestLocation(req.url ? req.url() : "");
+    const row = {
+      method: String(req.method ? req.method() : "GET"),
+      path: located.path,
+      host: located.host,
+      type: mappedType(String(req.resourceType ? req.resourceType() : "other")),
+      started: Date.now(),
+      done: false,
+    };
     pendingNet.set(req, row);
     return row;
+  }
+  function describeRequest(known, status, headers, errorText) {
+    let pageHost = "";
+    try { pageHost = new URL(page.url()).host; } catch (e) {}
+    const sameHost = Boolean(known.host && pageHost && known.host === pageHost);
+    const third = Boolean(known.host && !sameHost);
+    return {
+      method: known.method,
+      path: (sameHost || !known.host ? known.path : known.host + known.path).slice(0, 140),
+      type: known.type,
+      status: status,
+      failed: Boolean(errorText) || (status != null && status >= 400),
+      started: known.started,
+      duration_ms: Math.max(0, Date.now() - known.started),
+      transfer_bytes: contentLength(headers),
+      failure: failureKind(errorText, status),
+      third_party: third,
+      api: isApiPath(known.path),
+    };
   }
   try {
     page.on("console", (msg) => {
       try {
         if (!msg || msg.type() !== "error") return;
-        runtimeLog.push({ kind: "console_error", message: String(msg.text() || "").slice(0, 160), at: Date.now() });
+        const text = String(msg.text() || "");
+        runtimeLog.push({ kind: "console_error", message: text.slice(0, 160), at: Date.now() });
+        if (/CORS|Access-Control-Allow-Origin/i.test(text)) {
+          corsNotes.push(text.slice(0, 300));
+          for (let i = netLog.length - 1; i >= 0; i -= 1) {
+            const row = netLog[i];
+            if (!row || row.status != null || !row.failure) continue;
+            const host = String(row.path || "").split("/")[0];
+            if (host && host.indexOf(".") >= 0 && text.indexOf(host) >= 0) {
+              row.failure = "cors";
+              break;
+            }
+          }
+        }
       } catch (e) {}
     });
     page.on("pageerror", (err) => {
@@ -273,25 +344,24 @@ export function buildInteractionFunctionCode(): string {
       try {
         const req = res.request();
         const known = rememberRequest(req);
+        if (known.done) return;
         known.done = true;
-        netLog.push({
-          method: known.method,
-          path: known.path,
-          type: known.type,
-          status: res.status(),
-          failed: res.status() >= 400,
-          started: known.started,
-          duration_ms: Math.max(0, Date.now() - known.started),
-        });
+        netLog.push(describeRequest(known, res.status(), typeof res.headers === "function" ? res.headers() : {}, ""));
       } catch (e) {}
     });
     page.on("requestfailed", (req) => {
       try {
         const known = rememberRequest(req);
+        if (known.done) return;
         known.done = true;
         const failure = req.failure && req.failure();
         const message = String(failure && failure.errorText ? failure.errorText : "request failed").slice(0, 120);
-        netLog.push({ method: known.method, path: known.path, type: known.type, status: null, failed: true, started: known.started, duration_ms: Math.max(0, Date.now() - known.started) });
+        const failedRow = describeRequest(known, null, null, message);
+        const host = String(failedRow.path || "").split("/")[0];
+        if (failedRow.status == null && host && host.indexOf(".") >= 0 && corsNotes.some((note) => note.indexOf(host) >= 0)) {
+          failedRow.failure = "cors";
+        }
+        netLog.push(failedRow);
         runtimeLog.push({ kind: "requestfailed", message: (known.method + " " + known.path + " " + message).slice(0, 160), at: Date.now() });
       } catch (e) {}
     });
@@ -300,6 +370,16 @@ export function buildInteractionFunctionCode(): string {
     await page.goto("about:blank", { waitUntil: "domcontentloaded", timeout: 8000 });
     await page.evaluateOnNewDocument(installSampler, lightScan);
     await page.evaluateOnNewDocument(installSessionProbe);
+    await page.evaluateOnNewDocument(() => {
+      if (window.__vtRuntimeInstalled) return;
+      window.__vtRuntimeInstalled = true;
+      window.__vtRuntime = [];
+      window.addEventListener("unhandledrejection", (event) => {
+        const reason = event && event.reason;
+        const message = reason && reason.message ? String(reason.message) : String(reason || "unhandled rejection");
+        window.__vtRuntime.push({ kind: "unhandled_rejection", message: message.slice(0, 160) });
+      });
+    });
     initOk = true;
   } catch (e) {}
   if (html) {
@@ -370,6 +450,7 @@ export function buildInteractionFunctionCode(): string {
       }
     } catch (e) {}
   }
+  await drainPageRuntime();
   try {
     if (page.setViewport) {
       await page.setViewport({
@@ -394,9 +475,10 @@ export function buildInteractionFunctionCode(): string {
         locale: String(navigator.language || ""),
         timezone: timezone,
         prefers_reduced_motion: Boolean(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches),
-        dpr: Number(window.devicePixelRatio || 1),
+        dpr: Number(window.devicePixelRatio),
         document_lang: String(document.documentElement.lang || ""),
-        user_agent: String(navigator.userAgent || ""),
+        languages: Array.isArray(navigator.languages) ? navigator.languages.slice(0, 6).join(",") : "",
+        user_agent: String(navigator.userAgent || "").slice(0, 180),
         touch_points: Number(navigator.maxTouchPoints || 0),
       };
     });
@@ -408,8 +490,9 @@ export function buildInteractionFunctionCode(): string {
       locale: measured.locale || "",
       timezone: measured.timezone || "",
       prefers_reduced_motion: measured.prefers_reduced_motion === true,
-      dpr: measured.dpr || 1,
+      dpr: Number.isFinite(measured.dpr) && measured.dpr > 0 ? measured.dpr : null,
       document_lang: measured.document_lang || "",
+      languages: measured.languages || "",
       user_agent: measured.user_agent || "",
       touch_points: measured.touch_points || 0,
     };
@@ -590,9 +673,7 @@ export function buildInteractionFunctionCode(): string {
         if (prev.visibility !== row.visibility) props.push("visibility");
         if (prev.display !== row.display) props.push("display");
         if (prev.hidden !== row.hidden) props.push("hidden");
-        const styleMoved = prev.transform !== row.transform || Math.abs((prev.opacity || 0) - (row.opacity || 0)) >= 0.02;
-        const named = (prev.animationName && prev.animationName !== "none") || (row.animationName && row.animationName !== "none");
-        if (((prev.anim != null && row.anim != null && row.anim > prev.anim + 16) || named) && styleMoved) props.push("animation");
+        if (prev.anim != null && row.anim != null && row.anim > prev.anim + 16) props.push("animation");
         if (Math.abs((prev.x || 0) - (row.x || 0)) >= 2 || Math.abs((prev.y || 0) - (row.y || 0)) >= 2) props.push("bounding_rect");
         if (!props.length) continue;
         hits.push({ key: key, props: props, t0: prev, t1: row, className: row.className || prev.className || "" });
@@ -604,10 +685,7 @@ export function buildInteractionFunctionCode(): string {
   let motionHits = motionPairs(timeline);
   const legacy = timedDiff(loadT0, loadT1);
   const legacyHits = legacy.load.concat(legacy.delayed).map((row) => {
-    const props = (row.props || []).slice();
-    const name = (row.t0 && row.t0.animationName) || (row.t1 && row.t1.animationName) || "none";
-    if (name !== "none" && (props.indexOf("opacity") >= 0 || props.indexOf("transform") >= 0) && props.indexOf("animation") < 0) props.push("animation");
-    return { ...row, props: props, className: (row.t1 && row.t1.className) || (row.t0 && row.t0.className) || "" };
+    return { ...row, className: (row.t1 && row.t1.className) || (row.t0 && row.t0.className) || "" };
   });
   if (!motionHits.length) motionHits = legacyHits;
   else motionHits = motionHits.concat(legacyHits.filter((row) => !motionHits.some((hit) => hit.key === row.key)));
@@ -1080,16 +1158,70 @@ export function buildInteractionFunctionCode(): string {
       Math.abs(a.x - b.x) >= 2 || Math.abs(a.y - b.y) >= 2 || Math.abs(a.w - b.w) >= 2 || Math.abs(a.h - b.h) >= 2;
   }
 
+  function requestRank(row) {
+    if (row.failure || row.failed || row.status == null || row.status >= 400) return 0;
+    if (row.api || row.type === "xhr" || row.type === "fetch" || (row.method !== "GET" && row.method !== "HEAD")) return 1;
+    if (row.type === "document") return 2;
+    return 3;
+  }
+  function compactRequests(rows) {
+    const chosen = rows.length <= 8 ? rows : (() => {
+      const ranked = rows.map((row, index) => ({ index: index, rank: requestRank(row) }));
+      ranked.sort((a, b) => a.rank - b.rank || a.index - b.index);
+      const keep = {};
+      ranked.slice(0, 8).forEach((row) => { keep[row.index] = true; });
+      return rows.filter((_, index) => keep[index]);
+    })();
+    return chosen.map((row) => ({
+      method: row.method,
+      path: row.path,
+      status: row.status,
+      type: row.type,
+      duration_ms: row.duration_ms,
+      transfer_bytes: row.transfer_bytes == null ? null : row.transfer_bytes,
+      failure: row.failure || null,
+      third_party: row.third_party === true,
+      api: row.api === true,
+    }));
+  }
+  async function drainPageRuntime() {
+    try {
+      const rows = await page.evaluate(() => {
+        const list = Array.isArray(window.__vtRuntime) ? window.__vtRuntime.splice(0, 20) : [];
+        return list;
+      });
+      if (!Array.isArray(rows)) return;
+      for (const row of rows) {
+        if (!row || row.kind !== "unhandled_rejection") continue;
+        runtimeLog.push({ kind: "unhandled_rejection", message: String(row.message || "unhandled rejection").slice(0, 160), at: Date.now() });
+      }
+    } catch (e) {}
+  }
   function windowSince(since) {
-    const network = netLog.filter((row) => row.started >= since).slice(0, 8);
+    const network = netLog.filter((row) => row.started >= since);
     const runtime = runtimeLog.filter((row) => row.at >= since).slice(0, 8);
     return {
       network_count: network.length,
-      runtime_errors: runtime.filter((row) => row.kind === "console_error" || row.kind === "pageerror").length,
+      requests: compactRequests(network),
+      runtime_errors: runtime.filter((row) => row.kind === "console_error" || row.kind === "pageerror" || row.kind === "uncaught" || row.kind === "unhandled_rejection").length,
       request_failed: runtime.filter((row) => row.kind === "requestfailed").length,
     };
   }
 
+  function hashShot(shot) {
+    let bytes = shot;
+    if (typeof shot === "string") {
+      const raw = atob(shot);
+      bytes = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i += 1) bytes[i] = raw.charCodeAt(i);
+    }
+    const length = bytes && typeof bytes.length === "number" ? bytes.length : 0;
+    if (!length) return null;
+    let hash = 2166136261;
+    const step = Math.max(1, Math.floor(length / 64));
+    for (let i = 0; i < length; i += step) hash = Math.imul(hash ^ (bytes[i] || 0), 16777619);
+    return (hash >>> 0).toString(16);
+  }
   async function regionHash(box) {
     if (!box || visualCaptures >= 16) return null;
     const width = Math.floor(box.w || box.width || 0);
@@ -1107,17 +1239,15 @@ export function buildInteractionFunctionCode(): string {
         quality: 30,
       });
       visualCaptures += 1;
-      const buf = Buffer.isBuffer(shot) ? shot : Buffer.from(shot);
-      let hash = 2166136261;
-      const step = Math.max(1, Math.floor(buf.length / 64));
-      for (let i = 0; i < buf.length; i += step) hash = Math.imul(hash ^ buf[i], 16777619);
-      return (hash >>> 0).toString(16);
+      return hashShot(shot);
     } catch (e) {
       return null;
     }
   }
 
-  function actionWindow(since, samples, renderedChanges, visualChanged) {
+  async function actionWindow(since, samples, renderedChanges, visualChanged) {
+    await drainPageRuntime();
+    if (firstActionAt == null) firstActionAt = since;
     actionDurationMs += Math.max(0, Date.now() - since);
     return {
       executed: true,
@@ -1394,7 +1524,7 @@ export function buildInteractionFunctionCode(): string {
       t0: evidenceT0,
       t1: evidenceT1,
       changes: renderedChanges,
-      window: actionWindow(actionStarted, samples, renderedChanges, beforeHash && afterHash ? visualChanged : null),
+      window: await actionWindow(actionStarted, samples, renderedChanges, beforeHash && afterHash ? visualChanged : null),
     });
   }
 
@@ -1493,7 +1623,7 @@ export function buildInteractionFunctionCode(): string {
       return sel;
     }, hit.selector);
     const beforeStyle = await styleSnap(moving);
-    const beforeHash = await regionHash(beforeStyle);
+    const beforeHash = null;
     const actionStarted = Date.now();
     const box = await page.evaluate((sel) => {
       const el = document.querySelector(sel);
@@ -1526,7 +1656,7 @@ export function buildInteractionFunctionCode(): string {
       samples.push({ at_ms: mark, changed: Boolean(changedNow) });
       if (changedNow && mark >= 300) break;
     }
-    const afterHash = await regionHash(afterStyle);
+    const afterHash = null;
     const visualChanged = Boolean(beforeHash && afterHash && beforeHash !== afterHash);
     const ok = samples.some((row) => row.changed) || visualChanged;
     const renderedChanges = [];
@@ -1539,7 +1669,7 @@ export function buildInteractionFunctionCode(): string {
       t0: beforeStyle,
       t1: afterStyle,
       changes: renderedChanges,
-      window: actionWindow(actionStarted, samples, renderedChanges, beforeHash && afterHash ? visualChanged : null),
+      window: await actionWindow(actionStarted, samples, renderedChanges, beforeHash && afterHash ? visualChanged : null),
     });
   }
 
@@ -1616,6 +1746,52 @@ export function buildInteractionFunctionCode(): string {
       changes: changes,
     });
   });
+  async function animationSample(sel) {
+    return page.evaluate((s) => {
+      const el = document.querySelector(s);
+      if (!el) return null;
+      const st = getComputedStyle(el);
+      const anims = el.getAnimations ? el.getAnimations() : null;
+      const anim = anims && anims.length ? anims[0] : null;
+      const r = el.getBoundingClientRect();
+      return {
+        transform: String(st.transform || "none"),
+        opacity: Number(st.opacity),
+        playState: anims ? (anim ? String(anim.playState || "none") : "none") : null,
+        time: anim && anim.currentTime != null && Number.isFinite(Number(anim.currentTime)) ? Number(anim.currentTime) : null,
+        x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height),
+        visibility: String(st.visibility || ""),
+        display: String(st.display || ""),
+      };
+    }, sel);
+  }
+  function animationFacts(t0, t1, beforeHash, afterHash) {
+    const timeYes = Boolean(t0 && t1 && typeof t0.time === "number" && typeof t1.time === "number" && t1.time > t0.time + 0.01);
+    const transformYes = Boolean(t0 && t1 && t0.transform !== t1.transform);
+    const boxYes = Boolean(t0 && t1 && (Math.abs(t0.x - t1.x) >= 2 || Math.abs(t0.y - t1.y) >= 2 || Math.abs(t0.w - t1.w) >= 2 || Math.abs(t0.h - t1.h) >= 2));
+    const opacityYes = Boolean(t0 && t1 && Math.abs((t0.opacity || 0) - (t1.opacity || 0)) >= 0.02);
+    const regionYes = beforeHash && afterHash ? beforeHash !== afterHash : null;
+    const changes = [];
+    if (timeYes) changes.push("animation");
+    if (transformYes) changes.push("transform");
+    if (boxYes) changes.push("bounding_rect");
+    if (opacityYes) changes.push("opacity");
+    if (regionYes === true) changes.push("region");
+    return {
+      changes: changes,
+      animation: {
+        detected: true,
+        play_state_before: t0 && t0.playState != null ? t0.playState : null,
+        play_state_after: t1 && t1.playState != null ? t1.playState : null,
+        time_before: t0 && typeof t0.time === "number" ? t0.time : null,
+        time_after: t1 && typeof t1.time === "number" ? t1.time : null,
+        transform_changed: t0 && t1 ? transformYes : null,
+        box_changed: t0 && t1 ? boxYes : null,
+        region_changed: regionYes,
+        opacity_changed: t0 && t1 ? opacityYes : null,
+      },
+    };
+  }
   await maybe("js_animation", async () => {
     if (!detect.jsAnim) { pushType("js_animation", false, "not_detected"); return; }
     const sel = await page.evaluate(() => {
@@ -1639,46 +1815,24 @@ export function buildInteractionFunctionCode(): string {
       return named ? path(named) : null;
     });
     if (!sel) { pushType("js_animation", true, "no_change_observed", { actions: ["WAIT"], note: "runtime present, no target element" }); return; }
-    const early = motionHits.find((row) => row.key === sel);
-    if (early) {
-      pushType("js_animation", true, "working", {
-        actions: ["WAIT"],
-        selector: sel,
-        t0: early.t0,
-        t1: early.t1,
-        changes: early.props,
-      });
-      return;
-    }
-    const before = await styleSnap(sel);
+    const before = await animationSample(sel);
+    const beforeHash = await regionHash(before);
     await sleep(700);
-    const after = await styleSnap(sel);
-    const changes = [];
-    if (before && after) {
-      if (before.transform !== after.transform) changes.push("transform");
-      if (before.opacity !== after.opacity) changes.push("opacity");
-      if (Math.abs(before.x - after.x) >= 2 || Math.abs(before.y - after.y) >= 2 || Math.abs(before.w - after.w) >= 2 || Math.abs(before.h - after.h) >= 2) changes.push("bounding_rect");
-    }
-    pushType("js_animation", true, changes.length ? "working" : "no_change_observed", {
+    const after = await animationSample(sel);
+    const afterHash = await regionHash(after);
+    const facts = animationFacts(before, after, beforeHash, afterHash);
+    const moved = facts.changes.some((name) => name !== "region");
+    pushType("js_animation", true, moved ? "working" : "no_change_observed", {
       actions: ["WAIT"],
       selector: sel,
       t0: before,
       t1: after,
-      changes: changes,
+      changes: facts.changes,
+      animation: facts.animation,
+      frame_hashes: beforeHash && afterHash ? [beforeHash, afterHash] : [],
     });
   });
   await maybe("css_animation", async () => {
-    const early = motionHits.find((row) => row.props.indexOf("animation") >= 0);
-    if (early) {
-      pushType("css_animation", true, "working", {
-        actions: ["WAIT"],
-        selector: early.key,
-        t0: early.t0,
-        t1: early.t1,
-        changes: early.props,
-      });
-      return;
-    }
     if (!detect.cssAnim) { pushType("css_animation", false, "not_detected"); return; }
     const sel = await page.evaluate(() => {
       function path(el) {
@@ -1705,31 +1859,29 @@ export function buildInteractionFunctionCode(): string {
       }
       return null;
     });
-    if (!sel) { pushType("css_animation", true, "no_change_observed", { actions: ["WAIT"] }); return; }
-    const sample = () => page.evaluate((s) => {
-      const el = document.querySelector(s);
-      if (!el) return null;
-      const st = getComputedStyle(el);
-      const anims = el.getAnimations ? el.getAnimations() : [];
-      const time = anims.length && anims[0].currentTime != null ? Number(anims[0].currentTime) : null;
-      const r = el.getBoundingClientRect();
-      return { transform: String(st.transform || "none"), opacity: Number(st.opacity), time: time, x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height) };
-    }, sel);
-    const t0 = await sample();
-    await sleep(420);
-    const t1 = await sample();
-    const changes = [];
-    if (t0 && t1) {
-      if (t0.time != null && t1.time != null && t1.time > t0.time + 0.01) changes.push("animation");
-      if (t0.transform !== t1.transform) changes.push("transform");
-      if (Math.abs((t0.opacity || 0) - (t1.opacity || 0)) >= 0.02) changes.push("opacity");
+    if (!sel) {
+      pushType("css_animation", true, "no_change_observed", {
+        actions: ["WAIT"],
+        animation: { detected: true, play_state_before: null, play_state_after: null, time_before: null, time_after: null, transform_changed: null, box_changed: null, region_changed: null, opacity_changed: null },
+        note: "animation-name present, no measured target",
+      });
+      return;
     }
-    pushType("css_animation", true, changes.length ? "working" : "no_change_observed", {
+    const t0 = await animationSample(sel);
+    const beforeHash = await regionHash(t0);
+    await sleep(420);
+    const t1 = await animationSample(sel);
+    const afterHash = await regionHash(t1);
+    const facts = animationFacts(t0, t1, beforeHash, afterHash);
+    const moved = facts.changes.some((name) => name !== "region");
+    pushType("css_animation", true, moved ? "working" : "no_change_observed", {
       actions: ["WAIT"],
       selector: sel,
       t0: t0,
       t1: t1,
-      changes: changes,
+      changes: facts.changes,
+      animation: facts.animation,
+      frame_hashes: beforeHash && afterHash ? [beforeHash, afterHash] : [],
     });
   });
   await maybe("canvas", async () => {
@@ -1853,7 +2005,7 @@ export function buildInteractionFunctionCode(): string {
       t0: before,
       t1: after,
       changes: changes,
-      window: actionWindow(actionStarted, samples, changes, null),
+      window: await actionWindow(actionStarted, samples, changes, null),
     });
   });
   await maybe("accordion", async () => {
@@ -1899,7 +2051,7 @@ export function buildInteractionFunctionCode(): string {
       t0: before,
       t1: after,
       changes: changes,
-      window: actionWindow(actionStarted, samples, changes, null),
+      window: await actionWindow(actionStarted, samples, changes, null),
     });
   });
   await maybe("carousel", async () => { await runHit("carousel", detect.carousel || {}, null, true); });
@@ -1909,35 +2061,73 @@ export function buildInteractionFunctionCode(): string {
     if (!detect.video) { pushType("video", false, "not_detected"); return; }
     const result = await withTimeout(page.evaluate(async () => {
       const v = document.querySelector("video");
-      if (!v) return { working: false, error: false, start: null, end: null, selector: "video" };
-      const start = v.currentTime || 0;
+      if (!v) return { found: false };
       const selector = v.id ? "#" + CSS.escape(v.id) : "video";
+      const read = () => {
+        const r = v.getBoundingClientRect();
+        const st = getComputedStyle(v);
+        const visible = r.width >= 2 && r.height >= 2 && st.visibility !== "hidden" && st.display !== "none";
+        let src = "";
+        try { src = String(v.currentSrc || v.src || "").split("?")[0].slice(0, 100); } catch (e) {}
+        const err = v.error;
+        return {
+          time: Math.round((v.currentTime || 0) * 1000) / 1000,
+          paused: v.paused !== false,
+          ended: v.ended === true,
+          ready: v.readyState || 0,
+          width: v.videoWidth || 0,
+          height: v.videoHeight || 0,
+          visible: visible,
+          src: src,
+          errorCode: err ? err.code : 0,
+          errorMessage: err && err.message ? String(err.message).slice(0, 120) : "",
+        };
+      };
+      const before = read();
+      let playError = "";
       try {
         v.muted = true;
         const p = v.play();
         if (p && p.then) await Promise.race([p, new Promise((resolve) => setTimeout(resolve, 2500))]);
-      } catch (e) { return { working: false, error: true, start: start, end: start, selector: selector }; }
+      } catch (e) {
+        playError = e && e.message ? String(e.message).slice(0, 120) : "play failed";
+      }
       await new Promise((resolve) => setTimeout(resolve, 700));
-      const end = v.currentTime || 0;
-      return {
-        working: v.paused === false && end > start + 0.05,
-        error: false,
-        start: Math.round(start * 1000) / 1000,
-        end: Math.round(end * 1000) / 1000,
-        selector: selector,
-      };
-    }), 5000, { working: false, error: true, start: null, end: null, selector: "video" });
-    if (result.error) {
-      pushType("video", true, "failed", { actions: ["PLAY"], selector: result.selector || "video" });
-      return;
-    }
-    pushType("video", true, result.working ? "working" : "no_change_observed", {
+      const after = read();
+      return { found: true, selector: selector, before: before, after: after, playError: playError };
+    }), 5000, { found: true, selector: "video", before: null, after: null, playError: "timed out" });
+    const before = result.before || {};
+    const after = result.after || {};
+    const src = String(after.src || before.src || "");
+    const mediaNetwork = after.errorCode === 2 || before.errorCode === 2 || netLog.some((row) => row.failure && src && src.indexOf(String(row.path || "")) >= 0 && String(row.path || "").length > 1);
+    const playbackError = result.playError || (after.errorCode && after.errorCode !== 2 ? (after.errorMessage || "media error") : "");
+    const progressed = typeof before.time === "number" && typeof after.time === "number" && after.paused === false && after.time > before.time + 0.05;
+    const video = {
+      time_before: typeof before.time === "number" ? before.time : null,
+      time_after: typeof after.time === "number" ? after.time : null,
+      paused_before: typeof before.paused === "boolean" ? before.paused : null,
+      paused_after: typeof after.paused === "boolean" ? after.paused : null,
+      ended: typeof after.ended === "boolean" ? after.ended : null,
+      ready_before: typeof before.ready === "number" ? before.ready : null,
+      ready_after: typeof after.ready === "number" ? after.ready : null,
+      video_width: typeof after.width === "number" ? after.width : null,
+      video_height: typeof after.height === "number" ? after.height : null,
+      playback_error: playbackError || null,
+      media_network: mediaNetwork,
+      visible: typeof after.visible === "boolean" ? after.visible : null,
+    };
+    const claim = video.time_before != null && video.time_after != null
+      ? (progressed ? "Playback progressed " : "Playback did not progress ") + video.time_before.toFixed(2) + " → " + video.time_after.toFixed(2)
+      : "Playback was not measured";
+    const failed = !progressed && (Boolean(playbackError) || mediaNetwork || result.playError === "timed out");
+    pushType("video", true, progressed ? "working" : (failed ? "failed" : "no_change_observed"), {
       actions: ["PLAY"],
       selector: result.selector || "video",
-      t0: { currentTime: result.start },
-      t1: { currentTime: result.end },
-      changes: result.working ? ["currentTime"] : [],
-      note: "currentTime " + result.start + " → " + result.end,
+      t0: { currentTime: video.time_before, paused: before.paused, readyState: video.ready_before },
+      t1: { currentTime: video.time_after, paused: after.paused, readyState: video.ready_after, ended: after.ended, videoWidth: video.video_width, videoHeight: video.video_height, visibility: after.visible ? "visible" : "hidden" },
+      changes: progressed ? ["currentTime"] : [],
+      note: claim,
+      video: video,
     });
   });
   await maybe("embedded_video", async () => {
@@ -2016,10 +2206,7 @@ export function buildInteractionFunctionCode(): string {
       async function clipHash() {
         if (!clip || clip.width < 8 || clip.height < 8 || !page.screenshot) return null;
         const buf = await page.screenshot({ type: "jpeg", quality: 30, clip: clip });
-        const bytes = Buffer.isBuffer(buf) ? buf : Buffer.from(buf);
-        let hash = 0;
-        for (let i = 0; i < bytes.length; i += 97) hash = (hash * 33 + bytes[i]) >>> 0;
-        return hash.toString(16);
+        return hashShot(buf);
       }
       const first = await clipHash();
       await sleep(450);
@@ -2080,7 +2267,7 @@ export function buildInteractionFunctionCode(): string {
       t0: { value: beforeValue },
       t1: { value: filled },
       changes: formChanges,
-      window: actionWindow(actionStarted, [{ at_ms: 160, changed: filled !== beforeValue }], formChanges, null),
+      window: await actionWindow(actionStarted, [{ at_ms: 160, changed: filled !== beforeValue }], formChanges, null),
     });
   });
   await maybe("scroll_reveal", async () => {
@@ -2478,10 +2665,7 @@ export function buildInteractionFunctionCode(): string {
       try {
         async function clipHash() {
           const buf = await page.screenshot({ type: "jpeg", quality: 30, clip: { x: clip.x, y: clip.y, width: clip.width, height: clip.height } });
-          const bytes = Buffer.isBuffer(buf) ? buf : Buffer.from(buf);
-          let hash = 0;
-          for (let i = 0; i < bytes.length; i += 97) hash = (hash * 33 + bytes[i]) >>> 0;
-          return hash.toString(16);
+          return hashShot(buf);
         }
         const first = await clipHash();
         await sleep(180);
@@ -3162,10 +3346,12 @@ export function buildInteractionFunctionCode(): string {
       status_4xx: netLog.filter((row) => row.status >= 400 && row.status < 500).length,
       status_5xx: netLog.filter((row) => row.status >= 500).length,
     }),
+    requests: compactRequests(netLog.filter((row) => firstActionAt == null || row.started < firstActionAt)),
     errors: {
       console_error: runtimeLog.filter((row) => row.kind === "console_error").length,
-      pageerror: runtimeLog.filter((row) => row.kind === "pageerror").length,
+      pageerror: runtimeLog.filter((row) => row.kind === "pageerror" || row.kind === "uncaught").length,
       request_failed: runtimeLog.filter((row) => row.kind === "requestfailed").length,
+      unhandled_rejection: runtimeLog.filter((row) => row.kind === "unhandled_rejection").length,
     },
     performance: probe && probe.performance ? probe.performance : {},
     structured_data: {

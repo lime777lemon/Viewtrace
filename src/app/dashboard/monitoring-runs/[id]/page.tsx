@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
-import { journeyStatusLabel, journeyStepReport } from "@/lib/journey-definition";
+import { JourneyRunSummary } from "@/components/dashboard/JourneyRunSummary";
+import { RegionEnvironmentMatrixView } from "@/components/dashboard/RegionEnvironmentMatrixView";
+import { buildRegionEnvironmentMatrix, environmentFromJourneyRecord, resourcesCellFromRequests } from "@/lib/region-environment-matrix";
+import { journeyKindLabel, journeyStatusLabel, journeyStepReport } from "@/lib/journey-definition";
+import { journeyRegionStatusDiff } from "@/lib/journey-measurement";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { monitoringReviewStatus, type MonitoringAlert } from "@/lib/monitoring-run-diff";
 import { presentMonitoringReview } from "@/lib/monitoring-run-summary";
@@ -289,6 +293,26 @@ export default async function MonitoringRunPage({ params }: { params: Promise<{ 
   const regionLine = [...new Set(pages.map((row) => row.label))].join(", ");
   const behaviorRows = pages.filter((row) => row.behavior);
   const pageEvidenceId = pages.find((row) => row.id)?.id ?? null;
+  const regionMatrix = buildRegionEnvironmentMatrix([
+    ...loaded.observations.map((row) => ({
+      region: row.region,
+      stage: row.coverage.stage,
+      device: row.device,
+      environment: row.coverage.environment,
+      page: row.coverage.page,
+      resources: row.coverage.resources,
+      behavior: row.coverage.behavior,
+      video: row.coverage.video,
+    })),
+    ...loaded.journeyRuns.map((row) => ({
+      region: row.region,
+      stage: row.geoStage,
+      device: row.deviceClass,
+      environment: environmentFromJourneyRecord(row.environment),
+      resources: resourcesCellFromRequests(row.steps.flatMap((step) => step.network ?? [])),
+      steps: row.steps.map((step) => ({ kind: step.kind, status: step.status })),
+    })),
+  ], locale);
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
@@ -310,6 +334,8 @@ export default async function MonitoringRunPage({ params }: { params: Promise<{ 
           </div>
         ) : null}
       </header>
+
+      <RegionEnvironmentMatrixView matrix={regionMatrix} />
 
       <section className="space-y-4 text-sm text-ink">
         <div>
@@ -481,11 +507,33 @@ export default async function MonitoringRunPage({ params }: { params: Promise<{ 
       {journeyRows.length ? (
         <section id="journey-evidence" className="scroll-mt-6 space-y-4">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-muted">{copy.journeys}</h2>
+          {journeyRegionStatusDiff(journeyRows.map((row) => ({
+            region: row.label,
+            steps: (row.run?.steps ?? []).map((step) => ({ id: step.id, kind: step.kind, status: step.status })),
+          }))).map((diff) => (
+            <p key={diff.key} className="text-sm text-ink">
+              {locale === "ja" ? "地域で結果が違った手順" : "Step result differed by region"}
+              {" · "}
+              {journeyKindLabel(diff.kind, locale)}
+              {" · "}
+              {diff.cells.map((cell) => `${cell.region} ${journeyStatusLabel(cell.status, locale)}`).join(" · ")}
+            </p>
+          ))}
           {journeyRows.map((row) => (
             <article key={`${row.region}-${row.device}`} className="space-y-3">
               <p className="text-sm font-semibold text-ink">
                 {loaded.journeyName ?? "Journey"} · {row.label} · {row.device === "mobile" ? "Mobile" : "Desktop"} · {journeyStatusLabel(row.status === "incomplete" ? "incomplete" : row.status, locale)}
               </p>
+              {row.run ? (
+                <JourneyRunSummary
+                  region={row.region}
+                  environment={{ geo: { stage: row.run.geoStage } }}
+                  device={row.device}
+                  steps={row.run.steps}
+                  defined={loaded.journeySteps}
+                  locale={locale}
+                />
+              ) : null}
               <ol className="space-y-3">
                 {(row.run?.steps ?? []).map((step, index) => {
                   const defined = loaded.journeySteps.find((item) => item.id === step.id) ?? loaded.journeySteps[index] ?? null;
