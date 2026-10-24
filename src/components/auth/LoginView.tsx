@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { LoginLocaleToggle } from "@/components/auth/LoginLocaleToggle";
+import { LoginSignupTracker } from "@/components/auth/LoginSignupTracker";
 import { ViewtraceLogo } from "@/components/brand/ViewtraceLogo";
 import type { LoginLocale } from "@/lib/auth/login-copy";
 import { loginPageCopy } from "@/lib/auth/login-copy";
@@ -65,6 +66,12 @@ export function LoginView({
       <main className="relative z-10 mx-auto flex min-h-[calc(100vh-4.25rem)] max-w-md items-start justify-center px-4 py-8 sm:items-center sm:px-6 sm:py-10 lg:py-16">
         <section className="w-full">
           <div className="w-full rounded-2xl border border-border bg-surface-elevated p-6 shadow-lg shadow-ink/5 sm:p-8">
+            {signupDone ? (
+              <p role="status" className="text-sm leading-relaxed text-ink">
+                {t.form.signupSuccessMessage}
+              </p>
+            ) : (
+              <>
             <div className="flex flex-col items-center text-center">
               <ViewtraceLogo className="h-12 w-auto" priority={false} />
               <h1 className="mt-2 text-sm font-normal text-ink-muted">{t.cardSubtitle}</h1>
@@ -107,7 +114,11 @@ export function LoginView({
               authError={authError}
               authMessage={authMessage}
             />
+              </>
+            )}
+            {signupDone ? <LoginSignupTracker /> : null}
 
+            {!signupDone ? (
             <div className="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-1 border-t border-border pt-6 text-center text-xs text-ink-muted">
               <Link href="/terms" className="hover:text-ink">
                 {t.terms}
@@ -125,6 +136,7 @@ export function LoginView({
                 {t.acceptableUse}
               </Link>
             </div>
+            ) : null}
           </div>
         </section>
       </main>
