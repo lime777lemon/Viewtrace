@@ -60,6 +60,7 @@ export function DashboardShell({
   const nav = [
     { href: "/dashboard/region-search", label: t.nav.regionSearch, tour: "observe" as const },
     { href: "/dashboard/observations", label: t.nav.observations, tour: "records" as const },
+    { href: "/dashboard/attention", label: t.nav.lastHour, tour: undefined },
     { href: "/dashboard/journeys", label: t.nav.journeys, tour: undefined },
     ...(plan.autoObservationWatch
       ? [{ href: "/dashboard/auto-observations" as const, label: t.nav.autoObservations, tour: undefined }]

@@ -1,4 +1,5 @@
 import { behaviorFactLines } from "@/lib/behavior-observation";
+import { motionDriverFactLines } from "@/lib/motion-driver";
 import type { InteractionCheckType } from "@/lib/observation-regional-interaction";
 import type { InteractionEvidence, InteractionElementState } from "@/lib/observation-interaction-evidence";
 import { formatResourceRequest } from "@/lib/resource-request";
@@ -64,8 +65,8 @@ const PAIR_LABELS: Partial<Record<InteractionCheckType, [string, string]>> = {
   auto_carousel: ["Slide 1", "Slide 2"],
   form: ["Empty", "Cleared"],
   cursor_follow: ["Cursor A", "Cursor B"],
-  css_animation: ["T0", "T1"],
-  js_animation: ["T0", "T1"],
+  css_animation: ["T0", "T3"],
+  js_animation: ["T0", "T3"],
   canvas: ["T0", "T1"],
   webgl: ["T0", "T1"],
   lottie: ["T0", "T1"],
@@ -120,7 +121,10 @@ export function interactionEvidenceCard(
   const action = evidence.actions?.length ? evidence.actions.join(" → ") : null;
   const target = evidence.selector ? shorten(evidence.selector) : null;
   const requests = (evidence.window?.requests ?? []).map((row) => formatResourceRequest(row));
-  const facts = behaviorFactLines({ animation: evidence.animation, video: evidence.video });
+  const facts = [
+    ...behaviorFactLines({ animation: evidence.animation, video: evidence.video }),
+    ...(evidence.driver ? motionDriverFactLines(evidence.driver, "en") : []),
+  ];
   if (!facets.length && !frames && !action && !target && !evidence.note && !evidence.restore && !requests.length && !facts.length) return null;
   return {
     target,

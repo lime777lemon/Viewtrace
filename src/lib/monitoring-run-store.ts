@@ -484,6 +484,13 @@ export async function loadMonitoringRun(
     diff: diffStored && storedDiff ? storedDiff : computed,
     alerts: diffStored && storedAlerts ? storedAlerts : computedAlerts,
     diffStored,
+    previousPages: [...previousScope.observations.values()].map((obs) => ({
+      region: obs.regionValue,
+      label: obs.regionLabel || obs.regionValue,
+      device: obs.captureConditions?.device_class === "mobile" || obs.captureConditions?.device_class === "desktop"
+        ? obs.captureConditions.device_class
+        : null,
+    })),
   };
 }
 

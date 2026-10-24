@@ -155,3 +155,45 @@ export function monitoringStatusReasons(input: {
   }
   return reasons;
 }
+
+export type MonitoringPreviousPage = {
+  region: string;
+  label: string;
+  device: "desktop" | "mobile" | null;
+};
+
+function placeLabel(label: string, device: "desktop" | "mobile" | null): string {
+  if (device === "mobile") return `${label} · Mobile`;
+  if (device === "desktop") return `${label} · Desktop`;
+  return label;
+}
+
+function joinPlaces(locale: "ja" | "en", places: string[]): string {
+  if (places.length <= 1) return places[0] ?? "";
+  if (locale === "ja") return places.length === 2 ? `${places[0]} と ${places[1]}` : places.join("、");
+  if (places.length === 2) return `${places[0]} and ${places[1]}`;
+  return `${places.slice(0, -1).join(", ")}, and ${places[places.length - 1]}`;
+}
+
+/** Display only. A missing same-region screenshot stays Not comparable. */
+export function firstScreenshotCompareNote(input: {
+  locale: "ja" | "en";
+  regionLabel: string;
+  device: "desktop" | "mobile" | null;
+  previousPages: readonly MonitoringPreviousPage[];
+}): string {
+  const here = placeLabel(input.regionLabel, input.device);
+  const others = input.previousPages
+    .map((page) => placeLabel(page.label || page.region, page.device))
+    .filter(Boolean);
+  if (input.locale === "ja") {
+    if (others.length === 0) {
+      return `この URL の ${here} は、この記録が最初です。比べる前回の画像がないので、Same にも Changed にもせず Not comparable にしています。`;
+    }
+    return `この URL の ${here} は、この記録が最初です。直前の確認は同じ URL の ${joinPlaces("ja", others)} だけで、${input.regionLabel} の画像はありません。比較は同じ地域の前回だけを見るので、Same にも Changed にもせず Not comparable にしています。`;
+  }
+  if (others.length === 0) {
+    return `This is the first ${here} record for this URL. There is no earlier screenshot from this region, so it stays Not comparable.`;
+  }
+  return `This is the first ${here} record for this URL. The previous check for this URL recorded only ${joinPlaces("en", others)}, so there is no ${input.regionLabel} screenshot. Comparison uses the previous record from the same region, so this stays Not comparable.`;
+}

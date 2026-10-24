@@ -1,6 +1,8 @@
 /** Shared verify helpers. Detected is never Working. Cookie chrome is not Load animation. */
 
 import { parseAnimationObservation, parseVideoObservation, type AnimationObservation, type VideoObservation } from "@/lib/behavior-observation";
+import { parseMotionTrace, type MotionTraceEvidence } from "@/lib/motion-frames";
+import { parseMotionDriver, type MotionDriverEvidence } from "@/lib/motion-driver";
 import { selectResourceRequests, type ResourceRequestV1 } from "@/lib/resource-request";
 
 export const COOKIE_NOISE_PATTERN_SOURCE =
@@ -65,6 +67,8 @@ export type InteractionEvidence = {
   window?: ActionEvidenceWindow;
   animation?: AnimationObservation;
   video?: VideoObservation;
+  driver?: MotionDriverEvidence;
+  trace?: MotionTraceEvidence;
 };
 
 export function isCookieNoiseKey(key: string): boolean {
@@ -157,6 +161,8 @@ export function parseInteractionEvidence(raw: unknown): InteractionEvidence | nu
     window: parseActionWindow(o.window),
     animation: parseAnimationObservation(o.animation) ?? undefined,
     video: parseVideoObservation(o.video) ?? undefined,
+    driver: parseMotionDriver(o.driver) ?? undefined,
+    trace: parseMotionTrace(o.trace) ?? undefined,
   };
 }
 

@@ -2,6 +2,8 @@ import {
   BROWSER_LIKE_ACCEPT_LANGUAGE,
   BROWSER_LIKE_USER_AGENT,
 } from "@/lib/browser-fingerprint";
+import { MOTION_DRIVER_CLASSIFIER, MOTION_DRIVER_INSTALL } from "@/lib/motion-driver";
+import { MOTION_FRAME_CLASSIFIER } from "@/lib/motion-frames";
 import { COOKIE_NOISE_PATTERN_SOURCE } from "@/lib/observation-interaction-evidence";
 import { EXPENSIVE_INTERACTION_TYPES } from "@/lib/observation-interaction-plan";
 import { INTERACTION_UNSAFE_PATTERN_SOURCE } from "@/lib/observation-regional-interaction";
@@ -13,9 +15,19 @@ export function buildInteractionFunctionCode(): string {
   const lang = JSON.stringify(BROWSER_LIKE_ACCEPT_LANGUAGE);
   const unsafe = JSON.stringify(INTERACTION_UNSAFE_PATTERN_SOURCE);
   const cookieNoise = JSON.stringify(COOKIE_NOISE_PATTERN_SOURCE);
+  const motionClassifier = MOTION_FRAME_CLASSIFIER;
+  const motionDriverInstall = MOTION_DRIVER_INSTALL;
+  const motionDriverClassifier = MOTION_DRIVER_CLASSIFIER;
+  const revealSelector = JSON.stringify(
+    "[data-reveal],[data-aos],[data-sal],[data-scroll],[data-animate],[data-inview],.aos-init,.wow,[class*='reveal'],[class*='fade-up'],[class*='inview'],[class*='scroll-in']",
+  );
+  const jsMarkerSelector = JSON.stringify(
+    "[data-framer-component],[data-framer-name],[data-framer-appear-id],[class*='framer-'],[data-gsap],[data-js-anim],[data-animate],[data-w-id]",
+  );
   return `export default async function({ page, context }) {
   const url = String(context && context.url ? context.url : "");
   const html = String(context && context.html ? context.html : "");
+  let pageHtml = html;
   const fracs = [0, 0.25, 0.5, 0.75, 1];
   const unsafeSource = ${unsafe};
   const cookieSource = ${cookieNoise};
@@ -81,6 +93,7 @@ export function buildInteractionFunctionCode(): string {
       ]);
     }
   } catch (e) {}
+  ${motionDriverInstall}
   function installSampler(light) {
     if (window.__vtInstalled) return;
     window.__vtInstalled = true;
@@ -368,6 +381,7 @@ export function buildInteractionFunctionCode(): string {
   } catch (e) {}
   try {
     await page.goto("about:blank", { waitUntil: "domcontentloaded", timeout: 8000 });
+    await page.evaluateOnNewDocument(installMotionDriver);
     await page.evaluateOnNewDocument(installSampler, lightScan);
     await page.evaluateOnNewDocument(installSessionProbe);
     await page.evaluateOnNewDocument(() => {
@@ -426,9 +440,10 @@ export function buildInteractionFunctionCode(): string {
     await sleep(80);
   }
   if (html) {
-    const inline = "<script>(" + installSampler.toString() + ")(" + (lightScan ? "true" : "false") + ")</script>";
+    const inline = "<script>(" + installMotionDriver.toString() + ")();(" + installSampler.toString() + ")(" + (lightScan ? "true" : "false") + ")</script>";
     const tagged = html.indexOf("<head>") >= 0 ? html.replace("<head>", "<head>" + inline) : inline + html;
-    await page.setContent(tagged, { waitUntil: "domcontentloaded", timeout: 20000 });
+    pageHtml = tagged;
+    await page.setContent(pageHtml, { waitUntil: "domcontentloaded", timeout: 20000 });
   } else {
     const response = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 25000 });
     try {
@@ -1013,15 +1028,50 @@ export function buildInteractionFunctionCode(): string {
     }
     const vh = window.innerHeight;
     const tall = Array.from(document.querySelectorAll("section, [aria-label], main, main > div")).some((el) => el.offsetHeight >= vh * 1.8);
-    let cssAnim = false;
-    const cssNodes = Array.from(document.querySelectorAll("div, img, h1, h2, section, span")).slice(0, 120);
-    for (const el of cssNodes) {
-      const st = getComputedStyle(el);
-      if (st.animationName && st.animationName !== "none") { cssAnim = true; break; }
-      const dur = parseFloat(st.transitionDuration || "0");
-      if (dur > 0.05) { cssAnim = true; break; }
+    function transitionActive(st) {
+      const parts = String(st.transitionDuration || "0").split(",");
+      for (let i = 0; i < parts.length; i++) {
+        if (parseFloat(parts[i]) > 0.05) return true;
+      }
+      return false;
     }
-    const jsAnim = Boolean(window.gsap || window.Motion || window.anime || document.querySelector("[data-framer-component], [class*='framer-'], [data-gsap], [data-js-anim]"));
+    let cssAnim = false;
+    const cssNodes = Array.from(document.querySelectorAll("div, img, h1, h2, h3, section, span, p, a, li, article, header, button, svg")).slice(0, 240);
+    for (const el of cssNodes) {
+      let st;
+      try { st = getComputedStyle(el); } catch (e) { continue; }
+      if (st.animationName && st.animationName !== "none") { cssAnim = true; break; }
+      if (transitionActive(st)) { cssAnim = true; break; }
+      const inline = String(el.getAttribute("style") || "");
+      if (/animation|transition/i.test(inline)) { cssAnim = true; break; }
+      const anims = el.getAnimations ? el.getAnimations() : [];
+      for (let i = 0; i < anims.length; i++) {
+        const name = anims[i] && anims[i].animationName;
+        if ((name && name !== "none") || (anims[i] && anims[i].transitionProperty)) { cssAnim = true; break; }
+      }
+      if (cssAnim) break;
+    }
+    let jsRuntime = false;
+    const motionBox = window.__vtMotion;
+    const motionEvents = motionBox && motionBox.events ? motionBox.events : [];
+    for (let i = 0; i < motionEvents.length; i++) {
+      const row = motionEvents[i];
+      if (row && (row.kind === "style" || row.kind === "waapi")) { jsRuntime = true; break; }
+    }
+    let jsScript = false;
+    const scripts = Array.from(document.scripts).slice(0, 40);
+    for (let i = 0; i < scripts.length; i++) {
+      const src = String(scripts[i].src || "").toLowerCase();
+      if (
+        src.indexOf("gsap") >= 0 || src.indexOf("scrolltrigger") >= 0 || src.indexOf("framer") >= 0 ||
+        src.indexOf("anime.min") >= 0 || src.indexOf("animejs") >= 0 || src.indexOf("/anime.js") >= 0 ||
+        src.indexOf("lenis") >= 0 || src.indexOf("locomotive") >= 0 || src.indexOf("webflow") >= 0
+      ) { jsScript = true; break; }
+    }
+    const jsAnim = Boolean(
+      window.gsap || window.Motion || window.anime || window.ScrollTrigger || window.Lenis || window.Webflow ||
+      jsRuntime || jsScript || document.querySelector(${jsMarkerSelector})
+    );
     const canvases = Array.from(document.querySelectorAll("canvas"));
     let webgl = false;
     let canvas2d = false;
@@ -1040,7 +1090,72 @@ export function buildInteractionFunctionCode(): string {
     const autoCarousel = Boolean(document.querySelector("[class*='swiper'], [class*='carousel'], [class*='slick'], [aria-roledescription='carousel']"));
     const cursorEl = document.querySelector("[data-cursor], [data-speed], [class*='parallax'], [class*='cursor-follow'], [class*='mouse-follow']");
     const cursor = cursorEl ? path(cursorEl) : null;
-    const reveal = Boolean(document.querySelector("[data-reveal], [class*='reveal']"));
+    const reveal = Boolean(document.querySelector(${revealSelector}));
+    function pushUnique(list, el) {
+      if (el && list.indexOf(el) < 0) list.push(el);
+    }
+    function textOf(el) {
+      return [el.innerText, el.getAttribute("aria-label"), el.getAttribute("title"), el.getAttribute("class")]
+        .filter((value) => typeof value === "string")
+        .join(" ")
+        .toLowerCase();
+    }
+    const menuNodes = [];
+    document.querySelectorAll("[aria-haspopup='menu'], [aria-haspopup='true'], .menu-toggle, [class*='hamburger'], [class*='burger'], [class*='humberger'], [class*='menu-toggle'], [class*='menu-btn'], [class*='menu-button'], [class*='menu-trigger'], [class*='nav-toggle'], [class*='drawer-toggle'], [class*='sp-menu'], [class*='sp-nav'], [data-menu], [data-drawer], [data-toggle='menu'], [data-toggle='drawer'], [aria-label*='menu' i], [aria-label*='メニュー'], nav button").forEach((el) => pushUnique(menuNodes, el));
+    document.querySelectorAll("[aria-controls]").forEach((el, index) => {
+      if (index >= 40) return;
+      const panel = document.getElementById(el.getAttribute("aria-controls") || "");
+      if (!panel) return;
+      const role = panel.getAttribute("role") || "";
+      const cls = String(panel.getAttribute("class") || "").toLowerCase();
+      if (role === "menu" || role === "navigation" || panel.tagName === "NAV" || cls.indexOf("menu") >= 0 || cls.indexOf("drawer") >= 0) pushUnique(menuNodes, el);
+    });
+    document.querySelectorAll("button, [role='button'], a[href^='#']").forEach((el, index) => {
+      if (index >= 40) return;
+      const text = textOf(el);
+      if (text.indexOf("menu") >= 0 || text.indexOf("メニュー") >= 0 || text.indexOf("hamburger") >= 0 || text.indexOf("burger") >= 0 || text.indexOf("drawer") >= 0 || text.indexOf("ナビ") >= 0) pushUnique(menuNodes, el);
+    });
+    const menuHit = firstSafe(menuNodes.slice(0, 24), true, false);
+    if (!menuHit.selector && !menuHit.blocked && document.querySelector("[role='menu'], nav[hidden], nav[aria-hidden='true'], [class*='drawer'], [class*='sp-menu']")) menuHit.panel = true;
+    const modalNodes = [];
+    document.querySelectorAll("[aria-haspopup='dialog'], [data-modal], [data-bs-toggle='modal'], [data-open-modal], [data-micromodal-trigger], [data-a11y-dialog], [data-popup], [data-fancybox], [data-dialog], [class*='modal-open'], [class*='modal-trigger'], [class*='popup-trigger'], [class*='open-modal'], [class*='js-modal'], [aria-label*='modal' i], [aria-label*='モーダル']").forEach((el) => pushUnique(modalNodes, el));
+    document.querySelectorAll("[aria-controls]").forEach((el, index) => {
+      if (index >= 40) return;
+      const panel = document.getElementById(el.getAttribute("aria-controls") || "");
+      if (!panel) return;
+      if (panel.tagName === "DIALOG" || panel.getAttribute("role") === "dialog" || panel.getAttribute("aria-modal") === "true") pushUnique(modalNodes, el);
+    });
+    document.querySelectorAll("button, [role='button'], a[href^='#']").forEach((el, index) => {
+      if (index >= 40) return;
+      const text = textOf(el);
+      if (text.indexOf("modal") >= 0 || text.indexOf("dialog") >= 0 || text.indexOf("popup") >= 0 || text.indexOf("モーダル") >= 0) pushUnique(modalNodes, el);
+    });
+    const modalHit = firstSafe(modalNodes.slice(0, 24), true, false);
+    if (!modalHit.selector && !modalHit.blocked && document.querySelector("dialog, [role='dialog'], [aria-modal='true']")) modalHit.panel = true;
+    const tabNodes = [];
+    document.querySelectorAll("[role='tab'], [role='tablist'] button, [role='tablist'] a, [data-bs-toggle='tab'], [data-toggle='tab'], [data-tab], [class*='tab-button'], [class*='tab-btn'], [class*='tab-item'], [class*='tab-link'], [class*='js-tab'], [class*='c-tab']").forEach((el) => pushUnique(tabNodes, el));
+    document.querySelectorAll("[aria-controls]").forEach((el, index) => {
+      if (index >= 40) return;
+      const panel = document.getElementById(el.getAttribute("aria-controls") || "");
+      if (!panel) return;
+      const cls = String(panel.getAttribute("class") || "").toLowerCase();
+      if (panel.getAttribute("role") === "tabpanel" || cls.indexOf("tab-panel") >= 0 || cls.indexOf("tabpanel") >= 0) pushUnique(tabNodes, el);
+    });
+    document.querySelectorAll("button, [role='button'], a[href^='#']").forEach((el, index) => {
+      if (index >= 40) return;
+      const label = String(el.innerText || el.getAttribute("aria-label") || "").trim().toLowerCase();
+      if (label.indexOf("タブ") >= 0 || label === "tab" || /^tab\\s*\\d/.test(label)) pushUnique(tabNodes, el);
+    });
+    tabNodes.sort((a, b) => {
+      const on = (el) => el.getAttribute("aria-selected") === "true" || el.classList.contains("active") || el.classList.contains("is-active");
+      return (on(a) ? 1 : 0) - (on(b) ? 1 : 0);
+    });
+    const tabHit = firstSafe(tabNodes.slice(0, 24), true, false);
+    if (!tabHit.selector && !tabHit.blocked && document.querySelector("[role='tablist'], [role='tabpanel'], [data-bs-toggle='tab'], [data-toggle='tab']")) tabHit.panel = true;
+    const tipNodes = [];
+    document.querySelectorAll("[aria-describedby], [data-tooltip], [data-tip], [data-tippy-content], [data-tippy], [data-bs-toggle='tooltip'], [data-toggle='tooltip'], [data-microtip], [data-microtip-position], [class*='tooltip-trigger'], [class*='has-tooltip'], [class*='js-tooltip'], [class*='tippy']").forEach((el) => pushUnique(tipNodes, el));
+    const tipHit = firstSafe(tipNodes.slice(0, 24), false, false);
+    if (!tipHit.selector && !tipHit.blocked && document.querySelector("[role='tooltip'], [data-tippy-root], .tooltip, [class*='tippy-box']")) tipHit.panel = true;
     return {
       scroll: tall,
       cssAnim: cssAnim,
@@ -1054,15 +1169,12 @@ export function buildInteractionFunctionCode(): string {
       autoCarousel: autoCarousel,
       cursor: cursor,
       hover: firstSafe(Array.from(document.querySelectorAll("a, button, [role='button'], summary, img")).filter((el) => !el.hasAttribute("aria-describedby") && !el.hasAttribute("data-tooltip") && !el.hasAttribute("data-tip")).slice(0, 40), false, true),
-      menu: firstSafe(Array.from(document.querySelectorAll("[aria-haspopup='true'], [aria-haspopup='menu'], nav button, .menu-toggle, [class*='hamburger']")).slice(0, 20), true, false),
-      modal: firstSafe(Array.from(document.querySelectorAll("[aria-haspopup='dialog'], [data-modal], [data-bs-toggle='modal'], [data-open-modal]")).slice(0, 20), true, false),
+      menu: menuHit,
+      modal: modalHit,
       accordion: firstSafe(Array.from(document.querySelectorAll("[aria-expanded='false'], details > summary")).slice(0, 20), true, false),
       carousel: firstSafe(Array.from(document.querySelectorAll("[aria-label*='next' i], [aria-label*='Next'], .swiper-button-next, [data-carousel-next], button[class*='next']")).slice(0, 12), true, false),
-      tabs: firstSafe([
-        ...Array.from(document.querySelectorAll("[role='tab'][aria-selected='false']")),
-        ...Array.from(document.querySelectorAll("[role='tab']")),
-      ].slice(0, 16), true, false),
-      tooltip: firstSafe(Array.from(document.querySelectorAll("[aria-describedby], [data-tooltip], [data-tip]")).slice(0, 16), false, false),
+      tabs: tabHit,
+      tooltip: tipHit,
       drag: firstSafe(Array.from(document.querySelectorAll("[draggable='true'], [data-drag], [data-draggable], .drag-handle, [class*='drag-handle']")).slice(0, 12), false, false),
       swipe: firstSafe([
         ...Array.from(document.querySelectorAll("[data-swipe], #swipe-track")),
@@ -1091,7 +1203,7 @@ export function buildInteractionFunctionCode(): string {
     try {
       try { await page.keyboard.press("Escape"); } catch (e) {}
       if (html && hard) {
-        await page.setContent(html, { waitUntil: "domcontentloaded", timeout: 20000 });
+        await page.setContent(pageHtml || html, { waitUntil: "domcontentloaded", timeout: 20000 });
         await sleep(200);
         return { ok: true };
       }
@@ -1262,10 +1374,10 @@ export function buildInteractionFunctionCode(): string {
   async function overlayOpen(kind) {
     return page.evaluate((k) => {
       const sel = k === "menu"
-        ? "[role='menu'], [role='listbox'], [aria-expanded='true'] + *"
+        ? "[role='menu'], [role='listbox'], [class*='drawer'], [class*='menu-panel'], [class*='sp-menu'], [aria-expanded='true'] + *"
         : k === "tooltip"
-          ? "[role='tooltip'], [data-tooltip-content], .tooltip, [class*='popover']"
-          : "dialog[open], [role='dialog'], [aria-modal='true']";
+          ? "[role='tooltip'], [data-tooltip-content], [data-tippy-root], .tooltip, [class*='tippy-box'], [class*='popover']"
+          : "dialog[open], [role='dialog'], [aria-modal='true'], [class*='modal'].show, [class*='modal'][open]";
       const nodes = Array.from(document.querySelectorAll(sel));
       for (const el of nodes) {
         const r = el.getBoundingClientRect();
@@ -1298,14 +1410,21 @@ export function buildInteractionFunctionCode(): string {
 
   async function overlaySnap(kind) {
     return page.evaluate((k) => {
-      const el = k === "menu"
-        ? document.querySelector("[role='menu']")
+      const sel = k === "menu"
+        ? "[role='menu'], [class*='drawer'], [class*='menu-panel'], [class*='sp-menu'], nav[hidden], nav[aria-hidden='true']"
         : k === "tooltip"
-          ? document.querySelector("[role='tooltip']")
-          : document.querySelector("dialog, [role='dialog']");
+          ? "[role='tooltip']"
+          : "dialog, [role='dialog'], [aria-modal='true'], [class*='modal']";
+      const nodes = Array.from(document.querySelectorAll(sel)).slice(0, 6);
+      const el = nodes[0];
       if (!el) return null;
       const st = getComputedStyle(el);
       const r = el.getBoundingClientRect();
+      const state = nodes.map((node) => {
+        const style = getComputedStyle(node);
+        const box = node.getBoundingClientRect();
+        return [node.id || node.tagName, node.hidden ? "1" : "0", style.display, style.visibility, Math.round(box.width), Math.round(box.height)].join(":");
+      }).join("|");
       return {
         selector: el.id ? "#" + CSS.escape(el.id) : el.tagName.toLowerCase(),
         open: el.hasAttribute("open") ? "1" : "0",
@@ -1313,6 +1432,7 @@ export function buildInteractionFunctionCode(): string {
         display: String(st.display || ""),
         w: Math.round(r.width),
         h: Math.round(r.height),
+        state: state,
       };
     }, kind);
   }
@@ -1544,7 +1664,7 @@ export function buildInteractionFunctionCode(): string {
         const r = el.getBoundingClientRect();
         const opts = { bubbles: true, clientX: r.x + Math.max(1, r.width / 2), clientY: r.y + Math.max(1, r.height / 2) };
         const id = el.getAttribute("aria-describedby") || el.getAttribute("aria-controls") || "";
-        const tip = (id && document.getElementById(id)) || document.querySelector("[role='tooltip']");
+        const tip = (id && document.getElementById(id)) || document.querySelector("[role='tooltip'], [data-tippy-root], .tooltip.show, [class*='tippy-box']");
         const before = tip ? (tip.hidden ? "1" : "0") : "missing";
         try { el.dispatchEvent(new PointerEvent("pointerover", opts)); } catch (e) {}
         try { el.dispatchEvent(new PointerEvent("pointerenter", opts)); } catch (e) {}
@@ -1746,6 +1866,8 @@ export function buildInteractionFunctionCode(): string {
       changes: changes,
     });
   });
+  ${motionClassifier}
+  ${motionDriverClassifier}
   async function animationSample(sel) {
     return page.evaluate((s) => {
       const el = document.querySelector(s);
@@ -1762,80 +1884,355 @@ export function buildInteractionFunctionCode(): string {
         x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height),
         visibility: String(st.visibility || ""),
         display: String(st.display || ""),
+        color: String(st.color || ""),
+        backgroundColor: String(st.backgroundColor || ""),
+        filter: String(st.filter || "none"),
+        clipPath: String(st.clipPath || "none"),
       };
     }, sel);
   }
-  function animationFacts(t0, t1, beforeHash, afterHash) {
-    const timeYes = Boolean(t0 && t1 && typeof t0.time === "number" && typeof t1.time === "number" && t1.time > t0.time + 0.01);
-    const transformYes = Boolean(t0 && t1 && t0.transform !== t1.transform);
-    const boxYes = Boolean(t0 && t1 && (Math.abs(t0.x - t1.x) >= 2 || Math.abs(t0.y - t1.y) >= 2 || Math.abs(t0.w - t1.w) >= 2 || Math.abs(t0.h - t1.h) >= 2));
-    const opacityYes = Boolean(t0 && t1 && Math.abs((t0.opacity || 0) - (t1.opacity || 0)) >= 0.02);
-    const regionYes = beforeHash && afterHash ? beforeHash !== afterHash : null;
-    const changes = [];
-    if (timeYes) changes.push("animation");
-    if (transformYes) changes.push("transform");
-    if (boxYes) changes.push("bounding_rect");
-    if (opacityYes) changes.push("opacity");
-    if (regionYes === true) changes.push("region");
+  async function readMotionFrames(sel) {
+    const frames = [];
+    for (let i = 0; i < 4; i++) {
+      frames.push(await animationSample(sel));
+      if (i < 3) await sleep(150);
+    }
+    return frames;
+  }
+  async function motionMark() {
+    return page.evaluate(() => {
+      const box = window.__vtMotion;
+      return { at: Math.round(performance.now()), raf: box ? Number(box.rafCount) || 0 : 0, installed: Boolean(box && box.installed) };
+    });
+  }
+  async function readMotionSignals(sel, mark) {
+    return page.evaluate((s, m) => {
+      const box = window.__vtMotion;
+      if (!box || !box.installed || !m || !m.installed) return { installed: false };
+      const el = document.querySelector(s);
+      const st = el ? getComputedStyle(el) : null;
+      let styleMutations = 0;
+      let rafStyleMutations = 0;
+      let classMutations = 0;
+      let attributeMutations = 0;
+      let waapi = false;
+      const events = box.events || [];
+      for (let i = 0; i < events.length; i++) {
+        const row = events[i];
+        if (!row || row.el !== el || row.at < m.at) continue;
+        if (row.kind === "style") {
+          styleMutations += 1;
+          if (row.raf) rafStyleMutations += 1;
+        } else if (row.kind === "class") classMutations += 1;
+        else if (row.kind === "attribute") attributeMutations += 1;
+        else if (row.kind === "waapi") waapi = true;
+      }
+      const anims = el && el.getAnimations ? el.getAnimations() : [];
+      let cssAnimation = Boolean(st && st.animationName && st.animationName !== "none");
+      let cssTransition = Boolean(st && st.transitionProperty && st.transitionProperty !== "none" && parseFloat(st.transitionDuration || "0") > 0.05);
+      for (let i = 0; i < anims.length; i++) {
+        const anim = anims[i];
+        const name = anim && anim.animationName;
+        if (name && name !== "none") cssAnimation = true;
+        else if (anim && anim.transitionProperty) cssTransition = true;
+        else waapi = true;
+      }
+      return {
+        installed: true,
+        styleMutations: styleMutations,
+        rafStyleMutations: rafStyleMutations,
+        classMutations: classMutations,
+        attributeMutations: attributeMutations,
+        rafCallbacks: Math.max(0, Math.min(240, (Number(box.rafCount) || 0) - (Number(m.raf) || 0))),
+        cssAnimation: cssAnimation,
+        cssTransition: cssTransition,
+        waapi: waapi,
+        gsap: Boolean(window.gsap),
+      };
+    }, sel, mark);
+  }
+  function packageMotionDriver(signals, continuous) {
+    if (!signals || !signals.installed) return null;
     return {
-      changes: changes,
+      implementation: classifyMotionDriver({
+        renderedContinuous: Boolean(continuous),
+        cssAnimation: Boolean(signals.cssAnimation),
+        cssTransition: Boolean(signals.cssTransition),
+        styleMutations: Number(signals.styleMutations) || 0,
+        classMutations: Number(signals.classMutations) || 0,
+        attributeMutations: Number(signals.attributeMutations) || 0,
+        rafStyleMutations: Number(signals.rafStyleMutations) || 0,
+        waapi: Boolean(signals.waapi),
+      }),
+      raf_callbacks: Math.max(0, Math.min(240, Number(signals.rafCallbacks) || 0)),
+      raf_style_mutations: Math.max(0, Math.min(240, Number(signals.rafStyleMutations) || 0)),
+      style_mutations: Math.max(0, Math.min(240, Number(signals.styleMutations) || 0)),
+      class_mutations: Math.max(0, Math.min(240, Number(signals.classMutations) || 0)),
+      css_animation: Boolean(signals.cssAnimation),
+      css_transition: Boolean(signals.cssTransition),
+      waapi: Boolean(signals.waapi),
+      gsap: Boolean(signals.gsap),
+    };
+  }
+  async function measureMotion(sel) {
+    const mark = await motionMark();
+    const frames = await readMotionFrames(sel);
+    const verdict = classifyMotionFrames(frames);
+    const signals = await readMotionSignals(sel, mark);
+    return { frames: frames, verdict: verdict, signals: signals };
+  }
+  async function triggerMotion(sel, measured, actions) {
+    if (!measured || !measured.verdict || measured.verdict.continuous) return { measured: measured, actions: actions };
+    try {
+      await scrollSel(sel);
+      const again = await measureMotion(sel);
+      if (again.frames.filter(Boolean).length >= 2) {
+        measured = again;
+        actions = ["SCROLL"];
+      }
+    } catch (e) {}
+    if (measured.verdict.continuous) return { measured: measured, actions: actions };
+    try {
+      await page.hover(sel, { timeout: 2500 });
+      const again = await measureMotion(sel);
+      if (again.frames.filter(Boolean).length >= 2) {
+        measured = again;
+        actions = ["HOVER"];
+      }
+    } catch (e) {}
+    if (measured.verdict.continuous) return { measured: measured, actions: actions };
+    const box = await page.evaluate((s) => {
+      const el = document.querySelector(s);
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return { x: Math.max(0, r.x - 8), y: Math.max(0, r.y - 8), w: r.width + 16, h: r.height + 16 };
+    }, sel);
+    const hashes = [];
+    for (let i = 0; i < 4; i++) {
+      hashes.push(await regionHash(box));
+      if (i < 3) await sleep(150);
+    }
+    let transitions = 0;
+    for (let i = 1; i < hashes.length; i++) {
+      if (hashes[i] && hashes[i - 1] && hashes[i] !== hashes[i - 1]) transitions += 1;
+    }
+    if (transitions >= 2) {
+      measured.verdict.continuous = true;
+      if (measured.verdict.changes.indexOf("frame") < 0) measured.verdict.changes.push("frame");
+      measured.visual = true;
+    }
+    return { measured: measured, actions: actions };
+  }
+  function frameMoved(prev, next) {
+    if (!prev || !next) return false;
+    return classifyMotionFrames([prev, next]).changes.length > 0;
+  }
+  async function motionRecord(actions, selector, frames, verdict, since) {
+    const samples = [];
+    for (let i = 0; i < frames.length; i++) {
+      samples.push({ at_ms: i * 150, changed: i > 0 && frameMoved(frames[i - 1], frames[i]) });
+    }
+    const first = frames.length ? frames[0] : null;
+    const last = frames.length ? frames[frames.length - 1] : null;
+    const rendered = verdict.continuous ? verdict.changes : [];
+    const rows = frames.filter(Boolean);
+    const opacitySeries = rows.map((f) => String(Math.round(Number(f.opacity) * 100) / 100)).join(" → ");
+    const timeSeries = rows.map((f) => (typeof f.time === "number" ? String(Math.round(f.time)) + "ms" : "—")).join(" → ");
+    const xSeries = rows.map((f) => String(f.x)).join(" → ");
+    const series = "x " + xSeries + "; opacity " + opacitySeries + "; time " + timeSeries;
+    const trace = { x: xSeries, opacity: opacitySeries, transform: "", time: timeSeries };
+    if (verdict.changes.indexOf("transform") >= 0 || verdict.changes.indexOf("scale") >= 0 || verdict.changes.indexOf("rotation") >= 0) {
+      trace.transform = rows.map((f) => String(f.transform || "none").slice(0, 28)).join(" → ").slice(0, 120);
+    }
+    const reason = verdict.continuous
+      ? ""
+      : verdict.timeline
+        ? "animation time advanced without a repeated rendered change. "
+        : verdict.oneShot
+          ? "single state change. "
+          : "rendered state stayed the same. ";
+    const note = (reason + series).slice(0, 180);
+    return {
+      actions: actions,
+      selector: selector,
+      t0: first,
+      t1: last,
+      changes: rendered,
       animation: {
         detected: true,
-        play_state_before: t0 && t0.playState != null ? t0.playState : null,
-        play_state_after: t1 && t1.playState != null ? t1.playState : null,
-        time_before: t0 && typeof t0.time === "number" ? t0.time : null,
-        time_after: t1 && typeof t1.time === "number" ? t1.time : null,
-        transform_changed: t0 && t1 ? transformYes : null,
-        box_changed: t0 && t1 ? boxYes : null,
-        region_changed: regionYes,
-        opacity_changed: t0 && t1 ? opacityYes : null,
+        play_state_before: first && first.playState != null ? first.playState : null,
+        play_state_after: last && last.playState != null ? last.playState : null,
+        time_before: first && typeof first.time === "number" ? first.time : null,
+        time_after: last && typeof last.time === "number" ? last.time : null,
+        transform_changed: rendered.indexOf("transform") >= 0,
+        box_changed: rendered.indexOf("bounding_rect") >= 0,
+        region_changed: null,
+        opacity_changed: rendered.indexOf("opacity") >= 0,
       },
+      window: await actionWindow(since, samples, rendered, null),
+      note: note,
+      trace: trace,
+      driver: null,
     };
   }
   await maybe("js_animation", async () => {
     if (!detect.jsAnim) { pushType("js_animation", false, "not_detected"); return; }
-    const sel = await page.evaluate(() => {
-      function path(el) {
-        if (el.id) return "#" + CSS.escape(el.id);
-        const parts = [];
-        let node = el;
-        while (node && node.nodeType === 1 && parts.length < 5) {
-          let name = node.tagName.toLowerCase();
-          const parent = node.parentElement;
-          if (parent) {
-            const same = Array.from(parent.children).filter((c) => c.tagName === node.tagName);
-            if (same.length > 1) name += ":nth-of-type(" + (same.indexOf(node) + 1) + ")";
+    const since = Date.now();
+    let actions = ["WAIT"];
+    async function jsTargets() {
+      return page.evaluate(() => {
+        function path(el) {
+          if (el.id) return "#" + CSS.escape(el.id);
+          const parts = [];
+          let node = el;
+          while (node && node.nodeType === 1 && parts.length < 5) {
+            let name = node.tagName.toLowerCase();
+            const parent = node.parentElement;
+            if (parent) {
+              const same = Array.from(parent.children).filter((c) => c.tagName === node.tagName);
+              if (same.length > 1) name += ":nth-of-type(" + (same.indexOf(node) + 1) + ")";
+            }
+            parts.unshift(name);
+            node = parent;
           }
-          parts.unshift(name);
-          node = parent;
+          return parts.join(" > ");
         }
-        return parts.join(" > ");
+        function visible(el) {
+          const r = el.getBoundingClientRect();
+          return r.width > 0 && r.height > 0;
+        }
+        const out = [];
+        function add(el) {
+          if (!el || !visible(el) || out.length >= 3) return;
+          const sel = path(el);
+          if (out.indexOf(sel) < 0) out.push(sel);
+        }
+        const live = document.getAnimations ? document.getAnimations() : [];
+        for (let i = 0; i < live.length; i++) {
+          const effect = live[i] && live[i].effect;
+          const target = effect && effect.target && effect.target.nodeType === 1 ? effect.target : null;
+          const name = live[i] && live[i].animationName;
+          if (!target || (name && name !== "none")) continue;
+          if (live[i].playState === "running") add(target);
+        }
+        const marked = document.querySelectorAll(${jsMarkerSelector});
+        for (let i = 0; i < marked.length; i++) add(marked[i]);
+        if (!out.length && window.__vtMotion && window.__vtMotion.events) {
+          const events = window.__vtMotion.events;
+          for (let i = 0; i < events.length; i++) {
+            const row = events[i];
+            if (row && row.el && (row.kind === "style" || row.kind === "waapi")) add(row.el);
+          }
+        }
+        if (!out.length) {
+          const nodes = Array.from(document.querySelectorAll("div, span, h1, h2, section")).slice(0, 40);
+          for (let i = 0; i < nodes.length; i++) {
+            const el = nodes[i];
+            const st = getComputedStyle(el);
+            if (st.animationName && st.animationName !== "none") continue;
+            const anims = el.getAnimations ? el.getAnimations() : [];
+            let scripted = false;
+            for (let j = 0; j < anims.length; j++) {
+              if (anims[j].playState === "running") scripted = true;
+            }
+            if (scripted) add(el);
+          }
+        }
+        return out;
+      });
+    }
+    let targets = await jsTargets();
+    if (!targets.length && detect.reveal) {
+      const revealSel = await page.evaluate(() => {
+        function path(el) {
+          if (el.id) return "#" + CSS.escape(el.id);
+          const parts = [];
+          let node = el;
+          while (node && node.nodeType === 1 && parts.length < 5) {
+            let name = node.tagName.toLowerCase();
+            const parent = node.parentElement;
+            if (parent) {
+              const same = Array.from(parent.children).filter((c) => c.tagName === node.tagName);
+              if (same.length > 1) name += ":nth-of-type(" + (same.indexOf(node) + 1) + ")";
+            }
+            parts.unshift(name);
+            node = parent;
+          }
+          return parts.join(" > ");
+        }
+        const el = document.querySelector(${revealSelector});
+        return el ? path(el) : null;
+      });
+      if (revealSel) {
+        try {
+          await scrollSel(revealSel);
+          actions = ["SCROLL"];
+          targets = [revealSel];
+        } catch (e) {
+          pushType("js_animation", true, "failed", { actions: ["SCROLL"], selector: revealSel, note: "scroll failed" });
+          return;
+        }
       }
-      const named = document.querySelector("[data-gsap], [data-framer-component], [class*='framer-'], [data-anim], [data-js-anim]");
-      return named ? path(named) : null;
-    });
-    if (!sel) { pushType("js_animation", true, "no_change_observed", { actions: ["WAIT"], note: "runtime present, no target element" }); return; }
-    const before = await animationSample(sel);
-    const beforeHash = await regionHash(before);
-    await sleep(700);
-    const after = await animationSample(sel);
-    const afterHash = await regionHash(after);
-    const facts = animationFacts(before, after, beforeHash, afterHash);
-    const moved = facts.changes.some((name) => name !== "region");
-    pushType("js_animation", true, moved ? "working" : "no_change_observed", {
-      actions: ["WAIT"],
-      selector: sel,
-      t0: before,
-      t1: after,
-      changes: facts.changes,
-      animation: facts.animation,
-      frame_hashes: beforeHash && afterHash ? [beforeHash, afterHash] : [],
-    });
+    }
+    if (!targets.length) {
+      pushType("js_animation", true, "playback_not_verifiable", { actions: actions, note: "library or marker present, no rendered target" });
+      return;
+    }
+    let best = null;
+    for (let i = 0; i < targets.length; i++) {
+      const measured = await measureMotion(targets[i]);
+      const row = { selector: targets[i], frames: measured.frames, verdict: measured.verdict, signals: measured.signals, visual: false };
+      if (!best) best = row;
+      if (measured.verdict.continuous) { best = row; break; }
+    }
+    if (best && !best.verdict.continuous && detect.cursor && best.selector === detect.cursor) {
+      try {
+        const box = await page.evaluate((s) => {
+          const el = document.querySelector(s);
+          if (!el) return null;
+          const r = el.getBoundingClientRect();
+          return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+        }, best.selector);
+        const x = box ? box.x : 80;
+        const y = box ? box.y : 120;
+        await page.mouse.move(x, y);
+        await sleep(80);
+        await page.mouse.move(x + 80, y + 40, { steps: 6 });
+        actions = ["MOUSE_MOVE"];
+        const measured = await measureMotion(best.selector);
+        best = { selector: best.selector, frames: measured.frames, verdict: measured.verdict, signals: measured.signals, visual: false };
+      } catch (e) {
+        pushType("js_animation", true, "failed", { actions: ["MOUSE_MOVE"], selector: best.selector, note: "mouse move failed" });
+        return;
+      }
+    }
+    if (best && !best.verdict.continuous) {
+      const followed = await triggerMotion(best.selector, best, actions);
+      best.frames = followed.measured.frames;
+      best.verdict = followed.measured.verdict;
+      best.signals = followed.measured.signals;
+      best.visual = Boolean(followed.measured.visual);
+      actions = followed.actions;
+    }
+    const usable = best && best.frames ? best.frames.filter(Boolean) : [];
+    if (!best || usable.length < 2) {
+      pushType("js_animation", true, "playback_not_verifiable", { actions: actions, selector: best ? best.selector : null, note: "target could not be measured" });
+      return;
+    }
+    const status = best.verdict.continuous ? "working" : "no_change_observed";
+    const record = await motionRecord(actions, best.selector, best.frames, best.verdict, since);
+    if (best.visual) record.window.visual_changed = true;
+    const driver = packageMotionDriver(best.signals, best.verdict.continuous);
+    if (driver) record.driver = driver;
+    else delete record.driver;
+    pushType("js_animation", true, status, record);
   });
   await maybe("css_animation", async () => {
     if (!detect.cssAnim) { pushType("css_animation", false, "not_detected"); return; }
-    const sel = await page.evaluate(() => {
+    const since = Date.now();
+    const targets = await page.evaluate(() => {
       function path(el) {
+        if (!el || el.nodeType !== 1) return "";
         if (el.id) return "#" + CSS.escape(el.id);
         const parts = [];
         let node = el;
@@ -1851,38 +2248,76 @@ export function buildInteractionFunctionCode(): string {
         }
         return parts.join(" > ");
       }
-      const nodes = Array.from(document.querySelectorAll("div, img, h1, h2, section, span, p")).slice(0, 140);
-      for (const el of nodes) {
-        const st = getComputedStyle(el);
-        const anims = el.getAnimations ? el.getAnimations() : [];
-        if ((st.animationName && st.animationName !== "none") || anims.length) return path(el);
+      function visible(el) {
+        const r = el.getBoundingClientRect();
+        return r.width >= 4 || r.height >= 4;
       }
-      return null;
+      const ranked = [];
+      function add(el, rank) {
+        if (!el || el.nodeType !== 1 || !visible(el)) return;
+        const sel = path(el);
+        if (!sel) return;
+        const found = ranked.find((row) => row.sel === sel);
+        if (found) { if (rank < found.rank) found.rank = rank; return; }
+        ranked.push({ sel: sel, rank: rank });
+      }
+      const live = document.getAnimations ? document.getAnimations() : [];
+      for (let i = 0; i < live.length; i++) {
+        const animation = live[i];
+        const effect = animation && animation.effect;
+        const target = effect && effect.target && effect.target.nodeType === 1 ? effect.target : null;
+        if (!target) continue;
+        const name = animation.animationName;
+        const css = Boolean(name && name !== "none");
+        const running = animation.playState === "running";
+        add(target, running && css ? 0 : running ? 1 : css ? 2 : 3);
+      }
+      if (!ranked.some((row) => row.rank <= 2)) {
+        const nodes = Array.from(document.querySelectorAll("div, img, h1, h2, h3, section, span, p, a, li, article, header, button, svg")).slice(0, 240);
+        for (let i = 0; i < nodes.length; i++) {
+          const el = nodes[i];
+          const st = getComputedStyle(el);
+          if (st.animationName && st.animationName !== "none") add(el, 4);
+          else {
+            const parts = String(st.transitionDuration || "0").split(",");
+            for (let j = 0; j < parts.length; j++) {
+              if (parseFloat(parts[j]) > 0.05) { add(el, 5); break; }
+            }
+          }
+        }
+      }
+      ranked.sort((a, b) => a.rank - b.rank);
+      return ranked.slice(0, 2).map((row) => row.sel);
     });
-    if (!sel) {
-      pushType("css_animation", true, "no_change_observed", {
+    if (!targets.length) {
+      pushType("css_animation", true, "playback_not_verifiable", {
         actions: ["WAIT"],
-        animation: { detected: true, play_state_before: null, play_state_after: null, time_before: null, time_after: null, transform_changed: null, box_changed: null, region_changed: null, opacity_changed: null },
         note: "animation-name present, no measured target",
       });
       return;
     }
-    const t0 = await animationSample(sel);
-    const beforeHash = await regionHash(t0);
-    await sleep(420);
-    const t1 = await animationSample(sel);
-    const afterHash = await regionHash(t1);
-    const facts = animationFacts(t0, t1, beforeHash, afterHash);
-    const moved = facts.changes.some((name) => name !== "region");
-    pushType("css_animation", true, moved ? "working" : "no_change_observed", {
-      actions: ["WAIT"],
-      selector: sel,
-      t0: t0,
-      t1: t1,
-      changes: facts.changes,
-      animation: facts.animation,
-      frame_hashes: beforeHash && afterHash ? [beforeHash, afterHash] : [],
-    });
+    let chosen = null;
+    for (let i = 0; i < targets.length; i++) {
+      const measured = await measureMotion(targets[i]);
+      const followed = await triggerMotion(targets[i], measured, ["WAIT"]);
+      chosen = { selector: targets[i], measured: followed.measured, actions: followed.actions };
+      if (followed.measured.verdict.continuous) break;
+      if (followed.measured.frames.filter(Boolean).length >= 2) break;
+    }
+    const frames = chosen ? chosen.measured.frames : [];
+    const usable = frames.filter(Boolean);
+    if (!chosen || usable.length < 2) {
+      pushType("css_animation", true, "playback_not_verifiable", { actions: ["WAIT"], selector: chosen ? chosen.selector : null, note: "target could not be measured" });
+      return;
+    }
+    const verdict = chosen.measured.verdict;
+    const status = verdict.continuous ? "working" : "no_change_observed";
+    const record = await motionRecord(chosen.actions, chosen.selector, frames, verdict, since);
+    if (chosen.measured.visual) record.window.visual_changed = true;
+    const driver = packageMotionDriver(chosen.measured.signals, verdict.continuous);
+    if (driver) record.driver = driver;
+    else delete record.driver;
+    pushType("css_animation", true, status, record);
   });
   await maybe("canvas", async () => {
     if (!detect.canvas2d) { pushType("canvas", false, "not_detected"); return; }
@@ -1921,142 +2356,64 @@ export function buildInteractionFunctionCode(): string {
     });
   });
 
-  await maybe("hover", async () => { await runHoverKind("hover", detect.hover || {}, null); });
-  await maybe("tooltip", async () => { await runHoverKind("tooltip", detect.tooltip || {}, "tooltip"); });
-  await maybe("cursor_follow", async () => {
-    if (!detect.cursor) { pushType("cursor_follow", false, "not_detected"); return; }
-    const before = await styleSnap(detect.cursor);
-    const box = await page.evaluate((sel) => {
-      const el = document.querySelector(sel);
-      if (!el) return null;
-      const r = el.getBoundingClientRect();
-      return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
-    }, detect.cursor);
-    try {
-      const x = box ? box.x : 80;
-      const y = box ? box.y : 120;
-      await page.mouse.move(x, y);
-      await sleep(80);
-      await page.mouse.move(x + 140, y + 60, { steps: 8 });
-    } catch (e) {}
-    await sleep(180);
-    const after = await styleSnap(detect.cursor);
-    const changes = [];
-    if (before && after) {
-      if (before.transform !== after.transform) changes.push("transform");
-      if (Math.abs(before.x - after.x) >= 2 || Math.abs(before.y - after.y) >= 2) changes.push("position");
+  async function watchPassive(type, hit, kind) {
+    const row = typeof hit === "string" ? { selector: hit, blocked: false } : (hit || {});
+    if (row.blocked && !row.selector) { pushType(type, true, "blocked_for_safety"); return; }
+    if (!row.selector && row.panel) {
+      const panelNote = type === "menu" ? "menu present, no safe trigger"
+        : type === "modal" ? "dialog present, no safe trigger"
+        : type === "tabs" ? "tabs present, no safe trigger"
+        : type === "tooltip" ? "tooltip present, no safe trigger"
+        : "passive watch, no pointer or click";
+      pushType(type, true, "playback_not_verifiable", { actions: ["WAIT"], note: panelNote });
+      return;
     }
-    pushType("cursor_follow", true, changes.length ? "working" : "no_change_observed", {
-      actions: ["MOUSE_MOVE"],
-      selector: detect.cursor,
-      t0: before,
-      t1: after,
-      changes: changes,
-    });
-  });
-  await maybe("menu", async () => { await runHit("menu", detect.menu || {}, "menu", true); });
-  await maybe("modal", async () => { await runHit("modal", detect.modal || {}, "modal", false); });
-  await maybe("tabs", async () => {
-    const hit = detect.tabs || {};
-    if (hit.blocked && !hit.selector) { pushType("tabs", true, "blocked_for_safety"); return; }
-    if (!hit.selector) { pushType("tabs", false, "not_detected"); return; }
-    await scrollSel(hit.selector);
-    const snap = async () => page.evaluate((sel) => {
-      const el = document.querySelector(sel);
-      if (!el) return null;
-      const id = el.getAttribute("aria-controls");
-      const panel = id ? document.getElementById(id) : null;
-      const st = panel ? getComputedStyle(panel) : null;
-      const hidden = !panel || panel.hidden || (panel.getAttribute("aria-hidden") === "true") || Boolean(st && (st.display === "none" || st.visibility === "hidden"));
-      const r = panel ? panel.getBoundingClientRect() : { height: 0, width: 0 };
-      return {
-        selected: el.getAttribute("aria-selected"),
-        hidden: hidden,
-        h: Math.round(r.height || 0),
-        text: panel ? String(panel.innerText || "").slice(0, 80) : "",
-      };
-    }, hit.selector);
-    const before = await snap();
-    const actionStarted = Date.now();
-    const clicked = await safeClick(hit.selector);
-    if (!clicked.ok) { pushType("tabs", true, "blocked_for_safety"); return; }
-    const samples = [];
+    if (!row.selector) { pushType(type, false, "not_detected"); return; }
+    const since = Date.now();
+    const before = await styleSnap(row.selector);
+    const beforeOverlay = kind ? await overlaySnap(kind) : null;
+    const watchNear = type === "accordion" || type === "tabs";
+    const beforeNear = watchNear ? await nearbySnap(row.selector) : null;
     let after = before;
-    let selected = false;
-    let panel = false;
-    let waited = 0;
-    for (const mark of [100, 300, 1000]) {
-      const gap = mark - waited;
-      if (gap > 0) await sleep(gap);
-      waited = mark;
-      after = await snap();
-      selected = Boolean(before && after && before.selected !== "true" && after.selected === "true");
-      panel = Boolean(before && after && (before.hidden !== after.hidden || before.h !== after.h || before.text !== after.text));
-      samples.push({ at_ms: mark, changed: selected || panel });
-      if (selected && panel && mark >= 300) break;
+    let afterOverlay = beforeOverlay;
+    let changed = false;
+    let lastNear = beforeNear;
+    const samples = [{ at_ms: 0, changed: false }];
+    for (const mark of [150, 300, 450]) {
+      await sleep(150);
+      after = await styleSnap(row.selector);
+      afterOverlay = kind ? await overlaySnap(kind) : null;
+      lastNear = watchNear ? await nearbySnap(row.selector) : null;
+      const nearMoved = Boolean(beforeNear && lastNear && JSON.stringify(beforeNear) !== JSON.stringify(lastNear));
+      const moved = styleChanged(before, after) || nearMoved || Boolean(beforeOverlay && afterOverlay && JSON.stringify(beforeOverlay) !== JSON.stringify(afterOverlay));
+      if (moved) changed = true;
+      samples.push({ at_ms: mark, changed: moved });
     }
-    const ok = selected && panel;
     const changes = [];
-    if (selected) changes.push("aria-selected");
-    if (panel) changes.push("panel");
-    pushType("tabs", true, ok ? "working" : "no_change_observed", {
-      actions: ["SAFE_CLICK"],
-      selector: hit.selector,
+    if (changed && styleChanged(before, after)) changes.push("style");
+    if (changed && beforeOverlay && afterOverlay && JSON.stringify(beforeOverlay) !== JSON.stringify(afterOverlay)) changes.push("visibility");
+    if (changed && beforeNear && lastNear && JSON.stringify(beforeNear) !== JSON.stringify(lastNear)) changes.push("panel");
+    pushType(type, true, changed ? "working" : "no_change_observed", {
+      actions: ["WAIT"],
+      selector: row.selector,
       t0: before,
       t1: after,
       changes: changes,
-      window: await actionWindow(actionStarted, samples, changes, null),
+      note: "passive watch, no pointer or click",
+      window: await actionWindow(since, samples, changes, null),
     });
-  });
-  await maybe("accordion", async () => {
-    const hit = detect.accordion || {};
-    if (hit.blocked && !hit.selector) { pushType("accordion", true, "blocked_for_safety"); return; }
-    if (!hit.selector) { pushType("accordion", false, "not_detected"); return; }
-    await scrollSel(hit.selector);
-    const snap = async () => page.evaluate((sel) => {
-      const el = document.querySelector(sel);
-      if (!el) return null;
-      const id = el.getAttribute("aria-controls");
-      const panel = (id && document.getElementById(id)) || el.nextElementSibling;
-      const st = panel ? getComputedStyle(panel) : null;
-      const r = panel ? panel.getBoundingClientRect() : { height: 0 };
-      const hidden = !panel || panel.hidden || Boolean(st && (st.display === "none" || st.visibility === "hidden" || Number(st.opacity) < 0.05));
-      return { expanded: el.getAttribute("aria-expanded"), hidden: hidden, h: Math.round(r.height || 0) };
-    }, hit.selector);
-    const before = await snap();
-    const actionStarted = Date.now();
-    const clicked = await safeClick(hit.selector);
-    if (!clicked.ok) { pushType("accordion", true, "blocked_for_safety"); return; }
-    const samples = [];
-    let after = before;
-    let ok = false;
-    let waited = 0;
-    for (const mark of [100, 300, 1000]) {
-      const gap = mark - waited;
-      if (gap > 0) await sleep(gap);
-      waited = mark;
-      after = await snap();
-      ok = Boolean(before && after && (
-        (before.expanded === "false" && after.expanded === "true") ||
-        (before.hidden && !after.hidden) ||
-        (after.h - before.h >= 8)
-      ));
-      samples.push({ at_ms: mark, changed: ok });
-      if (ok && mark >= 300) break;
-    }
-    const changes = ok ? ["aria-expanded"] : [];
-    pushType("accordion", true, ok ? "working" : "no_change_observed", {
-      actions: ["SAFE_CLICK"],
-      selector: hit.selector,
-      t0: before,
-      t1: after,
-      changes: changes,
-      window: await actionWindow(actionStarted, samples, changes, null),
-    });
-  });
+  }
+
+  await maybe("hover", async () => { await watchPassive("hover", detect.hover || {}, null); });
+  await maybe("tooltip", async () => { await watchPassive("tooltip", detect.tooltip || {}, "tooltip"); });
+  await maybe("cursor_follow", async () => { await watchPassive("cursor_follow", detect.cursor || {}, null); });
+  await maybe("menu", async () => { await watchPassive("menu", detect.menu || {}, "menu"); });
+  await maybe("modal", async () => { await watchPassive("modal", detect.modal || {}, "modal"); });
+  await maybe("tabs", async () => { await watchPassive("tabs", detect.tabs || {}, null); });
+  await maybe("accordion", async () => { await watchPassive("accordion", detect.accordion || {}, null); });
   await maybe("carousel", async () => { await runHit("carousel", detect.carousel || {}, null, true); });
-  await maybe("drag", async () => { await runPointer("drag", detect.drag || {}, 48, 12); });
-  await maybe("swipe", async () => { await runPointer("swipe", detect.swipe || {}, -90, 0); });
+  await maybe("drag", async () => { await watchPassive("drag", detect.drag || {}, null); });
+  await maybe("swipe", async () => { await watchPassive("swipe", detect.swipe || {}, null); });
   await maybe("video", async () => {
     if (!detect.video) { pushType("video", false, "not_detected"); return; }
     const result = await withTimeout(page.evaluate(async () => {
@@ -2235,58 +2592,53 @@ export function buildInteractionFunctionCode(): string {
       return { ok: true };
     }, hit.selector, unsafeSource);
     if (!probe.ok) { pushType("form", true, "blocked_for_safety"); return; }
-    await scrollSel(hit.selector);
-    const actionStarted = Date.now();
-    const beforeValue = await page.evaluate((sel) => {
-      const el = document.querySelector(sel);
-      return el && "value" in el ? String(el.value || "") : "";
-    }, hit.selector);
-    await page.focus(hit.selector);
-    await page.type(hit.selector, "vt-check", { delay: 10 });
-    await sleep(160);
-    const filled = await page.evaluate((sel) => {
-      const el = document.querySelector(sel);
-      return el && "value" in el ? String(el.value || "") : "";
-    }, hit.selector);
-    await page.evaluate((sel) => {
-      const el = document.querySelector(sel);
-      if (!el || !("value" in el)) return;
-      el.value = "";
-      el.dispatchEvent(new Event("input", { bubbles: true }));
-      el.dispatchEvent(new Event("change", { bubbles: true }));
-    }, hit.selector);
-    const cleared = await page.evaluate((sel) => {
-      const el = document.querySelector(sel);
-      return el && "value" in el ? String(el.value || "") : "";
-    }, hit.selector);
-    const valueChanged = filled.indexOf("vt-check") >= 0 && cleared.indexOf("vt-check") < 0;
-    const formChanges = filled !== beforeValue ? ["value"] : [];
-    pushType("form", true, valueChanged ? "working" : "no_change_observed", {
-      actions: ["FOCUS", "INPUT"],
-      selector: hit.selector,
-      t0: { value: beforeValue },
-      t1: { value: filled },
-      changes: formChanges,
-      window: await actionWindow(actionStarted, [{ at_ms: 160, changed: filled !== beforeValue }], formChanges, null),
-    });
+    await watchPassive("form", hit, null);
   });
   await maybe("scroll_reveal", async () => {
-    const cands = await page.evaluate(() => {
-      const out = [];
-      const named = Array.from(document.querySelectorAll("[data-reveal], [class*='reveal']"));
-      for (const el of named) {
-        if (el.id) out.push("#" + CSS.escape(el.id));
-        if (out.length >= 4) break;
+    const cands = await page.evaluate((revealSel) => {
+      function path(el) {
+        if (!el || !el.tagName) return "";
+        if (el.id) return "#" + (window.CSS && CSS.escape ? CSS.escape(el.id) : el.id);
+        const parts = [];
+        let node = el;
+        while (node && node.nodeType === 1 && parts.length < 5) {
+          let name = node.tagName.toLowerCase();
+          const parent = node.parentElement;
+          if (parent) {
+            const same = Array.from(parent.children).filter((c) => c.tagName === node.tagName);
+            if (same.length > 1) name += ":nth-of-type(" + (same.indexOf(node) + 1) + ")";
+          }
+          parts.unshift(name);
+          node = parent;
+        }
+        return parts.join(" > ");
       }
+      function noisy(el) {
+        const text = String(el.className || "") + " " + String(el.id || "");
+        return /cookie|consent|gdpr|onetrust/i.test(text);
+      }
+      const out = [];
+      function add(el) {
+        if (!el || noisy(el) || out.length >= 4) return;
+        const sel = path(el);
+        if (sel && out.indexOf(sel) < 0) out.push(sel);
+      }
+      const named = Array.from(document.querySelectorAll(revealSel));
+      for (let i = 0; i < named.length; i++) add(named[i]);
       if (!out.length) {
-        for (const el of Array.from(document.querySelectorAll("p, h2, h3, img, div")).slice(0, 80)) {
-          const st = getComputedStyle(el);
-          if ((Number(st.opacity) < 0.05 || st.visibility === "hidden") && el.id) out.push("#" + CSS.escape(el.id));
-          if (out.length >= 4) break;
+        const nodes = Array.from(document.querySelectorAll("p, h2, h3, img, div, section, li")).slice(0, 80);
+        for (let i = 0; i < nodes.length; i++) {
+          const el = nodes[i];
+          let st;
+          try { st = getComputedStyle(el); } catch (e) { continue; }
+          const box = el.getBoundingClientRect();
+          const below = box.top > window.innerHeight * 0.85;
+          const hidden = Number(st.opacity) < 0.2 || st.visibility === "hidden";
+          if (below && hidden && st.display !== "none" && box.width > 0 && box.height > 0) add(el);
         }
       }
       return out;
-    });
+    }, ${revealSelector});
     if (!cands.length) { pushType("scroll_reveal", false, "not_detected"); return; }
     let worked = false;
     let ev = null;

@@ -362,12 +362,12 @@ const TYPE_FIXTURES: Record<
   },
   css_animation: {
     body: `<main><h1 id="hero-copy">Hero</h1></main>`,
-    working: `document.getElementById("hero-copy").style.animation = "hero-in .8s linear forwards";`,
+    working: `const el = document.getElementById("hero-copy"); el.style.opacity = "0"; el.style.transform = "translateY(16px)"; el.style.animation = "hero-in .8s linear forwards";`,
     broken: `const el = document.getElementById("hero-copy"); el.style.animation = "hero-in .8s linear forwards"; el.style.animationPlayState = "paused";`,
   },
   js_animation: {
     body: `<main><div id="js-box" data-js-anim="true" style="width:40px;height:40px">Box</div></main>`,
-    working: `setTimeout(() => { document.getElementById("js-box").style.transform = "translateX(24px)"; }, 200);`,
+    working: `(function () { const el = document.getElementById("js-box"); const start = performance.now(); function tick(now) { const p = Math.min(1, (now - start) / 500); el.style.transform = "translateX(" + Math.round(p * 40) + "px)"; if (p < 1) requestAnimationFrame(tick); } requestAnimationFrame(tick); })();`,
     broken: "",
   },
   scroll_reveal: {

@@ -4,7 +4,7 @@ import type { Locale } from "@/lib/i18n";
 import { presentInteractionHealth } from "@/lib/interaction-health-presentation";
 import type { PageSeoDerivedV1 } from "@/lib/measurement-record";
 import { monitoringReviewStatus, type MonitoringAlert } from "@/lib/monitoring-run-diff";
-import { monitoringJourneyFact, type MonitoringPageFact } from "@/lib/monitoring-run";
+import { firstScreenshotCompareNote, monitoringJourneyFact, type MonitoringPageFact } from "@/lib/monitoring-run";
 import { presentMonitoringReview } from "@/lib/monitoring-run-summary";
 import type { BehaviorDiffV1 } from "@/lib/observation-behavior-diff";
 import type { InteractionCheckType, RegionalInteractionCheckV1 } from "@/lib/observation-regional-interaction";
@@ -25,6 +25,21 @@ const COPY = {
     none: "なし",
     behaviorNoPrevious: "前回の挙動記録はありません。",
     behaviorUnchanged: "変化なし",
+    signals: "{n} signals",
+    measuredCount: "測定 {n}",
+    reasonScreenshot: "前回の{region}の記録とスクリーンショットが違います。",
+    reasonNotComparable: "前回の{region}の記録とは比較できません。",
+    reasonNoPrevious: "前回の記録には{region}のページがありません。",
+    area: {
+      Header: "ヘッダー",
+      Navigation: "ナビゲーション",
+      Main: "本文",
+      Form: "フォーム",
+      Sidebar: "サイドバー",
+      Footer: "フッター",
+      Motion: "動き",
+      Page: "ページ",
+    },
     missingLine: "{label} は検出されなくなりました。",
     newUnknownLine: "{label} で未分類の変化を検出しました。",
     regressionLine: "{label} · {previous} → {current}",
@@ -55,6 +70,21 @@ const COPY = {
     none: "None",
     behaviorNoPrevious: "No previous behavior check.",
     behaviorUnchanged: "Unchanged",
+    signals: "{n} signals",
+    measuredCount: "{n} measured",
+    reasonScreenshot: "Screenshot differs from the previous {region} check.",
+    reasonNotComparable: "This screenshot cannot be compared with the previous {region} check.",
+    reasonNoPrevious: "No previous {region} page is on record.",
+    area: {
+      Header: "Header",
+      Navigation: "Navigation",
+      Main: "Main",
+      Form: "Form",
+      Sidebar: "Sidebar",
+      Footer: "Footer",
+      Motion: "Motion",
+      Page: "Page",
+    },
     missingLine: "{label} is no longer detected.",
     newUnknownLine: "New unclassified change detected in {label}.",
     regressionLine: "{label} · {previous} → {current}",
@@ -110,6 +140,29 @@ function renderedStatus(status: string, locale: Locale): string {
   if (status === "playback_not_verifiable") return locale === "ja" ? "確認できない" : "Not verifiable";
   if (status === "blocked_for_safety") return locale === "ja" ? "安全のため未実行" : "Blocked for safety";
   return locale === "ja" ? "未測定" : "Not measured";
+}
+
+function renderedChip(status: string): string {
+  if (status === "working") return "bg-emerald-50 text-emerald-950 ring-emerald-200";
+  if (status === "failed") return "bg-rose-50 text-rose-950 ring-rose-200";
+  return "bg-surface text-ink-muted ring-border";
+}
+
+function reviewChip(status: "incomplete" | "attention_needed" | "blocked" | "healthy"): string {
+  if (status === "attention_needed") return "bg-amber-50 text-amber-950 ring-amber-200";
+  if (status === "healthy") return "bg-emerald-50 text-emerald-950 ring-emerald-200";
+  if (status === "blocked") return "bg-stone-100 text-stone-800 ring-stone-300";
+  return "bg-surface text-ink ring-border";
+}
+
+function pageAlertText(
+  copy: (typeof COPY)["en"],
+  alert: Extract<MonitoringAlert, { layer: "page" }>,
+  region: string,
+): string {
+  if (alert.code === "screenshot_differs") return copy.reasonScreenshot.replace("{region}", region);
+  if (!alert.paired) return copy.reasonNoPrevious.replace("{region}", region);
+  return copy.reasonNotComparable.replace("{region}", region);
 }
 
 function behaviorLine(copy: (typeof COPY)["en"], alert: Extract<MonitoringAlert, { layer: "behavior" }>): string {
@@ -184,59 +237,141 @@ export function ObservationCheckSummary({
         journeyBlocked ? `${journeyBlocked} Blocked` : "",
       ].filter(Boolean).join(" · ") || copy.none
     : copy.none;
+  const pageAlerts = loaded.alerts.filter((alert): alert is Extract<MonitoringAlert, { layer: "page" }> => alert.layer === "page");
+  const pageAlert = pageAlerts.find((alert) => !here || alert.region === here.region || alert.region === here.label) ?? pageAlerts[0] ?? null;
+  const reason = pageAlert
+    ? pageAlert.code === "screenshot_not_comparable" && !pageAlert.paired
+      ? firstScreenshotCompareNote({
+          locale,
+          regionLabel: here?.label || pageAlert.region,
+          device: here?.device ?? null,
+          previousPages: loaded.previousPages.filter((page) => !here || page.region !== here.region),
+        })
+      : pageAlertText(copy, pageAlert, here?.label || pageAlert.region)
+    : null;
+  const deviceLabel = here?.device === "mobile" ? "Mobile" : here?.device === "desktop" ? "Desktop" : "";
+  const session = check?.discovery?.session ?? null;
+  const workingCount = rendered.filter((row) => row.status === "working").length;
+  const stillCount = rendered.filter((row) => row.status === "no_change_observed").length;
+  const sessionStats = session
+    ? [
+        { label: "HTTP", value: session.http.timed_out ? "timeout" : String(session.http.status ?? "—") },
+        { label: "JS", value: String(session.resources.script) },
+        { label: "CSS", value: String(session.resources.stylesheet) },
+        { label: "img", value: String(session.resources.image) },
+        { label: "failed", value: String(session.resources.failed) },
+        { label: "console", value: String(session.errors.console_error) },
+        { label: "pageerror", value: String(session.errors.pageerror) },
+        ...(session.performance.fcp_ms != null ? [{ label: "FCP", value: `${session.performance.fcp_ms}ms` }] : []),
+        ...(session.performance.lcp_ms != null ? [{ label: "LCP", value: `${session.performance.lcp_ms}ms` }] : []),
+        ...(session.performance.cls != null ? [{ label: "CLS", value: String(session.performance.cls) }] : []),
+      ]
+    : [];
+  const behaviorNote = !loaded.diff.behavior.measured
+    ? copy.notMeasured
+    : behaviorLines.length === 0 && review.areas.length === 0
+      ? (loaded.diff.behavior.compared ? copy.behaviorUnchanged : copy.behaviorNoPrevious)
+      : null;
 
   return (
     <section
       aria-labelledby="observation-check-summary"
-      className="rounded-xl border border-border bg-surface-elevated p-4"
+      className="rounded-xl border border-border bg-surface-elevated p-4 sm:p-5"
     >
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
+      <div className="flex items-start justify-between gap-3">
         <h2 id="observation-check-summary" className="font-display text-lg font-semibold text-ink">
           {copy.title}
         </h2>
-        <p className="text-sm font-semibold uppercase tracking-wide text-ink">{copy.status[status]}</p>
+        <p className={`rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${reviewChip(status)}`}>
+          {copy.status[status]}
+        </p>
       </div>
-      <dl className="mt-4 space-y-1 text-sm text-ink">
-        <div>{copy.page} {here ? copy.pageFact[here.fact] : "—"}{here?.device ? ` · ${here.device === "mobile" ? "Mobile" : "Desktop"}` : ""}</div>
-        <div>{copy.seo} {seo?.score == null ? "—" : `${seo.score} / 100`}</div>
-        <div>{copy.behaviors} {healthLabel}</div>
-        <div>{copy.journeys} {journeySummary}</div>
+      {reason ? <p className="mt-2 text-sm leading-relaxed text-ink-muted">{reason}</p> : null}
+
+      <dl className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="rounded-lg border border-border bg-surface px-3 py-3">
+          <dt className="text-[11px] font-semibold uppercase tracking-wide text-ink-muted">{copy.page}</dt>
+          <dd className={`mt-1 text-sm font-semibold ${here?.fact === "not_comparable" || here?.fact === "changed" ? "text-amber-950" : "text-ink"}`}>
+            {here ? copy.pageFact[here.fact] : "—"}
+          </dd>
+          <dd className="mt-1 text-xs text-ink-muted">
+            {[deviceLabel, here && here.fact !== "incomplete" ? copy.measured : copy.notMeasured].filter(Boolean).join(" · ")}
+          </dd>
+        </div>
+        <div className="rounded-lg border border-border bg-surface px-3 py-3">
+          <dt className="text-[11px] font-semibold uppercase tracking-wide text-ink-muted">{copy.seo}</dt>
+          <dd className="mt-1 text-sm font-semibold text-ink">
+            {seo?.score == null ? "—" : seo.score}
+            {seo?.score == null ? null : <span className="text-xs font-medium text-ink-muted"> / 100</span>}
+          </dd>
+          {seo?.score != null ? (
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-border" aria-hidden>
+              <div className="h-full rounded-full bg-accent" style={{ width: `${Math.max(0, Math.min(100, seo.score))}%` }} />
+            </div>
+          ) : null}
+          <dd className="mt-1 text-xs text-ink-muted">
+            {seo ? copy.signals.replace("{n}", String(seo.measured_signals)) : copy.notMeasured}
+          </dd>
+        </div>
+        <div className="rounded-lg border border-border bg-surface px-3 py-3">
+          <dt className="text-[11px] font-semibold uppercase tracking-wide text-ink-muted">{copy.behaviors}</dt>
+          <dd className="mt-1 text-sm font-semibold text-ink">{healthLabel}</dd>
+          <dd className="mt-1 text-xs text-ink-muted">
+            {check ? copy.measuredCount.replace("{n}", String(behaviorCount)) : copy.notMeasured}
+          </dd>
+        </div>
+        <div className="rounded-lg border border-border bg-surface px-3 py-3">
+          <dt className="text-[11px] font-semibold uppercase tracking-wide text-ink-muted">{copy.journeys}</dt>
+          <dd className="mt-1 text-sm font-semibold text-ink">{journeySummary}</dd>
+          <dd className="mt-1 text-xs text-ink-muted">{journeyHere.length ? copy.measured : "\u00a0"}</dd>
+        </div>
       </dl>
+
       {rendered.length ? (
-        <ul className="mt-3 space-y-1 text-sm text-ink">
-          {rendered.map((row) => (
-            <li key={row.type}>
-              {(RENDERED_LABEL[row.type]?.[locale] ?? row.type)} · {renderedStatus(row.status, locale)}
+        <div className="mt-4">
+          <p className="text-xs text-ink-muted">
+            {[
+              workingCount ? `Working ${workingCount}` : "",
+              stillCount ? `${renderedStatus("no_change_observed", locale)} ${stillCount}` : "",
+            ].filter(Boolean).join(" · ")}
+          </p>
+          <ul className="mt-2 divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface">
+            {rendered.map((row) => (
+              <li key={row.type} className="flex items-center justify-between gap-3 px-3 py-2">
+                <span className="text-sm text-ink">{RENDERED_LABEL[row.type]?.[locale] ?? row.type}</span>
+                <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ${renderedChip(row.status)}`}>
+                  {renderedStatus(row.status, locale)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {health && health.areas.length ? (
+        <ul className="mt-3 flex flex-wrap gap-2">
+          {health.areas.map((area) => (
+            <li key={area.id} className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-950 ring-1 ring-amber-200">
+              {copy.area[area.id]} · {area.count}
             </li>
           ))}
         </ul>
       ) : null}
-      <div className="mt-4 text-sm text-ink">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-ink-muted">{copy.scope}</h3>
-        <ul className="mt-1 space-y-1">
-          <li>{copy.page} {here && here.fact !== "incomplete" ? copy.measured : copy.notMeasured}</li>
-          <li>{copy.metadata} {seo ? `${seo.measured_signals} signals` : copy.notMeasured}</li>
-          <li>{copy.behaviors} {check ? `${behaviorCount}` : copy.notMeasured}</li>
-          <li>{copy.journeys} {journeyHere.length || copy.none}</li>
-          {check?.discovery?.session ? (
-            <li>
-              HTTP {check.discovery.session.http.status ?? "—"}
-              {check.discovery.session.http.timed_out ? " · timeout" : ""}
-              {` · JS ${check.discovery.session.resources.script} · CSS ${check.discovery.session.resources.stylesheet} · img ${check.discovery.session.resources.image}`}
-              {` · failed ${check.discovery.session.resources.failed}`}
-              {` · console ${check.discovery.session.errors.console_error} · pageerror ${check.discovery.session.errors.pageerror}`}
-              {check.discovery.session.performance.fcp_ms != null ? ` · FCP ${check.discovery.session.performance.fcp_ms}ms` : ""}
-              {check.discovery.session.performance.lcp_ms != null ? ` · LCP ${check.discovery.session.performance.lcp_ms}ms` : ""}
-              {check.discovery.session.performance.cls != null ? ` · CLS ${check.discovery.session.performance.cls}` : ""}
-            </li>
-          ) : null}
-        </ul>
-      </div>
 
-      <div className="mt-4 space-y-4 text-sm text-ink">
-        <div>
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-ink-muted">{copy.page}</h3>
-          <ul className="mt-1 space-y-1">
+      {sessionStats.length ? (
+        <dl className="mt-4 grid grid-cols-3 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-5">
+          {sessionStats.map((stat) => (
+            <div key={stat.label} className="bg-surface-elevated px-2.5 py-2">
+              <dt className="text-[10px] font-semibold uppercase tracking-wide text-ink-muted">{stat.label}</dt>
+              <dd className="mt-0.5 text-sm font-semibold tabular-nums text-ink">{stat.value}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
+
+      <div className="mt-4 space-y-2 text-sm text-ink">
+        {pages.length > 1 ? (
+          <ul className="space-y-1">
             {pages.map((row) => {
               const current = row.id === observationId;
               const device = row.device === "mobile" ? "Mobile" : row.device === "desktop" ? "Desktop" : "";
@@ -254,40 +389,35 @@ export function ObservationCheckSummary({
               );
             })}
           </ul>
-        </div>
+        ) : here ? (
+          <p className="text-xs text-ink-muted">
+            {here.label}{deviceLabel ? ` · ${deviceLabel}` : ""} · {copy.pageFact[here.fact]} · {copy.thisRecord}
+          </p>
+        ) : null}
 
-        <div>
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-ink-muted">{copy.behaviors}</h3>
-          {!loaded.diff.behavior.measured ? (
-            <p className="mt-1">{copy.notMeasured}</p>
-          ) : behaviorLines.length === 0 && review.areas.length === 0 ? (
-            <p className="mt-1">{loaded.diff.behavior.compared ? copy.behaviorUnchanged : copy.behaviorNoPrevious}</p>
-          ) : (
-            <ul className="mt-1 space-y-1">
-              {review.areas.map((area) => (
-                <li key={area.id}>{area.title} · {area.count}</li>
-              ))}
-              {behaviorLines.map((line) => (
-                <li key={line}>{line}</li>
-              ))}
-            </ul>
-          )}
-        </div>
+        {behaviorNote ? <p className="text-xs text-ink-muted">{behaviorNote}</p> : null}
+        {review.areas.length || behaviorLines.length ? (
+          <ul className="space-y-1">
+            {review.areas.map((area) => (
+              <li key={area.id}>{area.title} · {area.count}</li>
+            ))}
+            {behaviorLines.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        ) : null}
 
         {journeyRows.length ? (
-          <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-ink-muted">{copy.journeys}</h3>
-            <ul className="mt-1 space-y-1">
-              {journeyRows.map((row) => (
-                <li key={`${row.region}-${row.device}`}>
-                  {loaded.journeyName ?? "Journey"}
-                  {pages.length > 1 ? ` · ${row.label}` : ""}
-                  {` · ${row.device === "mobile" ? "Mobile" : "Desktop"} · `}
-                  {journeyStatusLabel(row.status === "incomplete" ? "incomplete" : row.status, locale)}
-                </li>
-              ))}
-            </ul>
-          </div>
+          <ul className="space-y-1 text-xs text-ink-muted">
+            {journeyRows.map((row) => (
+              <li key={`${row.region}-${row.device}`}>
+                {loaded.journeyName ?? "Journey"}
+                {pages.length > 1 ? ` · ${row.label}` : ""}
+                {` · ${row.device === "mobile" ? "Mobile" : "Desktop"} · `}
+                {journeyStatusLabel(row.status === "incomplete" ? "incomplete" : row.status, locale)}
+              </li>
+            ))}
+          </ul>
         ) : null}
       </div>
     </section>

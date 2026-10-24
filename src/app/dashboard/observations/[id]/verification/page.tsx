@@ -7,17 +7,23 @@ import { loadObservationAiAudit } from "@/lib/observation-ai-audit-store";
 import { ObservationNotVisible } from "@/components/dashboard/ObservationNotVisible";
 import { PrintReportButton } from "@/components/dashboard/PrintReportButton";
 import { getSession } from "@/lib/auth/session";
-import { getObservationMergedForPlan } from "@/lib/demo/user-observations";
+import { getObservationMergedForPlan, listObservationsForUrlIdentity } from "@/lib/demo/user-observations";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { buildEvidenceReportFacts } from "@/lib/evidence-report";
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
 import { copy } from "@/lib/i18n";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
+import type { JourneyRunFacts } from "@/lib/observation-measure-ledger";
+import {
+  loadObservationScrollInteraction,
+  loadObservationSyntheticInteraction,
+} from "@/lib/observation-optional-metrics-store";
 import { sanitizeObservationRouteId } from "@/lib/observation-route-id";
 import {
   buildPublicVerifyUrlForObservation,
   ensureObservationVerifyTokenForUser,
 } from "@/lib/observation-verify-token";
-import { formatVerificationReportCountry } from "@/lib/verification-report-country";
+import { loadMonitoringRunForObservation } from "@/lib/monitoring-run-store";
 import { getPlan } from "@/lib/plans";
 import { visibleSnapshotImageUrl } from "@/lib/observation-screenshot-retention";
 
@@ -67,9 +73,32 @@ export default async function ObservationVerificationReportPage({ params }: Prop
   const aiAuditCopy = observationAiAuditCopyFrom(td);
   const verifyToken = await ensureObservationVerifyTokenForUser(supabase, obs.id);
   const verifyUrl = verifyToken ? buildPublicVerifyUrlForObservation(verifyToken) : "—";
+  const storedScroll = await loadObservationScrollInteraction(supabase, session.userId, obs.id);
+  const storedSynthetic = await loadObservationSyntheticInteraction(supabase, session.userId, obs.id);
+  const siblings = obs.regionValue ? await listObservationsForUrlIdentity(obs.url) : [];
+  let journeyRuns: JourneyRunFacts[] = [];
+  try {
+    const checkRun = await loadMonitoringRunForObservation(supabase, session.userId, obs.id);
+    journeyRuns = (checkRun?.journeyRuns ?? []).map((row) => ({
+      region: row.region,
+      deviceClass: row.deviceClass,
+      status: row.status,
+      steps: row.steps,
+    }));
+  } catch {
+    journeyRuns = [];
+  }
+  const facts = buildEvidenceReportFacts({
+    observation: obs,
+    locale,
+    siblings,
+    session: storedScroll?.result.discovery?.session ?? null,
+    behaviorTypes: storedScroll?.result.types ?? null,
+    synthetic: storedSynthetic?.result ?? null,
+    journeyRuns,
+  });
 
   const capturedLabel = `${formatJaDateTime(obs.capturedAt, locale)} · ${formatUtcLabel(obs.capturedAt)}`;
-  const country = formatVerificationReportCountry(obs, locale);
 
   const reportCopy = {
     title: t.title,
@@ -89,6 +118,25 @@ export default async function ObservationVerificationReportPage({ params }: Prop
     statusFailure: td.statusFailure,
     statusPending: td.statusPending,
     noScreenshot: t.noScreenshot,
+    fieldRequested: t.fieldRequested,
+    fieldObserved: t.fieldObserved,
+    sectionReachability: t.sectionReachability,
+    fieldHttp: t.fieldHttp,
+    fieldFinalUrl: t.fieldFinalUrl,
+    fieldPageTitle: t.fieldPageTitle,
+    fieldDns: t.fieldDns,
+    fieldTls: t.fieldTls,
+    unmeasured: t.unmeasured,
+    sectionDetected: t.sectionDetected,
+    detectedHint: t.detectedHint,
+    previousValue: t.previousValue,
+    thisValue: t.thisValue,
+    sectionBehavior: t.sectionBehavior,
+    behaviorNote: t.behaviorNote,
+    sectionJourney: t.sectionJourney,
+    journeyNoSafeTarget: t.journeyNoSafeTarget,
+    journeyIncomplete: t.journeyIncomplete,
+    auditInference: t.auditInference,
   };
 
   return (
@@ -134,12 +182,12 @@ export default async function ObservationVerificationReportPage({ params }: Prop
         observationId={obs.id}
         url={obs.url}
         capturedLabel={capturedLabel}
-        country={country}
         status={obs.status}
         snapshotImageUrl={visibleSnapshotImageUrl(obs, getPlan(session.plan).retentionDays)}
         snapshotSha256={obs.snapshotSha256}
         contentHash={obs.contentHash}
         verifyUrl={verifyUrl}
+        facts={facts}
         aiAudit={aiAudit}
         aiAuditCopy={aiAuditCopy}
         locale={locale}

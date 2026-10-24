@@ -11,6 +11,7 @@ import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { monitoringReviewStatus, type MonitoringAlert } from "@/lib/monitoring-run-diff";
 import { presentMonitoringReview } from "@/lib/monitoring-run-summary";
 import {
+  firstScreenshotCompareNote,
   monitoringJourneyFact,
   type MonitoringPageFact,
   type MonitoringParentStatus,
@@ -200,8 +201,13 @@ function areaAnchor(id: string): string {
   return `review-${id.replace(/:/g, "-")}`;
 }
 
-function pageAlertText(copy: (typeof COPY)["en"], alert: Extract<MonitoringAlert, { layer: "page" }>): string {
+function pageAlertText(
+  copy: (typeof COPY)["en"],
+  alert: Extract<MonitoringAlert, { layer: "page" }>,
+  firstRecordNote: string | null,
+): string {
   if (alert.code === "screenshot_differs") return copy.reasonScreenshot.replace("{region}", alert.region);
+  if (!alert.paired && firstRecordNote) return firstRecordNote;
   if (!alert.paired) return copy.reasonNoPrevious.replace("{region}", alert.region);
   return copy.reasonNotComparable.replace("{region}", alert.region);
 }
@@ -344,10 +350,19 @@ export default async function MonitoringRunPage({ params }: { params: Promise<{ 
             {loaded.diff.pages.map((row) => {
               const alert = loaded.alerts.find((item): item is Extract<MonitoringAlert, { layer: "page" }> => item.layer === "page" && item.region === (row.regionLabel || row.region));
               const fact = row.captured ? row.verdict : "incomplete";
+              const current = loaded.observations.find((item) => item.region === row.region);
+              const firstRecordNote = alert && !alert.paired && alert.code === "screenshot_not_comparable"
+                ? firstScreenshotCompareNote({
+                    locale,
+                    regionLabel: row.regionLabel || row.region,
+                    device: current?.device ?? null,
+                    previousPages: loaded.previousPages.filter((page) => page.region !== row.region),
+                  })
+                : null;
               return (
                 <li key={row.region}>
                   <p>{pages.length > 1 ? `${row.regionLabel} · ` : ""}{copy.pageFact[fact]}</p>
-                  {alert && alert.layer === "page" ? <p>{pageAlertText(copy, alert)}</p> : null}
+                  {alert && alert.layer === "page" ? <p>{pageAlertText(copy, alert, firstRecordNote)}</p> : null}
                 </li>
               );
             })}
