@@ -18,7 +18,7 @@ export type ProductTourStepCopy = {
   body: string;
 };
 
-export type ProductTourCopy = {
+type ProductTourBaseCopy = {
   ui: PRODUCT_TOUR_UI;
   steps: {
     loop: ProductTourStepCopy;
@@ -33,7 +33,14 @@ export type ProductTourCopy = {
   };
 };
 
-const en: ProductTourCopy = {
+export type ProductTourCopy = {
+  ui: PRODUCT_TOUR_UI;
+  steps: ProductTourBaseCopy["steps"] & {
+    journeys: ProductTourStepCopy;
+  };
+};
+
+const en: ProductTourBaseCopy = {
   ui: {
     tourTitle: "Product tour",
     tourIntro:
@@ -89,7 +96,7 @@ const en: ProductTourCopy = {
 
 export const DEFAULT = en;
 
-export const productTourCopy: Record<OnboardingLang, ProductTourCopy> = {
+export const productTourCopy: Record<OnboardingLang, ProductTourBaseCopy> = {
   en,
   ja: {
     ui: {
@@ -1098,6 +1105,94 @@ export const productTourCopy: Record<OnboardingLang, ProductTourCopy> = {
   },
 };
 
+const journeyTourStep: Record<OnboardingLang, ProductTourStepCopy> = {
+  en: {
+    title: "Journey",
+    body: "This page keeps steps that run in a regional browser, from one page to the next. A step can check the URL, whether an element is present, its text, and an attribute. Login, purchase, and submit run only when you add that step and permit it.",
+  },
+  ja: {
+    title: "Journey",
+    body: "このページは、ページ間の手順を地域のブラウザで実行した結果です。URL、要素の有無、文字、属性を手順として確認できます。ログイン、購入、送信は、手順に追加して許可したときだけ実行します。",
+  },
+  ko: {
+    title: "Journey",
+    body: "이 페이지는 지역 브라우저에서 페이지 사이를 실행한 단계의 결과입니다. URL, 요소의 존재, 텍스트, 속성을 단계로 확인할 수 있습니다. 로그인, 구매, 제출은 단계를 추가하고 허용한 경우에만 실행합니다.",
+  },
+  "zh-Hans": {
+    title: "Journey",
+    body: "此页面保存地区浏览器中跨页面步骤的结果。步骤可以确认 URL、元素是否存在、文字和属性。登录、购买和提交只在你添加该步骤并允许时执行。",
+  },
+  "zh-Hant": {
+    title: "Journey",
+    body: "此頁面保存地區瀏覽器中跨頁面步驟的結果。步驟可以確認 URL、元素是否存在、文字和屬性。登入、購買和提交只在你新增該步驟並允許時執行。",
+  },
+  es: {
+    title: "Journey",
+    body: "Esta página guarda los pasos ejecutados en un navegador regional, de una página a la siguiente. Un paso puede comprobar la URL, si un elemento está presente, su texto y un atributo. Iniciar sesión, comprar y enviar solo se ejecutan cuando añades ese paso y lo permites.",
+  },
+  fr: {
+    title: "Journey",
+    body: "Cette page garde les étapes exécutées dans un navigateur régional, d’une page à la suivante. Une étape peut vérifier l’URL, la présence d’un élément, son texte et un attribut. Connexion, achat et envoi ne s’exécutent que si vous ajoutez cette étape et l’autorisez.",
+  },
+  de: {
+    title: "Journey",
+    body: "Diese Seite speichert Schritte, die in einem regionalen Browser von Seite zu Seite laufen. Ein Schritt kann die URL, das Vorhandensein eines Elements, dessen Text und ein Attribut prüfen. Anmeldung, Kauf und Absenden laufen nur, wenn Sie diesen Schritt hinzufügen und erlauben.",
+  },
+  pt: {
+    title: "Journey",
+    body: "Esta página guarda os passos executados num navegador regional, de uma página para a seguinte. Um passo pode verificar o URL, se um elemento está presente, o texto e um atributo. Início de sessão, compra e envio só correm quando adiciona esse passo e o permite.",
+  },
+  it: {
+    title: "Journey",
+    body: "Questa pagina conserva i passi eseguiti in un browser regionale, da una pagina alla successiva. Un passo può controllare l’URL, se un elemento è presente, il testo e un attributo. Accesso, acquisto e invio partono solo se aggiungi quel passo e lo consenti.",
+  },
+  nl: {
+    title: "Journey",
+    body: "Deze pagina bewaart stappen die in een regionale browser van pagina naar pagina lopen. Een stap kan de URL, de aanwezigheid van een element, de tekst en een kenmerk controleren. Inloggen, kopen en verzenden gebeurt alleen als u die stap toevoegt en toestaat.",
+  },
+  pl: {
+    title: "Journey",
+    body: "Ta strona przechowuje kroki uruchomione w przeglądarce regionalnej, od strony do strony. Krok może sprawdzić URL, obecność elementu, jego tekst i atrybut. Logowanie, zakup i wysłanie działają tylko wtedy, gdy dodasz ten krok i go zezwolisz.",
+  },
+  sv: {
+    title: "Journey",
+    body: "Den här sidan sparar steg som körs i en regional webbläsare, från sida till sida. Ett steg kan kontrollera URL, om ett element finns, dess text och ett attribut. Inloggning, köp och skicka körs bara när du lägger till det steget och tillåter det.",
+  },
+  tr: {
+    title: "Journey",
+    body: "Bu sayfa, bölgesel bir tarayıcıda sayfalar arasında çalışan adımların sonucunu tutar. Bir adım URL’yi, bir öğenin varlığını, metnini ve bir özniteliği kontrol edebilir. Oturum açma, satın alma ve gönderme yalnızca o adımı ekleyip izin verdiğinizde çalışır.",
+  },
+  ru: {
+    title: "Journey",
+    body: "На этой странице хранятся шаги, выполненные в региональном браузере, от страницы к странице. Шаг может проверить URL, наличие элемента, его текст и атрибут. Вход, покупка и отправка выполняются только если вы добавили этот шаг и разрешили его.",
+  },
+  ar: {
+    title: "Journey",
+    body: "تحتفظ هذه الصفحة بخطوات تُنفَّذ في متصفح إقليمي، من صفحة إلى التالية. يمكن للخطوة التحقق من الرابط، ووجود عنصر، ونصه، وقيمة صفة. لا يُنفَّذ تسجيل الدخول أو الشراء أو الإرسال إلا عند إضافة الخطوة والسماح بها.",
+  },
+  hi: {
+    title: "Journey",
+    body: "यह पेज क्षेत्रीय ब्राउज़र में एक पेज से अगले पेज तक चले चरणों का परिणाम रखता है। एक चरण URL, तत्व की मौजूदगी, उसका पाठ और एक विशेषता जाँच सकता है। लॉगिन, खरीदारी और भेजना तभी चलता है जब आप वह चरण जोड़कर अनुमति दें।",
+  },
+  id: {
+    title: "Journey",
+    body: "Halaman ini menyimpan langkah yang dijalankan di browser regional, dari satu halaman ke halaman berikutnya. Satu langkah dapat memeriksa URL, ada tidaknya elemen, teksnya, dan atribut. Masuk, pembelian, dan kirim hanya berjalan jika Anda menambahkan langkah itu dan mengizinkannya.",
+  },
+  th: {
+    title: "Journey",
+    body: "หน้านี้เก็บขั้นตอนที่รันในเบราว์เซอร์ตามภูมิภาค จากหน้าหนึ่งไปอีกหน้า ขั้นตอนสามารถตรวจ URL ว่ามีองค์ประกอบหรือไม่ ข้อความ และแอตทริบิวต์ การเข้าสู่ระบบ การซื้อ และการส่ง จะรันเมื่อคุณเพิ่มขั้นตอนนั้นและอนุญาตเท่านั้น",
+  },
+  vi: {
+    title: "Journey",
+    body: "Trang này giữ các bước chạy trong trình duyệt theo khu vực, từ trang này sang trang tiếp theo. Một bước có thể kiểm tra URL, phần tử có mặt không, chữ và thuộc tính. Đăng nhập, mua và gửi chỉ chạy khi bạn thêm bước đó và cho phép.",
+  },
+};
+
 export function getProductTourCopy(lang: string): ProductTourCopy {
-  return isOnboardingLang(lang) ? productTourCopy[lang] : DEFAULT;
+  const key = isOnboardingLang(lang) ? lang : "en";
+  const base = productTourCopy[key];
+  return {
+    ui: base.ui,
+    steps: { ...base.steps, journeys: journeyTourStep[key] },
+  };
 }

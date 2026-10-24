@@ -14,6 +14,8 @@ export function productTourHref(
   switch (id) {
     case "observe":
       return "/dashboard/region-search";
+    case "journeys":
+      return "/dashboard/journeys";
     case "records":
     case "recordsScreen":
     case "recordDetail":
@@ -42,6 +44,9 @@ export function productTourPathMatches(
   }
   if (id === "observe") {
     return pathname === "/dashboard/region-search";
+  }
+  if (id === "journeys") {
+    return pathname === "/dashboard/journeys";
   }
   if (id === "records" || id === "recordsScreen" || id === "recordDetail") {
     return pathname === "/dashboard/observations";

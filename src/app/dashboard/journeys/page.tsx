@@ -113,7 +113,7 @@ export default async function JourneysPage() {
 
   return (
     <div className="mx-auto grid max-w-5xl gap-6">
-      <div>
+      <div data-tour="journeys">
         <h1 className="text-lg font-semibold text-ink">Journey</h1>
         <p className="mt-1 text-sm text-ink-muted">
           {ja ? "本番の Journey だけを表示しています。" : "Showing production journeys."}
