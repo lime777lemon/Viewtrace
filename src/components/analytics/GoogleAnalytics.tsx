@@ -15,7 +15,7 @@ export function GoogleAnalytics() {
 
   return (
     <>
-      <Script id="google-consent-init" strategy="afterInteractive">
+      <Script id="google-consent-init" strategy="lazyOnload">
         {`
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
@@ -52,9 +52,9 @@ export function GoogleAnalytics() {
       </Script>
       <Script
         src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-        strategy="afterInteractive"
+        strategy="lazyOnload"
       />
-      <Script id="google-analytics-config" strategy="afterInteractive">
+      <Script id="google-analytics-config" strategy="lazyOnload">
         {`
           gtag('js', new Date());
           gtag('config', '${gaId}');

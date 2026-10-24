@@ -31,15 +31,15 @@ export function LoginView({
   return (
     <div className="relative min-h-screen overflow-hidden bg-surface text-ink">
       <div
-        className="pointer-events-none absolute -left-32 top-20 h-80 w-80 rounded-full bg-accent-soft opacity-70 blur-3xl"
+        className="pointer-events-none absolute -left-32 top-20 h-80 w-80 rounded-full bg-accent-soft opacity-70"
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-accent-soft opacity-50 blur-3xl"
+        className="pointer-events-none absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-accent-soft opacity-50"
         aria-hidden
       />
 
-      <header className="relative z-10 border-b border-border/80 bg-surface-elevated/80 backdrop-blur-md">
+      <header className="relative z-10 border-b border-border/80 bg-surface-elevated">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
           <Link href="/" className="inline-flex items-center transition hover:opacity-90">
             <ViewtraceLogo className="h-8 w-auto sm:h-9" />
