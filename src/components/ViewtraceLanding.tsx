@@ -310,6 +310,16 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
               <article className="rounded-2xl border border-border bg-surface p-5 shadow-sm sm:p-6">
                 <h3 className="font-display text-lg font-semibold text-ink">{t.verify.behaviorTitle}</h3>
                 <p className="mt-3 text-sm leading-relaxed text-ink-muted">{t.verify.behaviorBody}</p>
+                <ol className="mt-4 space-y-2">
+                  {t.verify.behaviorSteps.map((step, index) => (
+                    <li key={step} className="flex gap-3 text-sm text-ink">
+                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#276248] text-[11px] font-semibold text-white">
+                        {index + 1}
+                      </span>
+                      <span className="leading-relaxed">{step}</span>
+                    </li>
+                  ))}
+                </ol>
                 <p className="mt-3 text-sm font-medium leading-relaxed text-ink">{t.verify.behaviorEmphasis}</p>
               </article>
             </div>
