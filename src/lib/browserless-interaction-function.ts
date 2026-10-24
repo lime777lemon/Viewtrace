@@ -4,6 +4,7 @@ import {
 } from "@/lib/browser-fingerprint";
 import { MOTION_DRIVER_CLASSIFIER, MOTION_DRIVER_INSTALL } from "@/lib/motion-driver";
 import { MOTION_FRAME_CLASSIFIER } from "@/lib/motion-frames";
+import { TOGGLE_STATE_SOURCE } from "@/lib/toggle-state";
 import { COOKIE_NOISE_PATTERN_SOURCE } from "@/lib/observation-interaction-evidence";
 import { EXPENSIVE_INTERACTION_TYPES } from "@/lib/observation-interaction-plan";
 import { INTERACTION_UNSAFE_PATTERN_SOURCE } from "@/lib/observation-regional-interaction";
@@ -18,6 +19,7 @@ export function buildInteractionFunctionCode(): string {
   const motionClassifier = MOTION_FRAME_CLASSIFIER;
   const motionDriverInstall = MOTION_DRIVER_INSTALL;
   const motionDriverClassifier = MOTION_DRIVER_CLASSIFIER;
+  const toggleState = TOGGLE_STATE_SOURCE;
   const revealSelector = JSON.stringify(
     "[data-reveal],[data-aos],[data-sal],[data-scroll],[data-animate],[data-inview],.aos-init,.wow,[class*='reveal'],[class*='fade-up'],[class*='inview'],[class*='scroll-in']",
   );
@@ -37,6 +39,7 @@ export function buildInteractionFunctionCode(): string {
   const started = Date.now();
   const deadline = started + 78000;
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  ${toggleState}
   ${SESSION_PROBE_INSTALL}
   ${SESSION_PROBE_READ}
   async function withTimeout(promise, ms, fallback) {
@@ -1026,6 +1029,23 @@ export function buildInteractionFunctionCode(): string {
       }
       return { blocked: blocked, selector: null };
     }
+    function safeList(nodes, limit) {
+      const selectors = [];
+      let blocked = false;
+      for (const el of nodes) {
+        if (!onPage(el)) continue;
+        if (bad.test(label(el))) { blocked = true; continue; }
+        if (navigates(el) || String(el.getAttribute("type") || "").toLowerCase() === "submit") {
+          blocked = true;
+          continue;
+        }
+        const sel = path(el);
+        if (selectors.indexOf(sel) >= 0) continue;
+        selectors.push(sel);
+        if (selectors.length >= limit) break;
+      }
+      return { blocked: blocked && selectors.length === 0, selectors: selectors };
+    }
     const vh = window.innerHeight;
     const tall = Array.from(document.querySelectorAll("section, [aria-label], main, main > div")).some((el) => el.offsetHeight >= vh * 1.8);
     function transitionActive(st) {
@@ -1100,38 +1120,105 @@ export function buildInteractionFunctionCode(): string {
         .join(" ")
         .toLowerCase();
     }
+    function controlled(el) {
+      const id = el.getAttribute("aria-controls");
+      if (id) {
+        const panel = document.getElementById(id);
+        if (panel) return panel;
+      }
+      const href = el.getAttribute("href") || "";
+      if (href.charAt(0) === "#" && href.length > 1) {
+        const panel = document.getElementById(href.slice(1));
+        if (panel) return panel;
+      }
+      return null;
+    }
+    function looksMenu(el) {
+      if (!el) return false;
+      const role = String(el.getAttribute("role") || "");
+      if (role === "menu" || role === "menubar" || role === "menuitem" || role === "navigation") return true;
+      if (el.tagName === "NAV") return true;
+      const blob = (String(el.getAttribute("class") || "") + " " + String(el.id || "")).toLowerCase();
+      return blob.indexOf("menu") >= 0 || blob.indexOf("dropdown") >= 0 || blob.indexOf("hamburger") >= 0 || blob.indexOf("burger") >= 0 || blob.indexOf("drawer") >= 0 || blob.indexOf("nav-toggle") >= 0;
+    }
+    function looksModal(el) {
+      if (!el) return false;
+      if (el.tagName === "DIALOG") return true;
+      if (el.getAttribute("role") === "dialog" || el.getAttribute("aria-modal") === "true") return true;
+      const blob = (String(el.getAttribute("class") || "") + " " + String(el.id || "")).toLowerCase();
+      return blob.indexOf("modal") >= 0 || blob.indexOf("dialog") >= 0;
+    }
+    function rememberTarget(hit, nodes) {
+      if (!hit.selector) return hit;
+      const el = document.querySelector(hit.selector);
+      const owned = el ? controlled(el) : null;
+      if (owned && owned.id) hit.target = "#" + CSS.escape(owned.id);
+      return hit;
+    }
     const menuNodes = [];
-    document.querySelectorAll("[aria-haspopup='menu'], [aria-haspopup='true'], .menu-toggle, [class*='hamburger'], [class*='burger'], [class*='humberger'], [class*='menu-toggle'], [class*='menu-btn'], [class*='menu-button'], [class*='menu-trigger'], [class*='nav-toggle'], [class*='drawer-toggle'], [class*='sp-menu'], [class*='sp-nav'], [data-menu], [data-drawer], [data-toggle='menu'], [data-toggle='drawer'], [aria-label*='menu' i], [aria-label*='メニュー'], nav button").forEach((el) => pushUnique(menuNodes, el));
-    document.querySelectorAll("[aria-controls]").forEach((el, index) => {
+    const menuPanels = [];
+    document.querySelectorAll("[role='menu'], [role='menubar'], [role='menuitem'], nav, [class*='menu'], [class*='dropdown'], [class*='hamburger'], [class*='burger'], [class*='drawer']").forEach((el, index) => {
       if (index >= 40) return;
-      const panel = document.getElementById(el.getAttribute("aria-controls") || "");
-      if (!panel) return;
-      const role = panel.getAttribute("role") || "";
-      const cls = String(panel.getAttribute("class") || "").toLowerCase();
-      if (role === "menu" || role === "navigation" || panel.tagName === "NAV" || cls.indexOf("menu") >= 0 || cls.indexOf("drawer") >= 0) pushUnique(menuNodes, el);
+      if (el.tagName === "NAV") {
+        const st = getComputedStyle(el);
+        const box = el.getBoundingClientRect();
+        const shown = st.display !== "none" && st.visibility !== "hidden" && Number(st.opacity) > 0.05 && box.width >= 8 && box.height >= 8 && !el.hidden && el.getAttribute("aria-hidden") !== "true";
+        if (shown) return;
+      }
+      pushUnique(menuPanels, el);
     });
-    document.querySelectorAll("button, [role='button'], a[href^='#']").forEach((el, index) => {
-      if (index >= 40) return;
+    document.querySelectorAll("button, [role='button'], summary, [aria-haspopup], [aria-controls], [aria-expanded], a[href^='#'], [data-menu], [data-drawer], [data-toggle='menu'], [data-toggle='drawer']").forEach((el, index) => {
+      if (index >= 80) return;
+      if (el.getAttribute("role") === "menuitem" || el.tagName === "NAV") return;
+      const popup = String(el.getAttribute("aria-haspopup") || "");
+      const owned = controlled(el);
       const text = textOf(el);
-      if (text.indexOf("menu") >= 0 || text.indexOf("メニュー") >= 0 || text.indexOf("hamburger") >= 0 || text.indexOf("burger") >= 0 || text.indexOf("drawer") >= 0 || text.indexOf("ナビ") >= 0) pushUnique(menuNodes, el);
+      const marked = el.hasAttribute("data-menu") || el.hasAttribute("data-drawer") || el.getAttribute("data-toggle") === "menu" || el.getAttribute("data-toggle") === "drawer";
+      const toggle = marked || popup === "menu" || popup === "true" || looksMenu(el) || (owned && looksMenu(owned)) || text.indexOf("menu") >= 0 || text.indexOf("メニュー") >= 0 || text.indexOf("hamburger") >= 0 || text.indexOf("burger") >= 0 || text.indexOf("drawer") >= 0;
+      if (toggle) pushUnique(menuNodes, el);
     });
-    const menuHit = firstSafe(menuNodes.slice(0, 24), true, false);
-    if (!menuHit.selector && !menuHit.blocked && document.querySelector("[role='menu'], nav[hidden], nav[aria-hidden='true'], [class*='drawer'], [class*='sp-menu']")) menuHit.panel = true;
+    menuNodes.sort((a, b) => {
+      const rank = (el) => {
+        const owned = controlled(el);
+        if (owned && looksMenu(owned)) return 0;
+        const href = el.getAttribute("href") || "";
+        if (el.getAttribute("aria-controls") || href.charAt(0) === "#") return 1;
+        return 2;
+      };
+      return rank(a) - rank(b);
+    });
+    const menuSafe = safeList(menuNodes.slice(0, 24), 3);
+    const menuHit = rememberTarget({ blocked: menuSafe.blocked, selector: menuSafe.selectors[0] || null, selectors: menuSafe.selectors }, menuNodes);
+    if (!menuHit.selector && menuPanels.length) menuHit.panel = true;
     const modalNodes = [];
-    document.querySelectorAll("[aria-haspopup='dialog'], [data-modal], [data-bs-toggle='modal'], [data-open-modal], [data-micromodal-trigger], [data-a11y-dialog], [data-popup], [data-fancybox], [data-dialog], [class*='modal-open'], [class*='modal-trigger'], [class*='popup-trigger'], [class*='open-modal'], [class*='js-modal'], [aria-label*='modal' i], [aria-label*='モーダル']").forEach((el) => pushUnique(modalNodes, el));
-    document.querySelectorAll("[aria-controls]").forEach((el, index) => {
-      if (index >= 40) return;
-      const panel = document.getElementById(el.getAttribute("aria-controls") || "");
-      if (!panel) return;
-      if (panel.tagName === "DIALOG" || panel.getAttribute("role") === "dialog" || panel.getAttribute("aria-modal") === "true") pushUnique(modalNodes, el);
+    const modalPanels = [];
+    document.querySelectorAll("dialog, [role='dialog'], [aria-modal='true'], [class*='modal'], [class*='dialog']").forEach((el, index) => {
+      if (index < 40) pushUnique(modalPanels, el);
+    });
+    document.querySelectorAll("[aria-haspopup='dialog'], [data-modal], [data-bs-toggle='modal'], [data-open-modal], [data-micromodal-trigger], [data-a11y-dialog], [data-popup], [data-fancybox], [data-dialog], [class*='modal-open'], [class*='modal-trigger'], [class*='popup-trigger'], [class*='open-modal'], [class*='js-modal'], [aria-label*='modal' i], [aria-label*='モーダル'], button[aria-controls], [role='button'][aria-controls]").forEach((el) => {
+      if (el.tagName === "DIALOG" || el.getAttribute("role") === "dialog") return;
+      const owned = controlled(el);
+      const popup = String(el.getAttribute("aria-haspopup") || "");
+      if (popup === "dialog" || looksModal(el) || (owned && looksModal(owned)) || el.hasAttribute("data-modal") || el.getAttribute("data-bs-toggle") === "modal") pushUnique(modalNodes, el);
     });
     document.querySelectorAll("button, [role='button'], a[href^='#']").forEach((el, index) => {
       if (index >= 40) return;
       const text = textOf(el);
       if (text.indexOf("modal") >= 0 || text.indexOf("dialog") >= 0 || text.indexOf("popup") >= 0 || text.indexOf("モーダル") >= 0) pushUnique(modalNodes, el);
     });
-    const modalHit = firstSafe(modalNodes.slice(0, 24), true, false);
-    if (!modalHit.selector && !modalHit.blocked && document.querySelector("dialog, [role='dialog'], [aria-modal='true']")) modalHit.panel = true;
+    modalNodes.sort((a, b) => {
+      const rank = (el) => {
+        const owned = controlled(el);
+        if (owned && looksModal(owned)) return 0;
+        const href = el.getAttribute("href") || "";
+        if (el.getAttribute("aria-haspopup") === "dialog" || el.getAttribute("aria-controls") || href.charAt(0) === "#") return 1;
+        return 2;
+      };
+      return rank(a) - rank(b);
+    });
+    const modalSafe = safeList(modalNodes.slice(0, 24), 3);
+    const modalHit = rememberTarget({ blocked: modalSafe.blocked, selector: modalSafe.selectors[0] || null, selectors: modalSafe.selectors }, modalNodes);
+    if (!modalHit.selector && modalPanels.length) modalHit.panel = true;
     const tabNodes = [];
     document.querySelectorAll("[role='tab'], [role='tablist'] button, [role='tablist'] a, [data-bs-toggle='tab'], [data-toggle='tab'], [data-tab], [class*='tab-button'], [class*='tab-btn'], [class*='tab-item'], [class*='tab-link'], [class*='js-tab'], [class*='c-tab']").forEach((el) => pushUnique(tabNodes, el));
     document.querySelectorAll("[aria-controls]").forEach((el, index) => {
@@ -2407,8 +2494,238 @@ export function buildInteractionFunctionCode(): string {
   await maybe("hover", async () => { await watchPassive("hover", detect.hover || {}, null); });
   await maybe("tooltip", async () => { await watchPassive("tooltip", detect.tooltip || {}, "tooltip"); });
   await maybe("cursor_follow", async () => { await watchPassive("cursor_follow", detect.cursor || {}, null); });
-  await maybe("menu", async () => { await watchPassive("menu", detect.menu || {}, "menu"); });
-  await maybe("modal", async () => { await watchPassive("modal", detect.modal || {}, "modal"); });
+  async function readToggle(kind, selector) {
+    return page.evaluate((k, sel) => {
+      function pathOf(el) {
+        if (!el) return "";
+        if (el.id) return "#" + CSS.escape(el.id);
+        const parts = [];
+        let node = el;
+        while (node && node.nodeType === 1 && parts.length < 6) {
+          let name = node.tagName.toLowerCase();
+          const parent = node.parentElement;
+          if (parent) {
+            const same = Array.from(parent.children).filter((child) => child.tagName === node.tagName);
+            if (same.length > 1) name += ":nth-of-type(" + (same.indexOf(node) + 1) + ")";
+          }
+          parts.unshift(name);
+          node = parent;
+        }
+        return parts.join(" > ");
+      }
+      function shown(el) {
+        if (!el) return false;
+        const st = getComputedStyle(el);
+        const box = el.getBoundingClientRect();
+        if (st.display === "none" || st.visibility === "hidden") return false;
+        if (!(Number(st.opacity) > 0.05)) return false;
+        if (!(box.width > 0) || !(box.height > 0)) return false;
+        if (el.tagName === "DIALOG" && !el.hasAttribute("open")) return false;
+        return true;
+      }
+      function snap(el) {
+        if (!el) return { exists: false, visible: false, selector: "" };
+        const st = getComputedStyle(el);
+        const box = el.getBoundingClientRect();
+        return {
+          exists: true,
+          visible: shown(el),
+          selector: pathOf(el),
+          opacity: String(st.opacity || ""),
+          visibility: String(st.visibility || ""),
+          display: String(st.display || ""),
+          expanded: el.getAttribute("aria-expanded"),
+          hidden: el.getAttribute("aria-hidden"),
+          modal: el.getAttribute("aria-modal"),
+          role: String(el.getAttribute("role") || (el.tagName === "DIALOG" ? "dialog" : "")),
+          open: el.hasAttribute("open") ? "1" : "0",
+          tag: el.tagName,
+          w: Math.round(box.width),
+          h: Math.round(box.height),
+          in_viewport: box.width > 0 && box.height > 0 && box.bottom > 0 && box.right > 0 && box.top < window.innerHeight && box.left < window.innerWidth,
+        };
+      }
+      const trigger = sel ? document.querySelector(sel) : null;
+      const ownedId = trigger && trigger.getAttribute("aria-controls");
+      const href = trigger ? String(trigger.getAttribute("href") || "") : "";
+      const owned = ownedId
+        ? document.getElementById(ownedId)
+        : (href.charAt(0) === "#" && href.length > 1 ? document.getElementById(href.slice(1)) : null);
+      const panelSel = k === "menu"
+        ? "[role='menu'], [role='menubar'], [class*='dropdown'], [class*='drawer'], [class*='hamburger'], [class*='menu'], nav"
+        : "dialog, [role='dialog'], [aria-modal='true'], [class*='modal'], [class*='dialog']";
+      const nodes = Array.from(document.querySelectorAll(panelSel)).filter((el) => el !== trigger).slice(0, 16);
+      if (owned && nodes.indexOf(owned) < 0) nodes.unshift(owned);
+      return { trigger: snap(trigger), panels: nodes.map(snap) };
+    }, kind, selector);
+  }
+
+  async function closeControl(kind) {
+    return page.evaluate((k) => {
+      const rootSel = k === "menu"
+        ? "[role='menu'], [class*='dropdown'], [class*='drawer'], [class*='menu']"
+        : "dialog[open], [role='dialog'], [aria-modal='true'], [class*='modal']";
+      const buttons = [];
+      Array.from(document.querySelectorAll(rootSel)).slice(0, 8).forEach((root) => {
+        root.querySelectorAll("button, [role='button']").forEach((el) => buttons.push(el));
+      });
+      for (const el of buttons) {
+        if (el.tagName === "A" || el.getAttribute("role") === "menuitem") continue;
+        const text = [el.innerText, el.getAttribute("aria-label"), el.className].join(" ").toLowerCase();
+        const dismiss = el.getAttribute("data-bs-dismiss") || el.getAttribute("data-dismiss") || "";
+        if (dismiss === "modal" || text.indexOf("close") >= 0 || text.indexOf("閉じ") >= 0 || text.indexOf("dismiss") >= 0) {
+          el.setAttribute("data-vt-close", "1");
+          return "[data-vt-close='1']";
+        }
+      }
+      return null;
+    }, kind);
+  }
+
+  async function measureToggleCandidate(type, selector) {
+    const since = Date.now();
+    let before;
+    try { before = await readToggle(type, selector); }
+    catch (e) {
+      return { status: "failed", evidence: { actions: ["SAFE_CLICK"], selector: selector, note: "click failed" } };
+    }
+    let clicked;
+    try { clicked = await safeClick(selector); }
+    catch (e) {
+      return { status: "failed", evidence: { actions: ["SAFE_CLICK"], selector: selector, note: "click failed" } };
+    }
+    if (!clicked.ok) {
+      return {
+        status: clicked.reason === "missing" ? "failed" : "blocked_for_safety",
+        evidence: {
+          actions: ["SAFE_CLICK"],
+          selector: selector,
+          note: clicked.reason === "missing" ? "click failed" : "blocked for safety",
+        },
+      };
+    }
+    const clickAt = Date.now();
+    let after = before;
+    let pair = null;
+    let responseMs = null;
+    let openMs = null;
+    let elapsed = 0;
+    const samples = [{ at_ms: 0, changed: false }];
+    for (const mark of [0, 40, 80, 120, 180, 260, 360, 480, 700, 1000, 1200]) {
+      if (mark > 0 && Date.now() - clickAt > 1200) break;
+      const gap = mark - elapsed;
+      if (gap > 0) await sleep(gap);
+      elapsed = mark;
+      after = await readToggle(type, selector);
+      const next = openedPair(before, after);
+      const at = Math.max(0, Date.now() - clickAt);
+      if (next && responseMs == null) {
+        responseMs = at;
+        pair = next;
+        if (samples.length < 6) samples.push({ at_ms: at, changed: true });
+      }
+      if (next && isFullyOpen(next.after) && openMs == null) {
+        openMs = at;
+        pair = next;
+        if (at !== responseMs && samples.length < 6) samples.push({ at_ms: at, changed: true });
+        break;
+      }
+      if (next) pair = next;
+    }
+    let closed = false;
+    let closeBy = null;
+    if (pair) {
+      try { await safeClick(selector); } catch (e) {}
+      await sleep(160);
+      let later = await readToggle(type, selector);
+      if (toggleClosed(pair.after, later)) { closed = true; closeBy = "button"; }
+      if (!closed) {
+        const closeSel = await closeControl(type);
+        if (closeSel) {
+          try {
+            const again = await safeClick(closeSel);
+            if (again && again.ok) {
+              await sleep(160);
+              later = await readToggle(type, selector);
+              if (toggleClosed(pair.after, later)) { closed = true; closeBy = "close"; }
+            }
+          } catch (e) {}
+        }
+      }
+      if (!closed) {
+        try { await page.keyboard.press("Escape"); } catch (e) {}
+        await sleep(160);
+        later = await readToggle(type, selector);
+        if (toggleClosed(pair.after, later)) { closed = true; closeBy = "escape"; }
+      }
+    }
+    const changes = [];
+    if (pair) {
+      changes.push("visibility");
+      const exp0 = before.trigger ? before.trigger.expanded : null;
+      const exp1 = after.trigger ? after.trigger.expanded : null;
+      if (exp0 !== exp1) changes.push("aria-expanded");
+      if (String(pair.before.opacity || "") !== String(pair.after.opacity || "")) changes.push("opacity");
+      if (Math.abs((pair.before.w || 0) - (pair.after.w || 0)) >= 2 || Math.abs((pair.before.h || 0) - (pair.after.h || 0)) >= 2) changes.push("bounding_rect");
+    }
+    const panelBefore = pair ? pair.before : (before.panels && before.panels[0]) || null;
+    const panelAfter = pair ? pair.after : (after.panels && after.panels[0]) || null;
+    const timing = responseMs == null ? null : {
+      response_ms: responseMs,
+      open_ms: openMs,
+      in_viewport: panelAfter && typeof panelAfter.in_viewport === "boolean" ? panelAfter.in_viewport : null,
+    };
+    return {
+      status: pair ? "working" : "no_change_observed",
+      evidence: {
+        actions: ["SAFE_CLICK"],
+        selector: (pair && pair.after && pair.after.selector) || selector,
+        t0: packToggle(before.trigger, panelBefore),
+        t1: packToggle(after.trigger, panelAfter),
+        changes: changes,
+        note: pair ? (closed ? "open verified, close verified" : "open verified") : "click, no open state change",
+        toggle: pair ? { open: "working", close: closed ? "working" : "failed", close_by: closeBy } : null,
+        timing: timing,
+        window: await actionWindow(since, samples, changes, null),
+      },
+    };
+  }
+
+  async function verifyToggle(type, hit) {
+    const row = hit || {};
+    const selectors = (Array.isArray(row.selectors) ? row.selectors : (row.selector ? [row.selector] : []))
+      .filter((sel) => typeof sel === "string" && sel)
+      .slice(0, 3);
+    if (row.blocked && !selectors.length) { pushType(type, true, "blocked_for_safety"); return; }
+    if (!selectors.length && row.panel) {
+      const panelNote = type === "menu" ? "menu present, no safe trigger" : "dialog present, no safe trigger";
+      pushType(type, true, "playback_not_verifiable", { actions: ["WAIT"], note: panelNote });
+      return;
+    }
+    if (!selectors.length) { pushType(type, false, "not_detected"); return; }
+    let chosen = null;
+    for (let i = 0; i < selectors.length; i++) {
+      if (Date.now() > deadline) break;
+      const attempt = await measureToggleCandidate(type, selectors[i]);
+      const rank = attempt.status === "working" ? 3 : attempt.status === "no_change_observed" ? 2 : attempt.status === "failed" ? 1 : 0;
+      const prev = chosen ? (chosen.status === "working" ? 3 : chosen.status === "no_change_observed" ? 2 : chosen.status === "failed" ? 1 : 0) : -1;
+      if (rank > prev) chosen = attempt;
+      if (attempt.status === "working") break;
+      try { await restore(false); } catch (e) {}
+    }
+    if (!chosen) {
+      pushType(type, true, Date.now() > deadline ? "not_measured" : "failed", {
+        actions: ["SAFE_CLICK"],
+        note: Date.now() > deadline ? "execution time limit" : "click failed",
+      });
+      return;
+    }
+    pushType(type, true, chosen.status, chosen.evidence);
+    try { await restore(false); } catch (e) {}
+  }
+
+  await maybe("menu", async () => { await verifyToggle("menu", detect.menu || {}); });
+  await maybe("modal", async () => { await verifyToggle("modal", detect.modal || {}); });
   await maybe("tabs", async () => { await watchPassive("tabs", detect.tabs || {}, null); });
   await maybe("accordion", async () => { await watchPassive("accordion", detect.accordion || {}, null); });
   await maybe("carousel", async () => { await runHit("carousel", detect.carousel || {}, null, true); });

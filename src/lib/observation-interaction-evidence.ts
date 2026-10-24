@@ -55,6 +55,20 @@ export type ActionEvidenceWindow = {
   duration_ms: number;
 };
 
+/** Open stays Working when the panel opens. Close is a separate result and does not change that. */
+export type InteractionToggleEvidence = {
+  open: "working";
+  close: "working" | "failed";
+  close_by?: "button" | "close" | "escape";
+};
+
+/** Times from the click this check already performed. Missing means that moment was not observed. */
+export type InteractionUxTiming = {
+  response_ms: number;
+  open_ms?: number;
+  in_viewport?: boolean;
+};
+
 export type InteractionEvidence = {
   actions?: InteractionAction[];
   selector?: string;
@@ -64,6 +78,8 @@ export type InteractionEvidence = {
   frame_hashes?: string[];
   note?: string;
   restore?: "ok" | "failed";
+  timing?: InteractionUxTiming;
+  toggle?: InteractionToggleEvidence;
   window?: ActionEvidenceWindow;
   animation?: AnimationObservation;
   video?: VideoObservation;
@@ -158,12 +174,38 @@ export function parseInteractionEvidence(raw: unknown): InteractionEvidence | nu
     frame_hashes,
     note: typeof o.note === "string" ? o.note.slice(0, 180) : undefined,
     restore: o.restore === "ok" || o.restore === "failed" ? o.restore : undefined,
+    timing: parseUxTiming(o.timing),
+    toggle: parseToggleEvidence(o.toggle),
     window: parseActionWindow(o.window),
     animation: parseAnimationObservation(o.animation) ?? undefined,
     video: parseVideoObservation(o.video) ?? undefined,
     driver: parseMotionDriver(o.driver) ?? undefined,
     trace: parseMotionTrace(o.trace) ?? undefined,
   };
+}
+
+function parseToggleEvidence(raw: unknown): InteractionToggleEvidence | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const row = raw as Record<string, unknown>;
+  if (row.open !== "working") return undefined;
+  if (row.close !== "working" && row.close !== "failed") return undefined;
+  const toggle: InteractionToggleEvidence = { open: "working", close: row.close };
+  if (row.close === "working" && (row.close_by === "button" || row.close_by === "close" || row.close_by === "escape")) {
+    toggle.close_by = row.close_by;
+  }
+  return toggle;
+}
+
+function parseUxTiming(raw: unknown): InteractionUxTiming | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const row = raw as Record<string, unknown>;
+  const response = row.response_ms;
+  if (typeof response !== "number" || !Number.isFinite(response) || response < 0) return undefined;
+  const timing: InteractionUxTiming = { response_ms: Math.round(response) };
+  const open = row.open_ms;
+  if (typeof open === "number" && Number.isFinite(open) && open >= 0) timing.open_ms = Math.round(open);
+  if (row.in_viewport === true || row.in_viewport === false) timing.in_viewport = row.in_viewport;
+  return timing;
 }
 
 function parseActionWindow(raw: unknown): ActionEvidenceWindow | undefined {

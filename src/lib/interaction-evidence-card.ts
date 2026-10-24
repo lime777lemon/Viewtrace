@@ -79,7 +79,8 @@ const PAIR_LABELS: Partial<Record<InteractionCheckType, [string, string]>> = {
 function fieldsFor(type: InteractionCheckType): (keyof InteractionElementState)[] {
   if (type === "accordion") return ["expanded", "h"];
   if (type === "tabs") return ["selected", "hidden", "h"];
-  if (type === "menu" || type === "modal" || type === "tooltip") return ["expanded", "hidden", "display"];
+  if (type === "menu" || type === "modal") return ["expanded", "visibility", "opacity", "h"];
+  if (type === "tooltip") return ["expanded", "hidden", "display"];
   if (type === "carousel" || type === "auto_carousel") return ["index", "transform"];
   if (type === "video" || type === "embedded_video") return ["currentTime"];
   if (type === "cursor_follow") return ["transform", "x", "y"];
@@ -125,6 +126,21 @@ export function interactionEvidenceCard(
     ...behaviorFactLines({ animation: evidence.animation, video: evidence.video }),
     ...(evidence.driver ? motionDriverFactLines(evidence.driver, "en") : []),
   ];
+  if (evidence.toggle?.open === "working") {
+    facts.push("Open working");
+    facts.push(evidence.toggle.close === "working" ? "Close working" : "Close failed");
+    if (evidence.toggle.close === "working" && evidence.toggle.close_by === "escape") facts.push("Closed by Escape");
+    if (evidence.toggle.close === "working" && evidence.toggle.close_by === "close") facts.push("Closed by close button");
+    if (evidence.toggle.close === "working" && evidence.toggle.close_by === "button") facts.push("Closed by the same button");
+  }
+  if (typeof evidence.timing?.response_ms === "number") facts.push(`Response ${evidence.timing.response_ms}ms`);
+  if (typeof evidence.timing?.open_ms === "number") facts.push(`Fully open ${evidence.timing.open_ms}ms`);
+  if (evidence.timing?.in_viewport === true) facts.push("In viewport");
+  if (evidence.timing?.in_viewport === false) facts.push("Outside viewport");
+  if ((type === "menu" || type === "modal") && evidence.window?.executed) {
+    facts.push(`Console errors ${evidence.window.runtime_errors}`);
+    facts.push(`Failed requests ${evidence.window.request_failed}`);
+  }
   if (!facets.length && !frames && !action && !target && !evidence.note && !evidence.restore && !requests.length && !facts.length) return null;
   return {
     target,

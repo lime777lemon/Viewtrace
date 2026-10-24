@@ -97,6 +97,7 @@ assert.match(code, /tabs present, no safe trigger/);
 assert.match(code, /tooltip present, no safe trigger/);
 assert.match(code, /data-drawer/);
 assert.match(code, /data-micromodal-trigger/);
+assert.match(code, /async function verifyToggle/);
 assert.match(code, /menu present, no safe trigger/);
 assert.match(code, /dialog present, no safe trigger/);
 assert.match(code, /passive watch, no pointer or click/);

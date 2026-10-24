@@ -163,6 +163,84 @@ function triggerLine(actions: string[] | undefined, locale: Locale): string | nu
   return null;
 }
 
+function stateText(row: object | null | undefined, key: string): string | null {
+  if (!row || typeof row !== "object") return null;
+  const value = (row as Record<string, unknown>)[key];
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  return null;
+}
+
+function closeByLabel(value: string, ja: boolean): string {
+  if (value === "escape") return "Escape";
+  if (value === "close") return ja ? "閉じるボタン" : "Close button";
+  return ja ? "同じボタン" : "Same button";
+}
+
+function toggleSnapshotLines(title: string, state: object | null | undefined): string[] {
+  if (!state) return [];
+  const lines = [title];
+  const visibility = stateText(state, "visibility");
+  if (visibility) lines.push(`visible: ${visibility === "visible" ? "true" : "false"}`);
+  const height = stateText(state, "h");
+  if (height) lines.push(`height: ${height}`);
+  const expanded = stateText(state, "expanded");
+  if (expanded) lines.push(`aria-expanded: ${expanded}`);
+  return lines;
+}
+
+function toggleLines(row: InteractionTypeRow, locale: Locale): string[] {
+  if (row.type !== "menu" && row.type !== "modal") return [];
+  const before = row.evidence?.t0;
+  const after = row.evidence?.t1;
+  if (!before || !after) return [];
+  const ja = locale === "ja";
+  const lines: string[] = [];
+  const selector = row.evidence?.selector?.trim();
+  if (selector) lines.push(`${ja ? "対象" : "Target"}: ${selector}`);
+  lines.push(ja ? "トリガー: Click" : "Trigger: Click");
+  const toggle = row.evidence?.toggle;
+  if (toggle?.open === "working") {
+    lines.push(ja ? "開く: 成功" : "Open: working");
+    lines.push(toggle.close === "working" ? (ja ? "閉じる: 成功" : "Close: working") : (ja ? "閉じる: 失敗" : "Close: failed"));
+    if (toggle.close === "working" && toggle.close_by) lines.push(`${ja ? "閉じ方" : "Closed by"}: ${closeByLabel(toggle.close_by, ja)}`);
+    lines.push(...toggleSnapshotLines(ja ? "開く前" : "Before", before));
+    lines.push(...toggleSnapshotLines(ja ? "開いた後" : "After open", after));
+  } else {
+    const expanded0 = stateText(before, "expanded");
+    const expanded1 = stateText(after, "expanded");
+    if (expanded0 || expanded1) lines.push(`aria-expanded: ${expanded0 ?? "—"} → ${expanded1 ?? "—"}`);
+    const vis0 = stateText(before, "visibility");
+    const vis1 = stateText(after, "visibility");
+    if (vis0 || vis1) lines.push(`${ja ? "表示" : "Visibility"}: ${vis0 ?? "—"} → ${vis1 ?? "—"}`);
+    const h0 = stateText(before, "h");
+    const h1 = stateText(after, "h");
+    if (h0 && h1 && h0 !== h1) lines.push(`${ja ? "高さ" : "Height"}: ${h0} → ${h1}`);
+    if (row.evidence?.note === "open verified, close verified") {
+      lines.push(ja ? "開く: 確認した" : "Open verified");
+      lines.push(ja ? "閉じる: 確認した" : "Close verified");
+    } else if (row.evidence?.note === "open verified") {
+      lines.push(ja ? "開く: 確認した" : "Open verified");
+    }
+  }
+  const exists0 = (before as Record<string, unknown>).exists;
+  const exists1 = (after as Record<string, unknown>).exists;
+  if (exists0 === false && exists1 === true) lines.push("DOM: absent → present");
+  const op0 = stateText(before, "opacity");
+  const op1 = stateText(after, "opacity");
+  if (op0 && op1 && op0 !== op1) lines.push(`Opacity: ${op0} → ${op1}`);
+  const timing = row.evidence?.timing;
+  if (typeof timing?.response_ms === "number") lines.push(`${ja ? "応答" : "Response"}: ${timing.response_ms}ms`);
+  if (typeof timing?.open_ms === "number") lines.push(`${ja ? "表示完了" : "Fully open"}: ${timing.open_ms}ms`);
+  if (timing?.in_viewport === true) lines.push(ja ? "ビューポート内" : "In viewport");
+  if (timing?.in_viewport === false) lines.push(ja ? "ビューポート外" : "Outside viewport");
+  if (row.evidence?.window?.executed) {
+    lines.push(`${ja ? "コンソールエラー" : "Console errors"}: ${row.evidence.window.runtime_errors}`);
+    lines.push(`${ja ? "失敗したリクエスト" : "Failed requests"}: ${row.evidence.window.request_failed}`);
+  }
+  return lines;
+}
+
 function motionLines(row: InteractionTypeRow, locale: Locale): string[] {
   if (row.type !== "css_animation" && row.type !== "js_animation") return [];
   const trace = parseMotionTrace(row.evidence?.trace);
@@ -186,7 +264,7 @@ function behaviorRows(types: InteractionTypeRow[] | null, locale: Locale): Evide
     .filter((row) => row.status !== "not_measured")
     .map((row) => {
       const driver = parseMotionDriver(row.evidence?.driver);
-      const lines = motionLines(row, locale);
+      const lines = [...motionLines(row, locale), ...toggleLines(row, locale)];
       return {
         type: row.type,
         status: row.status,
