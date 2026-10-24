@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useTransition, type MouseEvent } from "react";
+import { useTransition, type KeyboardEvent, type MouseEvent } from "react";
 import type { Observation } from "@/lib/demo/observations";
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
 import { copy, type Locale } from "@/lib/i18n";
@@ -52,20 +51,42 @@ function ObservationTableRow({
   const detailHref = `/dashboard/observations/${row.id}`;
   const capturedLabel = formatJaDateTime(row.capturedAt, locale);
   const detailAria = `${pending ? tb.actionOpening : tb.actionDetail}: ${capturedLabel}`;
-  const cellLinkClass =
-    "block h-full px-4 py-3 no-underline outline-offset-[-2px] hover:bg-accent-soft/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent";
 
-  function openDetail(event: MouseEvent<HTMLAnchorElement>) {
-    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    event.preventDefault();
+  function openDetail(event: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean; altKey: boolean; button?: number }) {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button === 1) {
+      window.open(detailHref, "_blank", "noopener,noreferrer");
+      return;
+    }
     if (pending) return;
     startTransition(() => {
       router.push(detailHref);
     });
   }
 
+  function onRowClick(event: MouseEvent<HTMLTableRowElement>) {
+    if ((event.target as HTMLElement).closest("input")) return;
+    if (event.button === 1) event.preventDefault();
+    openDetail(event);
+  }
+
+  function onRowKeyDown(event: KeyboardEvent<HTMLTableRowElement>) {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    if ((event.target as HTMLElement).closest("input")) return;
+    event.preventDefault();
+    openDetail(event);
+  }
+
   return (
-    <tr className={`hover:bg-surface/80 ${pending ? "opacity-70" : ""}`} aria-busy={pending || undefined}>
+    <tr
+      data-tour="recordDetail"
+      className={`cursor-pointer align-top hover:bg-accent-soft/50 ${pending ? "opacity-70" : ""}`}
+      aria-busy={pending || undefined}
+      aria-label={detailAria}
+      tabIndex={0}
+      onClick={onRowClick}
+      onAuxClick={onRowClick}
+      onKeyDown={onRowKeyDown}
+    >
       {onToggleSelect ? (
         <td className="px-3 py-3 align-top">
           <input
@@ -73,56 +94,41 @@ function ObservationTableRow({
             checked={selected ?? false}
             disabled={!isObservationUuid(row.id)}
             title={isObservationUuid(row.id) ? undefined : copy[locale].observationsListPage.shareCollectionDemoSkip}
+            onClick={(event) => event.stopPropagation()}
             onChange={(e) => onToggleSelect(row.id, e.target.checked)}
             className="mt-1 h-4 w-4 accent-accent"
             aria-label={copy[locale].observationsListPage.shareCollectionSelectRow}
           />
         </td>
       ) : null}
-      <td className="p-0 align-top text-ink-muted">
-        <Link href={detailHref} aria-label={detailAria} className={cellLinkClass} onClick={openDetail}>
-          <span className="text-ink">{capturedLabel}</span>
-          <span className="mt-0.5 block text-[11px] text-ink-muted">
-            {formatUtcLabel(row.capturedAt)}
-          </span>
-        </Link>
+      <td className="px-4 py-3 align-top text-ink-muted">
+        <span className="text-ink">{capturedLabel}</span>
+        <span className="mt-0.5 block text-[11px] text-ink-muted">
+          {formatUtcLabel(row.capturedAt)}
+        </span>
       </td>
-      <td className="max-w-55 p-0 align-top font-mono text-xs text-ink">
-        <Link href={detailHref} aria-label={detailAria} className={`${cellLinkClass} min-w-0 truncate`} onClick={openDetail}>
-          {row.url}
-        </Link>
+      <td className="max-w-55 px-4 py-3 align-top font-mono text-xs text-ink">
+        <span className="block min-w-0 truncate">{row.url}</span>
       </td>
-      <td className="p-0 align-top text-ink">
-        <Link href={detailHref} aria-label={detailAria} className={cellLinkClass} onClick={openDetail}>
-          <ObservationRegionReadout
-            requestedLabel={row.regionLabel}
-            regionValue={row.regionValue}
-            captureConditions={row.captureConditions}
-            copy={geoCopy}
-            locale={locale}
-            compact
-          />
-        </Link>
+      <td className="px-4 py-3 align-top text-ink">
+        <ObservationRegionReadout
+          requestedLabel={row.regionLabel}
+          regionValue={row.regionValue}
+          captureConditions={row.captureConditions}
+          copy={geoCopy}
+          locale={locale}
+          compact
+        />
       </td>
-      <td className="p-0 align-top">
-        <Link href={detailHref} aria-label={detailAria} className={cellLinkClass} onClick={openDetail}>
-          <StatusBadge status={row.status} locale={locale} />
-          {pending ? <span className="mt-1 block text-[11px] font-semibold text-ink-muted">{tb.actionOpening}</span> : null}
-          {retentionDays != null && isObservationScreenshotExpired(row, retentionDays) ? (
-            <span className="mt-1 block text-[11px] text-ink-muted">{tb.screenshotExpired}</span>
-          ) : null}
-        </Link>
+      <td className="px-4 py-3 align-top">
+        <StatusBadge status={row.status} locale={locale} />
+        {pending ? <span className="mt-1 block text-[11px] font-semibold text-ink-muted">{tb.actionOpening}</span> : null}
+        {retentionDays != null && isObservationScreenshotExpired(row, retentionDays) ? (
+          <span className="mt-1 block text-[11px] text-ink-muted">{tb.screenshotExpired}</span>
+        ) : null}
       </td>
-      <td className="px-4 py-3 text-right align-top">
-        <Link
-          href={detailHref}
-          data-tour="recordDetail"
-          aria-busy={pending || undefined}
-          onClick={openDetail}
-          className="font-medium text-accent hover:text-accent-hover"
-        >
-          {pending ? tb.actionOpening : tb.actionDetail}
-        </Link>
+      <td className="px-4 py-3 text-right align-top font-medium text-accent">
+        {pending ? tb.actionOpening : tb.actionDetail}
       </td>
     </tr>
   );

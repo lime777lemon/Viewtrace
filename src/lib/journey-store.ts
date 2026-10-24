@@ -121,6 +121,30 @@ export async function listJourneyRuns(supabase: SupabaseClient, userId: string, 
   });
 }
 
+export async function latestJourneyStatuses(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<Map<string, JourneyRunPublic["status"]>> {
+  const { data, error } = await supabase
+    .from("journey_runs")
+    .select("journey_id, status, created_at")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(200);
+  const statuses = new Map<string, JourneyRunPublic["status"]>();
+  if (error) return statuses;
+  for (const row of data ?? []) {
+    const item = row as Record<string, unknown>;
+    const journeyId = typeof item.journey_id === "string" ? item.journey_id : "";
+    const status = item.status;
+    if (!journeyId || statuses.has(journeyId)) continue;
+    if (status === "passed" || status === "failed" || status === "blocked" || status === "incomplete") {
+      statuses.set(journeyId, status);
+    }
+  }
+  return statuses;
+}
+
 async function monthlyJourneyRuns(supabase: SupabaseClient, userId: string): Promise<number> {
   const { count, error } = await supabase
     .from("journey_runs")

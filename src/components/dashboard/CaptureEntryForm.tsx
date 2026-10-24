@@ -10,6 +10,7 @@ import {
   commerceJourneyInputs,
   isJourneyCommerceKind,
   isJourneyPurposeKind,
+  JOURNEY_KEYS,
   JOURNEY_STEP_KINDS,
   JOURNEY_STEP_LIMIT,
   journeyKindLabel,
@@ -71,6 +72,8 @@ const TEXT = {
       selector_required: "この手順にはセレクタが必要です。",
       outcome_required: "Login、Checkout、言語、通貨、地域、アップロードの送信とドロップには、成立したことを確認する条件を指定してください。",
       value_required: "この手順には値が必要です。",
+      attribute_required: "属性名を指定してください。",
+      key_not_allowed: "送れるキーは Enter、Escape、Tab、矢印、Space、Backspace です。",
       url_host: "手順の URL は開始 URL と同じホストにしてください。",
       save_failed: "Journey を保存できませんでした。",
       region: "このプランでは選べない地域です。",
@@ -125,6 +128,8 @@ const TEXT = {
       selector_required: "This step needs a selector.",
       outcome_required: "Login, Checkout, language, currency, region, and an upload submit or drop need a condition that proves the step worked.",
       value_required: "This step needs a value.",
+      attribute_required: "This step needs an attribute name.",
+      key_not_allowed: "The recorded keys are Enter, Escape, Tab, the arrows, Space, and Backspace.",
       url_host: "Step URLs stay on the same host as the start URL.",
       save_failed: "Could not save the Journey.",
       region: "That region is outside this plan.",
@@ -388,20 +393,28 @@ export function CaptureEntryForm({
                 {isJourneyCommerceKind(step.kind) ? (
                   <JourneyCommerceFields step={step} locale={locale} onChange={(patch) => updateStep(index, patch)} />
                 ) : null}
-                {!isJourneyCommerceKind(step.kind) && step.kind !== "wait" && step.kind !== "assert_url" ? (
+                {!isJourneyCommerceKind(step.kind) && step.kind !== "wait" && step.kind !== "assert_url" && step.kind !== "assert_page_text" ? (
                   <input
                     value={step.selector}
-                    placeholder="selector"
+                    placeholder={step.kind === "key" ? (locale === "ja" ? "フォーカスする要素（任意）" : "Focus selector (optional)") : step.kind === "drag" ? (locale === "ja" ? "ドラッグする要素" : "Element to drag") : "selector"}
                     onChange={(event) => updateStep(index, { selector: event.target.value })}
                     className="min-w-40 flex-1 rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
                   />
                 ) : null}
-                {step.kind === "assert_url" ? (
+                {step.kind === "drag" ? (
                   <input
-                    value={step.value}
-                    placeholder="url contains"
-                    onChange={(event) => updateStep(index, { value: event.target.value })}
+                    value={step.expect_selector}
+                    placeholder={locale === "ja" ? "ドロップ先" : "Drop target"}
+                    onChange={(event) => updateStep(index, { expect_selector: event.target.value })}
                     className="min-w-40 flex-1 rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
+                  />
+                ) : null}
+                {step.kind === "assert_attribute" ? (
+                  <input
+                    value={step.expect_attribute ?? ""}
+                    placeholder={locale === "ja" ? "属性名（href など）" : "Attribute name, such as href"}
+                    onChange={(event) => updateStep(index, { expect_attribute: event.target.value })}
+                    className="min-w-32 flex-1 rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
                   />
                 ) : null}
                 {step.kind === "search" ? (
@@ -412,10 +425,32 @@ export function CaptureEntryForm({
                     className="min-w-32 flex-1 rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
                   />
                 ) : null}
-                {step.kind === "fill" || step.kind === "select" || step.kind === "assert_text" ? (
+                {step.kind === "key" ? (
+                  <select
+                    value={step.value}
+                    onChange={(event) => updateStep(index, { value: event.target.value })}
+                    className="min-w-32 rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
+                  >
+                    <option value="">{locale === "ja" ? "キー" : "Key"}</option>
+                    {JOURNEY_KEYS.map((key) => (
+                      <option key={key} value={key}>{key}</option>
+                    ))}
+                  </select>
+                ) : null}
+                {step.kind === "fill" || step.kind === "select" || step.kind === "assert_text" || step.kind === "assert_url" || step.kind === "assert_page_text" || step.kind === "assert_attribute" ? (
                   <input
                     value={step.value}
-                    placeholder={step.kind === "fill" ? copy.fillValue : "value"}
+                    placeholder={step.kind === "fill"
+                      ? copy.fillValue
+                      : step.kind === "assert_text"
+                        ? (locale === "ja" ? "一致する文字" : "Exact text")
+                        : step.kind === "assert_url"
+                          ? (locale === "ja" ? "期待する URL、または URL に含まれる文字列" : "Expected URL, or text the URL contains")
+                          : step.kind === "assert_page_text"
+                            ? (locale === "ja" ? "ページに含まれる文字列" : "Text the page contains")
+                            : step.kind === "assert_attribute"
+                              ? (locale === "ja" ? "期待する属性値" : "Expected attribute value")
+                              : "value"}
                     onChange={(event) => updateStep(index, { value: event.target.value })}
                     className="min-w-32 flex-1 rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
                   />

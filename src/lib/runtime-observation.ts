@@ -105,7 +105,7 @@ export function journeyRuntimeObservedLines(input: {
   const copy = LABEL[input.locale];
   const lines: Array<{ label: string; value: string }> = [];
   const ran = input.status === "pass" || input.status === "fail" || input.status === "incomplete";
-  if (ran && input.kind !== "open_url" && input.kind !== "wait") {
+  if (ran && input.kind !== "open_url" && input.kind !== "wait" && !input.kind.startsWith("assert_")) {
     lines.push({ label: copy.click, value: copy.ran });
   }
   const dom = (input.evidence ?? []).some((item) => item.kind === "dom_changed");

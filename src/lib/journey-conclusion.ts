@@ -149,11 +149,19 @@ export function journeyRunEvidence(input: {
     const ran = step.status === "pass" || step.status === "fail";
     if (!ran && step.status !== "incomplete") return;
     const expectUrl = definedFor(step, index, input.defined)?.expect_url ?? "";
-    if (ran && step.kind !== "open_url" && step.kind !== "wait" && step.kind !== "assert_visible" && step.kind !== "assert_text" && step.kind !== "assert_url") {
-      const entered = step.kind === "search" || step.kind === "fill";
+    if (ran && step.kind !== "open_url" && step.kind !== "wait" && !step.kind.startsWith("assert_")) {
+      const value = step.kind === "search" || step.kind === "fill"
+        ? (ja ? "入力した" : "entered")
+        : step.kind === "hover"
+          ? (ja ? "ホバーした" : "hovered")
+          : step.kind === "key"
+            ? (ja ? "キーを押した" : "pressed a key")
+            : step.kind === "drag"
+              ? (ja ? "ドラッグした" : "dragged")
+              : (ja ? "クリックした" : "clicked");
       lines.push({
         label: journeyKindLabel(step.kind, input.locale),
-        value: entered ? (ja ? "入力した" : "entered") : (ja ? "クリックした" : "clicked"),
+        value,
       });
     }
     for (const row of journeyNetworkEvidence(step.network).filter(proofRequest)) {

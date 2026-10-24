@@ -3,6 +3,7 @@ import {
   commerceJourneyInputs,
   journeyNetworkEvidence,
   journeyCaptureLine,
+  journeyRunGeoReadout,
   journeyOpenPageState,
   journeyStepReport,
   resolveJourneyOpenUrl,
@@ -25,6 +26,33 @@ assert.equal(journeyCaptureLine("US-CA", "country", "en"), "Requested United Sta
 assert.equal(journeyCaptureLine("JP-13", "city", "ja"), "リクエスト 日本 · 東京 · 観測 日本 · 東京");
 assert.equal(journeyCaptureLine("JP-13", "country", "en"), "Requested Japan · Tokyo · Observed Japan");
 assert.equal(journeyCaptureLine("US-CA", "no_proxy", "en"), "Requested United States · California · Observed No regional proxy");
+const californiaCountry = journeyRunGeoReadout({
+  region: "US-CA",
+  stage: "country",
+  requestedLabel: "US · California",
+  locale: "ja",
+  requestedObserved: "指定: {requested} / 実際の取得: {observed}",
+});
+assert.equal(californiaCountry.headline, "米国");
+assert.equal(californiaCountry.detailLine, "指定: US · California / 実際の取得: 米国");
+const tokyoCountry = journeyRunGeoReadout({
+  region: "JP-13",
+  stage: "country",
+  requestedLabel: "日本 · 東京",
+  locale: "ja",
+  requestedObserved: "指定: {requested} / 実際の取得: {observed}",
+});
+assert.equal(tokyoCountry.headline, "日本");
+assert.equal(tokyoCountry.detailLine, "指定: 日本 · 東京 / 実際の取得: 日本");
+const californiaCity = journeyRunGeoReadout({
+  region: "US-CA",
+  stage: "city",
+  requestedLabel: "US · California",
+  locale: "ja",
+  requestedObserved: "指定: {requested} / 実際の取得: {observed}",
+});
+assert.equal(californiaCity.headline, "US · California");
+assert.equal(californiaCity.detailLine, null);
 assert.equal(journeyOpenPageState({ status: "fail", url_after: "about:blank", detail: "url_mismatch" }, "ja").headline, "ページは表示されていない");
 assert.equal(journeyOpenPageState({ status: "fail", url_after: "about:blank", detail: "Navigation timeout" }, "ja").reason, "Navigation timeout");
 assert.equal(journeyOpenPageState({ status: "pass", url_after: "https://viewtrace.net/", detail: "https://viewtrace.net/" }, "ja").displayed, true);

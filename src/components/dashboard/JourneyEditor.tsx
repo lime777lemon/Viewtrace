@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { deleteJourneyAction, disableJourneyMonitoringAction, enableJourneyMonitoringAction, runJourneyNowAction, saveJourneyAction } from "@/app/actions/journeys";
 import { JourneyCommerceFields } from "@/components/dashboard/JourneyCommerceFields";
-import { JourneyRunSummary } from "@/components/dashboard/JourneyRunSummary";
+import { JourneyRunsTable } from "@/components/dashboard/JourneyRunsTable";
 import { RegionEnvironmentMatrixView } from "@/components/dashboard/RegionEnvironmentMatrixView";
 import { parseJourneyGeoStage } from "@/lib/journey-conclusion";
 import { buildRegionEnvironmentMatrix, environmentFromJourneyRecord, keepLatestColumns, resourcesCellFromRequests } from "@/lib/region-environment-matrix";
@@ -13,12 +13,10 @@ import {
   isJourneyCommerceKind,
   isJourneyPurposeKind,
   journeyPurposeLabel,
+  JOURNEY_KEYS,
   JOURNEY_STEP_KINDS,
   JOURNEY_STEP_LIMIT,
-  journeyCaptureLine,
   journeyKindLabel,
-  journeyStatusLabel,
-  journeyStepReport,
   resolveJourneyOpenUrl,
   resolveJourneySteps,
   type JourneyDeviceClass,
@@ -292,25 +290,41 @@ export function JourneyEditor({
                 {isJourneyCommerceKind(step.kind) ? (
                   <JourneyCommerceFields step={step} locale={locale} onChange={(patch) => updateStep(index, patch)} />
                 ) : null}
-                {!isJourneyCommerceKind(step.kind) && step.kind !== "wait" && step.kind !== "open_url" && step.kind !== "assert_url" ? (
+                {!isJourneyCommerceKind(step.kind) && step.kind !== "wait" && step.kind !== "open_url" && step.kind !== "assert_url" && step.kind !== "assert_page_text" ? (
                   <input
                     value={step.selector}
-                    placeholder="selector"
+                    placeholder={step.kind === "key" ? (locale === "ja" ? "フォーカスする要素（任意）" : "Focus selector (optional)") : step.kind === "drag" ? (locale === "ja" ? "ドラッグする要素" : "Element to drag") : "selector"}
                     onChange={(event) => updateStep(index, { selector: event.target.value })}
                     className="min-w-40 flex-1 rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
                   />
                 ) : null}
-                {step.kind === "open_url" || step.kind === "assert_url" ? (
+                {step.kind === "drag" ? (
                   <input
-                    name={step.kind === "open_url" ? `step-${index}-url` : undefined}
-                    value={step.kind === "open_url" ? step.url : step.value}
-                    placeholder={step.kind === "open_url" ? "https://…" : "url contains"}
-                    onChange={(event) => updateStep(index, step.kind === "open_url" ? { url: event.target.value } : { value: event.target.value })}
-                    onBlur={step.kind === "open_url" ? () => {
+                    value={step.expect_selector}
+                    placeholder={locale === "ja" ? "ドロップ先" : "Drop target"}
+                    onChange={(event) => updateStep(index, { expect_selector: event.target.value })}
+                    className="min-w-40 flex-1 rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
+                  />
+                ) : null}
+                {step.kind === "assert_attribute" ? (
+                  <input
+                    value={step.expect_attribute ?? ""}
+                    placeholder={locale === "ja" ? "属性名（href など）" : "Attribute name, such as href"}
+                    onChange={(event) => updateStep(index, { expect_attribute: event.target.value })}
+                    className="min-w-32 flex-1 rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
+                  />
+                ) : null}
+                {step.kind === "open_url" ? (
+                  <input
+                    name={`step-${index}-url`}
+                    value={step.url}
+                    placeholder="https://…"
+                    onChange={(event) => updateStep(index, { url: event.target.value })}
+                    onBlur={() => {
                       const resolved = resolveJourneyOpenUrl(fieldValue("startUrl", startUrl), fieldValue(`step-${index}-url`, step.url));
                       if (resolved) updateStep(index, { url: resolved });
-                    } : undefined}
-                    autoComplete={step.kind === "open_url" ? "url" : "off"}
+                    }}
+                    autoComplete="url"
                     className="min-w-40 flex-1 rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
                   />
                 ) : null}
@@ -326,10 +340,32 @@ export function JourneyEditor({
                     className="min-w-32 flex-1 rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
                   />
                 ) : null}
-                {step.kind === "fill" || step.kind === "select" || step.kind === "assert_text" ? (
+                {step.kind === "key" ? (
+                  <select
+                    value={step.value}
+                    onChange={(event) => updateStep(index, { value: event.target.value })}
+                    className="min-w-32 rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
+                  >
+                    <option value="">{locale === "ja" ? "キー" : "Key"}</option>
+                    {JOURNEY_KEYS.map((key) => (
+                      <option key={key} value={key}>{key}</option>
+                    ))}
+                  </select>
+                ) : null}
+                {step.kind === "fill" || step.kind === "select" || step.kind === "assert_text" || step.kind === "assert_url" || step.kind === "assert_page_text" || step.kind === "assert_attribute" ? (
                   <input
                     value={step.value}
-                    placeholder={step.kind === "fill" ? "{{username}} or text" : "value"}
+                    placeholder={step.kind === "fill"
+                      ? "{{username}} or text"
+                      : step.kind === "assert_text"
+                        ? (locale === "ja" ? "一致する文字" : "Exact text")
+                        : step.kind === "assert_url"
+                          ? (locale === "ja" ? "期待する URL、または URL に含まれる文字列" : "Expected URL, or text the URL contains")
+                          : step.kind === "assert_page_text"
+                            ? (locale === "ja" ? "ページに含まれる文字列" : "Text the page contains")
+                            : step.kind === "assert_attribute"
+                              ? (locale === "ja" ? "期待する属性値" : "Expected attribute value")
+                              : "value"}
                     onChange={(event) => updateStep(index, { value: event.target.value })}
                     className="min-w-32 flex-1 rounded-lg border border-border bg-surface px-2 py-2 text-xs text-ink"
                   />
@@ -612,67 +648,15 @@ export function JourneyEditor({
           <div className="mt-4">
             <RegionEnvironmentMatrixView matrix={regionMatrix} />
           </div>
-          <ul className="mt-4 space-y-4">
-            {runs.map((run) => {
-              const env = run.environment && typeof run.environment.viewport === "object" ? run.environment.viewport as { width?: number; height?: number } : null;
-              const geo = run.environment && typeof run.environment.geo === "object" && run.environment.geo
-                ? run.environment.geo as { stage?: string; requested_region?: string }
-                : null;
-              const captureLine = journeyCaptureLine(geo?.requested_region || run.region, geo?.stage, locale);
-              const regionLabel = regions.find((item) => item.value === run.region)?.label ?? run.region;
-              const deviceLabel = run.device_class === "mobile"
-                ? (locale === "ja" ? "モバイル" : "Mobile")
-                : (locale === "ja" ? "デスクトップ" : "Desktop");
-              const statusClass = run.status === "passed"
-                ? "text-emerald-800"
-                : run.status === "blocked"
-                  ? "text-amber-800"
-                  : run.status === "failed"
-                    ? "text-red-800"
-                    : "text-ink";
-              return (
-                <li key={run.id} className="rounded-lg border border-border bg-surface p-3">
-                  <p className={`text-sm font-semibold ${statusClass}`}>
-                    Journey Run · {journeyStatusLabel(run.status, locale)}
-                  </p>
-                  <p className="mt-1 text-xs text-ink-muted">
-                    {regionLabel} · {deviceLabel}
-                    {env?.width && env?.height ? ` · ${env.width}×${env.height}` : ""}
-                    {run.duration_ms != null ? ` · ${(run.duration_ms / 1000).toFixed(1)}s` : ""}
-                  </p>
-                  {captureLine ? <p className="mt-1 text-xs text-ink-muted">{captureLine}</p> : null}
-                  {run.alert ? <p className="mt-1 text-xs font-medium text-red-700">Journey regression · {run.alert}</p> : null}
-                  <JourneyRunSummary
-                    region={run.region}
-                    environment={run.environment}
-                    device={run.device_class}
-                    steps={run.steps}
-                    defined={journey?.steps}
-                    locale={locale}
-                  />
-                  <ol className="mt-3 space-y-3">
-                    {run.steps.map((step, index) => {
-                      const defined = journey?.steps.find((item) => item.id === step.id) ?? journey?.steps[index] ?? null;
-                      const report = journeyStepReport(step, defined, index, locale);
-                      return (
-                        <li key={`${run.id}-${step.id}`} className="text-xs text-ink">
-                          <p className="font-semibold">{report.title}</p>
-                          <dl className="mt-1 space-y-0.5 text-ink-muted">
-                            {report.lines.map((line, lineIndex) => (
-                              <div key={`${line.label}-${lineIndex}`} className="flex gap-2">
-                                <dt className="shrink-0">{line.label}</dt>
-                                <dd className="min-w-0 break-all">{line.value}</dd>
-                              </div>
-                            ))}
-                          </dl>
-                        </li>
-                      );
-                    })}
-                  </ol>
-                </li>
-              );
-            })}
-          </ul>
+          <div className="mt-4">
+            <JourneyRunsTable
+              runs={runs}
+              steps={journey?.steps ?? []}
+              regions={regions}
+              startUrl={journey?.start_url || startUrl}
+              locale={locale}
+            />
+          </div>
         </section>
       ) : null}
     </div>
@@ -684,6 +668,9 @@ function monitoringErrorText(error: string, locale: Locale): string {
   if (error === "invalid_url") return ja ? "URLを https://viewtrace.net のように入力してください。" : "Enter a full URL, such as https://viewtrace.net";
   if (error === "outcome_required") return ja ? "Login、Checkout、言語、通貨、地域、アップロードの送信とドロップには、成立したことを確認する条件を指定してください。Download はファイル応答を待ちます。" : "Login, Checkout, language, currency, region, and an upload submit or drop need a condition that proves the step worked. Download waits for the file response.";
   if (error === "selector_required") return ja ? "この手順にはセレクタが必要です。" : "This step needs a selector.";
+  if (error === "value_required") return ja ? "この手順には値が必要です。" : "This step needs a value.";
+  if (error === "attribute_required") return ja ? "属性名を指定してください。" : "This step needs an attribute name.";
+  if (error === "key_not_allowed") return ja ? "送れるキーは Enter、Escape、Tab、矢印、Space、Backspace です。" : "The recorded keys are Enter, Escape, Tab, the arrows, Space, and Backspace.";
   if (error === "upload_file_required") return ja ? "送信するにはテストファイルを指定してください。" : "Submit upload needs a test file.";
   if (error === "upload_confirm_required") return ja ? "送信ボタンのセレクタを指定してください。" : "Submit upload needs the submit button selector.";
   if (error === "preflight") return ja ? "監視をオンにする条件が揃っていません。" : "Monitoring preflight did not pass.";

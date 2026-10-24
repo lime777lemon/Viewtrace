@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { JourneyStatusBadge } from "@/components/dashboard/JourneyRunsTable";
+import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
+import { copy, type Locale } from "@/lib/i18n";
 import { getSession } from "@/lib/auth/session";
-import type { Locale } from "@/lib/i18n";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { journeyPurposeLabel, type JourneyPurpose } from "@/lib/journey-definition";
-import { listJourneys, type JourneyDefinitionPublic } from "@/lib/journey-store";
+import { latestJourneyStatuses, listJourneys, type JourneyDefinitionPublic } from "@/lib/journey-store";
+import { getRegionLabelForLocale, getRegionOptions } from "@/lib/regions";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Journeys | Viewtrace", robots: { index: false, follow: false } };
@@ -16,22 +19,77 @@ function purposeBadgeClass(purpose: JourneyPurpose): string {
   return "border-border bg-surface text-ink";
 }
 
-function JourneyRow({ journey, locale }: { journey: JourneyDefinitionPublic; locale: Locale }) {
+function JourneyListTable({
+  journeys,
+  statuses,
+  locale,
+  framed = true,
+}: {
+  journeys: JourneyDefinitionPublic[];
+  statuses: Map<string, "passed" | "failed" | "blocked" | "incomplete">;
+  locale: Locale;
+  framed?: boolean;
+}) {
+  const tb = copy[locale].observationsTable;
+  const regionLabel = new Map(getRegionOptions("pro").map((region) => [region.value, getRegionLabelForLocale(region, locale)]));
   return (
-    <li>
-      <Link href={`/dashboard/journeys/${journey.id}`} className="flex items-baseline justify-between gap-3 px-4 py-3 text-sm text-ink hover:bg-surface">
-        <span className="flex min-w-0 items-center gap-2">
-          <span className="truncate">{journey.name}</span>
-          <span className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold ${purposeBadgeClass(journey.purpose)}`}>
-            {journeyPurposeLabel(journey.purpose, locale)}
-          </span>
-        </span>
-        <span className="shrink-0 text-xs text-ink-muted">
-          {journey.regions.join(", ")} · {journey.device_classes.join(", ")}
-          {journey.watch_enabled ? ` · Watch ${journey.watch_frequency}` : ""}
-        </span>
-      </Link>
-    </li>
+    <div className={framed ? "overflow-hidden rounded-xl border border-border bg-surface-elevated" : "overflow-hidden"}>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-160 text-left text-sm">
+          <thead className="border-b border-border bg-surface text-xs font-semibold uppercase tracking-wide text-ink-muted">
+            <tr>
+              <th className="px-4 py-3">{tb.colCaptured}</th>
+              <th className="px-4 py-3">{tb.colUrl}</th>
+              <th className="px-4 py-3">{tb.colRegion}</th>
+              <th className="px-4 py-3">{tb.colStatus}</th>
+              <th className="px-4 py-3 text-right">{tb.colActions}</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {journeys.map((journey) => {
+              const href = `/dashboard/journeys/${journey.id}`;
+              const status = statuses.get(journey.id) ?? null;
+              return (
+                <tr key={journey.id} className="align-top hover:bg-surface/80">
+                  <td className="px-4 py-3 text-ink-muted">
+                    {journey.last_run_at ? (
+                      <>
+                        <span className="text-ink">{formatJaDateTime(journey.last_run_at, locale)}</span>
+                        <span className="mt-0.5 block text-[11px] text-ink-muted">{formatUtcLabel(journey.last_run_at)}</span>
+                      </>
+                    ) : (
+                      <span>—</span>
+                    )}
+                  </td>
+                  <td className="max-w-55 px-4 py-3">
+                    <span className="block truncate font-mono text-xs text-ink">{journey.start_url}</span>
+                    <span className="mt-0.5 flex min-w-0 items-center gap-2">
+                      <span className="truncate text-xs text-ink-muted">{journey.name}</span>
+                      <span className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold ${purposeBadgeClass(journey.purpose)}`}>
+                        {journeyPurposeLabel(journey.purpose, locale)}
+                      </span>
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-ink">
+                    {journey.regions.map((value) => (
+                      <span key={value} className="block">{regionLabel.get(value) ?? value}</span>
+                    ))}
+                  </td>
+                  <td className="px-4 py-3">
+                    {status ? <JourneyStatusBadge status={status} locale={locale} /> : <span className="text-ink-muted">—</span>}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <Link href={href} className="font-medium text-accent hover:text-accent-hover">
+                      {tb.actionDetail}
+                    </Link>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }
 
@@ -42,9 +100,11 @@ export default async function JourneysPage() {
   const ja = locale === "ja";
   const supabase = await createSupabaseServerClient();
   let journeys: JourneyDefinitionPublic[] = [];
+  let statuses = new Map<string, "passed" | "failed" | "blocked" | "incomplete">();
   let loadError: string | null = null;
   try {
     journeys = await listJourneys(supabase, session.userId);
+    statuses = await latestJourneyStatuses(supabase, session.userId);
   } catch {
     loadError = "Journey storage is not available yet. Apply supabase/migrations/20261022040813_journey_purpose.sql.";
   }
@@ -66,9 +126,7 @@ export default async function JourneysPage() {
       {journeys.length ? (
         <div className="grid gap-4">
           {production.length ? (
-            <ul className="divide-y divide-border rounded-xl border border-border bg-surface-elevated">
-              {production.map((journey) => <JourneyRow key={journey.id} journey={journey} locale={locale} />)}
-            </ul>
+            <JourneyListTable journeys={production} statuses={statuses} locale={locale} />
           ) : (
             <p className="text-sm text-ink-muted">{ja ? "本番の Journey はありません。" : "No production journeys."}</p>
           )}
@@ -78,9 +136,9 @@ export default async function JourneysPage() {
                 Development
                 <span className="ml-2 text-xs font-normal text-ink-muted">{development.length}</span>
               </summary>
-              <ul className="divide-y divide-border border-t border-border">
-                {development.map((journey) => <JourneyRow key={journey.id} journey={journey} locale={locale} />)}
-              </ul>
+              <div className="border-t border-border">
+                <JourneyListTable journeys={development} statuses={statuses} locale={locale} framed={false} />
+              </div>
             </details>
           ) : null}
         </div>

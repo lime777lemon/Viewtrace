@@ -15,9 +15,15 @@ export const JOURNEY_STEP_KINDS = [
   "click",
   "fill",
   "select",
+  "hover",
+  "key",
+  "drag",
   "wait",
   "assert_visible",
+  "assert_present",
   "assert_text",
+  "assert_page_text",
+  "assert_attribute",
   "assert_url",
   "login",
   "signup",
@@ -45,6 +51,9 @@ export const JOURNEY_STEP_LIMIT = 12;
 
 /** A capture started from a Journey can take longer than a click. */
 export const JOURNEY_WAIT_MS_MAX = 120_000;
+
+/** Keys a Journey step may press. Other keys are not sent. */
+export const JOURNEY_KEYS = ["Enter", "Escape", "Tab", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space", "Backspace"] as const;
 
 export type JourneyDeviceClass = "desktop" | "mobile";
 
@@ -76,8 +85,7 @@ export function journeyNetworkEvidence(events: unknown): ResourceRequestV1[] {
   return selectResourceRequests(events);
 }
 
-/** Same residential outcome as an Observation capture. A country fallback is not the requested state. */
-export function journeyCaptureLine(region: string, stage: string | null | undefined, locale: Locale): string | null {
+function journeyGeoPair(region: string, stage: string | null | undefined, locale: Locale): { requested: string; observed: string } | null {
   if (stage !== "city" && stage !== "state" && stage !== "country" && stage !== "no_proxy" && stage !== "direct") return null;
   const target = resolveBrowserlessResidentialTarget(region);
   const requested = region === "JP-13"
@@ -94,9 +102,48 @@ export function journeyCaptureLine(region: string, stage: string | null | undefi
       : stage === "city" && region === "JP-13"
         ? (locale === "ja" ? "日本 · 東京" : "Japan · Tokyo")
         : requested;
+  return { requested, observed };
+}
+
+/** Same residential outcome as an Observation capture. A country fallback is not the requested state. */
+export function journeyCaptureLine(region: string, stage: string | null | undefined, locale: Locale): string | null {
+  const pair = journeyGeoPair(region, stage, locale);
+  if (!pair) return null;
   return locale === "ja"
-    ? `リクエスト ${requested} · 観測 ${observed}`
-    : `Requested ${requested} · Observed ${observed}`;
+    ? `リクエスト ${pair.requested} · 観測 ${pair.observed}`
+    : `Requested ${pair.requested} · Observed ${pair.observed}`;
+}
+
+/** List cell in the same shape as an Observation: country headline when the state was not the exit. */
+export function journeyRunGeoReadout(input: {
+  region: string;
+  stage: string | null | undefined;
+  requestedLabel: string;
+  locale: Locale;
+  requestedObserved: string;
+}): { headline: string; detailLine: string | null } {
+  const requested = input.requestedLabel.trim() || input.region;
+  const stage = input.stage;
+  if (stage !== "city" && stage !== "state" && stage !== "country" && stage !== "no_proxy" && stage !== "direct") {
+    return { headline: requested, detailLine: null };
+  }
+  if (stage === "no_proxy" || stage === "direct") {
+    const observed = input.locale === "ja" ? "確認できていない" : "Not verified";
+    return {
+      headline: requested,
+      detailLine: input.requestedObserved.replace("{requested}", requested).replace("{observed}", observed),
+    };
+  }
+  if (stage === "city" || stage === "state") return { headline: requested, detailLine: null };
+  const pair = journeyGeoPair(input.region, stage, input.locale);
+  const observed = pair?.observed || requested;
+  const target = resolveBrowserlessResidentialTarget(input.region);
+  const moreSpecific = Boolean(target?.stateCode) || input.region === "JP-13";
+  if (!moreSpecific || observed === requested) return { headline: requested, detailLine: null };
+  return {
+    headline: observed,
+    detailLine: input.requestedObserved.replace("{requested}", requested).replace("{observed}", observed),
+  };
 }
 
 export type JourneyInputRole = "username" | "password" | "name" | "email" | "field";
@@ -149,6 +196,8 @@ export type JourneyStepDefinition = {
   expect_text: string;
   expect_visible: boolean;
   expect_url: string;
+  /** Attribute name for assert_attribute, such as href or aria-expanded. */
+  expect_attribute?: string;
   /** HTML lang a language switch must reach, such as en. */
   expect_lang?: string;
   /** Login, signup, and checkout fields. Password values stay {{password}}. */
@@ -288,6 +337,7 @@ export function parseJourneySteps(raw: unknown): JourneyStepDefinition[] {
       expect_text: typeof row.expect_text === "string" ? row.expect_text.slice(0, 180) : "",
       expect_visible: row.expect_visible === true,
       expect_url: typeof row.expect_url === "string" ? row.expect_url.trim().slice(0, 240) : "",
+      expect_attribute: typeof row.expect_attribute === "string" ? row.expect_attribute.trim().slice(0, 80) : "",
       expect_lang: typeof row.expect_lang === "string" ? row.expect_lang.trim().slice(0, 32) : "",
       inputs: parseJourneyInputs(row.inputs),
       confirm_selector: typeof row.confirm_selector === "string" ? row.confirm_selector.trim().slice(0, 180) : "",
@@ -303,7 +353,7 @@ export function parseJourneySteps(raw: unknown): JourneyStepDefinition[] {
 }
 
 export function journeyStepNeedsSelector(kind: JourneyStepKind): boolean {
-  return kind === "click" || kind === "fill" || kind === "select" || kind === "assert_visible" || kind === "assert_text" || isJourneyCommerceKind(kind) || isJourneyPurposeKind(kind);
+  return kind === "click" || kind === "fill" || kind === "select" || kind === "hover" || kind === "drag" || kind === "assert_visible" || kind === "assert_present" || kind === "assert_text" || kind === "assert_attribute" || isJourneyCommerceKind(kind) || isJourneyPurposeKind(kind);
 }
 
 function journeyExpectsOutcome(step: JourneyStepDefinition): boolean {
@@ -323,9 +373,12 @@ export function validateJourneySteps(startUrl: string, steps: JourneyStepDefinit
   for (const step of steps) {
     if (step.kind === "open_url" && !resolveJourneyOpenUrl(startUrl, step.url || startUrl)) return "url_host";
     if (journeyStepNeedsSelector(step.kind) && !step.selector) return "selector_required";
-    if ((step.kind === "assert_text" || step.kind === "assert_url" || step.kind === "select") && !step.value) {
+    if (step.kind === "drag" && !step.expect_selector.trim()) return "selector_required";
+    if ((step.kind === "assert_text" || step.kind === "assert_url" || step.kind === "assert_page_text" || step.kind === "select" || step.kind === "key") && !step.value.trim()) {
       return "value_required";
     }
+    if (step.kind === "assert_attribute" && !step.expect_attribute?.trim()) return "attribute_required";
+    if (step.kind === "key" && !(JOURNEY_KEYS as readonly string[]).includes(step.value.trim())) return "key_not_allowed";
     if (step.kind === "login" && (!journeyInputSelector(step, "username") || !journeyInputSelector(step, "password"))) {
       return "selector_required";
     }
@@ -359,10 +412,16 @@ const STEP_KIND_LABEL: Record<Locale, Record<JourneyStepKind, string>> = {
     click: "クリック",
     fill: "入力",
     select: "選択",
+    hover: "ホバー",
+    key: "キー入力",
+    drag: "ドラッグ",
     wait: "待機",
-    assert_visible: "表示を確認",
-    assert_text: "文言を確認",
-    assert_url: "URLを確認",
+    assert_visible: "表示されている",
+    assert_present: "要素がある",
+    assert_text: "要素の文字が一致",
+    assert_page_text: "ページに文字列がある",
+    assert_attribute: "属性値が一致",
+    assert_url: "URLが期待値",
     login: "ログイン",
     signup: "アカウント作成",
     add_to_cart: "カートに追加",
@@ -386,10 +445,16 @@ const STEP_KIND_LABEL: Record<Locale, Record<JourneyStepKind, string>> = {
     click: "Click",
     fill: "Fill",
     select: "Select",
+    hover: "Hover",
+    key: "Key press",
+    drag: "Drag and drop",
     wait: "Wait",
-    assert_visible: "Assert visible",
-    assert_text: "Assert text",
-    assert_url: "Assert URL",
+    assert_visible: "Element is visible",
+    assert_present: "Element is present",
+    assert_text: "Element text matches",
+    assert_page_text: "Page contains text",
+    assert_attribute: "Attribute matches",
+    assert_url: "URL matches",
     login: "Login",
     signup: "Signup",
     add_to_cart: "Add to cart",
@@ -465,6 +530,14 @@ function journeyFailureReason(detail: string | null, locale: Locale): string | n
   if (!detail) return null;
   if (/invalid url/i.test(detail)) return locale === "ja" ? "無効な URL" : "Invalid URL";
   if (detail === "url_mismatch") return locale === "ja" ? "指定したホストに着いていない" : "Did not reach the requested host";
+  if (detail === "url_not_expected") return locale === "ja" ? "URL が期待と一致しない" : "URL did not match";
+  if (detail === "text_mismatch") return locale === "ja" ? "要素の文字が期待と一致しない" : "Element text did not match";
+  if (detail === "page_text_mismatch") return locale === "ja" ? "ページにその文字列は含まれない" : "The page did not contain that text";
+  if (detail === "attribute_mismatch") return locale === "ja" ? "属性値が期待と一致しない" : "Attribute value did not match";
+  if (detail === "attribute_missing") return locale === "ja" ? "属性名がない" : "Attribute name is missing";
+  if (detail === "absent") return locale === "ja" ? "要素が存在しない" : "Element is absent";
+  if (detail === "not_visible") return locale === "ja" ? "要素は表示されていない" : "Element is not visible";
+  if (detail === "key_not_allowed") return locale === "ja" ? "そのキーは送れない" : "That key is not sent";
   if (detail === "outcome_mismatch") return locale === "ja" ? "期待した変化がなかった" : "Expected change was not observed";
   if (detail === "outcome_not_defined") return locale === "ja" ? "期待する結果が未定義" : "Expected outcome is not defined";
   if (detail === "value_not_set") return locale === "ja" ? "入力が残らなかった" : "Entered value did not stick";
@@ -506,7 +579,8 @@ export function journeyStepReport(
     visual?: StepVisualEvidence | null;
     evidence?: JourneyEvidenceItem[];
   },
-  defined: (Pick<JourneyStepDefinition, "selector" | "url" | "value" | "expect_text" | "expect_visible" | "expect_url" | "permitted_side_effect"> & {
+  defined: (Pick<JourneyStepDefinition, "selector" | "url" | "value" | "expect_text" | "expect_visible" | "expect_url" | "expect_attribute" | "permitted_side_effect"> & {
+    expect_selector?: string;
     evidence_screenshot?: boolean;
     evidence_video?: boolean;
   }) | null,
@@ -531,6 +605,47 @@ export function journeyStepReport(
           ? (ja ? "入力" : "Fill")
           : (ja ? "選択" : "Select");
     lines.push({ label: ja ? "操作" : "Action", value: selector ? `${action} \`${selector}\`` : action });
+  } else if (step.kind === "hover" || step.kind === "key" || step.kind === "drag") {
+    const action = step.kind === "hover" ? (ja ? "ホバー" : "Hover") : step.kind === "key" ? (ja ? "キー" : "Key") : (ja ? "ドラッグ" : "Drag");
+    const extra = step.kind === "key" ? (defined?.value || "") : step.kind === "drag" ? (defined?.expect_selector || "") : "";
+    lines.push({ label: ja ? "操作" : "Action", value: [action, selector ? `\`${selector}\`` : "", extra ? `\`${extra}\`` : ""].filter(Boolean).join(" ") });
+  }
+
+  if (step.kind.startsWith("assert_")) {
+    const expectedValue = defined?.value || defined?.expect_text || defined?.expect_url || "";
+    if (selector && step.kind !== "assert_url" && step.kind !== "assert_page_text") {
+      lines.push({ label: ja ? "対象" : "Target", value: selector });
+    }
+    if (step.kind === "assert_attribute" && defined?.expect_attribute) {
+      lines.push({ label: ja ? "属性" : "Attribute", value: defined.expect_attribute });
+    }
+    if (expectedValue || step.kind === "assert_attribute") {
+      lines.push({ label: ja ? "期待" : "Expected", value: expectedValue || (ja ? "（空）" : "(empty)") });
+    }
+    if (step.kind === "assert_url") {
+      lines.push({ label: ja ? "観測した URL" : "Observed URL", value: step.url_after || (ja ? "なし" : "None") });
+    } else if (step.kind === "assert_present") {
+      lines.push({
+        label: ja ? "観測" : "Observed",
+        value: step.status === "pass"
+          ? (ja ? `存在する（${step.detail || "element"}）` : `Present (${step.detail || "element"})`)
+          : (ja ? "存在しない" : "Absent"),
+      });
+    } else if (step.kind === "assert_visible") {
+      lines.push({
+        label: ja ? "観測" : "Observed",
+        value: step.status === "pass" ? (ja ? "表示されている" : "Visible") : (ja ? "表示されていない" : "Not visible"),
+      });
+    } else if (step.kind === "assert_attribute") {
+      const observed = step.after_text
+        ? step.after_text
+        : step.status === "pass"
+          ? (ja ? "（空）" : "(empty)")
+          : (ja ? "なし" : "None");
+      lines.push({ label: ja ? "観測した値" : "Observed value", value: observed });
+    } else {
+      lines.push({ label: ja ? "観測した文字" : "Observed text", value: step.after_text || (ja ? "なし" : "None") });
+    }
   }
 
   if (step.status === "blocked_for_safety") {
@@ -559,7 +674,7 @@ export function journeyStepReport(
           : step.kind === "open_url"
             ? (ja ? "対象の URL を開く" : "Open the target URL")
             : "";
-    if (expected) lines.push({ label: ja ? "期待" : "Expected", value: expected });
+    if (expected && !step.kind.startsWith("assert_")) lines.push({ label: ja ? "期待" : "Expected", value: expected });
     lines.push(...journeyRuntimeObservedLines({
       kind: step.kind,
       status: step.status,
@@ -618,7 +733,7 @@ export function journeyStepReport(
         ? (ja ? "未測定 — ファイルをドロップすると対象サイトへ送られることがある。測るにはドロップを許可する。" : "Not measured — dropping a file can send it to the target website. Permit drop to measure this.")
         : "";
     lines.push({ label: ja ? "結果" : "Result", value: uploadNote || journeyStatusLabel(step.status, locale) });
-    const coded = step.detail === "url_mismatch" || step.detail === "outcome_mismatch" || step.detail === "outcome_not_defined" || step.detail === "value_not_set" || step.detail === "file_input" || step.detail === "file_input_missing" || step.detail === "file_not_provided" || step.detail === "file_selected" || step.detail === "file_dropped" || step.detail === "drop_not_permitted" || step.detail === "download_not_started";
+    const coded = step.detail === "url_mismatch" || step.detail === "url_not_expected" || step.detail === "text_mismatch" || step.detail === "page_text_mismatch" || step.detail === "attribute_mismatch" || step.detail === "attribute_missing" || step.detail === "absent" || step.detail === "not_visible" || step.detail === "key_not_allowed" || step.detail === "text_match" || step.detail === "page_text_match" || step.detail === "attribute_match" || step.detail === "hovered" || step.detail === "dragged" || step.detail === "outcome_mismatch" || step.detail === "outcome_not_defined" || step.detail === "value_not_set" || step.detail === "file_input" || step.detail === "file_input_missing" || step.detail === "file_not_provided" || step.detail === "file_selected" || step.detail === "file_dropped" || step.detail === "drop_not_permitted" || step.detail === "download_not_started";
     if (step.detail && !coded && step.detail !== reason && !/^https?:\/\//i.test(step.detail) && step.detail !== step.url_after) {
       lines.push({ label: "Evidence", value: step.detail });
     }

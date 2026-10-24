@@ -1211,6 +1211,83 @@ export function buildJourneyFunctionCode(): string {
           detail = "value_mismatch";
           stopped = true;
         } else detail = "value_verified";
+      } else if (kind === "hover") {
+        const exists = await page.$(selector);
+        if (!exists) throw new Error("selector_missing");
+        await page.hover(selector);
+        detail = "hovered";
+      } else if (kind === "key") {
+        const keyName = String(value || "");
+        const allowedKey = keyName === "Enter" || keyName === "Escape" || keyName === "Tab" || keyName === "ArrowUp" || keyName === "ArrowDown" || keyName === "ArrowLeft" || keyName === "ArrowRight" || keyName === "Space" || keyName === "Backspace";
+        if (!allowedKey) {
+          status = "fail";
+          detail = "key_not_allowed";
+          stopped = true;
+        } else {
+          const label = await page.evaluate((sel) => {
+            const el = sel ? document.querySelector(sel) : document.activeElement;
+            if (!el) return "";
+            return [el.innerText, el.getAttribute("aria-label"), el.getAttribute("value"), el.id].filter(Boolean).join(" ").slice(0, 240);
+          }, selector || "").catch(() => "");
+          const effect = keyName === "Enter" ? sideEffect(label + " " + selector) : "";
+          const permitted = String(step && step.permitted_side_effect ? step.permitted_side_effect : "");
+          if (effect && permitted !== effect) {
+            status = "blocked_for_safety";
+            detail = effect;
+            stopped = true;
+          } else {
+            if (selector) {
+              const exists = await page.$(selector);
+              if (!exists) throw new Error("selector_missing");
+              await page.focus(selector);
+            }
+            await page.keyboard.press(keyName);
+            detail = keyName;
+          }
+        }
+      } else if (kind === "drag") {
+        const dropSelector = String(step && step.expect_selector ? step.expect_selector : "");
+        await page.evaluate((from) => {
+          const el = document.querySelector(from);
+          if (el && el.scrollIntoView) el.scrollIntoView({ block: "center", inline: "center" });
+        }, selector).catch(() => {});
+        const boxes = await page.evaluate((from, to) => {
+          function box(sel) {
+            const el = document.querySelector(sel);
+            if (!el) return null;
+            const r = el.getBoundingClientRect();
+            if (r.width < 2 || r.height < 2) return null;
+            return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+          }
+          return { from: box(from), to: box(to) };
+        }, selector, dropSelector);
+        const fromBox = boxes && boxes.from;
+        const toBox = boxes && boxes.to;
+        const dragLabel = await page.evaluate((from, to) => {
+          function text(sel) {
+            const el = document.querySelector(sel);
+            if (!el) return "";
+            return [el.innerText, el.getAttribute("aria-label"), el.id].filter(Boolean).join(" ");
+          }
+          return (text(from) + " " + text(to)).slice(0, 240);
+        }, selector, dropSelector).catch(() => "");
+        const dragEffect = sideEffect(dragLabel);
+        const dragPermitted = String(step && step.permitted_side_effect ? step.permitted_side_effect : "");
+        if (dragEffect && dragPermitted !== dragEffect) {
+          status = "blocked_for_safety";
+          detail = dragEffect;
+          stopped = true;
+        } else if (!fromBox || !toBox) {
+          status = "fail";
+          detail = "absent";
+          stopped = true;
+        } else {
+          await page.mouse.move(fromBox.x, fromBox.y);
+          await page.mouse.down();
+          await page.mouse.move(toBox.x, toBox.y, { steps: 8 });
+          await page.mouse.up();
+          detail = "dragged";
+        }
       } else if (kind === "wait") {
         await sleep(stepBudget(step, 1000));
       } else if (kind === "assert_visible") {
@@ -1223,31 +1300,109 @@ export function buildJourneyFunctionCode(): string {
           const rect = el.getBoundingClientRect();
           return rect.width >= 2 && rect.height >= 2;
         }, selector));
+        afterVisible = Boolean(visible);
         if (!visible) {
           status = "fail";
           detail = "not_visible";
           stopped = true;
         }
+      } else if (kind === "assert_present") {
+        const tag = await until(stepBudget(step, 1000), () => page.evaluate((sel) => {
+          const el = document.querySelector(sel);
+          return el ? String(el.tagName || "ELEMENT").toLowerCase() : "";
+        }, selector));
+        afterVisible = Boolean(tag);
+        if (!tag) {
+          status = "fail";
+          detail = "absent";
+          stopped = true;
+        } else {
+          detail = String(tag);
+        }
       } else if (kind === "assert_text") {
         const text = await until(stepBudget(step, 1000), () => page.evaluate((sel, expected) => {
           const el = document.querySelector(sel);
           const found = el ? String(el.innerText || "").replace(/\\s+/g, " ").trim().slice(0, 240) : "";
-          return found.includes(expected) ? found : "";
+          const want = String(expected || "").replace(/\\s+/g, " ").trim();
+          return found && found === want ? found : "";
         }, selector, value));
         if (!text) {
+          const observedText = await page.evaluate((sel) => {
+            const el = document.querySelector(sel);
+            return el ? String(el.innerText || "").replace(/\\s+/g, " ").trim().slice(0, 240) : "";
+          }, selector).catch(() => "");
+          afterText = observedText;
           status = "fail";
-          detail = "text_mismatch";
+          detail = observedText ? "text_mismatch" : "absent";
           stopped = true;
+        } else {
+          afterText = text;
+          detail = "text_match";
+        }
+      } else if (kind === "assert_page_text") {
+        const needle = String(value || "").replace(/\\s+/g, " ").trim();
+        const found = await until(stepBudget(step, 1000), () => page.evaluate((expected) => {
+          const text = String(document.body ? document.body.innerText : "").replace(/\\s+/g, " ");
+          return expected && text.indexOf(expected) >= 0 ? expected : "";
+        }, needle));
+        if (!found) {
+          status = "fail";
+          detail = "page_text_mismatch";
+          stopped = true;
+        } else {
+          afterText = found;
+          detail = "page_text_match";
+        }
+      } else if (kind === "assert_attribute") {
+        const attrName = String(step && step.expect_attribute ? step.expect_attribute : "").trim().slice(0, 80);
+        const expectedAttr = String(value || "");
+        if (!attrName) {
+          status = "fail";
+          detail = "attribute_missing";
+          stopped = true;
+        } else {
+          let sample = { present: false, value: null };
+          const deadline = Date.now() + stepBudget(step, 1000);
+          while (Date.now() <= deadline) {
+            sample = await page.evaluate((sel, name) => {
+              const el = document.querySelector(sel);
+              if (!el) return { present: false, value: null };
+              const got = el.getAttribute(name);
+              return { present: true, value: got };
+            }, selector, attrName).catch(() => ({ present: false, value: null }));
+            if (sample && sample.present && sample.value === expectedAttr) break;
+            if (Date.now() + 400 > deadline) break;
+            await sleep(400);
+          }
+          afterText = sample && sample.value != null ? String(sample.value).slice(0, 240) : "";
+          if (!sample || !sample.present) {
+            status = "fail";
+            detail = "absent";
+            stopped = true;
+          } else if (sample.value !== expectedAttr) {
+            status = "fail";
+            detail = "attribute_mismatch";
+            stopped = true;
+          } else {
+            detail = "attribute_match";
+          }
         }
       } else if (kind === "assert_url") {
+        const expectedUrl = String(value || "").trim();
         const href = await until(stepBudget(step, 1000), async () => {
           const current = String(page.url() || "");
-          return current.includes(value) ? current : "";
+          if (!expectedUrl) return "";
+          if (/^https?:\\/\\//i.test(expectedUrl)) {
+            return current.replace(/\\/+$/, "") === expectedUrl.replace(/\\/+$/, "") ? current : "";
+          }
+          return current.indexOf(expectedUrl) >= 0 ? current : "";
         });
         if (!href) {
           status = "fail";
-          detail = "url_mismatch";
+          detail = "url_not_expected";
           stopped = true;
+        } else {
+          detail = href;
         }
       } else {
         status = "fail";
