@@ -34,16 +34,6 @@ const MAJOR_COUNTRIES: RegionOption[] = [
 /** 地域選択の初期値（主要国の先頭） */
 export const DEFAULT_OBSERVATION_REGION = MAJOR_COUNTRIES[0]!.value;
 
-/** Starter：米国の代表州 */
-const STARTER_US: RegionOption[] = [
-  { value: "US-CA", label: "US · California" },
-  { value: "US-NY", label: "US · New York" },
-  { value: "US-TX", label: "US · Texas" },
-  { value: "US-WA", label: "US · Washington" },
-  { value: "US-FL", label: "US · Florida" },
-  { value: "US-IL", label: "US · Illinois" },
-];
-
 const US_STATES: [string, string][] = [
   ["AL", "Alabama"],
   ["AK", "Alaska"],
@@ -102,12 +92,15 @@ const PRO_US: RegionOption[] = US_STATES.map(([abbr, name]) => ({
   label: `US · ${name}`,
 }));
 
+const ALL_REGIONS: RegionOption[] = [...MAJOR_COUNTRIES, ...PRO_US];
+
 export function getRegionOptions(planId: PlanId): RegionOption[] {
-  if (planId === "pro") {
-    return [...MAJOR_COUNTRIES, ...PRO_US];
-  }
-  /** Starter: 主要国 + 代表州（UI の地域欄と一致） */
-  return [...MAJOR_COUNTRIES, ...STARTER_US];
+  const byPlan: Record<PlanId, RegionOption[]> = {
+    freeplan: ALL_REGIONS,
+    starter: ALL_REGIONS,
+    pro: ALL_REGIONS,
+  };
+  return byPlan[planId];
 }
 
 const ALL_OBSERVATION_REGION_VALUES = new Set([

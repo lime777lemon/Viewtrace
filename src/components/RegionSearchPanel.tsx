@@ -148,7 +148,9 @@ export function RegionSearchPanel({
               <p className="mt-2 text-sm text-ink-muted">
                 {lockedPlanId === "pro"
                   ? `${labels.planPro} · ${labels.planProHint}`
-                  : `${labels.planStarter} · ${labels.planStarterHint}`}
+                  : lockedPlanId === "starter"
+                    ? `${labels.planStarter} · ${labels.planStarterHint}`
+                    : labels.planTrialHint}
               </p>
             ) : (
               <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label={labels.planLabel}>

@@ -1,7 +1,7 @@
 /** freeplan = 無料トライアル／未課金。starter = 有料 Starter（Stripe）。 */
 export type PlanId = "freeplan" | "starter" | "pro";
 
-export type LocationsKey = "us_major_countries" | "all_us_states_major_countries";
+export type LocationsKey = "all_us_states_major_countries";
 
 export type PlanDefinition = {
   id: PlanId;
@@ -61,11 +61,11 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     priceMonthlyUsd: 0,
     monthlyObservations: 80,
     retentionDays: 7,
-    locationsKey: "us_major_countries",
-    coverageLabel: "米国＋主要国",
+    locationsKey: "all_us_states_major_countries",
+    coverageLabel: "米国全州＋主要国",
     audienceLabel: "無料トライアル・未課金",
     csvExport: true,
-    allUsStates: false,
+    allUsStates: true,
     snapshotFullPage: true,
     autoObservationWatch: false,
     watchMaxDailyRepeats: 1,
@@ -81,11 +81,11 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     priceMonthlyUsd: 15,
     monthlyObservations: 500,
     retentionDays: 7,
-    locationsKey: "us_major_countries",
-    coverageLabel: "米国＋主要国",
+    locationsKey: "all_us_states_major_countries",
+    coverageLabel: "米国全州＋主要国",
     audienceLabel: "試す・軽い検証用途向け",
     csvExport: true,
-    allUsStates: false,
+    allUsStates: true,
     snapshotFullPage: true,
     autoObservationWatch: true,
     watchMaxDailyRepeats: 1,

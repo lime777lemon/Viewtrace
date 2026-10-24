@@ -5,6 +5,7 @@ export type RegionSearchLabels = {
   planStarter: string;
   planPro: string;
   planStarterHint: string;
+  planTrialHint: string;
   planProHint: string;
   regionLabel: string;
   regionAria: string;

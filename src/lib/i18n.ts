@@ -73,7 +73,8 @@ export const copy = {
       planLabel: "カバレッジ",
       planStarter: "Starter",
       planPro: "Pro",
-      planStarterHint: "米国の代表州＋主要国",
+      planStarterHint: "米国全州＋主要国",
+      planTrialHint: "米国全州＋主要国",
       planProHint: "米国全州＋主要国",
       regionLabel: "観測地域（登録後に使用）",
       regionAria: "登録後のオブザベーションで使う地域",
@@ -561,7 +562,7 @@ export const copy = {
         features: [
           "月500回のオブザベーション",
           "GEOルーティング込み（指定した国・州からレジデンシャルプロキシ経由で着地ページを取得）",
-          "対象地域：主要国（GB / DE / FR / JP / AU / CA）＋米国代表州",
+          "対象地域：主要国＋米国全州",
           "スクリーンショット保存：7日間（期限後も URL・地域・時刻・ハッシュは残る）",
           "SEO・SNSに関係するページメタデータも記録（title、description、canonical、robots、OG）",
           "フルページのスクリーンショット（保存は7日間）",
@@ -849,7 +850,7 @@ export const copy = {
       invalidUrlQuery:
         "URL の形式を確認してください。`https://` で始まる有効なアドレス（例: https://example.com）を入力してください。コピー時の不可視文字や全角記号があると失敗することがあります。",
       invalidRegionQuery:
-        "地域の指定が無効でした。一覧から選び直してください。Starter では米国の代表州と主要国のみ選べます。",
+        "地域の指定が無効でした。一覧から選び直してください。",
       invalidWebhookQuery:
         "Webhook URL は https で始まる有効な URL を指定してください（Slack Incoming Webhook 等）。",
       upgradeHint:
@@ -2228,7 +2229,8 @@ export const copy = {
       planLabel: "Coverage",
       planStarter: "Starter",
       planPro: "Pro",
-      planStarterHint: "Representative US states + major countries",
+      planStarterHint: "All US states + major countries",
+      planTrialHint: "All US states + major countries",
       planProHint: "All US states + major countries",
       regionLabel: "Region (after sign-up)",
       regionAria: "Region for observations after sign-up",
@@ -2715,7 +2717,7 @@ export const copy = {
         features: [
           "500 observations / month",
           "GEO routing included (residential proxy from the selected country or US state)",
-          "Regions: major countries (GB / DE / FR / JP / AU / CA) + representative US states",
+          "Regions: major countries + all US states",
           "7-day screenshot retention (URL, region, time, and hashes remain after)",
           "Also records SEO- and social-related page metadata (title, description, canonical, robots, OG)",
           "Full-page screenshots (7-day retention)",
@@ -3007,7 +3009,7 @@ export const copy = {
       invalidUrlQuery:
         "Check the URL. Use a valid address starting with https:// (e.g. https://example.com). Invisible characters or full-width punctuation from copy-paste can cause this to fail.",
       invalidRegionQuery:
-        "Invalid region. Pick again from the list. On Starter, only the listed US states and major countries are available.",
+        "Invalid region. Pick again from the list.",
       invalidWebhookQuery:
         "Webhook URL must be a valid HTTPS URL (e.g. a Slack Incoming Webhook).",
       upgradeHint:

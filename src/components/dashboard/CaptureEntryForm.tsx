@@ -257,7 +257,11 @@ export function CaptureEntryForm({
     >
       <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">{labels.planLabel}</p>
       <p className="mt-2 text-sm text-ink-muted">
-        {planId === "pro" ? `${labels.planPro} · ${labels.planProHint}` : `${labels.planStarter} · ${labels.planStarterHint}`}
+        {planId === "pro"
+          ? `${labels.planPro} · ${labels.planProHint}`
+          : planId === "starter"
+            ? `${labels.planStarter} · ${labels.planStarterHint}`
+            : labels.planTrialHint}
       </p>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2 lg:gap-8">
