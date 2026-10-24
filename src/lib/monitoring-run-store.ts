@@ -33,7 +33,7 @@ import {
   type MonitoringJourneyStepInput,
   type MonitoringRunDiff,
 } from "@/lib/monitoring-run-diff";
-import { monitoringJourneyFact, parseMonitoringRunPlan, type MonitoringPageFact, monitoringPageFact } from "@/lib/monitoring-run";
+import { monitoringJourneyFact, parseMonitoringRunPlan, type MonitoringPageFact, type MonitoringPreviousPage, monitoringPageFact } from "@/lib/monitoring-run";
 import type { Observation } from "@/lib/demo/observations";
 import type { RegionalInteractionCheckV1 } from "@/lib/observation-regional-interaction";
 
@@ -270,6 +270,7 @@ export async function loadMonitoringRun(
   diff: MonitoringRunDiff;
   alerts: MonitoringAlert[];
   diffStored: boolean;
+  previousPages: MonitoringPreviousPage[];
 } | null> {
   const { data, error } = await supabase
     .from("monitoring_runs")
@@ -485,8 +486,8 @@ export async function loadMonitoringRun(
     alerts: diffStored && storedAlerts ? storedAlerts : computedAlerts,
     diffStored,
     previousPages: [...previousScope.observations.values()].map((obs) => ({
-      region: obs.regionValue,
-      label: obs.regionLabel || obs.regionValue,
+      region: obs.regionValue ?? "",
+      label: obs.regionLabel || obs.regionValue || "",
       device: obs.captureConditions?.device_class === "mobile" || obs.captureConditions?.device_class === "desktop"
         ? obs.captureConditions.device_class
         : null,

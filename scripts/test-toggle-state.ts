@@ -78,8 +78,8 @@ const report = buildEvidenceReportFacts({
         selector: "#mobile-menu",
         note: "open verified, close verified",
         toggle: { open: "working", close: "working", close_by: "escape" },
-        t0: { visibility: "hidden", opacity: "0", expanded: "false", h: 0, exists: false },
-        t1: { visibility: "visible", opacity: "1", expanded: "true", h: 284, exists: true },
+        t0: { visibility: "hidden", opacity: 0, expanded: "false", h: 0, exists: false },
+        t1: { visibility: "visible", opacity: 1, expanded: "true", h: 284, exists: true },
         timing: { response_ms: 83, open_ms: 290, in_viewport: true },
         window: {
           executed: true,

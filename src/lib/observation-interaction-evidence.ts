@@ -40,6 +40,7 @@ export type InteractionElementState = {
   index?: number;
   hidden?: string | null;
   className?: string;
+  exists?: boolean;
 };
 
 /** One real-browser action: before, the action, then later samples. Network success is not a rendered change. */
