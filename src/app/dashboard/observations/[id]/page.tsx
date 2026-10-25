@@ -500,6 +500,7 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
           limit={plan.syntheticInteractionMonthly}
         />
 
+        <div id={auditEvidenceDomId("interaction")} className="scroll-mt-28">
         <ObservationInteractionCheckPanel
           observationId={obs.id}
           regionLabel={obs.regionLabel}
@@ -519,6 +520,7 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
           observationUrl={obs.url}
           journeyTargets={journeyTargets}
         />
+        </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <ObservationHtmlHeadSignalsPanel

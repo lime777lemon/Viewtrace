@@ -33,6 +33,12 @@ import {
   stampDiscoveryFullAt,
   WATCH_INTERACTION_MIN_BUDGET_MS,
 } from "@/lib/observation-watch-interaction";
+import { changeAuditEmailSection } from "@/lib/observation-change-audit-email";
+import {
+  runWatchChangeAudit,
+  WATCH_CHANGE_AUDIT_MIN_BUDGET_MS,
+  watchChangeAuditTrigger,
+} from "@/lib/observation-change-audit-run";
 import {
   behaviorAlertEmailCopy,
   behaviorAlertTransitions,
@@ -244,6 +250,8 @@ export async function POST(req: Request) {
   let interactionRan = 0;
   let interactionSkipped = 0;
   let interactionAlerted = 0;
+  let changeAuditRan = 0;
+  let changeAuditSkipped = 0;
 
   const dashboardUrl = `${getAppOriginForEmailLinks()}/dashboard/observations`;
 
@@ -1040,6 +1048,49 @@ export async function POST(req: Request) {
       "viewtrace.behavior.map_alerts": behaviorMapAlerts.length,
     });
 
+    /**
+     * Change Audit（Evidence Interpreter）。Same なら走らない。Behavior Diff の Alert か Screenshot Changed のときだけ、
+     * 保存済みの Observation / 直前 Compare / Behavior Diff を読んで、記録の下の「読み」を作る。再計測はしない。
+     * Pro の上・月間上限あり。失敗しても Alert メール自体は止めない。
+     */
+    let changeAuditSection: { text: string[]; html: string } | null = null;
+    const auditTrigger = watchChangeAuditTrigger({
+      behaviorAlerts,
+      behaviorMapAlerts,
+      screenshotVerdict: screenshot?.verdict ?? null,
+    });
+    if (auditTrigger && blobUrl) {
+      const timeLeft = CRON_BUDGET_MS - (Date.now() - cronStartedAt);
+      if (timeLeft < WATCH_CHANGE_AUDIT_MIN_BUDGET_MS) {
+        changeAuditSkipped += 1;
+        console.warn("[cron] change audit skipped", { watchId, reason: "time_budget", timeLeft });
+      } else {
+        try {
+          const auditResult = await runWatchChangeAudit(svc, {
+            userId,
+            plan,
+            observation: obsForHash,
+            previous,
+            behaviorAlerts,
+            behaviorMapAlerts,
+            screenshotVerdict: screenshot?.verdict ?? null,
+            locale: "ja",
+          });
+          if (auditResult.ran) {
+            changeAuditRan += 1;
+            changeAuditSection = changeAuditEmailSection(auditResult.audit, { locale: "ja", recordUrl: openUrl });
+          } else if (auditResult.reason === "quota" || auditResult.reason === "plan") {
+            changeAuditSkipped += 1;
+          }
+        } catch (err) {
+          console.warn("[cron] change audit unavailable", {
+            watchId,
+            error: err instanceof Error ? err.message : String(err),
+          });
+        }
+      }
+    }
+    setSpanAttrs(span, { "viewtrace.change_audit.attached": Boolean(changeAuditSection) });
 
     if (webhookUrl) {
       const posted = await postObservationWebhook(webhookUrl, {
@@ -1078,6 +1129,7 @@ export async function POST(req: Request) {
           `Region / 地域: ${region}`,
           blobUrl ? `Snapshot / スナップショット: ${blobUrl}` : "Snapshot: not stored (check dashboard).",
           pageSignalsEmail ? pageSignalsEmail.text : "",
+          ...(changeAuditSection ? changeAuditSection.text : []),
           "",
           `Open record / 記録を開く: ${openUrl}`,
           compareOpenUrl ? `Open compare / 比較を開く: ${compareOpenUrl}` : "",
@@ -1095,6 +1147,7 @@ export async function POST(req: Request) {
             ? `<p><a href="${escapeHtml(blobUrl)}">Snapshot link</a></p>`
             : "<p>Snapshot was not stored to Blob; open the dashboard for details.</p>",
           pageSignalsEmail ? pageSignalsEmail.html : "",
+          changeAuditSection ? changeAuditSection.html : "",
           observationRecordLinkHtml(openUrl),
           compareOpenUrl ? observationCompareLinkHtml(compareOpenUrl) : "",
           emailAccountHintHtml(userEmail),
@@ -1130,6 +1183,7 @@ export async function POST(req: Request) {
           `URL: ${url}`,
           `Region / 地域: ${region}`,
           pageSignalsEmail ? pageSignalsEmail.text : "",
+          ...(changeAuditSection ? changeAuditSection.text : []),
           "",
           `Open compare / 比較を開く: ${compareOpenUrl}`,
           `Open record / 記録を開く: ${openUrl}`,
@@ -1142,6 +1196,7 @@ export async function POST(req: Request) {
           `<p><strong>URL</strong><br/>${escapeHtml(url)}</p>`,
           `<p><strong>Region</strong> / 地域<br/>${escapeHtml(region)}</p>`,
           pageSignalsEmail ? pageSignalsEmail.html : "",
+          changeAuditSection ? changeAuditSection.html : "",
           observationCompareLinkHtml(compareOpenUrl),
           observationRecordLinkHtml(openUrl),
           emailAccountHintHtml(userEmail),
@@ -1217,6 +1272,7 @@ export async function POST(req: Request) {
         const behaviorCopy = behaviorAlertEmailCopy({ region, alerts: behaviorAlerts, mapDiffs: behaviorMapAlerts });
         const text = [
           ...behaviorCopy.lines,
+          ...(changeAuditSection ? changeAuditSection.text : []),
           "",
           compareOpenUrl ? `Open compare / 比較を開く: ${compareOpenUrl}` : "",
           `Open record / 記録を開く: ${openUrl}`,
@@ -1228,6 +1284,7 @@ export async function POST(req: Request) {
         const html = [
           "<p><strong>Observed interaction behavior changed</strong></p>",
           ...behaviorCopy.lines.filter((line) => line !== "").map((line) => `<p>${escapeHtml(line)}</p>`),
+          changeAuditSection ? changeAuditSection.html : "",
           compareOpenUrl ? observationCompareLinkHtml(compareOpenUrl) : "",
           observationRecordLinkHtml(openUrl),
           emailAccountHintHtml(userEmail),
@@ -1291,6 +1348,8 @@ export async function POST(req: Request) {
     interactionRan,
     interactionSkipped,
     interactionAlerted,
+    changeAuditRan,
+    changeAuditSkipped,
     journeyRan,
     journeySkipped,
     monitoringRan,

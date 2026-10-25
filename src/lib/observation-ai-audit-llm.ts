@@ -70,6 +70,8 @@ export async function tryLlmPageAudit(input: {
         "各指摘は text（What changed）/ impact（high|medium|low。点数ではない）/ evidence（allowed_evidence から1つ）/ check（確認してよいこと）を必ず付ける。",
         "画面に見えた差は kind=visible、evidence=screenshot。地域の指定と取得の差は kind=region_time、evidence=geo。",
         "requested_region の US-XX を Observed の州として書かない。observed_state があるときだけ州を書く。",
+        "behavior_transitions / behavior_map_diffs があるときは、操作検証（Interaction）の差を kind=page、evidence=interaction で書く。測った遷移（Working → No rendered state change observed など）だけを書き、JavaScript が壊れている・設定ミスといった原因は証拠が無ければ書かない。",
+        "summary は『何が変わったか』『どの証拠を見ればよいか』を 1〜2 文で。",
         "日本語で短く書く。",
       ].join("\n")
     : [
@@ -79,6 +81,8 @@ export async function tryLlmPageAudit(input: {
         "Each note needs text (What changed), impact (high|medium|low, not a score), evidence (one of allowed_evidence), and check (what to verify).",
         "Visible screenshot differences: kind=visible, evidence=screenshot. Requested vs observed region: kind=region_time, evidence=geo.",
         "Never copy requested US-XX into Observed. Name a state only when observed_state is present.",
+        "When behavior_transitions / behavior_map_diffs are present, describe the interaction change with kind=page, evidence=interaction. State only the measured transition (e.g. Working → No rendered state change observed). Do not claim a cause such as broken JavaScript or misconfiguration without evidence.",
+        "The summary says what changed and which evidence to look at, in one or two sentences.",
         "Write the summary, each note text, and each check in English.",
       ].join("\n");
 

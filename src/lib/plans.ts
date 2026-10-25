@@ -44,6 +44,12 @@ export type PlanDefinition = {
    * ラボと同じ Browserless 原価帯。Watch では自動実行しない。
    */
   syntheticInteractionMonthly: number;
+  /**
+   * Watch の Alert（Behavior Diff / Screenshot Changed）に対して自動で走る Change Audit の月間上限。
+   * 再計測はしない（保存済み Evidence を読むだけ）。Browserless 原価は増えず LLM 原価だけ。
+   * Change Audit は Pro の上。回数は仮置き。クレジットパックにしない。
+   */
+  watchChangeAuditMonthly: number;
 };
 
 /** 無料トライアル（LP・請求設計と一致） */
@@ -73,6 +79,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     subpageMaxLinks: 3,
     fieldCwvMonthly: 10,
     syntheticInteractionMonthly: 2,
+    watchChangeAuditMonthly: 0,
   },
   starter: {
     id: "starter",
@@ -93,6 +100,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     subpageMaxLinks: 5,
     fieldCwvMonthly: 50,
     syntheticInteractionMonthly: 10,
+    watchChangeAuditMonthly: 0,
   },
   pro: {
     id: "pro",
@@ -114,6 +122,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     subpageMaxLinks: 10,
     fieldCwvMonthly: 150,
     syntheticInteractionMonthly: 30,
+    watchChangeAuditMonthly: 30,
   },
 };
 

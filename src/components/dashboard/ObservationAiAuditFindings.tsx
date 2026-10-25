@@ -37,6 +37,7 @@ type Props = {
     | "evidenceHtmlLang"
     | "evidenceGeo"
     | "evidenceFinalUrl"
+    | "evidenceInteraction"
     | "mixHint"
   >;
   notes: AiAuditNote[];

@@ -40,6 +40,7 @@ export type ObservationAiAuditCopy = {
   evidenceHtmlLang: string;
   evidenceGeo: string;
   evidenceFinalUrl: string;
+  evidenceInteraction: string;
   mixHint: string;
 };
 
@@ -83,6 +84,7 @@ export function observationAiAuditCopyFrom(t: {
   aiAuditEvidenceHtmlLang: string;
   aiAuditEvidenceGeo: string;
   aiAuditEvidenceFinalUrl: string;
+  aiAuditEvidenceInteraction: string;
   aiAuditMixHint: string;
 }): ObservationAiAuditCopy {
   return {
@@ -125,6 +127,7 @@ export function observationAiAuditCopyFrom(t: {
     evidenceHtmlLang: t.aiAuditEvidenceHtmlLang,
     evidenceGeo: t.aiAuditEvidenceGeo,
     evidenceFinalUrl: t.aiAuditEvidenceFinalUrl,
+    evidenceInteraction: t.aiAuditEvidenceInteraction,
     mixHint: t.aiAuditMixHint,
   };
 }
@@ -153,6 +156,7 @@ export function aiAuditEvidenceLabel(
     | "evidenceHtmlLang"
     | "evidenceGeo"
     | "evidenceFinalUrl"
+    | "evidenceInteraction"
   >,
   evidence: AiAuditEvidenceId,
 ): string {
@@ -181,5 +185,7 @@ export function aiAuditEvidenceLabel(
       return copy.evidenceGeo;
     case "final_url":
       return copy.evidenceFinalUrl;
+    case "interaction":
+      return copy.evidenceInteraction;
   }
 }

@@ -3,6 +3,12 @@ import type { Locale } from "@/lib/i18n";
 import { classifyHtmlHeadSignals } from "@/lib/observation-html-signals-readout";
 import { compareObservations, type ObservationCompareFieldKey } from "@/lib/observation-compare";
 import { observationGeoCopyFrom, observationGeoReadout } from "@/lib/observation-geo-readout";
+import {
+  behaviorStatusLabel,
+  behaviorTypeLabel,
+  type BehaviorMapDiffV1,
+  type BehaviorTransitionV1,
+} from "@/lib/observation-behavior-diff";
 import { copy } from "@/lib/i18n";
 
 export const PAGE_AUDIT_PROMPT_VERSION = "page-audit-v2";
@@ -24,8 +30,18 @@ export const AI_AUDIT_EVIDENCE_IDS = [
   "html_lang",
   "geo",
   "final_url",
+  "interaction",
 ] as const;
 export type AiAuditEvidenceId = (typeof AI_AUDIT_EVIDENCE_IDS)[number];
+
+/**
+ * Watch の Behavior Diff から渡す操作検証の差。Change Audit はこれを読むだけで、再計測はしない。
+ * `transitions` は regression / alert_candidate のみ（unchanged は渡さない）。
+ */
+export type AuditBehaviorContext = {
+  transitions: BehaviorTransitionV1[];
+  mapDiffs: BehaviorMapDiffV1[];
+};
 
 export type AiAuditNote = {
   kind: AiAuditNoteKind;
@@ -154,11 +170,32 @@ function compareChangedKeys(previous: Observation | null | undefined, obs: Obser
 export function observationAuditFacts(
   obs: Observation,
   previous?: Observation | null,
+  behavior?: AuditBehaviorContext | null,
 ): Record<string, unknown> {
   const signals = obs.captureConditions?.html_signals;
   const geo = obs.captureConditions?.geo;
   const compare = compareChangedKeys(previous, obs);
+  const behaviorFacts = behavior
+    ? {
+        behavior_transitions: behavior.transitions.map((row) => ({
+          interaction: behaviorTypeLabel(row.type),
+          previous: behaviorStatusLabel(row.previous),
+          current: behaviorStatusLabel(row.current),
+          kind: row.kind,
+        })),
+        behavior_map_diffs: behavior.mapDiffs.map((row) => ({
+          section: row.section,
+          label: row.label,
+          detail: row.detail,
+          interaction: row.type ? behaviorTypeLabel(row.type) : null,
+        })),
+        behavior_note:
+          "Working means a rendered/runtime state change was measured. No rendered state change observed means the trigger was executed but nothing measurable changed. It does not by itself prove JavaScript is broken.",
+      }
+    : {};
   return {
+    ...behaviorFacts,
+    web_http_status: obs.captureConditions?.web_facts?.http.status ?? null,
     url: obs.url,
     requested_region: obs.regionValue ?? null,
     requested_label: obs.regionLabel,
@@ -220,10 +257,46 @@ export function buildRecordPageAudit(
   obs: Observation,
   locale: Locale,
   previous?: Observation | null,
+  behavior?: AuditBehaviorContext | null,
 ): ObservationAiAudit {
   const ja = locale === "ja";
   const notes: AiAuditNote[] = [];
   const signals = obs.captureConditions?.html_signals;
+
+  // 操作検証の差（Behavior Diff）。測った結果の遷移だけを書き、原因は書かない。
+  for (const row of behavior?.transitions ?? []) {
+    const type = behaviorTypeLabel(row.type);
+    const prev = behaviorStatusLabel(row.previous);
+    const curr = behaviorStatusLabel(row.current);
+    notes.push(
+      finding(
+        "page",
+        ja
+          ? `${type}: 前回 ${prev} → 今回 ${curr}`
+          : `${type}: ${prev} → ${curr}`,
+        row.kind === "regression" ? "high" : "medium",
+        "interaction",
+        ja
+          ? `記録の Interaction evidence で ${type} の対象要素と状態の変化を確認する。`
+          : `Open the Interaction evidence on the record and check the ${type} target and its state change.`,
+      ),
+    );
+  }
+  for (const row of behavior?.mapDiffs ?? []) {
+    if (row.section === "unchanged") continue;
+    const head = row.section === "new" ? (ja ? "新しく検出" : "Newly detected") : row.section === "changed" ? (ja ? "検証結果が変化" : "Verification changed") : (ja ? "前回あった対象が検出されない" : "Previously present, not detected now");
+    notes.push(
+      finding(
+        "page",
+        `${head}: ${row.label}${row.detail ? ` — ${row.detail}` : ""}`,
+        row.section === "changed" ? "high" : row.section === "missing" ? "medium" : "low",
+        "interaction",
+        ja
+          ? "記録の Behavior Map で対象要素（selector）と前回の状態を確認する。"
+          : "Open the Behavior Map on the record and compare the target selector with the previous state.",
+      ),
+    );
+  }
 
   if (obs.status === "failure") {
     notes.push(
