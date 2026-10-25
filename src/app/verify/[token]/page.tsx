@@ -2,18 +2,27 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ViewtraceLogo } from "@/components/brand/ViewtraceLogo";
+import { EvidenceReportSheet } from "@/components/dashboard/EvidenceReportSheet";
 import { ObservationRegionReadout } from "@/components/dashboard/ObservationRegionReadout";
 import { EvidenceReportObservationDetail } from "@/components/evidence-report/EvidenceReportObservationDetail";
 import { PublicShareActions } from "@/components/verify/PublicShareActions";
 import { PublicVerifySnapshot } from "@/components/verify/PublicVerifySnapshot";
 import { VerifyViewBeacon } from "@/components/verify/VerifyViewBeacon";
-import { loadEvidenceReportObservationDetailForVerifyToken } from "@/lib/evidence-report-observation-detail";
+import { buildEvidenceReportFacts } from "@/lib/evidence-report";
+import {
+  loadEvidenceReportObservationDetailForVerifyToken,
+  type EvidenceReportObservationDetailData,
+} from "@/lib/evidence-report-observation-detail";
+import { observationAiAuditCopyFrom } from "@/lib/observation-ai-audit-copy";
 import { fetchObservationForPublicVerify } from "@/lib/observation-public-verify";
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
 import { copy } from "@/lib/i18n";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { observationGeoCopyFrom } from "@/lib/observation-geo-readout";
-import { sanitizeVerifyTokenParam } from "@/lib/observation-verify-token";
+import {
+  buildPublicVerifyUrlForObservation,
+  sanitizeVerifyTokenParam,
+} from "@/lib/observation-verify-token";
 
 export const dynamic = "force-dynamic";
 
@@ -48,10 +57,10 @@ export default async function PublicVerifyPage({ params }: Props) {
   if (!obs) notFound();
 
   /**
-   * 提出用: 表紙（画面と身元）のあとに、詳細画面と同じ内容をそのまま載せる。
-   * 再計測はしない。保存済みの行だけ。
+   * 提出用: 証拠レポートと同じ実測サマリー（EvidenceReportSheet）と、
+   * 詳細画面と同じ内容を載せる。再計測はしない。保存済みの行だけ。
    */
-  let detail = null;
+  let detail: EvidenceReportObservationDetailData | null = null;
   try {
     detail = await loadEvidenceReportObservationDetailForVerifyToken(token);
   } catch (error) {
@@ -69,6 +78,63 @@ export default async function PublicVerifyPage({ params }: Props) {
         : td.statusPending;
   const finalUrl = obs.htmlSignals?.final_url?.trim() || "";
   const geoCopy = observationGeoCopyFrom(td);
+  const tr = copy[locale].observationVerificationReport;
+  const verifyUrl = buildPublicVerifyUrlForObservation(token);
+  const facts = detail
+    ? buildEvidenceReportFacts({
+        observation: detail.obs,
+        locale,
+        siblings: detail.compareSiblings,
+        session: detail.storedScroll?.result.discovery?.session ?? null,
+        behaviorTypes: detail.storedScroll?.result.types ?? null,
+        synthetic: detail.storedSynthetic?.result ?? null,
+        journeyRuns: (detail.checkRun?.journeyRuns ?? []).map((row) => ({
+          region: row.region,
+          deviceClass: row.deviceClass,
+          status: row.status,
+          steps: row.steps,
+        })),
+      })
+    : null;
+  const reportCopy = {
+    title: t.title,
+    subtitle: t.subtitle,
+    disclaimer: t.disclaimer,
+    fieldObservationId: t.fieldObservationId,
+    fieldUrl: t.fieldUrl,
+    fieldCaptureTime: t.fieldTimestamp,
+    fieldCountry: t.fieldRegion,
+    fieldScreenshot: tr.fieldScreenshot,
+    fieldSha256: t.fieldSha256,
+    fieldSha256Hint: t.fieldSha256Hint,
+    fieldContentHash: tr.fieldContentHash,
+    fieldVerifyUrl: tr.fieldVerifyUrl,
+    fieldStatus: t.fieldStatus,
+    statusSuccess: td.statusSuccess,
+    statusFailure: td.statusFailure,
+    statusPending: td.statusPending,
+    noScreenshot: t.noScreenshot,
+    fieldRequested: tr.fieldRequested,
+    fieldObserved: tr.fieldObserved,
+    sectionReachability: tr.sectionReachability,
+    fieldHttp: tr.fieldHttp,
+    fieldFinalUrl: t.fieldFinalUrl,
+    fieldPageTitle: tr.fieldPageTitle,
+    fieldDns: tr.fieldDns,
+    fieldTls: tr.fieldTls,
+    unmeasured: tr.unmeasured,
+    sectionDetected: tr.sectionDetected,
+    detectedHint: tr.detectedHint,
+    previousValue: tr.previousValue,
+    thisValue: tr.thisValue,
+    sectionBehavior: tr.sectionBehavior,
+    behaviorNote: tr.behaviorNote,
+    sectionJourney: tr.sectionJourney,
+    journeyNoSafeTarget: tr.journeyNoSafeTarget,
+    journeyIncomplete: tr.journeyIncomplete,
+    auditInference: tr.auditInference,
+  };
+  const aiAuditCopy = observationAiAuditCopyFrom(td);
 
   return (
     <div className="min-h-screen bg-surface">
@@ -98,87 +164,114 @@ export default async function PublicVerifyPage({ params }: Props) {
           printLabel={t.savePdf}
         />
 
-        <div className="mt-8 overflow-hidden rounded-2xl border border-border bg-surface-elevated">
-          {obs.snapshotImageUrl ? (
-            <PublicVerifySnapshot
-              imageUrl={obs.snapshotImageUrl}
-              contentType={obs.snapshotContentType}
-              labels={{
-                viewFullscreen: sv.viewFullscreen,
-                closeFullscreen: sv.closeFullscreen,
-                fullscreenHint: sv.fullscreenHint,
-              }}
+        {facts && detail ? (
+          <div className="mt-8">
+            <EvidenceReportSheet
+              copy={reportCopy}
+              observationId={detail.obs.id}
+              url={detail.obs.url}
+              capturedLabel={capturedLabel}
+              status={detail.obs.status}
+              snapshotImageUrl={detail.storedVisibleImage ?? obs.snapshotImageUrl}
+              snapshotSha256={detail.obs.snapshotSha256 ?? obs.snapshotSha256}
+              contentHash={detail.obs.contentHash ?? obs.contentHash}
+              verifyUrl={verifyUrl}
+              facts={facts}
+              aiAudit={detail.aiAudit}
+              aiAuditCopy={aiAuditCopy}
+              locale={locale}
+              aiAuditGeneratedAtLabel={
+                detail.aiAudit
+                  ? `${formatJaDateTime(detail.aiAudit.createdAt, locale)} · ${formatUtcLabel(detail.aiAudit.createdAt)}`
+                  : undefined
+              }
             />
-          ) : (
-            <p className="px-4 py-12 text-center text-sm text-ink-muted">
-              {obs.screenshotExpired
-                ? t.screenshotExpired
-                : obs.captureConditions?.homepage_observation?.mode === "live_check"
-                  ? sv.liveOnlyHint
-                  : t.noScreenshot}
-            </p>
-          )}
-        </div>
+          </div>
+        ) : (
+          <>
+            <div className="mt-8 overflow-hidden rounded-2xl border border-border bg-surface-elevated">
+              {obs.snapshotImageUrl ? (
+                <PublicVerifySnapshot
+                  imageUrl={obs.snapshotImageUrl}
+                  contentType={obs.snapshotContentType}
+                  labels={{
+                    viewFullscreen: sv.viewFullscreen,
+                    closeFullscreen: sv.closeFullscreen,
+                    fullscreenHint: sv.fullscreenHint,
+                  }}
+                />
+              ) : (
+                <p className="px-4 py-12 text-center text-sm text-ink-muted">
+                  {obs.screenshotExpired
+                    ? t.screenshotExpired
+                    : obs.captureConditions?.homepage_observation?.mode === "live_check"
+                      ? sv.liveOnlyHint
+                      : t.noScreenshot}
+                </p>
+              )}
+            </div>
 
-        <dl className="mt-6 divide-y divide-border rounded-2xl border border-border bg-surface-elevated px-5 sm:px-6">
-          <div className="grid gap-1 py-4 sm:grid-cols-[8.5rem_1fr] sm:gap-4">
-            <dt className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-              {t.fieldTimestamp}
-            </dt>
-            <dd className="text-sm text-ink">{capturedLabel}</dd>
-          </div>
-          <div className="grid gap-1 py-4 sm:grid-cols-[8.5rem_1fr] sm:gap-4">
-            <dt className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-              {t.fieldRegion}
-            </dt>
-            <dd className="text-sm text-ink">
-              <ObservationRegionReadout
-                requestedLabel={obs.regionLabel}
-                regionValue={obs.regionValue}
-                captureConditions={obs.captureConditions}
-                copy={geoCopy}
-                locale={locale}
-              />
-            </dd>
-          </div>
-          <div className="grid gap-1 py-4 sm:grid-cols-[8.5rem_1fr] sm:gap-4">
-            <dt className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-              {t.fieldUrl}
-            </dt>
-            <dd className="break-all font-mono text-xs text-ink">{obs.url || "—"}</dd>
-          </div>
-          <div className="grid gap-1 py-4 sm:grid-cols-[8.5rem_1fr] sm:gap-4">
-            <dt className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-              {t.fieldFinalUrl}
-            </dt>
-            <dd className="break-all font-mono text-xs text-ink">{finalUrl || "—"}</dd>
-          </div>
-          <div className="grid gap-1 py-4 sm:grid-cols-[8.5rem_1fr] sm:gap-4">
-            <dt className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-              {t.fieldStatus}
-            </dt>
-            <dd className="text-sm font-medium text-ink">{statusLabel}</dd>
-          </div>
-          <div className="grid gap-1 py-4 sm:grid-cols-[8.5rem_1fr] sm:gap-4">
-            <dt className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-              {t.fieldSha256}
-            </dt>
-            <dd className="text-sm text-ink">
-              <p className="break-all font-mono text-xs leading-relaxed">
-                {obs.snapshotSha256?.trim() || "—"}
-              </p>
-              {obs.snapshotSha256?.trim() ? (
-                <p className="mt-1.5 text-xs leading-relaxed text-ink-muted">{t.fieldSha256Hint}</p>
-              ) : null}
-            </dd>
-          </div>
-          <div className="grid gap-1 py-4 sm:grid-cols-[8.5rem_1fr] sm:gap-4">
-            <dt className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-              {t.fieldObservationId}
-            </dt>
-            <dd className="break-all font-mono text-xs text-ink-muted">{obs.id}</dd>
-          </div>
-        </dl>
+            <dl className="mt-6 divide-y divide-border rounded-2xl border border-border bg-surface-elevated px-5 sm:px-6">
+              <div className="grid gap-1 py-4 sm:grid-cols-[8.5rem_1fr] sm:gap-4">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                  {t.fieldTimestamp}
+                </dt>
+                <dd className="text-sm text-ink">{capturedLabel}</dd>
+              </div>
+              <div className="grid gap-1 py-4 sm:grid-cols-[8.5rem_1fr] sm:gap-4">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                  {t.fieldRegion}
+                </dt>
+                <dd className="text-sm text-ink">
+                  <ObservationRegionReadout
+                    requestedLabel={obs.regionLabel}
+                    regionValue={obs.regionValue}
+                    captureConditions={obs.captureConditions}
+                    copy={geoCopy}
+                    locale={locale}
+                  />
+                </dd>
+              </div>
+              <div className="grid gap-1 py-4 sm:grid-cols-[8.5rem_1fr] sm:gap-4">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                  {t.fieldUrl}
+                </dt>
+                <dd className="break-all font-mono text-xs text-ink">{obs.url || "—"}</dd>
+              </div>
+              <div className="grid gap-1 py-4 sm:grid-cols-[8.5rem_1fr] sm:gap-4">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                  {t.fieldFinalUrl}
+                </dt>
+                <dd className="break-all font-mono text-xs text-ink">{finalUrl || "—"}</dd>
+              </div>
+              <div className="grid gap-1 py-4 sm:grid-cols-[8.5rem_1fr] sm:gap-4">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                  {t.fieldStatus}
+                </dt>
+                <dd className="text-sm font-medium text-ink">{statusLabel}</dd>
+              </div>
+              <div className="grid gap-1 py-4 sm:grid-cols-[8.5rem_1fr] sm:gap-4">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                  {t.fieldSha256}
+                </dt>
+                <dd className="text-sm text-ink">
+                  <p className="break-all font-mono text-xs leading-relaxed">
+                    {obs.snapshotSha256?.trim() || "—"}
+                  </p>
+                  {obs.snapshotSha256?.trim() ? (
+                    <p className="mt-1.5 text-xs leading-relaxed text-ink-muted">{t.fieldSha256Hint}</p>
+                  ) : null}
+                </dd>
+              </div>
+              <div className="grid gap-1 py-4 sm:grid-cols-[8.5rem_1fr] sm:gap-4">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                  {t.fieldObservationId}
+                </dt>
+                <dd className="break-all font-mono text-xs text-ink-muted">{obs.id}</dd>
+              </div>
+            </dl>
+          </>
+        )}
 
         <section className="mt-10 print:break-before-page">
           <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#276248]">{t.details}</h2>
