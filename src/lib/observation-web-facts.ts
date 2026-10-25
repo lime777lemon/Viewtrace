@@ -12,6 +12,7 @@ import { isIP } from "node:net";
 import { getDomain } from "tldts";
 import { BROWSER_LIKE_HEADERS } from "@/lib/browser-fingerprint";
 import { isBlockedPreviewHost } from "@/lib/url-preview";
+import { ATTR, setSpanAttrs, urlHostAttr, withSpan } from "@/lib/otel/trace";
 
 export const OBSERVATION_WEB_FACTS_SCHEMA_VERSION = 1 as const;
 export const WEB_FACTS_RESOURCE_MAX_BYTES = 128 * 1024;
@@ -444,6 +445,24 @@ export function filterPublicResponseHeaders(
 }
 
 export async function collectObservationWebFacts(
+  input: CollectObservationWebFactsInput,
+): Promise<ObservationWebFactsV1 | null> {
+  return withSpan(
+    "facts.web",
+    {
+      [ATTR.operation]: "web_facts",
+      [ATTR.urlHost]: urlHostAttr(input.target),
+      "viewtrace.facts.preview_provided": Boolean(input.preview),
+    },
+    async (span) => {
+      const facts = await collectObservationWebFactsInner(input);
+      setSpanAttrs(span, { [ATTR.ok]: facts !== null });
+      return facts;
+    },
+  );
+}
+
+async function collectObservationWebFactsInner(
   input: CollectObservationWebFactsInput,
 ): Promise<ObservationWebFactsV1 | null> {
   let target: URL;

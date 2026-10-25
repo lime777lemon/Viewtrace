@@ -9,6 +9,15 @@ import { buildInteractionFunctionCode } from "@/lib/browserless-interaction-func
 import type { InteractionPriorRow } from "@/lib/observation-interaction-plan";
 import { buildRegionalCheckFromSession, type RegionalInteractionCheckV1 } from "@/lib/observation-regional-interaction";
 import { isBlockedPreviewHost, normalizeUserUrlInput } from "@/lib/url-preview";
+import {
+  ATTR,
+  browserlessResultAttrs,
+  markSpanResult,
+  requestedStateAttr,
+  setSpanAttrs,
+  urlHostAttr,
+  withSpan,
+} from "@/lib/otel/trace";
 
 const FUNCTION_TIMEOUT_MS = 110_000;
 
@@ -132,14 +141,56 @@ async function runOnce(params: {
   return { ok: true, check, durationMs, proxyBytes };
 }
 
-export async function runBrowserlessScrollWithProxyRetry(params: {
+type BrowserlessScrollParams = {
   url: string;
   region?: string;
   fixtureHtml?: string;
   prior?: InteractionPriorRow[];
   scan?: "full" | "light";
   environment?: { device_class?: "desktop" | "mobile" };
-}): Promise<BrowserlessScrollResult> {
+};
+
+/**
+ * Regional Interaction Check（1 Region × 1 Check session）。
+ * span `browserless.interaction_check` に scan 種別・prior 件数・検出 / 実行件数を載せる。
+ */
+export async function runBrowserlessScrollWithProxyRetry(
+  params: BrowserlessScrollParams,
+): Promise<BrowserlessScrollResult> {
+  return withSpan(
+    "browserless.interaction_check",
+    {
+      [ATTR.operation]: "interaction_check",
+      [ATTR.urlHost]: urlHostAttr(params.url),
+      [ATTR.regionRequested]: params.region ?? null,
+      [ATTR.stateRequested]: requestedStateAttr(params.region),
+      "viewtrace.interaction.scan": params.scan ?? "full",
+      "viewtrace.interaction.prior_count": params.prior?.length ?? 0,
+      [ATTR.deviceClass]: params.environment?.device_class ?? null,
+      "viewtrace.fixture": Boolean(params.fixtureHtml),
+    },
+    async (span) => {
+      const result = await runScrollWithProxyRetryInner(params);
+      setSpanAttrs(span, browserlessResultAttrs(result));
+      if (result.ok) {
+        const types = result.check.types;
+        setSpanAttrs(span, {
+          "viewtrace.interaction.detected": types.filter((row) => row.detected).length,
+          "viewtrace.interaction.working": types.filter((row) => row.status === "working").length,
+          "viewtrace.interaction.no_change": types.filter((row) => row.status === "no_change_observed").length,
+          "viewtrace.interaction.failed": types.filter((row) => row.status === "failed").length,
+          "viewtrace.interaction.blocked": types.filter((row) => row.status === "blocked_for_safety").length,
+        });
+      }
+      markSpanResult(span, result);
+      return result;
+    },
+  );
+}
+
+async function runScrollWithProxyRetryInner(
+  params: BrowserlessScrollParams,
+): Promise<BrowserlessScrollResult> {
   if (!isBrowserlessConfigured()) {
     return { ok: false, error: "browserless_not_configured", durationMs: 0, proxyBytes: null };
   }

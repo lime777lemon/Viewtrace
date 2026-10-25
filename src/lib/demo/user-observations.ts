@@ -21,6 +21,7 @@ import { countObservationsThisUtcMonth } from "@/lib/observation-quota";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { recordStateCoverage } from "@/lib/state-coverage";
 import { observationUrlIdentity, observationUrlLookupVariants } from "@/lib/observation-compare";
+import { ATTR, markSpanResult, withSpan } from "@/lib/otel/trace";
 
 export const USER_OBSERVATIONS_COOKIE = "viewtrace_user_obs";
 
@@ -306,6 +307,26 @@ export async function writeUserObservations(list: Observation[]): Promise<void> 
 }
 
 export async function appendUserObservation(
+  obs: Observation,
+  opts: { retentionDays: number; monthlyLimit: number },
+): Promise<{ ok: true } | { ok: false; code: "monthly_limit" }> {
+  return withSpan(
+    "supabase.observation_insert",
+    {
+      [ATTR.observationId]: obs.id,
+      [ATTR.regionRequested]: obs.regionValue ?? null,
+      "viewtrace.observation.status": obs.status,
+      "viewtrace.observation.snapshot_stored": Boolean(obs.snapshotSha256),
+    },
+    async (span) => {
+      const result = await appendUserObservationInner(obs, opts);
+      markSpanResult(span, { ok: result.ok, error: result.ok ? null : result.code });
+      return result;
+    },
+  );
+}
+
+async function appendUserObservationInner(
   obs: Observation,
   opts: { retentionDays: number; monthlyLimit: number },
 ): Promise<{ ok: true } | { ok: false; code: "monthly_limit" }> {

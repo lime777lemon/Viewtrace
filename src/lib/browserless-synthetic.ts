@@ -18,6 +18,15 @@ import {
   parseSyntheticFromFunctionBody,
   type SyntheticInteractionV1,
 } from "@/lib/observation-synthetic-interaction";
+import {
+  ATTR,
+  browserlessResultAttrs,
+  markSpanResult,
+  requestedStateAttr,
+  setSpanAttrs,
+  urlHostAttr,
+  withSpan,
+} from "@/lib/otel/trace";
 
 const DEFAULT_BROWSERLESS_FUNCTION = "https://production-sfo.browserless.io/function";
 const FUNCTION_TIMEOUT_MS = 45_000;
@@ -310,6 +319,27 @@ function retryableDeny(result: BrowserlessSyntheticResult): boolean {
 
 /** 撮影と同じ順: 都市 →（任意）州 → 国 → プロキシなし。Observed geo は書き換えない。 */
 export async function runBrowserlessSyntheticWithProxyRetry(params: {
+  url: string;
+  region?: string;
+}): Promise<BrowserlessSyntheticResult> {
+  return withSpan(
+    "browserless.synthetic",
+    {
+      [ATTR.operation]: "synthetic_interaction",
+      [ATTR.urlHost]: urlHostAttr(params.url),
+      [ATTR.regionRequested]: params.region ?? null,
+      [ATTR.stateRequested]: requestedStateAttr(params.region),
+    },
+    async (span) => {
+      const result = await runSyntheticWithProxyRetryInner(params);
+      setSpanAttrs(span, browserlessResultAttrs(result));
+      markSpanResult(span, result);
+      return result;
+    },
+  );
+}
+
+async function runSyntheticWithProxyRetryInner(params: {
   url: string;
   region?: string;
 }): Promise<BrowserlessSyntheticResult> {

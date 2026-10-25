@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { ATTR, markSpanResult, withSpan } from "@/lib/otel/trace";
 
 let client: Resend | null = null;
 
@@ -67,6 +68,25 @@ export function resultFromResendSendHttp(status: number, rawBody: string): SendR
  * `html` と `text` のどちらか一方以上が必要です。
  */
 export async function sendResendEmail(input: SendResendEmailInput): Promise<SendResendEmailResult> {
+  // 宛先・本文は span に載せない（PII）。件名と結果だけ。
+  return withSpan(
+    "resend.send",
+    {
+      [ATTR.provider]: "resend",
+      [ATTR.operation]: "email_send",
+      "viewtrace.email.subject": input.subject.slice(0, 120),
+      "viewtrace.email.recipients": Array.isArray(input.to) ? input.to.length : 1,
+      "viewtrace.email.idempotent": Boolean(input.idempotencyKey),
+    },
+    async (span) => {
+      const result = await sendResendEmailInner(input);
+      markSpanResult(span, result, { [ATTR.upstreamStatus]: result.status ?? null });
+      return result;
+    },
+  );
+}
+
+async function sendResendEmailInner(input: SendResendEmailInput): Promise<SendResendEmailResult> {
   const key = process.env.RESEND_API_KEY?.trim();
   if (!key) {
     return { ok: false, error: "RESEND_API_KEY is not set", status: null };

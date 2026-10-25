@@ -10,6 +10,7 @@ import {
   type HtmlHeadSignalsV1,
 } from "@/lib/url-preview";
 import { getGeoProxyAgent } from "@/lib/geo/proxy";
+import { ATTR, markSpanResult, urlHostAttr, withSpan } from "@/lib/otel/trace";
 
 export type UrlPreviewResult =
   | {
@@ -54,6 +55,32 @@ export type UrlPreviewFetchOptions = {
 export async function runUrlPreviewFetch(
   target: string,
   options: UrlPreviewFetchOptions = {},
+): Promise<UrlPreviewResult> {
+  return withSpan(
+    "preview.fetch",
+    {
+      [ATTR.operation]: "html_preview",
+      [ATTR.urlHost]: urlHostAttr(target),
+      [ATTR.regionRequested]: options.regionValue?.trim() || null,
+      "viewtrace.preview.screenshot_fallback": options.screenshotFallback === true,
+      "viewtrace.preview.retry_without_proxy": options.retryWithoutProxyOnFailure === true,
+    },
+    async (span) => {
+      const result = await runUrlPreviewFetchInner(target, options);
+      markSpanResult(span, result, {
+        [ATTR.upstreamStatus]: result.ok ? result.status : null,
+        "viewtrace.proxy.used": result.ok ? result.viaProxy : null,
+        "viewtrace.preview.html": result.ok ? result.html : null,
+        [ATTR.bytes]: result.ok ? result.htmlSampleBytes : null,
+      });
+      return result;
+    },
+  );
+}
+
+async function runUrlPreviewFetchInner(
+  target: string,
+  options: UrlPreviewFetchOptions,
 ): Promise<UrlPreviewResult> {
   const screenshotFallback = options.screenshotFallback === true;
   const fullPageScreenshot = options.fullPageScreenshot === true;

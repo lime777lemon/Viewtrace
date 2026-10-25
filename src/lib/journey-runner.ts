@@ -12,6 +12,14 @@ import { parseJourneyEvidence, type JourneyEvidenceItem } from "@/lib/journey-st
 import { resolveBrowserlessResidentialTarget } from "@/lib/regions";
 import { normalizeUserUrlInput } from "@/lib/url-preview";
 import { runStateMeasurementSession } from "@/lib/state-measurement-session";
+import {
+  ATTR,
+  markSpanResult,
+  requestedStateAttr,
+  setSpanAttrs,
+  urlHostAttr,
+  withSpan,
+} from "@/lib/otel/trace";
 
 const FUNCTION_TIMEOUT_MS = 300_000;
 
@@ -188,14 +196,46 @@ async function runJourneyThroughStateSession(params: {
   return { ok: true, status: journeyRunStatus(steps), durationMs: session.durationMs, environment, steps };
 }
 
-export async function runJourneyInBrowserless(params: {
+type RunJourneyParams = {
   url: string;
   region: string;
   deviceClass: JourneyDeviceClass;
   steps: JourneyStepDefinition[];
   credentials?: { username?: string; password?: string };
   fixtureHtml?: string;
-}): Promise<JourneyExecution | JourneyExecutionFailure> {
+};
+
+/** Journey 1 回。span `browserless.journey` に step 数・結果・地域 stage を載せる。credentials は載せない。 */
+export async function runJourneyInBrowserless(
+  params: RunJourneyParams,
+): Promise<JourneyExecution | JourneyExecutionFailure> {
+  return withSpan(
+    "browserless.journey",
+    {
+      [ATTR.operation]: "journey",
+      [ATTR.urlHost]: urlHostAttr(params.url),
+      [ATTR.regionRequested]: params.region,
+      [ATTR.stateRequested]: requestedStateAttr(params.region),
+      [ATTR.deviceClass]: params.deviceClass,
+      "viewtrace.journey.step_count": params.steps.length,
+      "viewtrace.fixture": Boolean(params.fixtureHtml),
+    },
+    async (span) => {
+      const result = await runJourneyInner(params);
+      setSpanAttrs(span, {
+        [ATTR.durationMs]: result.durationMs,
+        "viewtrace.journey.status": result.ok ? result.status : null,
+        [ATTR.stage]: result.ok ? result.environment?.geo?.stage ?? null : null,
+      });
+      markSpanResult(span, result);
+      return result;
+    },
+  );
+}
+
+async function runJourneyInner(
+  params: RunJourneyParams,
+): Promise<JourneyExecution | JourneyExecutionFailure> {
   if (!isBrowserlessConfigured()) return { ok: false, error: "browserless_not_configured", durationMs: 0 };
   if (/^US-[A-Z]{2}$/i.test(params.region)) return runJourneyThroughStateSession(params);
   const target = params.fixtureHtml ? "https://viewtrace.net/tests/journey" : normalizeUserUrlInput(params.url);

@@ -3,6 +3,7 @@ import { del, put } from "@vercel/blob";
 import sharp from "sharp";
 import { blobClientAuth } from "@/lib/blob-client-auth";
 import { computeSnapshotPerceptualHash } from "@/lib/snapshot-perceptual-hash";
+import { ATTR, markSpanResult, withSpan, type SpanAttrs } from "@/lib/otel/trace";
 
 export type ObservationSnapshotUploadResult =
   | {
@@ -40,8 +41,39 @@ function clampInt(n: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, Math.round(n)));
 }
 
+function uploadResultAttrs(result: ObservationSnapshotUploadResult): SpanAttrs {
+  return {
+    [ATTR.ok]: result.ok,
+    [ATTR.error]: result.ok ? null : result.code,
+    [ATTR.bytes]: result.ok ? result.snapshotBytes : null,
+    "viewtrace.blob.content_type": result.ok ? result.snapshotContentType : null,
+    "viewtrace.blob.phash": result.ok ? Boolean(result.snapshotPhash) : null,
+  };
+}
+
 /** 観測 ID ごとにスナップショットを公開 Blob に置き、結果を返す */
 export async function uploadObservationSnapshotPng(
+  observationId: string,
+  png: ArrayBuffer,
+  opts?: ObservationSnapshotUploadOptions,
+): Promise<ObservationSnapshotUploadResult> {
+  return withSpan(
+    "blob.upload_snapshot",
+    {
+      [ATTR.observationId]: observationId,
+      "viewtrace.blob.input_bytes": png.byteLength,
+      "viewtrace.blob.format": opts?.format ?? "webp",
+      "viewtrace.blob.phash_requested": opts?.includePerceptualHash === true,
+    },
+    async (span) => {
+      const result = await uploadObservationSnapshotPngInner(observationId, png, opts);
+      markSpanResult(span, { ok: result.ok, error: result.ok ? null : result.code }, uploadResultAttrs(result));
+      return result;
+    },
+  );
+}
+
+async function uploadObservationSnapshotPngInner(
   observationId: string,
   png: ArrayBuffer,
   opts?: ObservationSnapshotUploadOptions,
@@ -133,12 +165,34 @@ export async function uploadObservationSnapshotPng(
   }
 }
 
-/** 短いホームページ動画（webm/mp4）。連続ショットは保存しない。 */
-export async function uploadObservationMedia(params: {
+type UploadObservationMediaParams = {
   observationId: string;
   body: ArrayBuffer;
   contentType: "video/webm" | "video/mp4";
-}): Promise<ObservationSnapshotUploadResult> {
+};
+
+/** 短いホームページ動画（webm/mp4）。連続ショットは保存しない。 */
+export async function uploadObservationMedia(
+  params: UploadObservationMediaParams,
+): Promise<ObservationSnapshotUploadResult> {
+  return withSpan(
+    "blob.upload_media",
+    {
+      [ATTR.observationId]: params.observationId,
+      "viewtrace.blob.input_bytes": params.body.byteLength,
+      "viewtrace.blob.format": params.contentType,
+    },
+    async (span) => {
+      const result = await uploadObservationMediaInner(params);
+      markSpanResult(span, { ok: result.ok, error: result.ok ? null : result.code }, uploadResultAttrs(result));
+      return result;
+    },
+  );
+}
+
+async function uploadObservationMediaInner(
+  params: UploadObservationMediaParams,
+): Promise<ObservationSnapshotUploadResult> {
   const auth = blobClientAuth();
   if (!auth) {
     console.warn("[blob] observation media skipped", {

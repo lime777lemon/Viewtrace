@@ -1,5 +1,14 @@
 import { NextResponse } from "next/server";
+import type { Span } from "@opentelemetry/api";
 import { AUDIT_ACTION, appendAuditEventAsService } from "@/lib/audit-log";
+import {
+  ATTR,
+  markSpanResult,
+  requestedStateAttr,
+  setSpanAttrs,
+  urlHostAttr,
+  withSpan,
+} from "@/lib/otel/trace";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { runDueJourneyWatches } from "@/lib/journey-store";
 import { runDueMonitoringWatches } from "@/lib/monitoring-watch-store";
@@ -464,9 +473,13 @@ export async function POST(req: Request) {
     if (sent) quotaSkipNotified += 1;
   }
 
-  for (const w of watches ?? []) {
-    ran += 1;
-    const row = w as unknown as Record<string, unknown>;
+  /**
+   * Watch 1 件の 1 実行 = trace 1 本（span `watch.run`）。
+   * 子 span: capture.primary / browserless.* / blob.upload_snapshot / preview.fetch / facts.web /
+   * browserless.interaction_check / resend.send。Supabase の REST 呼び出しは fetch 計装で自動。
+   * 早期 return は以前の `continue` と同じ意味。
+   */
+  async function processWatch(row: Record<string, unknown>, span: Span): Promise<void> {
     const url = getString(row, "url");
     const region = getString(row, "region");
     const watchId = getString(row, "id");
@@ -475,8 +488,22 @@ export async function POST(req: Request) {
     const notifyOnMetadata = parseWatchNotifyOnMetadata(row.notify_on_metadata);
     const webhookUrl = normalizeObservationWebhookUrl(getString(row, "webhook_url") || null);
 
-    if (!url || !region || !watchId || !userId) continue;
-    if (skipWatchIds.has(watchId)) continue;
+    if (!url || !region || !watchId || !userId) {
+      setSpanAttrs(span, { [ATTR.outcome]: "invalid_row" });
+      return;
+    }
+    setSpanAttrs(span, {
+      [ATTR.watchId]: watchId,
+      [ATTR.userId]: userId,
+      [ATTR.urlHost]: urlHostAttr(url),
+      [ATTR.regionRequested]: region,
+      [ATTR.stateRequested]: requestedStateAttr(region),
+      "viewtrace.watch.notify_mode": notifyMode,
+    });
+    if (skipWatchIds.has(watchId)) {
+      setSpanAttrs(span, { [ATTR.outcome]: "skipped_quota" });
+      return;
+    }
 
     const watchPlanId = getString(row, "plan_id");
     const plan = await planForUser(userId, watchPlanId);
@@ -489,7 +516,10 @@ export async function POST(req: Request) {
     const dueByDailyAnchor =
       freq === "daily" &&
       isDailyWatchDueOnCronDay(now, lastRunAtRaw || null, repeatCount, plan.watchMaxDailyRepeats);
-    if (!dueByNextRun && !dueByDailyAnchor) continue;
+    if (!dueByNextRun && !dueByDailyAnchor) {
+      setSpanAttrs(span, { [ATTR.outcome]: "not_due" });
+      return;
+    }
 
     const remaining = remainingByUser.get(userId) ?? 0;
     if (remaining < 1) {
@@ -500,9 +530,15 @@ export async function POST(req: Request) {
         .from("observation_watches")
         .update({ last_run_at: now.toISOString(), next_run_at: nextRun })
         .eq("id", watchId);
-      continue;
+      setSpanAttrs(span, { [ATTR.outcome]: "skipped_quota" });
+      return;
     }
 
+    setSpanAttrs(span, {
+      "viewtrace.plan": plan.id,
+      "viewtrace.watch.frequency": freq,
+      "viewtrace.watch.repeat_count": repeatCount,
+    });
     const userEmail = await getUserEmail(userId);
     const fullPage = plan.snapshotFullPage;
     const desktop = REQUESTED_DEVICE_VIEWPORT.desktop;
@@ -532,10 +568,21 @@ export async function POST(req: Request) {
         : undefined,
     });
     const shot = primary.result;
+    setSpanAttrs(span, {
+      [ATTR.engine]: primary.engine,
+      "viewtrace.capture.ok": shot.ok,
+      [ATTR.stateVerified]:
+        primary.engine === "browserless" ? primary.result.stateVerified ?? null : null,
+      [ATTR.fallbackLevel]:
+        primary.engine === "browserless" ? primary.result.fallbackLevel ?? null : null,
+      "viewtrace.interaction.in_session":
+        primary.engine === "browserless" && primary.result.ok && Boolean(primary.result.interaction),
+    });
 
     const nextRun = computeNextRunAfter(new Date(), freq, repeatCount, plan.watchMaxDailyRepeats).toISOString();
 
     if (!shot.ok) {
+      markSpanResult(span, { ok: false, error: shot.error }, { [ATTR.outcome]: "screenshot_failed" });
       const failDetail = "detail" in shot && typeof shot.detail === "string" ? shot.detail : undefined;
       console.warn("[cron] screenshot failed", { watchId, url, region, error: shot.error, detail: failDetail });
       const failedAt = new Date().toISOString();
@@ -576,10 +623,11 @@ export async function POST(req: Request) {
         failureNotified += 1;
         await markWatchNotified(watchId);
       }
-      continue;
+      return;
     }
 
     const obsId = crypto.randomUUID();
+    setSpanAttrs(span, { [ATTR.observationId]: obsId });
     const blobResult = await uploadObservationSnapshotPng(obsId, shot.png, {
       format: "webp",
       webpQuality: 86,
@@ -809,8 +857,14 @@ export async function POST(req: Request) {
         failureNotified += 1;
         await markWatchNotified(watchId);
       }
-      continue;
+      markSpanResult(span, { ok: false, error: "observation_insert_failed" }, { [ATTR.outcome]: "insert_failed" });
+      return;
     }
+    setSpanAttrs(span, {
+      [ATTR.outcome]: "saved",
+      "viewtrace.observation.status": blobUrl ? "success" : "failure",
+      "viewtrace.observation.snapshot_stored": Boolean(blobUrl),
+    });
 
     /**
      * 監査ログにも追記する。手動の `appendUserObservation` と違って Cron は service_role
@@ -978,6 +1032,14 @@ export async function POST(req: Request) {
         }
       }
     }
+
+    setSpanAttrs(span, {
+      "viewtrace.compare.previous_found": Boolean(previous),
+      "viewtrace.compare.screenshot_verdict": screenshot?.verdict ?? null,
+      "viewtrace.behavior.alerts": behaviorAlerts.length,
+      "viewtrace.behavior.map_alerts": behaviorMapAlerts.length,
+    });
+
 
     if (webhookUrl) {
       const posted = await postObservationWebhook(webhookUrl, {
@@ -1185,6 +1247,11 @@ export async function POST(req: Request) {
         }
       }
     }
+  }
+
+  for (const w of watches ?? []) {
+    ran += 1;
+    await withSpan("watch.run", { [ATTR.source]: "watch" }, (span) => processWatch(w, span));
   }
 
   let monitoringRan = 0;

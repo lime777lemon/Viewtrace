@@ -51,6 +51,15 @@ import { stampMeasurement } from "@/lib/measurement-record";
 import { seoFactsForObservation } from "@/lib/observation-seo-facts";
 import { collectObservationWebFacts } from "@/lib/observation-web-facts";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { Span } from "@opentelemetry/api";
+import {
+  ATTR,
+  markSpanResult,
+  requestedStateAttr,
+  setSpanAttrs,
+  urlHostAttr,
+  withSpan,
+} from "@/lib/otel/trace";
 import {
   formatCaptureNoUrlPreviewFail,
   formatCaptureNoUrlUploadFail,
@@ -123,7 +132,7 @@ function parseObservationForm(formData: FormData): {
   };
 }
 
-async function recordOneObservation(input: {
+type RecordOneObservationInput = {
   urlRaw: string;
   regionValue: string;
   regionLabel: string;
@@ -131,9 +140,41 @@ async function recordOneObservation(input: {
   verifiedImageUrl: string;
   homepageMode: HomepageObservationMode;
   deviceClass?: RequestedDeviceClass;
-}): Promise<RecordObservationResult> {
+};
+
+/**
+ * 手動 Observation 1 件 = trace 1 本（span `observation.create`）。
+ * 子 span: preview.fetch / capture.primary / browserless.* / blob.upload_* / facts.web / supabase.observation_insert。
+ */
+async function recordOneObservation(input: RecordOneObservationInput): Promise<RecordObservationResult> {
+  return withSpan(
+    "observation.create",
+    {
+      [ATTR.source]: "manual",
+      [ATTR.urlHost]: urlHostAttr(coerceRecordingUrl(input.urlRaw) ?? ""),
+      [ATTR.regionRequested]: input.regionValue || null,
+      [ATTR.stateRequested]: requestedStateAttr(input.regionValue),
+      [ATTR.homepageMode]: input.homepageMode,
+      [ATTR.deviceClass]: input.deviceClass ?? null,
+    },
+    async (span) => {
+      const result = await recordOneObservationInner(input, span);
+      markSpanResult(span, { ok: result.ok, error: result.ok ? null : result.code }, {
+        [ATTR.observationId]: result.ok ? result.id : null,
+        [ATTR.outcome]: result.ok ? "saved" : result.code,
+      });
+      return result;
+    },
+  );
+}
+
+async function recordOneObservationInner(
+  input: RecordOneObservationInput,
+  span: Span,
+): Promise<RecordObservationResult> {
   const session = await getSession();
   if (!session) return { ok: false, code: "unauthenticated" };
+  setSpanAttrs(span, { [ATTR.userId]: session.userId, "viewtrace.plan": session.plan });
 
   const urlRaw = input.urlRaw;
   const regionValue = input.regionValue;
@@ -171,6 +212,7 @@ async function recordOneObservation(input: {
 
   // Persisted in Postgres `uuid` column; keep as UUID string.
   const id = crypto.randomUUID();
+  setSpanAttrs(span, { [ATTR.observationId]: id });
   const noteParts = ["Webサイト確認に基づく記録"];
   if (verifiedTitle) noteParts.push(`確認時タイトル: ${verifiedTitle.slice(0, 200)}`);
 
@@ -551,6 +593,16 @@ async function recordOneObservation(input: {
   });
   if (seoFacts) captureConditions = { ...captureConditions, seo_facts: seoFacts };
   if (input.deviceClass) captureConditions = applyRequestedDevice(captureConditions, input.deviceClass);
+  setSpanAttrs(span, {
+    [ATTR.engine]: captureConditions.engine.name,
+    [ATTR.observedCountry]: captureConditions.geo.country,
+    [ATTR.observedState]: captureConditions.geo.state,
+    [ATTR.stateVerified]: captureConditions.geo.state_verified ?? null,
+    [ATTR.fallbackLevel]: captureConditions.geo.fallback_level ?? null,
+    "viewtrace.observation.status": ok ? "success" : "failure",
+    "viewtrace.observation.snapshot_stored": Boolean(snapshotBinarySha256),
+    "viewtrace.observation.microlink": usedMicrolink,
+  });
 
   const obs: Observation = {
     id,

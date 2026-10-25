@@ -1,7 +1,17 @@
 import type { Instrumentation } from "next";
+import { registerOTel } from "@vercel/otel";
 
+/**
+ * ViewTrace 自身の OpenTelemetry。
+ * - Next.js の request span と `fetch`（Browserless / Supabase / Resend / Blob）の span は自動。
+ * - ViewTrace 固有の段階（capture / interaction check / save / email）は `src/lib/otel/trace.ts` の
+ *   `withSpan` で足す。
+ * - 送り先: Vercel 上では Vercel の OTel collector（Drains / Observability）。
+ *   それ以外は `OTEL_EXPORTER_OTLP_ENDPOINT` があれば OTLP、無ければ no-op。
+ */
 export function register() {
-  // No-op: ops hooks live in onRequestError.
+  if (process.env.VIEWTRACE_OTEL_DISABLED === "1") return;
+  registerOTel({ serviceName: process.env.VIEWTRACE_OTEL_SERVICE_NAME?.trim() || "viewtrace" });
 }
 
 export const onRequestError: Instrumentation.onRequestError = async (err, request, context) => {

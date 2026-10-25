@@ -13,6 +13,15 @@ import {
 } from "@/lib/observation-cost-signals";
 import { isBlockedPreviewHost, normalizeUserUrlInput } from "@/lib/url-preview";
 import { runStateMeasurementSession, type StateMeasurementResult } from "@/lib/state-measurement-session";
+import {
+  ATTR,
+  browserlessResultAttrs,
+  markSpanResult,
+  requestedStateAttr,
+  setSpanAttrs,
+  urlHostAttr,
+  withSpan,
+} from "@/lib/otel/trace";
 
 const DEFAULT_BROWSERLESS_SCREENSHOT = "https://production-sfo.browserless.io/screenshot";
 
@@ -153,7 +162,7 @@ export { estimatedBrowserTimeUnits };
  * Browserless の /screenshot を呼び、PNG を返す。
  * - 内蔵 residential: `proxy=residential` + `proxyCountry`（US 州は `proxyState`、だめなら `proxyCity`）
  */
-export async function runBrowserlessScreenshot(params: {
+type BrowserlessScreenshotParams = {
   url: string;
   region?: string;
   fullPage: boolean;
@@ -163,7 +172,35 @@ export async function runBrowserlessScreenshot(params: {
   residentialState?: boolean;
   /** US 州の代表都市を proxyCity で指定するか。 */
   residentialCity?: boolean;
-}): Promise<BrowserlessScreenshotResult> {
+};
+
+export async function runBrowserlessScreenshot(
+  params: BrowserlessScreenshotParams,
+): Promise<BrowserlessScreenshotResult> {
+  return withSpan(
+    "browserless.screenshot",
+    {
+      [ATTR.operation]: "screenshot",
+      [ATTR.urlHost]: urlHostAttr(params.url),
+      [ATTR.regionRequested]: params.region ?? null,
+      [ATTR.stateRequested]: requestedStateAttr(params.region),
+      [ATTR.fullPage]: params.fullPage,
+      "viewtrace.proxy.disabled": params.disableProxy === true,
+      "viewtrace.proxy.state_requested": params.residentialState === true,
+      "viewtrace.proxy.city_requested": params.residentialCity === true,
+    },
+    async (span) => {
+      const result = await runBrowserlessScreenshotOnce(params);
+      setSpanAttrs(span, browserlessResultAttrs(result));
+      markSpanResult(span, result);
+      return result;
+    },
+  );
+}
+
+async function runBrowserlessScreenshotOnce(
+  params: BrowserlessScreenshotParams,
+): Promise<BrowserlessScreenshotResult> {
   const endpoint = browserlessScreenshotEndpointWithToken();
   if (!endpoint) {
     return { ok: false, error: "browserless_not_configured" };

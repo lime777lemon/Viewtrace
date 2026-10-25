@@ -13,6 +13,14 @@ import {
   type StateProxySelection,
 } from "@/lib/state-proxy-provider";
 import { isBlockedPreviewHost, normalizeUserUrlInput } from "@/lib/url-preview";
+import {
+  ATTR,
+  browserlessResultAttrs,
+  markSpanResult,
+  setSpanAttrs,
+  urlHostAttr,
+  withSpan,
+} from "@/lib/otel/trace";
 
 export type { StateMeasure };
 
@@ -146,7 +154,35 @@ export async function runStateMeasurementSession(input: {
   let geoAttempts = 0;
   let rejected = false;
 
-  const once = async (
+  const once = (
+    attempt: StateProxySelection | "template" | "country",
+    requireState: boolean,
+  ): Promise<StateMeasurementResult> =>
+    withSpan(
+      "browserless.state_session",
+      {
+        [ATTR.operation]: measures.join(","),
+        [ATTR.urlHost]: urlHostAttr(normalized),
+        [ATTR.regionRequested]: input.region,
+        [ATTR.stateRequested]: stateCode,
+        [ATTR.stage]: attempt === "country" ? "country" : "state",
+        [ATTR.provider]:
+          attempt === "template"
+            ? "external_proxy"
+            : attempt === "country"
+              ? "browserless_residential"
+              : attempt.provider,
+        "viewtrace.region.require_state": requireState,
+      },
+      async (span) => {
+        const result = await onceInner(attempt, requireState);
+        setSpanAttrs(span, browserlessResultAttrs(result));
+        markSpanResult(span, result);
+        return result;
+      },
+    );
+
+  const onceInner = async (
     attempt: StateProxySelection | "template" | "country",
     requireState: boolean,
   ): Promise<StateMeasurementResult> => {
