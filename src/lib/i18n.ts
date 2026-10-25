@@ -176,11 +176,6 @@ export const copy = {
         "非表示から表示になったかを測る",
       ],
       behaviorEmphasis: "見つかっただけでは「動作している」にしません。開いたあとの表示を測れたときだけです。ログイン、購入、送信は自動では押しません。",
-      journeyTitle: "重要なユーザーフローを実測",
-      journeyBody: "追加した手順を、その地域の実ブラウザで実行します。",
-      journeyExample: "手順の例",
-      journeySteps: ["ログイン", "アカウント作成", "カートに追加", "チェックアウト"],
-      journeySafety: "注文確定と支払いは、その手順で許可したときだけです。",
       journeyLead: "各ステップでは、観測できた Evidence を残します。",
       journeyItems: [
         "URL・リダイレクト",
@@ -2420,11 +2415,6 @@ export const copy = {
         "Measure hidden to visible",
       ],
       behaviorEmphasis: "Finding an element is not enough to call it working. Working is recorded only after the opened state is measured. Login, purchase, and submit are not clicked automatically.",
-      journeyTitle: "Measure important user flows",
-      journeyBody: "Steps you add run in a real browser from that region.",
-      journeyExample: "Example steps",
-      journeySteps: ["Login", "Signup", "Add to cart", "Checkout"],
-      journeySafety: "Place order and payment run only when that step permits them.",
       journeyLead: "Each step keeps the evidence it actually observed.",
       journeyItems: [
         "URL and redirects",

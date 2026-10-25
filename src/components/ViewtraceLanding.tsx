@@ -339,53 +339,23 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                 <p className="mt-3 text-sm font-medium leading-relaxed text-ink">{t.verify.behaviorEmphasis}</p>
               </article>
             </div>
-            <article className="mt-4 overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
-              <div className="grid lg:grid-cols-2">
-                <div className="border-b border-border p-5 sm:p-6 lg:border-b-0 lg:border-r">
-                  <h3 className="font-display text-lg font-semibold text-ink">{t.verify.journeyTitle}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-ink-muted">{t.verify.journeyBody}</p>
-                  <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#276248]">
-                    {t.verify.journeyExample}
-                  </p>
-                  <ol className="mt-4">
-                    {t.verify.journeySteps.map((step, index) => (
-                      <li key={step} className="relative flex gap-3 pb-4 last:pb-0">
-                        {index < t.verify.journeySteps.length - 1 ? (
-                          <span
-                            className="absolute top-7 bottom-0 left-3.25 w-px bg-[#276248]/40"
-                            aria-hidden
-                          />
-                        ) : null}
-                        <span className="relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#276248] text-xs font-semibold text-white">
-                          {index + 1}
-                        </span>
-                        <span className="pt-1 text-sm font-medium leading-relaxed text-ink">{step}</span>
-                      </li>
-                    ))}
-                  </ol>
-                  <p className="rounded-xl border border-border bg-surface-elevated px-4 py-3 text-sm leading-relaxed text-ink">
-                    {t.verify.journeySafety}
-                  </p>
-                </div>
-                <div className="p-5 sm:p-6">
-                  <p className="text-sm font-medium text-ink">{t.verify.journeyLead}</p>
-                  <ul className="mt-4 grid gap-2 sm:grid-cols-2">
-                    {t.verify.journeyItems.map((item) => (
-                      <li
-                        key={item}
-                        className="flex items-start gap-2.5 rounded-xl border border-border bg-surface-elevated px-3 py-2.5 text-sm leading-snug text-ink"
-                      >
-                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#276248]" aria-hidden />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                  <p className="mt-4 rounded-xl border border-dashed border-border px-4 py-3 text-sm leading-relaxed text-ink-muted">
-                    {t.verify.journeyOptional}
-                  </p>
-                  <p className="mt-4 text-sm font-semibold leading-relaxed text-ink">{t.verify.journeyEmphasis}</p>
-                </div>
-              </div>
+            <article className="mt-4 rounded-2xl border border-border bg-surface p-5 shadow-sm sm:p-6">
+              <p className="text-sm font-medium text-ink">{t.verify.journeyLead}</p>
+              <ul className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {t.verify.journeyItems.map((item) => (
+                  <li
+                    key={item}
+                    className="flex items-start gap-2.5 rounded-xl border border-border bg-surface-elevated px-3 py-2.5 text-sm leading-snug text-ink"
+                  >
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#276248]" aria-hidden />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-4 rounded-xl border border-dashed border-border px-4 py-3 text-sm leading-relaxed text-ink-muted">
+                {t.verify.journeyOptional}
+              </p>
+              <p className="mt-4 text-sm font-semibold leading-relaxed text-ink">{t.verify.journeyEmphasis}</p>
             </article>
             <div className="mt-10 max-w-3xl">
               <h3 className="font-display text-xl font-semibold leading-snug text-ink sm:text-2xl">
