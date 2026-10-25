@@ -6,6 +6,7 @@ import { getSession } from "@/lib/auth/session";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { hasSupabaseAuthSessionCookie } from "@/lib/supabase/auth-session-cookie";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { POST_LOGIN_PATH } from "@/lib/auth/post-login-path";
 import { sanitizeDashboardObservationHrefPath } from "@/lib/observation-route-id";
 import { readVerifyLoopAttribution } from "@/lib/verify-loop/cookies";
 
@@ -54,7 +55,7 @@ export default async function LoginPage({
     session = null;
   } else if (session && !verified) {
     if (nextPath) redirect(nextPath);
-    redirect("/dashboard");
+    redirect(POST_LOGIN_PATH);
   }
 
   const locale = await getRequestLocale();

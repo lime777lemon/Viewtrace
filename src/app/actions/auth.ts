@@ -16,6 +16,7 @@ import { parsePlanId } from "@/lib/plans";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { syncPublicUserPlanMirror } from "@/lib/supabase/sync-public-user-plan";
 import { insertOpsSignal } from "@/lib/ops/insert-signal";
+import { POST_LOGIN_PATH } from "@/lib/auth/post-login-path";
 import { sanitizeDashboardObservationHrefPath } from "@/lib/observation-route-id";
 import { completeVerifyLoopSignup, markVerifyLoopSignupStarted } from "@/lib/verify-loop/track";
 import { readVerifyLoopAttribution } from "@/lib/verify-loop/cookies";
@@ -96,7 +97,7 @@ export async function authFormAction(
   }
   const loopNext = (await readVerifyLoopAttribution()).nextPath;
   if (loopNext) redirect(loopNext);
-  redirect("/dashboard");
+  redirect(POST_LOGIN_PATH);
 }
 
 /**
