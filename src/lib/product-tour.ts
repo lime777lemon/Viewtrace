@@ -29,7 +29,7 @@ export function productTourHref(
     case "loop":
     case "observeAgain":
     default:
-      return "/dashboard";
+      return "/dashboard/overview";
   }
 }
 
@@ -40,7 +40,7 @@ export function productTourPathMatches(
 ): boolean {
   const href = productTourHref(id, latestObservationId);
   if (id === "loop" || id === "observeAgain") {
-    return pathname === "/dashboard";
+    return pathname === "/dashboard/overview";
   }
   if (id === "observe") {
     return pathname === "/dashboard/region-search";

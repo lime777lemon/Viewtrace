@@ -6,13 +6,14 @@ import { ViewtraceLogo } from "@/components/brand/ViewtraceLogo";
 import { DashboardOnboardingWelcome } from "@/components/dashboard/DashboardOnboardingWelcome";
 import { DashboardProductTour } from "@/components/dashboard/DashboardProductTour";
 import { LogoutButton } from "@/components/dashboard/LogoutButton";
+import { POST_LOGIN_PATH } from "@/lib/auth/post-login-path";
 import type { Locale } from "@/lib/i18n";
 import { copy } from "@/lib/i18n";
-import { getPlan, type PlanId } from "@/lib/plans";
 import { LOCALE_COOKIE } from "@/lib/i18n/locale-cookie";
+import { getPlan, type PlanId } from "@/lib/plans";
 
 function isNavActive(href: string, path: string): boolean {
-  if (href === "/dashboard") return path === "/dashboard";
+  if (href === "/dashboard/overview") return path === "/dashboard/overview";
   return path === href || path.startsWith(`${href}/`);
 }
 
@@ -65,7 +66,7 @@ export function DashboardShell({
     ...(plan.autoObservationWatch
       ? [{ href: "/dashboard/auto-observations" as const, label: t.nav.autoObservations, tour: undefined }]
       : []),
-    { href: "/dashboard", label: t.nav.overview, tour: "loop" as const },
+    { href: "/dashboard/overview", label: t.nav.overview, tour: "loop" as const },
     { href: "/dashboard/audit", label: t.nav.auditLog, tour: undefined },
     { href: "/dashboard/purchases", label: t.nav.purchases, tour: undefined },
     { href: "/dashboard/evidence-report", label: t.nav.evidenceReport, tour: undefined },
@@ -89,7 +90,7 @@ export function DashboardShell({
       <div className="flex min-h-screen">
         <aside className="sticky top-0 hidden h-dvh w-56 shrink-0 flex-col self-start overflow-hidden border-r border-border bg-surface-elevated md:flex">
           <div className="border-b border-border px-4 py-4">
-            <Link href="/dashboard" className="inline-flex items-center transition hover:opacity-90">
+            <Link href={POST_LOGIN_PATH} className="inline-flex items-center transition hover:opacity-90">
               <ViewtraceLogo className="h-9 w-auto" />
             </Link>
             <p className="mt-1 text-[10px] font-medium uppercase tracking-wider text-ink-muted">
@@ -129,7 +130,7 @@ export function DashboardShell({
           <header className="sticky top-0 z-40 border-b border-border bg-surface/95 backdrop-blur-md">
             <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
               <div className="flex min-w-0 items-center gap-3 md:hidden">
-                <Link href="/dashboard" className="inline-flex items-center transition hover:opacity-90">
+                <Link href={POST_LOGIN_PATH} className="inline-flex items-center transition hover:opacity-90">
                   <ViewtraceLogo className="h-7 w-auto" />
                 </Link>
               </div>

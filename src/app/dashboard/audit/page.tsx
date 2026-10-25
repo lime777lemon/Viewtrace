@@ -42,7 +42,7 @@ export default async function DashboardAuditPage() {
     <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex flex-wrap items-center gap-3 text-sm">
         <Link
-          href="/dashboard"
+          href="/dashboard/overview"
           className="font-medium text-accent hover:text-accent-hover"
         >
           ← {t.back}

@@ -91,6 +91,7 @@ export async function updateObservationAnnotationsAction(
   if (!data) return { ok: false, error: "not_found" };
 
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard/overview");
   revalidatePath("/dashboard/observations");
   revalidatePath(`/dashboard/observations/${observationId}`);
   revalidatePath(`/dashboard/observations/${observationId}/report`);

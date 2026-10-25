@@ -8,6 +8,7 @@ import {
   type EmailVerifiedLocale,
   POST_EMAIL_VERIFY_PATH,
 } from "@/lib/auth/email-verified-copy";
+import { POST_LOGIN_PATH } from "@/lib/auth/post-login-path";
 
 export function EmailVerifiedView({ hasSession }: { hasSession: boolean }) {
   const [locale, setLocale] = useState<EmailVerifiedLocale>("ja");
@@ -76,7 +77,7 @@ export function EmailVerifiedView({ hasSession }: { hasSession: boolean }) {
             <p className="mt-3 text-sm leading-relaxed text-emerald-900/90">
               {t.alreadySignedInHint}{" "}
               <Link
-                href="/dashboard"
+                href={POST_LOGIN_PATH}
                 className="font-semibold text-emerald-950 underline decoration-emerald-700/40 underline-offset-2 hover:text-emerald-900"
               >
                 {t.dashboardCta}
