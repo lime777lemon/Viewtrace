@@ -16,6 +16,12 @@ import {
 import { evidenceFactCaptureConditions, evidenceReportPeriodStarting } from "@/lib/scheduled-evidence-report";
 import { getAppOriginForEmailLinks } from "@/lib/site";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { EvidenceReportObservationDetail } from "@/components/evidence-report/EvidenceReportObservationDetail";
+import {
+  loadEvidenceReportObservationDetails,
+  type EvidenceReportObservationDetailData,
+} from "@/lib/evidence-report-observation-detail";
+import { planAndRetentionForOwner } from "@/lib/observation-public-verify";
 
 export const dynamic = "force-dynamic";
 
@@ -67,6 +73,30 @@ export default async function PublicEvidenceReportPage({ params }: TokenParams) 
     }
   }
   const view = parseEvidenceReportBody(source);
+
+  /**
+   * 提出用: 週の各 Observation について、詳細画面と同じ内容をそのまま載せる。
+   * 再計測はしない。保存済みの行だけ。読み込めない記録は飛ばして、その旨を出す。
+   */
+  let details: EvidenceReportObservationDetailData[] = [];
+  if (admin && report.userId && rows.length > 0) {
+    try {
+      const owner = await planAndRetentionForOwner(admin, report.userId);
+      details = await loadEvidenceReportObservationDetails({
+        admin,
+        userId: report.userId,
+        plan: owner.plan,
+        retentionDays: owner.retentionDays,
+        appOrigin: getAppOriginForEmailLinks(),
+        rows: rows.map((row) => ({ id: row.id, verifyToken: row.verifyToken ?? null })),
+      });
+    } catch (error) {
+      console.warn("[evidence-report] observation details unavailable", {
+        message: error instanceof Error ? error.message : "details_failed",
+      });
+    }
+  }
+  const detailById = new Map(details.map((item) => [item.obs.id, item]));
   const table = copy[locale].observationsTable;
   const detail = copy[locale].observationDetail;
   const geoCopy = observationGeoCopyFrom(detail);
@@ -163,7 +193,11 @@ export default async function PublicEvidenceReportPage({ params }: TokenParams) 
                             </span>
                           </td>
                           <td className="px-4 py-3 text-right font-medium">
-                            {row.detailUrl ? (
+                            {detailById.has(row.id) ? (
+                              <a href={`#observation-${row.id}`} className="text-accent hover:text-accent-hover">
+                                {table.actionDetail}
+                              </a>
+                            ) : row.detailUrl ? (
                               <Link href={row.detailUrl} className="text-accent hover:text-accent-hover">
                                 {table.actionDetail}
                               </Link>
@@ -206,6 +240,30 @@ export default async function PublicEvidenceReportPage({ params }: TokenParams) 
                   </div>
                 </article>
               ))}
+            </div>
+          </section>
+        ) : null}
+        {rows.length > 0 ? (
+          <section className="mt-10">
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#276248]">{t.details}</h2>
+            <p className="mt-2 text-sm leading-relaxed text-ink-muted">{t.detailsHint}</p>
+            <div className="mt-4 grid gap-8">
+              {rows.map((row) => {
+                const item = detailById.get(row.id);
+                if (!item) {
+                  return (
+                    <article
+                      key={row.id}
+                      id={`observation-${row.id}`}
+                      className="rounded-2xl border border-dashed border-border bg-surface px-4 py-4 text-sm text-ink-muted sm:px-6"
+                    >
+                      <p className="font-mono text-xs text-ink-muted">{row.id}</p>
+                      <p className="mt-1">{t.detailsUnavailable}</p>
+                    </article>
+                  );
+                }
+                return <EvidenceReportObservationDetail key={row.id} data={item} locale={locale} />;
+              })}
             </div>
           </section>
         ) : null}

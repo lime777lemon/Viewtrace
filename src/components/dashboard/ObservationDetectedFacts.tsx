@@ -17,6 +17,8 @@ type Props = {
   current: Observation;
   timeSiblings: Observation[];
   locale: Locale;
+  /** 公開 Evidence Report。ダッシュボードの Compare 導線は出さない。 */
+  publicView?: boolean;
 };
 
 function fieldLabel(
@@ -64,7 +66,7 @@ function displayValue(value: string, emptyLabel: string): string {
 }
 
 /** 42: Screenshot 三値の下に、既にあるメタ差を事実で並べる。Page changed とは書かない。 */
-export function ObservationDetectedFacts({ current, timeSiblings, locale }: Props) {
+export function ObservationDetectedFacts({ current, timeSiblings, locale, publicView = false }: Props) {
   const t = copy[locale].observationCompare;
   const previous = previousObservationForCompare(current, timeSiblings);
   if (!previous) return null;
@@ -179,12 +181,14 @@ export function ObservationDetectedFacts({ current, timeSiblings, locale }: Prop
         <p className="mt-3 text-sm text-ink-muted">{t.noMetadataChanges}</p>
       )}
 
-      <Link
-        href={observationCompareHref(previous.id, current.id)}
-        className="mt-3 inline-flex text-sm font-semibold text-accent hover:text-accent-hover"
-      >
-        {t.promptOpen}
-      </Link>
+      {publicView ? null : (
+        <Link
+          href={observationCompareHref(previous.id, current.id)}
+          className="mt-3 inline-flex text-sm font-semibold text-accent hover:text-accent-hover"
+        >
+          {t.promptOpen}
+        </Link>
+      )}
     </section>
   );
 }

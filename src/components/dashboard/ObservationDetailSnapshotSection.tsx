@@ -50,6 +50,8 @@ type Props = {
   locale: Locale;
   comparePrevious?: ComparePreviousSnapshot | null;
   screenshotExpired?: boolean;
+  /** 公開 Evidence Report。ログイン必須の取得・diff・ダッシュボード導線を出さない。 */
+  publicView?: boolean;
 };
 
 export function ObservationDetailSnapshotSection({
@@ -60,6 +62,7 @@ export function ObservationDetailSnapshotSection({
   locale,
   comparePrevious = null,
   screenshotExpired = false,
+  publicView = false,
 }: Props) {
   const history = obs.events?.length ? obs.events : defaultHistory(obs, locale);
   const openUrl = resolvedCanonical ?? obs.url;
@@ -73,7 +76,7 @@ export function ObservationDetailSnapshotSection({
   const metaLine = `snapshot · ${geo.headline} · ${formatUtcLabel(obs.capturedAt)}`;
   const liveCheck = isHomepageLiveCheckObservation(obs);
   const clip = isHomepageClipObservation(obs);
-  const fetchSnapshot = shouldHydrateObservationSnapshot(obs);
+  const fetchSnapshot = !publicView && shouldHydrateObservationSnapshot(obs);
   const captureEventDetailRaw = obs.events?.find((e) => e.kind === "capture")?.detail;
   const captureEventDetail = captureEventDetailRaw
     ? localizeObservationEventDetail(captureEventDetailRaw, locale)
@@ -84,7 +87,7 @@ export function ObservationDetailSnapshotSection({
     Boolean(captureEventDetailRaw?.trim()) &&
     !liveCheck;
   const clipHref =
-    liveCheck && obs.url && obs.regionValue
+    !publicView && liveCheck && obs.url && obs.regionValue
       ? `/dashboard/observations/new?url=${encodeURIComponent(obs.url)}&region=${encodeURIComponent(obs.regionValue)}&mode=share_clip`
       : null;
 
@@ -116,6 +119,7 @@ export function ObservationDetailSnapshotSection({
           mediaKind={liveCheck ? "live" : clip ? "video" : "image"}
           clipHref={clipHref}
           fullPage={obs.captureConditions?.full_page_requested === true}
+          publicView={publicView}
         />
       </div>
 

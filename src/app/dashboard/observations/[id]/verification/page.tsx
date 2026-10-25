@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { EvidenceReportSheet } from "@/components/dashboard/EvidenceReportSheet";
+import { EvidenceReportObservationDetail } from "@/components/evidence-report/EvidenceReportObservationDetail";
 import { observationAiAuditCopyFrom } from "@/lib/observation-ai-audit-copy";
 import { loadObservationAiAudit } from "@/lib/observation-ai-audit-store";
 import { ObservationNotVisible } from "@/components/dashboard/ObservationNotVisible";
@@ -10,6 +11,10 @@ import { getSession } from "@/lib/auth/session";
 import { getObservationMergedForPlan, listObservationsForUrlIdentity } from "@/lib/demo/user-observations";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { buildEvidenceReportFacts } from "@/lib/evidence-report";
+import {
+  loadEvidenceReportObservationDetails,
+  type EvidenceReportObservationDetailData,
+} from "@/lib/evidence-report-observation-detail";
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
 import { copy } from "@/lib/i18n";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
@@ -26,6 +31,7 @@ import {
 import { loadMonitoringRunForObservation } from "@/lib/monitoring-run-store";
 import { readScreenshotRetentionDays } from "@/lib/screenshot-retention-store";
 import { visibleSnapshotImageUrl } from "@/lib/observation-screenshot-retention";
+import { getAppOriginForEmailLinks } from "@/lib/site";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -99,6 +105,28 @@ export default async function ObservationVerificationReportPage({ params }: Prop
   });
 
   const capturedLabel = `${formatJaDateTime(obs.capturedAt, locale)} · ${formatUtcLabel(obs.capturedAt)}`;
+  const retentionDays = await readScreenshotRetentionDays(session.userId, session.plan);
+
+  /**
+   * 提出用: 表紙の1ページサマリーのあとに、詳細画面と同じ内容をそのまま載せる。
+   * 再計測はしない。保存済みの行だけ。
+   */
+  let detail: EvidenceReportObservationDetailData | null = null;
+  try {
+    const loaded = await loadEvidenceReportObservationDetails({
+      admin: supabase,
+      userId: session.userId,
+      plan: session.plan,
+      retentionDays,
+      appOrigin: getAppOriginForEmailLinks(),
+      rows: [{ id: obs.id, verifyToken }],
+    });
+    detail = loaded[0] ?? null;
+  } catch (error) {
+    console.warn("[verification-report] observation details unavailable", {
+      message: error instanceof Error ? error.message : "details_failed",
+    });
+  }
 
   const reportCopy = {
     title: t.title,
@@ -139,8 +167,6 @@ export default async function ObservationVerificationReportPage({ params }: Prop
     auditInference: t.auditInference,
   };
 
-  const retentionDays = await readScreenshotRetentionDays(session.userId, session.plan);
-
   return (
     <>
       <style
@@ -158,7 +184,7 @@ export default async function ObservationVerificationReportPage({ params }: Prop
           `,
         }}
       />
-      <div className="no-print mx-auto max-w-2xl space-y-4 px-4 py-6 sm:px-6">
+      <div className="no-print mx-auto max-w-4xl space-y-4 px-4 py-6 sm:px-6">
         <Link
           href={`/dashboard/observations/${obs.id}`}
           className="text-sm font-medium text-accent hover:text-accent-hover"
@@ -199,6 +225,20 @@ export default async function ObservationVerificationReportPage({ params }: Prop
             : undefined
         }
       />
+
+      <section className="mx-auto max-w-4xl px-4 pb-16 sm:px-6 sm:pb-20 print:break-before-page print:pb-0">
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#276248]">{t.details}</h2>
+        <p className="mt-2 text-sm leading-relaxed text-ink-muted">{t.detailsHint}</p>
+        <div className="mt-4">
+          {detail ? (
+            <EvidenceReportObservationDetail data={detail} locale={locale} />
+          ) : (
+            <p className="rounded-2xl border border-dashed border-border bg-surface px-4 py-4 text-sm text-ink-muted">
+              {t.detailsUnavailable}
+            </p>
+          )}
+        </div>
+      </section>
     </>
   );
 }

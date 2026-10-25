@@ -483,6 +483,8 @@ type Props = {
   browserlessConfigured: boolean;
   cruxConfigured: boolean;
   hideSyntheticRunner?: boolean;
+  /** 公開 Evidence Report。保存済みの結果だけを出し、実行ボタン・quota・設定ヒントは出さない。 */
+  readOnly?: boolean;
 };
 
 export function ObservationOptionalMetricsPanel({
@@ -502,6 +504,7 @@ export function ObservationOptionalMetricsPanel({
   browserlessConfigured,
   cruxConfigured,
   hideSyntheticRunner = false,
+  readOnly = false,
 }: Props) {
   const [labCwv, setLabCwv] = useState<LabCwvV1 | null>(initialLabCwv);
   const [fieldCwv, setFieldCwv] = useState<FieldCwvV1 | null>(initialFieldCwv);
@@ -518,7 +521,7 @@ export function ObservationOptionalMetricsPanel({
   const [fieldPending, startField] = useTransition();
   const [syntheticPending, startSynthetic] = useTransition();
   const [subPending, startSub] = useTransition();
-  const canRun = Boolean(observationId);
+  const canRun = !readOnly && Boolean(observationId);
 
   const quotaText = copy.cwvQuota.replace("{used}", String(used)).replace("{limit}", String(labCwvLimit));
   const fieldQuotaText = copy.fieldQuota
@@ -614,7 +617,7 @@ export function ObservationOptionalMetricsPanel({
         <div>
           <h3 className="font-display text-base font-semibold text-ink">{copy.cwvTitle}</h3>
           <p className="mt-1 text-sm leading-relaxed text-ink-muted">{copy.cwvHint}</p>
-          <p className="mt-1 text-xs text-ink-muted">{quotaText}</p>
+          {readOnly ? null : <p className="mt-1 text-xs text-ink-muted">{quotaText}</p>}
           {labCwv ? <LabCwvBody row={labCwv} copy={copy} /> : null}
           {cwvError ? (
             <p role="alert" className="mt-2 text-sm text-rose-800">
@@ -631,7 +634,7 @@ export function ObservationOptionalMetricsPanel({
               {cwvPending ? copy.cwvMeasuring : labCwv ? copy.cwvAgain : copy.cwvMeasure}
             </button>
           ) : null}
-          {!browserlessConfigured ? (
+          {!readOnly && !browserlessConfigured ? (
             <p className="mt-2 text-xs text-ink-muted">{copy.browserlessOff}</p>
           ) : null}
         </div>
@@ -639,14 +642,14 @@ export function ObservationOptionalMetricsPanel({
         <div>
           <h3 className="font-display text-base font-semibold text-ink">{copy.syntheticTitle}</h3>
           <p className="mt-1 text-sm leading-relaxed text-ink-muted">{copy.syntheticHint}</p>
-          <p className="mt-1 text-xs text-ink-muted">{syntheticQuotaText}</p>
+          {readOnly ? null : <p className="mt-1 text-xs text-ink-muted">{syntheticQuotaText}</p>}
           {synthetic ? <SyntheticBody row={synthetic} copy={copy} /> : null}
           {syntheticError ? (
             <p role="alert" className="mt-2 text-sm text-rose-800">
               {syntheticError}
             </p>
           ) : null}
-          {hideSyntheticRunner ? (
+          {readOnly ? null : hideSyntheticRunner ? (
             <p className="mt-2 text-xs text-ink-muted">{copy.syntheticRunViaJourney}</p>
           ) : canRun ? (
             <button
@@ -667,7 +670,7 @@ export function ObservationOptionalMetricsPanel({
         <div>
           <h3 className="font-display text-base font-semibold text-ink">{copy.fieldTitle}</h3>
           <p className="mt-1 text-sm leading-relaxed text-ink-muted">{copy.fieldHint}</p>
-          <p className="mt-1 text-xs text-ink-muted">{fieldQuotaText}</p>
+          {readOnly ? null : <p className="mt-1 text-xs text-ink-muted">{fieldQuotaText}</p>}
           {fieldCwv ? <FieldCwvBody row={fieldCwv} copy={copy} /> : null}
           {fieldError ? (
             <p role="alert" className="mt-2 text-sm text-rose-800">
@@ -697,7 +700,7 @@ export function ObservationOptionalMetricsPanel({
               </button>
             </div>
           ) : null}
-          {!cruxConfigured ? (
+          {!readOnly && !cruxConfigured ? (
             <p className="mt-2 text-xs text-ink-muted">{copy.fieldNotConfigured}</p>
           ) : null}
         </div>

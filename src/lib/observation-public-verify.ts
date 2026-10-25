@@ -6,7 +6,7 @@ import {
   isObservationScreenshotExpired,
   visibleSnapshotImageUrl,
 } from "@/lib/observation-screenshot-retention";
-import { getPlan, parsePlanId } from "@/lib/plans";
+import { getPlan, parsePlanId, type PlanId } from "@/lib/plans";
 import {
   planIdFromUserRow,
   screenshotRetentionDaysFromStored,
@@ -109,29 +109,42 @@ export function mapObservationRowToPublicVerify(
   };
 }
 
-export async function retentionDaysForOwner(
+/** 所有者のプランと保存日数（公開ページ用。セッションなし）。 */
+export async function planAndRetentionForOwner(
   admin: NonNullable<ReturnType<typeof createSupabaseAdminClient>>,
   userId: string,
-): Promise<number> {
+): Promise<{ plan: PlanId; retentionDays: number }> {
   const { data: row } = await admin
     .from("users")
     .select("plan, screenshot_retention_days")
     .eq("id", userId)
     .maybeSingle();
-  const plan = planIdFromUserRow(row && typeof row === "object" && "plan" in row ? row.plan : null);
+  let plan = planIdFromUserRow(row && typeof row === "object" && "plan" in row ? row.plan : null);
   const stored =
     row && typeof row === "object" && "screenshot_retention_days" in row
       ? row.screenshot_retention_days
       : null;
-  if (typeof stored === "number" && stored > 0) return screenshotRetentionDaysFromStored(stored, plan);
+  if (typeof stored === "number" && stored > 0) {
+    return { plan, retentionDays: screenshotRetentionDaysFromStored(stored, plan) };
+  }
   try {
     const { data } = await admin.auth.admin.getUserById(userId);
     const raw = data.user?.user_metadata?.plan;
-    if (typeof raw === "string") return getPlan(parsePlanId(raw)).retentionDays;
+    if (typeof raw === "string") {
+      plan = parsePlanId(raw);
+      return { plan, retentionDays: getPlan(plan).retentionDays };
+    }
   } catch {
     /* stored plan is enough */
   }
-  return screenshotRetentionDaysFromStored(stored, plan);
+  return { plan, retentionDays: screenshotRetentionDaysFromStored(stored, plan) };
+}
+
+export async function retentionDaysForOwner(
+  admin: NonNullable<ReturnType<typeof createSupabaseAdminClient>>,
+  userId: string,
+): Promise<number> {
+  return (await planAndRetentionForOwner(admin, userId)).retentionDays;
 }
 
 export async function fetchObservationForPublicVerify(

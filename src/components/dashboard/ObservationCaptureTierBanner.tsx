@@ -12,6 +12,8 @@ type Props = {
   obs: Observation;
   locale: Locale;
   screenshotExpired?: boolean;
+  /** 公開 Evidence Report。再取得の導線は出さない。 */
+  publicView?: boolean;
 };
 
 function tierStyles(tier: ObservationCaptureTier): string {
@@ -33,6 +35,7 @@ export function ObservationCaptureTierBanner({
   obs,
   locale,
   screenshotExpired = false,
+  publicView = false,
 }: Props) {
   const tier = resolveObservationCaptureTier(obs);
   const c = copy[locale].observationCaptureTier;
@@ -65,7 +68,7 @@ export function ObservationCaptureTierBanner({
     none: c.hintNoImage,
   };
 
-  const retryHref = tier === "preview_fallback" ? observationRetryHref(obs) : null;
+  const retryHref = !publicView && tier === "preview_fallback" ? observationRetryHref(obs) : null;
 
   return (
     <div

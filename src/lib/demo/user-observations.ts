@@ -8,7 +8,7 @@ import type {
 } from "@/lib/demo/observations";
 import type { PlanId } from "@/lib/plans";
 import { getRegionOptions } from "@/lib/regions";
-import type { PostgrestError } from "@supabase/supabase-js";
+import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
 import { parseCaptureConditionsFromDb } from "@/lib/capture-conditions";
 import { computeObservationContentHash } from "@/lib/observation-content-hash";
 import { generateObservationVerifyToken } from "@/lib/observation-verify-token";
@@ -237,6 +237,55 @@ export async function listObservationsForUrlIdentity(url: string): Promise<Obser
 
   return data
     .map((row) => mapDbRowToObservation(row as unknown as Record<string, unknown>, session.plan))
+    .filter((x): x is Observation => Boolean(x))
+    .filter((row) => (identity ? observationUrlIdentity(row.url) === identity : row.url.trim() === url.trim()));
+}
+
+/**
+ * 公開 Evidence Report 用。セッションなし・admin client で、所有者の行だけを ID で取得する。
+ * RLS を通らないので `user_id` を必ず絞る。
+ */
+export async function listObservationsByIdsForOwner(
+  admin: SupabaseClient,
+  userId: string,
+  ids: string[],
+  planForRegionFallback: PlanId,
+): Promise<Observation[]> {
+  const clean = Array.from(
+    new Set(ids.map((id) => sanitizeObservationRouteId(id)).filter((id): id is string => Boolean(id))),
+  );
+  if (!userId || clean.length === 0) return [];
+  const { data, error } = await admin
+    .from("observations")
+    .select(OBSERVATION_ROW_SELECT)
+    .eq("user_id", userId)
+    .in("id", clean);
+  if (error || !data) return [];
+  return data
+    .map((row) => mapDbRowToObservation(row as unknown as Record<string, unknown>, planForRegionFallback))
+    .filter((x): x is Observation => Boolean(x));
+}
+
+/** 公開 Evidence Report 用。所有者の同一 URL 識別子の記録（Time / Region Compare の母集団）。 */
+export async function listObservationsForUrlIdentityForOwner(
+  admin: SupabaseClient,
+  userId: string,
+  url: string,
+  planForRegionFallback: PlanId,
+): Promise<Observation[]> {
+  const identity = observationUrlIdentity(url);
+  const variants = observationUrlLookupVariants(url);
+  if (!userId || variants.length === 0) return [];
+  const { data, error } = await admin
+    .from("observations")
+    .select(OBSERVATION_ROW_SELECT)
+    .eq("user_id", userId)
+    .in("url", variants)
+    .order("captured_at", { ascending: true })
+    .limit(80);
+  if (error || !data) return [];
+  return data
+    .map((row) => mapDbRowToObservation(row as unknown as Record<string, unknown>, planForRegionFallback))
     .filter((x): x is Observation => Boolean(x))
     .filter((row) => (identity ? observationUrlIdentity(row.url) === identity : row.url.trim() === url.trim()));
 }

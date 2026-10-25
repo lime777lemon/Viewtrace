@@ -80,6 +80,8 @@ type Props = {
   mediaKind?: "image" | "video" | "live";
   clipHref?: string | null;
   fullPage?: boolean;
+  /** 公開ページ（Evidence Report）。セッション必須の diff API を叩かず、保存済み画像だけで描く。 */
+  publicView?: boolean;
 };
 
 export function ObservationSnapshotVisuals({
@@ -94,6 +96,7 @@ export function ObservationSnapshotVisuals({
   mediaKind = "image",
   clipHref = null,
   fullPage = false,
+  publicView = false,
 }: Props) {
   const t = copy[locale].snapshotVisuals;
   const { imageUrl, phase } = useHydratedSnapshotImage(
@@ -109,7 +112,7 @@ export function ObservationSnapshotVisuals({
   const previousUrl = comparePrevious?.snapshotImageUrl ?? null;
 
   useEffect(() => {
-    if (mediaKind !== "image" || !currentForDiff || !previousUrl) {
+    if (publicView || mediaKind !== "image" || !currentForDiff || !previousUrl) {
       setDiffRatioLabel(null);
       setDiffPhase("idle");
       return;
@@ -142,7 +145,7 @@ export function ObservationSnapshotVisuals({
     return () => {
       cancelled = true;
     };
-  }, [currentForDiff, previousUrl, mediaKind]);
+  }, [currentForDiff, previousUrl, mediaKind, publicView]);
 
   const showVideo = mediaKind === "video" && Boolean(serverImageUrl);
   const showLive = mediaKind === "live";
@@ -301,22 +304,26 @@ export function ObservationSnapshotVisuals({
                     className="h-full w-full object-cover object-top"
                   />
                 </div>
-                <Link
-                  href={`/dashboard/observations/${comparePrevious.id}`}
-                  className="mt-4 inline-flex text-sm font-semibold text-accent hover:text-accent-hover"
-                >
-                  {t.viewPrevious}
-                </Link>
+                {publicView ? null : (
+                  <Link
+                    href={`/dashboard/observations/${comparePrevious.id}`}
+                    className="mt-4 inline-flex text-sm font-semibold text-accent hover:text-accent-hover"
+                  >
+                    {t.viewPrevious}
+                  </Link>
+                )}
               </>
             ) : (
               <>
                 <p className="mt-3 text-sm text-ink-muted">{t.compareHint}</p>
-                <Link
-                  href="/dashboard/observations"
-                  className="mt-4 inline-flex text-sm font-semibold text-accent hover:text-accent-hover"
-                >
-                  {t.backToObservations}
-                </Link>
+                {publicView ? null : (
+                  <Link
+                    href="/dashboard/observations"
+                    className="mt-4 inline-flex text-sm font-semibold text-accent hover:text-accent-hover"
+                  >
+                    {t.backToObservations}
+                  </Link>
+                )}
               </>
             )}
           </div>

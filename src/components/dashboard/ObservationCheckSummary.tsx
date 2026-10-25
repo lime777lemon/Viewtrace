@@ -181,6 +181,7 @@ export function ObservationCheckSummary({
   seo = null,
   check = null,
   behaviorDiff = null,
+  publicView = false,
 }: {
   loaded: MonitoringRunLoaded;
   observationId: string;
@@ -188,6 +189,8 @@ export function ObservationCheckSummary({
   seo?: PageSeoDerivedV1 | null;
   check?: RegionalInteractionCheckV1 | null;
   behaviorDiff?: BehaviorDiffV1 | null;
+  /** 公開 Evidence Report。他の記録へのダッシュボード導線は出さない。 */
+  publicView?: boolean;
 }) {
   if (loaded.run.execution !== "executed") return null;
   const copy = COPY[locale];
@@ -378,7 +381,7 @@ export function ObservationCheckSummary({
               const text = `${row.label}${device ? ` · ${device}` : ""} · ${copy.pageFact[row.fact]}${current ? ` · ${copy.thisRecord}` : ""}`;
               return (
                 <li key={row.id}>
-                  {!current && row.id ? (
+                  {!current && row.id && !publicView ? (
                     <Link href={`/dashboard/observations/${row.id}`} className="font-semibold underline">
                       {text}
                     </Link>

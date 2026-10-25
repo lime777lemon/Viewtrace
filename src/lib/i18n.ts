@@ -967,9 +967,13 @@ export const copy = {
       openReport: "証跡レポートを作成",
       title: "証跡レポート",
       subtitle:
-        "代理店・クライアント共有用の1ページサマリー。印刷または PDF 保存でそのまま送れます。",
+        "代理店・クライアント共有用。表紙のあとに、Observation 詳細と同じ内容をそのまま載せています。印刷または PDF 保存で送れます。",
       generateButton: "証跡レポートを作成（PDF）",
       printHint: "ボタンで印刷画面を開き、「PDF に保存」を選んでください。追加コストはかかりません。",
+      details: "記録の詳細",
+      detailsHint:
+        "提出用に、この Observation の詳細画面と同じ内容をそのまま載せています。実行や設定の操作は含みません。",
+      detailsUnavailable: "この記録の詳細は読み込めませんでした。",
       verifyUrlHint: "顧客向けの公開確認 URL:",
       disclaimer:
         "参照用の証跡サマリーです。法的証明や第三者監査の代替にはなりません。未記録の項目は「—」と表示されます。",
@@ -1014,6 +1018,10 @@ export const copy = {
       records: "記録",
       weekRecords: "１週間の記録",
       screenshot: "Screenshot",
+      details: "各記録の詳細",
+      detailsHint:
+        "提出用に、各 Observation の詳細画面と同じ内容をそのまま載せています。実行や設定の操作は含みません。",
+      detailsUnavailable: "この記録の詳細は読み込めませんでした。",
       source: "送られた原文",
       missing: "このレポートは見つかりません。",
     },
@@ -3212,9 +3220,13 @@ export const copy = {
       openReport: "Generate Evidence Report",
       title: "Evidence Report",
       subtitle:
-        "One-page summary for agencies and clients—print or save as PDF and send as-is.",
+        "For agencies and clients. After the cover, the Observation appears exactly as on its detail page. Print or save as PDF.",
       generateButton: "Generate Evidence Report",
       printHint: "Opens print—choose “Save as PDF”. No extra cost.",
+      details: "Record details",
+      detailsHint:
+        "For submission, this Observation appears here exactly as on its detail page. Run and settings controls are not included.",
+      detailsUnavailable: "Details for this record could not be loaded.",
       verifyUrlHint: "Public verify link for your client:",
       disclaimer:
         "Reference evidence summary only—not legal proof or third-party audit. Missing fields show as “—”.",
@@ -3259,6 +3271,10 @@ export const copy = {
       records: "Records",
       weekRecords: "This week's records",
       screenshot: "Screenshot",
+      details: "Record details",
+      detailsHint:
+        "For submission, each Observation appears here exactly as on its detail page. Run and settings controls are not included.",
+      detailsUnavailable: "Details for this record could not be loaded.",
       source: "Report text",
       missing: "This report could not be found.",
     },

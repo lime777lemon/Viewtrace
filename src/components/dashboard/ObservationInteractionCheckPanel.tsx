@@ -49,6 +49,8 @@ type Props = {
   watchIncluded?: boolean;
   observationUrl?: string;
   journeyTargets?: Array<{ id: string; name: string; startUrl: string }>;
+  /** 公開 Evidence Report。保存済みの結果と Evidence だけを出し、実行・quota・Journey 追加の操作は出さない。 */
+  readOnly?: boolean;
 };
 
 function shortSelector(selector: string): string {
@@ -336,6 +338,7 @@ export function ObservationInteractionCheckPanel({
   watchIncluded = false,
   observationUrl = "",
   journeyTargets = [],
+  readOnly = false,
 }: Props) {
   const t = copy[locale].observationDetail;
   const router = useRouter();
@@ -538,7 +541,7 @@ export function ObservationInteractionCheckPanel({
                 .replace("{not_measured}", String(current.discovery.not_measured))}
             </p>
           )}
-          {journeyCandidates.length > 0 ? (
+          {!readOnly && journeyCandidates.length > 0 ? (
             <div className="mt-3 space-y-2">
               <p className="text-xs text-ink-muted">{t.interactionAddToJourneyHint}</p>
               <ul className="space-y-1">
@@ -855,6 +858,8 @@ export function ObservationInteractionCheckPanel({
         </div>
       ) : null}
       </details>
+      {readOnly ? null : (
+      <>
       <p className="mt-2 text-xs text-ink-muted">
         {t.interactionQuota.replace("{used}", String(usedCount)).replace("{limit}", String(limit))}
       </p>
@@ -903,6 +908,8 @@ export function ObservationInteractionCheckPanel({
           <p className="text-xs text-ink-muted">{t.interactionCaptureOff}</p>
         )}
       </div>
+      </>
+      )}
       {error ? (
         <p className="mt-2 text-xs font-medium text-red-700" role="alert">
           {error}

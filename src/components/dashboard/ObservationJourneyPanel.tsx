@@ -32,6 +32,8 @@ type Props = {
   canRun: boolean;
   used: number;
   limit: number;
+  /** 公開 Evidence Report。結果だけを出し、実行ボタンと quota は出さない。 */
+  readOnly?: boolean;
 };
 
 function statusText(status: JourneyStepStatus, t: (typeof copy)[Locale]["observationDetail"]): string {
@@ -56,6 +58,7 @@ export function ObservationJourneyPanel({
   canRun,
   used,
   limit,
+  readOnly = false,
 }: Props) {
   const t = copy[locale].observationDetail;
   const router = useRouter();
@@ -114,9 +117,11 @@ export function ObservationJourneyPanel({
         {t.journeyTitle}
       </h3>
       <p className="mt-1 text-xs leading-relaxed text-ink-muted">{t.journeyHint}</p>
-      <p className="mt-2 text-xs text-ink-muted">
-        {t.journeyQuota.replace("{used}", String(usedCount)).replace("{limit}", String(limit))}
-      </p>
+      {readOnly ? null : (
+        <p className="mt-2 text-xs text-ink-muted">
+          {t.journeyQuota.replace("{used}", String(usedCount)).replace("{limit}", String(limit))}
+        </p>
+      )}
 
       <div className="mt-4 flex flex-wrap items-baseline justify-between gap-2">
         <p className="text-sm text-ink">
@@ -127,7 +132,7 @@ export function ObservationJourneyPanel({
           </span>
           {duration ? ` · ${duration}` : ""}
         </p>
-        {canRun ? (
+        {readOnly ? null : canRun ? (
           <button
             type="button"
             disabled={pending || usedCount >= limit}
