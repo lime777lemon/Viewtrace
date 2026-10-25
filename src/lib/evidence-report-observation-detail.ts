@@ -33,8 +33,11 @@ import {
   isObservationScreenshotExpired,
   visibleSnapshotImageUrl,
 } from "@/lib/observation-screenshot-retention";
-import { buildPublicVerifyUrl } from "@/lib/observation-verify-token";
+import { planAndRetentionForOwner } from "@/lib/observation-public-verify";
+import { buildPublicVerifyUrl, sanitizeVerifyTokenParam } from "@/lib/observation-verify-token";
 import type { PlanId } from "@/lib/plans";
+import { getAppOriginForEmailLinks } from "@/lib/site";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 /**
  * 公開 Evidence Report に、Observation 詳細と同じ内容を載せるための読み出し。
@@ -226,4 +229,37 @@ export async function loadEvidenceReportObservationDetails(
     out.push(await loadOne(input, obs, row.verifyToken ?? null, loadRelated));
   }
   return out;
+}
+
+/**
+ * 公開 Verify（`/verify/[token]`）用。トークンから所有者の行だけを読み、詳細と同じ材料を返す。
+ * 再計測はしない。トークンが無い・行が無いときは null。
+ */
+export async function loadEvidenceReportObservationDetailForVerifyToken(
+  tokenRaw: string,
+): Promise<EvidenceReportObservationDetailData | null> {
+  const token = sanitizeVerifyTokenParam(tokenRaw);
+  if (!token) return null;
+  const admin = createSupabaseAdminClient();
+  if (!admin) return null;
+  const { data: row, error } = await admin
+    .from("observations")
+    .select("id,user_id")
+    .eq("verify_token", token)
+    .maybeSingle();
+  if (error || !row) return null;
+  const id = typeof (row as { id?: unknown }).id === "string" ? (row as { id: string }).id : "";
+  const userId =
+    typeof (row as { user_id?: unknown }).user_id === "string" ? (row as { user_id: string }).user_id : "";
+  if (!id || !userId) return null;
+  const owner = await planAndRetentionForOwner(admin, userId);
+  const loaded = await loadEvidenceReportObservationDetails({
+    admin,
+    userId,
+    plan: owner.plan,
+    retentionDays: owner.retentionDays,
+    appOrigin: getAppOriginForEmailLinks(),
+    rows: [{ id, verifyToken: token }],
+  });
+  return loaded[0] ?? null;
 }

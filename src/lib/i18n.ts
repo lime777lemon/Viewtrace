@@ -1028,7 +1028,12 @@ export const copy = {
     publicVerify: {
       badge: "公開 Observation",
       title: "公開 Observation",
-      subtitle: "ログイン不要の提出用ページです。取得時点の画面とメタデータを、リンクを知っている人に渡せます。",
+      subtitle:
+        "ログイン不要の提出用ページです。取得時点の画面と、Observation 詳細と同じ内容を、リンクを知っている人に渡せます。",
+      details: "記録の詳細",
+      detailsHint:
+        "提出用に、この Observation の詳細画面と同じ内容をそのまま載せています。実行や設定の操作は含みません。",
+      detailsUnavailable: "この記録の詳細は読み込めませんでした。",
       fieldTimestamp: "観測日時",
       fieldRegion: "観測地域",
       fieldUrl: "URL",
@@ -3282,7 +3287,11 @@ export const copy = {
       badge: "Public observation",
       title: "Public observation",
       subtitle:
-        "A login-free delivery page. Anyone with the link can see the screenshot and metadata from capture time.",
+        "A login-free delivery page. Anyone with the link can see the screenshot and the same Observation detail as the record page.",
+      details: "Record details",
+      detailsHint:
+        "For submission, this Observation appears here exactly as on its detail page. Run and settings controls are not included.",
+      detailsUnavailable: "Details for this record could not be loaded.",
       fieldTimestamp: "Captured",
       fieldRegion: "Region",
       fieldUrl: "URL",

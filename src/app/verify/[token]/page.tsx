@@ -2,32 +2,18 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ViewtraceLogo } from "@/components/brand/ViewtraceLogo";
-import {
-  ObservationCaptureConditionsPanel,
-  observationCaptureConditionsCopyFrom,
-} from "@/components/dashboard/ObservationCaptureConditionsPanel";
 import { ObservationRegionReadout } from "@/components/dashboard/ObservationRegionReadout";
-import { observationGeoCopyFrom } from "@/lib/observation-geo-readout";
-import {
-  ObservationHtmlHeadSignalsPanel,
-  observationHtmlHeadCopyFrom,
-} from "@/components/dashboard/ObservationHtmlHeadSignalsPanel";
-import { ObservationAiAuditReadout } from "@/components/dashboard/ObservationAiAuditReadout";
-import {
-  ObservationPageSignalsPanel,
-  observationPageSignalsCopyFrom,
-} from "@/components/dashboard/ObservationPageSignalsPanel";
-import { observationAiAuditCopyFrom } from "@/lib/observation-ai-audit-copy";
-import { ObservationSeoFactsPanel } from "@/components/dashboard/ObservationSeoFactsPanel";
+import { EvidenceReportObservationDetail } from "@/components/evidence-report/EvidenceReportObservationDetail";
 import { PublicShareActions } from "@/components/verify/PublicShareActions";
 import { PublicVerifySnapshot } from "@/components/verify/PublicVerifySnapshot";
 import { VerifyViewBeacon } from "@/components/verify/VerifyViewBeacon";
+import { loadEvidenceReportObservationDetailForVerifyToken } from "@/lib/evidence-report-observation-detail";
 import { fetchObservationForPublicVerify } from "@/lib/observation-public-verify";
 import { formatJaDateTime, formatUtcLabel } from "@/lib/format";
 import { copy } from "@/lib/i18n";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
+import { observationGeoCopyFrom } from "@/lib/observation-geo-readout";
 import { sanitizeVerifyTokenParam } from "@/lib/observation-verify-token";
-import { htmlHeadSignalsHasAny } from "@/lib/url-preview";
 
 export const dynamic = "force-dynamic";
 
@@ -61,6 +47,19 @@ export default async function PublicVerifyPage({ params }: Props) {
   const obs = await fetchObservationForPublicVerify(token);
   if (!obs) notFound();
 
+  /**
+   * 提出用: 表紙（画面と身元）のあとに、詳細画面と同じ内容をそのまま載せる。
+   * 再計測はしない。保存済みの行だけ。
+   */
+  let detail = null;
+  try {
+    detail = await loadEvidenceReportObservationDetailForVerifyToken(token);
+  } catch (error) {
+    console.warn("[verify] observation details unavailable", {
+      message: error instanceof Error ? error.message : "details_failed",
+    });
+  }
+
   const capturedLabel = `${formatJaDateTime(obs.capturedAt, locale)} · ${formatUtcLabel(obs.capturedAt)}`;
   const statusLabel =
     obs.status === "success"
@@ -69,14 +68,7 @@ export default async function PublicVerifyPage({ params }: Props) {
         ? td.statusFailure
         : td.statusPending;
   const finalUrl = obs.htmlSignals?.final_url?.trim() || "";
-
-  const captureConditionsCopy = observationCaptureConditionsCopyFrom(td);
   const geoCopy = observationGeoCopyFrom(td);
-
-  const htmlHeadSignalsCopy = observationHtmlHeadCopyFrom(td);
-  const pageSignalsCopy = observationPageSignalsCopyFrom(td);
-  const aiAuditCopy = observationAiAuditCopyFrom(td);
-  const showHtmlSignals = Boolean(obs.htmlSignals && htmlHeadSignalsHasAny(obs.htmlSignals));
 
   return (
     <div className="min-h-screen bg-surface">
@@ -86,7 +78,7 @@ export default async function PublicVerifyPage({ params }: Props) {
         }}
       />
       <header className="border-b border-border bg-surface-elevated">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
           <Link href="/" className="shrink-0">
             <ViewtraceLogo className="h-7 w-auto" priority={false} />
           </Link>
@@ -94,7 +86,7 @@ export default async function PublicVerifyPage({ params }: Props) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
+      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-10">
         <VerifyViewBeacon token={token} />
         <h1 className="font-display text-2xl font-semibold tracking-tight text-ink">{t.title}</h1>
         <p className="mt-2 text-sm leading-relaxed text-ink-muted">{t.subtitle}</p>
@@ -188,49 +180,19 @@ export default async function PublicVerifyPage({ params }: Props) {
           </div>
         </dl>
 
-        {showHtmlSignals && obs.htmlSignals ? (
-          <div className="mt-6">
-            <ObservationHtmlHeadSignalsPanel
-              signals={obs.htmlSignals}
-              copy={htmlHeadSignalsCopy}
-              requestedUrl={obs.url}
-              locale={locale === "ja" ? "ja" : "en"}
-            />
+        <section className="mt-10 print:break-before-page">
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#276248]">{t.details}</h2>
+          <p className="mt-2 text-sm leading-relaxed text-ink-muted">{t.detailsHint}</p>
+          <div className="mt-4">
+            {detail ? (
+              <EvidenceReportObservationDetail data={detail} locale={locale} />
+            ) : (
+              <p className="rounded-2xl border border-dashed border-border bg-surface px-4 py-4 text-sm text-ink-muted">
+                {t.detailsUnavailable}
+              </p>
+            )}
           </div>
-        ) : null}
-
-        {obs.captureConditions?.seo_facts ? (
-          <div className="mt-6">
-            <ObservationSeoFactsPanel
-              facts={obs.captureConditions.seo_facts}
-              html={obs.captureConditions?.html_signals}
-              locale={locale}
-            />
-          </div>
-        ) : null}
-
-        <div className="mt-6 empty:hidden">
-          <ObservationPageSignalsPanel signals={obs.htmlSignals} copy={pageSignalsCopy} />
-        </div>
-
-        <div className="mt-6">
-          <ObservationCaptureConditionsPanel
-            conditions={obs.captureConditions}
-            copy={captureConditionsCopy}
-            locale={locale}
-          />
-        </div>
-
-        {obs.aiAudit ? (
-          <div className="mt-6 rounded-2xl border border-dashed border-border bg-surface-elevated px-5 py-5 sm:px-6">
-            <ObservationAiAuditReadout
-              copy={aiAuditCopy}
-              audit={obs.aiAudit}
-              locale={locale}
-              generatedAtLabel={`${formatJaDateTime(obs.aiAudit.createdAt, locale)} · ${formatUtcLabel(obs.aiAudit.createdAt)}`}
-            />
-          </div>
-        ) : null}
+        </section>
 
         <p className="mt-6 text-xs leading-relaxed text-ink-muted">{t.disclaimer}</p>
         <p className="no-print mt-3">
