@@ -65,7 +65,14 @@ assert.equal(JSON.stringify(fallbackView.customer).includes("attempts"), false);
 assert.equal(JSON.stringify(fallbackView.customer).includes("proxy"), false);
 
 const verified = conditions({
-  geo: { country: "us", state: "NY", proxy_mode: "browserless_residential", proxy_provider: "browserless", proxy_sticky: true },
+  geo: {
+    country: "us",
+    state: "NY",
+    proxy_mode: "browserless_residential",
+    proxy_provider: "browserless",
+    proxy_sticky: true,
+    state_verified: true,
+  },
   cost_signals: {
     duration_ms: 12000,
     estimated_time_units: 1,
@@ -82,5 +89,28 @@ const countryOnly = conditions({
   geo: { country: "us", state: null, proxy_mode: "browserless_residential", proxy_provider: "browserless", proxy_sticky: true },
 });
 assert.equal(regionalVerification(countryOnly), "not_verified");
+
+const copiedState = conditions({
+  geo: { country: "us", state: "NY", proxy_mode: "browserless_residential", proxy_provider: "browserless", proxy_sticky: true },
+});
+assert.equal(regionalVerification(copiedState), "not_verified");
+
+const rejected = conditions({
+  geo: {
+    country: "us",
+    state: null,
+    proxy_mode: "browserless_residential",
+    proxy_provider: "browserless",
+    proxy_sticky: true,
+    state_verified: false,
+    state_targeting_rejected: true,
+  },
+});
+const rejectedView = presentCaptureConditions(rejected, "ja");
+assert.equal(rejectedView.customer.regionalVerificationLabel, "未確認");
+assert.equal(rejectedView.customer.regionalNote, "State-level proxying unavailable on current provider plan");
+const verifiedView = presentCaptureConditions(verified, "ja");
+assert.equal(verifiedView.customer.regionalVerificationLabel, "Screenshot を州単位で確認済み");
+assert.match(verifiedView.customer.regionalNote ?? "", /Screenshot/);
 
 console.log("ok");

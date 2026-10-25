@@ -82,8 +82,14 @@ export type CaptureConditionsV1 = {
     country: string | null;
     state: string | null;
     proxy_mode: CaptureProxyMode;
-    proxy_provider: "browserless" | "bright_data" | "custom" | null;
+    proxy_provider: "browserless" | "bright_data" | "decodo" | "custom" | null;
     proxy_sticky: boolean | null;
+    state_verified?: boolean;
+    fallback_level?: "state" | "country" | null;
+    geo_attempts?: number | null;
+    requested_state?: string | null;
+    state_targeting_rejected?: boolean;
+    verified_measurements?: Array<"screenshot" | "interaction" | "journey" | "lab_cwv">;
   };
   engine: {
     name: CaptureEngineName;
@@ -188,7 +194,7 @@ export type ContentHashCaptureConditions = {
     country: string | null;
     state: string | null;
     proxy_mode: CaptureProxyMode;
-    proxy_provider: "browserless" | "bright_data" | "custom" | null;
+    proxy_provider: "browserless" | "bright_data" | "decodo" | "custom" | null;
     proxy_sticky: boolean | null;
   };
   engine: CaptureConditionsV1["engine"];
@@ -245,13 +251,14 @@ function resolveGeoFromRegion(regionInput: string): { country: string | null; st
   return { country: target.country, state: target.stateCode ?? target.state ?? null };
 }
 
-function inferProxyProviderFromUrl(proxyUrl: string | null): "bright_data" | "custom" | null {
+function inferProxyProviderFromUrl(proxyUrl: string | null): "bright_data" | "decodo" | "custom" | null {
   if (!proxyUrl) return null;
   try {
     const host = new URL(proxyUrl).hostname.toLowerCase();
     if (host.includes("brightdata") || host.includes("brd") || host.includes("luminati")) {
       return "bright_data";
     }
+    if (host.includes("decodo.com") || host.includes("smartproxy.com")) return "decodo";
     return "custom";
   } catch {
     return "custom";
@@ -263,7 +270,8 @@ export function resolveCaptureProxyMode(input: {
   viaExternalProxy: boolean;
   usedRetryWithoutProxy: boolean;
   regionInput: string;
-  /** false のとき geo.state は出さない（国単位。proxyCity / proxyState が通ったときだけ true） */
+  /** 出口の州が requested state と一致したときだけ true。proxy を付けただけでは true にしない。 */
+  stateVerified?: boolean;
   residentialStateApplied?: boolean;
 }): {
   proxy_mode: CaptureProxyMode;
@@ -273,8 +281,7 @@ export function resolveCaptureProxyMode(input: {
   state: string | null;
 } {
   const geo = resolveGeoFromRegion(input.regionInput);
-  const stateApplied = input.residentialStateApplied === true;
-  const state = stateApplied ? geo.state : null;
+  const state = input.stateVerified === true ? geo.state : null;
   if (input.usedRetryWithoutProxy) {
     return {
       proxy_mode: "retry_without_proxy",
@@ -291,7 +298,7 @@ export function resolveCaptureProxyMode(input: {
       proxy_provider: inferProxyProviderFromUrl(proxyUrl),
       proxy_sticky: null,
       country: geo.country,
-      state: geo.state,
+      state,
     };
   }
   if (input.viaResidential) {
@@ -340,6 +347,12 @@ export type BuildBrowserlessCaptureConditionsInput = {
   viaResidential: boolean;
   viaExternalProxy: boolean;
   usedRetryWithoutProxy: boolean;
+  stateVerified?: boolean;
+  fallbackLevel?: "state" | "country" | null;
+  geoAttempts?: number | null;
+  stateTargetingRejected?: boolean;
+  verifiedMeasurements?: Array<"screenshot" | "interaction" | "journey" | "lab_cwv">;
+  proxyProvider?: CaptureConditionsV1["geo"]["proxy_provider"];
   residentialStateApplied?: boolean;
   storageFormat: "webp" | "png" | "webm" | "none";
   webpQuality: number | null;
@@ -368,6 +381,7 @@ export function buildCaptureConditionsFromBrowserless(
     viaResidential: input.viaResidential,
     viaExternalProxy: input.viaExternalProxy,
     usedRetryWithoutProxy: input.usedRetryWithoutProxy,
+    stateVerified: input.stateVerified,
     residentialStateApplied: input.residentialStateApplied,
     regionInput: input.regionInput,
   });
@@ -384,8 +398,14 @@ export function buildCaptureConditionsFromBrowserless(
       country: proxy.country,
       state: proxy.state,
       proxy_mode: proxy.proxy_mode,
-      proxy_provider: proxy.proxy_provider,
-      proxy_sticky: proxy.proxy_sticky,
+      proxy_provider: input.proxyProvider ?? proxy.proxy_provider,
+      proxy_sticky: input.proxyProvider === "decodo" ? true : proxy.proxy_sticky,
+      state_verified: input.stateVerified === true,
+      fallback_level: input.fallbackLevel ?? null,
+      geo_attempts: input.geoAttempts ?? null,
+      requested_state: resolveBrowserlessResidentialTarget(input.regionInput)?.stateCode ?? null,
+      state_targeting_rejected: input.stateTargetingRejected === true,
+      verified_measurements: input.stateVerified === true ? input.verifiedMeasurements ?? [] : [],
     },
     engine: {
       name: "browserless",
@@ -525,10 +545,12 @@ export function buildCaptureConditionsFromMicrolink(input: {
     },
     geo: {
       country: geo.country,
-      state: geo.state,
+      state: null,
       proxy_mode: "none",
       proxy_provider: null,
       proxy_sticky: null,
+      state_verified: false,
+      requested_state: geo.state,
     },
     engine: {
       name: "microlink",
@@ -566,10 +588,12 @@ export function buildCaptureConditionsFromFormUpload(input: {
     },
     geo: {
       country: geo.country,
-      state: geo.state,
+      state: null,
       proxy_mode: "none",
       proxy_provider: null,
       proxy_sticky: null,
+      state_verified: false,
+      requested_state: geo.state,
     },
     engine: { name: "form_upload" },
     result: {
@@ -603,7 +627,7 @@ export function buildCaptureConditionsFromDirectFetch(input: {
         proxy_provider: null as CaptureConditionsV1["geo"]["proxy_provider"],
         proxy_sticky: null as boolean | null,
         country: resolveGeoFromRegion(input.regionInput).country,
-        state: resolveGeoFromRegion(input.regionInput).state,
+        state: null,
       };
 
   return {

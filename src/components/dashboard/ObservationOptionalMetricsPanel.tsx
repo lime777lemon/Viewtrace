@@ -8,6 +8,7 @@ import {
   runObservationSyntheticInteractionAction,
 } from "@/app/actions/observation-optional-metrics";
 import {
+  LAB_CWV_SESSION_SOURCE,
   labCwvBarPercents,
   labCwvRatings,
   type LabCwvRating,
@@ -155,7 +156,12 @@ function LabCwvBody({ row, copy }: { row: LabCwvV1; copy: ObservationOptionalMet
   }
   return (
     <div className="mt-3 space-y-3">
-      <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">{copy.cwvLab}</p>
+      <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
+        {row.source === LAB_CWV_SESSION_SOURCE ? copy.cwvLabSession : copy.cwvLab}
+      </p>
+      {row.source === LAB_CWV_SESSION_SOURCE ? (
+        <p className="text-xs leading-relaxed text-ink-muted">{copy.cwvLabSessionNote}</p>
+      ) : null}
       <p className="text-xs leading-relaxed text-ink-muted">{copy.cwvChartHint}</p>
       <ObservationFactCountBar
         ariaLabel={copy.cwvLab}

@@ -25,6 +25,7 @@ import type { RegionalInteractionCheckV1 } from "@/lib/observation-regional-inte
 import { SCROLL_CHECK_MAX_REGIONS } from "@/lib/observation-scroll-interaction";
 import type { SyntheticInteractionV1 } from "@/lib/observation-synthetic-interaction";
 import { fetchFieldCwvForUrl, isCruxConfigured } from "@/lib/crux";
+import { runStateMeasurementSession } from "@/lib/state-measurement-session";
 import {
   countFieldCwvRunsThisUtcMonth,
   countLabCwvRunsThisUtcMonth,
@@ -107,10 +108,24 @@ export async function runObservationLabCwvAction(
     return { ok: false, error: "quota", used, limit: plan.labCwvMonthly };
   }
 
-  const result = await runBrowserlessPerformanceWithProxyRetry({
-    url: obs.url,
-    region: obs.regionValue,
-  });
+  const usState = /^US-[A-Z]{2}$/i.test(obs.regionValue ?? "");
+  const result = usState
+    ? await (async () => {
+        const session = await runStateMeasurementSession({
+          url: obs.url,
+          region: obs.regionValue ?? "",
+          measures: ["lab_cwv"],
+          countryFallback: true,
+        });
+        if (!session.labCwv || session.labCwv.error) {
+          return { ok: false as const, error: session.error || "no_audits", durationMs: session.durationMs, proxyBytes: null as number | null, detail: undefined };
+        }
+        return { ok: true as const, labCwv: session.labCwv, durationMs: session.durationMs, proxyBytes: null as number | null };
+      })()
+    : await runBrowserlessPerformanceWithProxyRetry({
+        url: obs.url,
+        region: obs.regionValue,
+      });
   if (!result.ok) {
     console.warn("[optional-metrics] lab cwv failed", result.error, result.detail?.slice(0, 200));
     return { ok: false, error: "failed", used, limit: plan.labCwvMonthly };

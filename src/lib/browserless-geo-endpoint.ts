@@ -107,16 +107,10 @@ export async function withBrowserlessGeoRetry<T extends { ok: boolean }>(params:
   const geo = geoRoutingRequested(params.region, false);
   const target = resolveBrowserlessResidentialTarget(params.region ?? "");
   const hasUsState = Boolean(target?.stateCode);
-  const tryCity = geo && hasUsState && Boolean(target?.city);
-  const tryState = geo && hasUsState && isBrowserlessProxyStateEnabled() && !tryCity;
-
-  if (tryCity) {
-    const city = await params.run({ residentialCity: true, residentialState: false });
-    if (city.ok || !params.retryable(city)) return city;
-  }
-  if (tryState) {
+  if (geo && hasUsState && isBrowserlessProxyStateEnabled()) {
     const state = await params.run({ residentialState: true, residentialCity: false });
     if (state.ok || !params.retryable(state)) return state;
+    return params.run({ residentialState: false, residentialCity: false, disableProxy: false });
   }
   if (geo) {
     const country = await params.run({

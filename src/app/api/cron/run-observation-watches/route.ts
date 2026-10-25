@@ -8,12 +8,14 @@ import {
   buildCaptureConditionsFromPlaywrightWorker,
 } from "@/lib/capture-conditions";
 import { runObservationPrimaryScreenshot } from "@/lib/observation-primary-capture";
+import { recordStateCoverage } from "@/lib/state-coverage";
 import { runUrlPreviewFetch } from "@/lib/url-preview-fetch";
 import { stampMeasurement } from "@/lib/measurement-record";
 import { seoFactsForObservation } from "@/lib/observation-seo-facts";
 import { collectObservationWebFacts } from "@/lib/observation-web-facts";
 import { isBrowserlessConfigured } from "@/lib/browserless-screenshot";
 import { runBrowserlessScrollWithProxyRetry } from "@/lib/browserless-scroll-interaction";
+import { buildRegionalCheckFromSession } from "@/lib/observation-regional-interaction";
 import {
   interactionWatchPlan,
   persistRegionalInteractionCheck,
@@ -501,8 +503,25 @@ export async function POST(req: Request) {
 
     const userEmail = await getUserEmail(userId);
     const fullPage = plan.snapshotFullPage;
+    const statePlan = /^US-[A-Z]{2}$/i.test(region)
+      ? await interactionWatchPlan(svc, {
+          userId,
+          url,
+          region,
+          capturedAt: new Date().toISOString(),
+          excludeId: "pending",
+          htmlChanged: false,
+        })
+      : null;
 
-    const primary = await runObservationPrimaryScreenshot({ url, region, fullPage });
+    const primary = await runObservationPrimaryScreenshot({
+      url,
+      region,
+      fullPage,
+      interaction: statePlan
+        ? { url, prior: statePlan.prior, scan: statePlan.scan, environment: { device_class: "desktop" } }
+        : undefined,
+    });
     const shot = primary.result;
 
     const nextRun = computeNextRunAfter(new Date(), freq, repeatCount, plan.watchMaxDailyRepeats).toISOString();
@@ -614,6 +633,12 @@ export async function POST(req: Request) {
               viaExternalProxy: primary.result.viaExternalProxy ?? false,
               usedRetryWithoutProxy: primary.result.usedRetryWithoutProxy ?? false,
               residentialStateApplied: primary.result.residentialStateApplied ?? false,
+              stateVerified: primary.result.stateVerified === true,
+              fallbackLevel: primary.result.fallbackLevel ?? null,
+              geoAttempts: primary.result.geoAttempts ?? null,
+              stateTargetingRejected: primary.result.stateTargetingRejected === true,
+              verifiedMeasurements: primary.result.verifiedMeasurements,
+              proxyProvider: primary.result.proxyProvider,
               durationMs: primary.result.durationMs ?? null,
               estimatedTimeUnits: primary.result.estimatedTimeUnits ?? null,
               proxyBytes: primary.result.proxyBytes ?? null,
@@ -722,6 +747,19 @@ export async function POST(req: Request) {
       verify_token: verifyToken,
     });
 
+    if (!insertObsError && primary.engine === "browserless" && primary.result.ok) {
+      await recordStateCoverage(svc, {
+        userId,
+        url,
+        region,
+        capturedAt,
+        observationId: obsId,
+        stateVerified: primary.result.stateVerified === true,
+        geoAttempts: primary.result.geoAttempts ?? 0,
+        stateTargetingRejected: primary.result.stateTargetingRejected === true,
+      });
+    }
+
     if (insertObsError) {
       console.error("[cron] observation insert failed", {
         watchId,
@@ -813,7 +851,40 @@ export async function POST(req: Request) {
 
     let behaviorAlerts: BehaviorTransitionV1[] = [];
     let behaviorMapAlerts: BehaviorMapDiffV1[] = [];
-    if (blobUrl) {
+    if (blobUrl && statePlan && primary.engine === "browserless" && primary.result.ok && primary.result.interaction) {
+      try {
+        const check = buildRegionalCheckFromSession({
+          raw: primary.result.interaction,
+          requestedUrl: url,
+          requestedRegion: region,
+          measuredAt: capturedAt,
+          durationMs: primary.result.durationMs ?? 0,
+          proxyBytes: primary.result.proxyBytes ?? null,
+        });
+        stampDiscoveryFullAt(check, statePlan.lastFullDiscoveryAt);
+        const persisted = await persistRegionalInteractionCheck(svc, {
+          userId,
+          observationId: obsId,
+          url,
+          region,
+          capturedAt,
+          check,
+          billing: "watch_included",
+        });
+        if (persisted.saved) {
+          interactionRan += 1;
+          behaviorAlerts = behaviorAlertTransitions(persisted.diff);
+          behaviorMapAlerts = behaviorMapAlertDiffs(persisted.diff);
+        }
+      } catch (err) {
+        console.warn("[cron] state session interaction unavailable", {
+          watchId,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    } else if (blobUrl && statePlan) {
+      interactionSkipped += 1;
+    } else if (blobUrl) {
       const timeLeft = CRON_BUDGET_MS - (Date.now() - cronStartedAt);
       if (!isBrowserlessConfigured() || timeLeft < WATCH_INTERACTION_MIN_BUDGET_MS) {
         interactionSkipped += 1;

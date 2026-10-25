@@ -11,6 +11,7 @@ import { parseStepVisual, type StepVisualEvidence } from "@/lib/visual-evidence"
 import { parseJourneyEvidence, type JourneyEvidenceItem } from "@/lib/journey-step-evidence";
 import { resolveBrowserlessResidentialTarget } from "@/lib/regions";
 import { normalizeUserUrlInput } from "@/lib/url-preview";
+import { runStateMeasurementSession } from "@/lib/state-measurement-session";
 
 const FUNCTION_TIMEOUT_MS = 300_000;
 
@@ -54,6 +55,7 @@ export type JourneyEnvironmentObserved = {
   geo?: {
     requested_region: string;
     stage: JourneyGeoStage;
+    state_verified?: boolean;
   };
 };
 
@@ -130,6 +132,62 @@ export function journeyAlert(previous: JourneyStepEvidence[] | null, current: Jo
   return changed.map((step) => `${step.kind} ${step.id} ${step.status}`).join("; ").slice(0, 240);
 }
 
+async function runJourneyThroughStateSession(params: {
+  url: string;
+  region: string;
+  deviceClass: JourneyDeviceClass;
+  steps: JourneyStepDefinition[];
+  credentials?: { username?: string; password?: string };
+  fixtureHtml?: string;
+}): Promise<JourneyExecution | JourneyExecutionFailure> {
+  const target = params.fixtureHtml ? "https://viewtrace.net/tests/journey" : normalizeUserUrlInput(params.url);
+  if (!target) return { ok: false, error: "invalid_url", durationMs: 0 };
+  const session = await runStateMeasurementSession({
+    url: target,
+    region: params.region,
+    measures: ["journey"],
+    countryFallback: true,
+    journey: {
+      url: target,
+      html: params.fixtureHtml || undefined,
+      device_class: params.deviceClass,
+      region: params.region,
+      steps: params.steps,
+      credentials: {
+        username: params.credentials?.username ?? "",
+        password: params.credentials?.password ?? "",
+      },
+    },
+  });
+  const body = session.journey && typeof session.journey === "object" ? session.journey as Record<string, unknown> : null;
+  if (!body) return { ok: false, error: session.error || "journey_missing", durationMs: session.durationMs };
+  const steps = parseSteps(body.steps);
+  const envRaw = body.environment && typeof body.environment === "object" ? body.environment as Record<string, unknown> : null;
+  const viewport = envRaw?.viewport && typeof envRaw.viewport === "object" ? envRaw.viewport as Record<string, unknown> : null;
+  const width = typeof viewport?.width === "number" ? viewport.width : 0;
+  const height = typeof viewport?.height === "number" ? viewport.height : 0;
+  const geo = {
+    requested_region: params.region,
+    stage: session.stateVerified ? "state" as const : "country" as const,
+    state_verified: session.stateVerified,
+  };
+  const environment = width && height ? {
+    device_class: (width < 700 ? "mobile" : "desktop") as JourneyDeviceClass,
+    viewport: { width, height },
+    pointer: envRaw?.pointer === "touch" ? "touch" as const : "mouse" as const,
+    touch: envRaw?.touch === true,
+    locale: typeof envRaw?.locale === "string" ? envRaw.locale : "",
+    timezone: typeof envRaw?.timezone === "string" ? envRaw.timezone : "",
+    prefers_reduced_motion: envRaw?.prefers_reduced_motion === true,
+    dpr: typeof envRaw?.dpr === "number" && Number.isFinite(envRaw.dpr) && envRaw.dpr > 0 ? envRaw.dpr : null,
+    languages: typeof envRaw?.languages === "string" ? envRaw.languages.slice(0, 80) : "",
+    document_lang: typeof envRaw?.document_lang === "string" ? envRaw.document_lang.slice(0, 32) : "",
+    user_agent: typeof envRaw?.user_agent === "string" ? envRaw.user_agent.slice(0, 180) : "",
+    geo,
+  } : { geo };
+  return { ok: true, status: journeyRunStatus(steps), durationMs: session.durationMs, environment, steps };
+}
+
 export async function runJourneyInBrowserless(params: {
   url: string;
   region: string;
@@ -139,6 +197,7 @@ export async function runJourneyInBrowserless(params: {
   fixtureHtml?: string;
 }): Promise<JourneyExecution | JourneyExecutionFailure> {
   if (!isBrowserlessConfigured()) return { ok: false, error: "browserless_not_configured", durationMs: 0 };
+  if (/^US-[A-Z]{2}$/i.test(params.region)) return runJourneyThroughStateSession(params);
   const target = params.fixtureHtml ? "https://viewtrace.net/tests/journey" : normalizeUserUrlInput(params.url);
   if (!target) return { ok: false, error: "invalid_url", durationMs: 0 };
   const href = browserlessPathEndpoint("/function");

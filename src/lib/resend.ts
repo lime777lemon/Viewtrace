@@ -34,8 +34,8 @@ export type SendResendEmailInput = {
 };
 
 export type SendResendEmailResult =
-  | { ok: true; id: string }
-  | { ok: false; error: string };
+  | { ok: true; id: string; status: number }
+  | { ok: false; error: string; status: number | null };
 
 const RESEND_EMAILS_URL = "https://api.resend.com/emails";
 const RESEND_SEND_TIMEOUT_MS = 15_000;
@@ -56,10 +56,10 @@ export function resultFromResendSendHttp(status: number, rawBody: string): SendR
   }
   if (status >= 200 && status < 300) {
     const id = typeof parsed.id === "string" && parsed.id ? parsed.id : "unknown";
-    return { ok: true, id };
+    return { ok: true, id, status };
   }
   const message = typeof parsed.message === "string" && parsed.message ? parsed.message : `Resend HTTP ${status}`;
-  return { ok: false, error: message };
+  return { ok: false, error: message, status };
 }
 
 /**
@@ -69,12 +69,12 @@ export function resultFromResendSendHttp(status: number, rawBody: string): SendR
 export async function sendResendEmail(input: SendResendEmailInput): Promise<SendResendEmailResult> {
   const key = process.env.RESEND_API_KEY?.trim();
   if (!key) {
-    return { ok: false, error: "RESEND_API_KEY is not set" };
+    return { ok: false, error: "RESEND_API_KEY is not set", status: null };
   }
   const html = input.html?.trim();
   const text = input.text?.trim();
   if (!html && !text) {
-    return { ok: false, error: "Either html or text is required" };
+    return { ok: false, error: "Either html or text is required", status: null };
   }
 
   const from = input.from?.trim() || getDefaultResendFrom();
@@ -114,11 +114,10 @@ export async function sendResendEmail(input: SendResendEmailInput): Promise<Send
   } catch (err) {
     // Body already consumed / locked after a 2xx: the API accepted the send.
     if (status >= 200 && status < 300) {
-      console.warn("[resend] accepted but response body unreadable", err);
-      return { ok: true, id: "unknown" };
+      console.warn("[resend] accepted but response body unreadable");
+      return { ok: true, id: "unknown", status };
     }
-    const message = err instanceof Error ? err.message : "Unknown Resend error";
-    console.error("[resend] send threw", err);
-    return { ok: false, error: message };
+    console.error("[resend] send threw");
+    return { ok: false, error: "network_error", status: status || null };
   }
 }

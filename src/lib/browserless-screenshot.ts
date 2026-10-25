@@ -12,6 +12,7 @@ import {
   type CaptureCostAttemptV1,
 } from "@/lib/observation-cost-signals";
 import { isBlockedPreviewHost, normalizeUserUrlInput } from "@/lib/url-preview";
+import { runStateMeasurementSession, type StateMeasurementResult } from "@/lib/state-measurement-session";
 
 const DEFAULT_BROWSERLESS_SCREENSHOT = "https://production-sfo.browserless.io/screenshot";
 
@@ -27,8 +28,9 @@ export function isBrowserlessResidentialEnabled(): boolean {
 }
 
 /**
- * US 州を選んだら REST は `proxyCity` を先に付ける。拒否されたら国単位。
- * Observed は成功した経路だけ。`VIEWTRACE_BROWSERLESS_PROXY_STATE=0` で proxyState を使わない。
+ * US 州は proxyState と出口確認を同じセッションで行う。
+ * 確認できないときは国単位で残し、no-proxy には落とさない。
+ * `VIEWTRACE_BROWSERLESS_PROXY_STATE=0` で州試行をしない。
  */
 export function isBrowserlessProxyStateEnabled(): boolean {
   const raw = process.env.VIEWTRACE_BROWSERLESS_PROXY_STATE?.trim().toLowerCase();
@@ -75,8 +77,15 @@ export type BrowserlessScreenshotResult =
       png: ArrayBuffer;
       normalizedUrl: string;
       viaResidential?: boolean;
-      /** true のときだけ Browserless に proxyState または proxyCity を付けた */
+      /** true のときだけ、同じセッションの出口州が requested state と一致した */
       residentialStateApplied?: boolean;
+      stateVerified?: boolean;
+      fallbackLevel?: "state" | "country" | null;
+      geoAttempts?: number;
+      stateTargetingRejected?: boolean;
+      verifiedMeasurements?: Array<"screenshot" | "interaction" | "journey" | "lab_cwv">;
+      proxyProvider?: "browserless" | "bright_data" | "decodo" | "custom" | null;
+      interaction?: unknown;
       viaExternalProxy?: boolean;
       /** 地理ルーティング失敗後、プロキシなしで再試行して成功した */
       usedRetryWithoutProxy?: boolean;
@@ -100,6 +109,13 @@ export type BrowserlessScreenshotResult =
       attemptsLog?: CaptureCostAttemptV1[];
       viaResidential?: boolean;
       residentialStateApplied?: boolean;
+      stateVerified?: boolean;
+      fallbackLevel?: "state" | "country" | null;
+      geoAttempts?: number;
+      stateTargetingRejected?: boolean;
+      verifiedMeasurements?: Array<"screenshot" | "interaction" | "journey" | "lab_cwv">;
+      proxyProvider?: "browserless" | "bright_data" | "decodo" | "custom" | null;
+      interaction?: unknown;
       viaExternalProxy?: boolean;
     };
 
@@ -363,55 +379,63 @@ function geoRoutingRequested(regionRaw: string | undefined, disableProxy: boolea
   return isBrowserlessResidentialEnabled() && isValidObservationRegion(regionRaw);
 }
 
-function isRetryableSubdivisionDeny(shot: BrowserlessScreenshotResult): boolean {
-  if (shot.ok) return false;
-  return shot.upstreamStatus === 400 || shot.upstreamStatus === 401;
-}
-
 /**
  * 1 本ずつ試す（並列に投げない）。
- * 1. 州の代表都市 proxyCity（REST `/screenshot` の州経路。成功したら Observed に州）
- * 2. 州 proxyState（BrowserQL / 明示オプトイン。成功したら Observed に州）
- * 3. 国（Observed は国単位）
- * 4. プロキシなし
+ * US 州: proxyState で出口を確認し、一致した同じセッションで撮影。最大3回。
+ * 確認できなければ国単位の residential を1回。no-proxy には落とさない。
+ * 州以外: 国、だめならプロキシなし。
  */
+export function browserlessShotFromStateSession(
+  session: StateMeasurementResult,
+  normalizedUrl: string,
+): BrowserlessScreenshotResult {
+  const shared = {
+    stateVerified: session.stateVerified,
+    fallbackLevel: session.fallbackLevel,
+    geoAttempts: session.geoAttempts,
+    stateTargetingRejected: session.stateTargetingRejected,
+    verifiedMeasurements: session.verifiedMeasurements,
+    interaction: session.interaction,
+    viaResidential: session.viaResidential,
+    viaExternalProxy: session.viaExternalProxy,
+    proxyProvider: session.provider === "decodo" ? "decodo" as const : undefined,
+    residentialStateApplied: session.stateVerified,
+    durationMs: session.durationMs,
+    proxyBytes: session.proxyBytes,
+    usedRetryWithoutProxy: false as const,
+  };
+  if (session.ok && session.png) {
+    return { ok: true, png: session.png, normalizedUrl, ...shared };
+  }
+  return { ok: false, error: session.error || "state_not_confirmed", upstreamStatus: session.upstreamStatus, ...shared };
+}
+
 export async function runBrowserlessScreenshotWithProxyRetry(params: {
   url: string;
   region?: string;
   fullPage: boolean;
   viewport?: { width: number; height: number; isMobile: boolean; hasTouch: boolean };
+  interaction?: Record<string, unknown>;
 }): Promise<BrowserlessScreenshotResult> {
   const log: CaptureCostAttemptV1[] = [];
   const geo = geoRoutingRequested(params.region, false);
   const target = resolveBrowserlessResidentialTarget(params.region ?? "");
   const hasUsState = Boolean(target?.stateCode);
-  const tryCity = geo && hasUsState && Boolean(target?.city);
-  const tryState = geo && hasUsState && isBrowserlessProxyStateEnabled() && !tryCity;
+  const tryState = geo && hasUsState && isBrowserlessProxyStateEnabled();
 
-  if (tryCity) {
-    const withCity = await runBrowserlessScreenshot({
-      ...params,
-      residentialState: false,
-      residentialCity: true,
+  if (tryState && params.region) {
+    const session = await runStateMeasurementSession({
+      url: params.url,
+      region: params.region,
+      fullPage: params.fullPage,
+      viewport: params.viewport ? { width: params.viewport.width, height: params.viewport.height } : undefined,
+      measures: params.interaction ? ["screenshot", "interaction"] : ["screenshot"],
+      interaction: params.interaction,
+      countryFallback: true,
     });
-    log.push(shotToAttemptCost(withCity, "city", true));
-    if (withCity.ok) return withAttemptTotals(withCity, log, { usedRetryWithoutProxy: false });
-    if (withCity.error !== "browserless_error" && !isRetryableSubdivisionDeny(withCity)) {
-      return withAttemptTotals(withCity, log);
-    }
-  }
-
-  if (tryState) {
-    const withState = await runBrowserlessScreenshot({
-      ...params,
-      residentialState: true,
-      residentialCity: false,
-    });
-    log.push(shotToAttemptCost(withState, "state", true));
-    if (withState.ok) return withAttemptTotals(withState, log, { usedRetryWithoutProxy: false });
-    if (withState.error !== "browserless_error" && !isRetryableSubdivisionDeny(withState)) {
-      return withAttemptTotals(withState, log);
-    }
+    const shot = browserlessShotFromStateSession(session, params.url);
+    log.push(shotToAttemptCost(shot, session.fallbackLevel === "state" ? "state" : "country", true));
+    return withAttemptTotals(shot, log, { usedRetryWithoutProxy: false });
   }
 
   if (geo) {

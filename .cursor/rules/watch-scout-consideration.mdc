@@ -33,7 +33,7 @@ Verify（`/verify/[token]`）は削除しない。成長ループではなく、
 
 記録に混ぜない: 測っていない Performance / SEO / Accessibility 数字。ラボ CWV・フィールド CWV（CrUX）・撮っていない下層の採点は、記録の Observed には混ぜず、**料金内オプション**（押した件数だけ。Watch で自動実行する）。Lab と Field は別セクション。URL 単位 CrUX が無ければ Origin 単位と明示する。no_data も正常な保存結果。再取得は補助（**CrUX は完成。Field INP の代替は作らない。** 任意 URL の操作応答は合成操作テスト（安全なクリック 1〜3。Field INP と呼ばない）。自社 RUM は将来・自サイトへ script を置いたときだけ。第三者 Observation には置けない。RUM は今の順（36 → 41 → 42 → 38/19 → 12）より上げない。合成は料金内オプション（trial 2 / Starter 10 / Pro 30）。Watch では自動実行する。Page Signals は html_signals 減点の点数として記録の下に出してよい。CWV と下層はこの点数に入れない）。このページの監査指摘は読み側に出して良い。のちに実行するもの: 、自社 RUM（優先しない）、Free AI Visual Checker、Scout、Apollo、クレジットパック、Tokyo Proxy 再販、Heartbeat / HTTP health を商品化。Journey の最初のスライスは既存合成（安全クリック 1〜3）の再利用のみ。Regional Interaction Check は 1 Region × 1 Check セッション = 合成 1（タイプごとではない）。同じセッションで User interactions / Motion / Media を Detect → Execute → Verify。Detected だけでは Working にしない。Verify は DOM だけでなく frame hash / media / resource。Accordion は trigger+panel。Scroll reveal / Lazy-load は candidate-specific。Load は要素単位（cookie は Delayed）。fixture `/tests/interactions` は本番 Browserless で回す。Canvas / WebGL / Lottie は短いフレーム差分のみ。Form は submit しない。Journey とは別。Watch で自動実行する。Verify を KPI の主役にしない。$15 / $39 は動かさない。ラボ CWV は trial 月 2 / Starter 月 10 / Pro 月 30。フィールド CWV は trial 月 10 / Starter 月 50 / Pro 月 150。下層はスクショなし・同じホスト trial 3 / Starter 5 / Pro 10。
 単一URLのObservationでは、取得済みHTML・HTTP・robots.txtを根拠にSEO関連事実を自動記録してよい。測っていない数値は記録へ混ぜない。サイト全体crawler、根拠のないSEO Score、未撮影ページの評価は行わない。
-自社 pull Node（`agent.mjs`）は実験。自社 Playwright Observation Worker は `workers/observation-worker`。本番出口は Browserless。切替は `VIEWTRACE_CAPTURE_BACKEND=playwright_worker` のみ。顧客に proxy は売らない。Residential は外部供給。US 州を選んだ Observation は Browserless REST で同じ州の代表都市 `proxyCity` を先に付ける。失敗したら国単位へ落とす。Requested と Observed を混ぜない。US-CA を選んでも国単位で取れたら California と表示しない。
+自社 pull Node（`agent.mjs`）は実験。自社 Playwright Observation Worker は `workers/observation-worker`。本番出口は Browserless。切替は `VIEWTRACE_CAPTURE_BACKEND=playwright_worker` のみ。顧客に proxy は売らない。Residential は外部供給。US 州を選んだ Observation は、まず Browserless 内蔵 `proxyState` で出口を確認する。確認できなければ第2 Provider の Decodo Residential を `externalProxyServer` にし、新しい sticky session で最大3回試す。一致した測定だけ州確認済み。それでもとれなければ国単位で保存し、州確認済みにはしない。no-proxy には落とさない。未達成の州は週内に再試行する。Requested と Observed を混ぜない。US-CA を選んでも国単位で取れたら California と表示しない。
 
 Mac は開発機。Linux は将来の worker。Python は撮影後の抽出（A: hash / parse / diff）。B（heartbeat / HTTP）と C（撮影）は混ぜない。41 / 42 は Node。Python は HTML を切る 43 / 44 / 48。
 
@@ -963,9 +963,9 @@ Synthetic interaction と Field data を混同しない。
 
 Residentialは外部供給。
 
-US州を選んだ Observation は Browserless REST で同じ州の代表都市 `proxyCity` を先に付ける。
+US州を選んだ Observation は、まず Browserless 内蔵 `proxyState` で出口を確認する。確認できなければ第2 Provider の Decodo Residential を `externalProxyServer` にし、新しい sticky session で最大3回試す。一致した測定だけ州確認済み。それでもとれなければ国単位で保存し、州確認済みにはしない。
 
-失敗した場合は国単位へ落とす。
+一致しない回は国単位の residential で保存する。no-proxy には落とさない。未達成の州は週内に再試行する。
 
 Requested と Observed を混ぜない。
 

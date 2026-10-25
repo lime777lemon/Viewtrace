@@ -57,6 +57,53 @@ export function captureConditionsPresentationCopy(locale: Locale) {
   return COPY[locale];
 }
 
+function usStateRequest(regionInput: string): boolean {
+  return /^US-[A-Z]{2}$/i.test(regionInput);
+}
+
+function usStateVerificationLabel(
+  conditions: CaptureConditionsV1,
+  locale: Locale,
+  verification: RegionalVerification,
+  copy: (typeof COPY)[Locale],
+): string {
+  if (!usStateRequest(conditions.region_input)) return verification === "verified" ? copy.verified : copy.notVerified;
+  if (conditions.geo.state_verified === true) {
+    return locale === "ja" ? "Screenshot を州単位で確認済み" : "Screenshot verified from this state";
+  }
+  if (conditions.geo.state_targeting_rejected === true) return locale === "ja" ? "未確認" : "Not verified";
+  return copy.notVerified;
+}
+
+function usStateVerificationNote(
+  conditions: CaptureConditionsV1,
+  locale: Locale,
+  verification: RegionalVerification,
+  copy: (typeof COPY)[Locale],
+): string | null {
+  if (!usStateRequest(conditions.region_input)) return verification === "verified" ? null : copy.notVerifiedNote;
+  if (conditions.geo.state_verified === true) {
+    const names = conditions.geo.verified_measurements?.length
+      ? conditions.geo.verified_measurements
+      : ["screenshot" as const];
+    const confirmed = names
+      .map((name) =>
+        name === "screenshot" ? "Screenshot"
+          : name === "interaction" ? "Interaction Check"
+            : name === "journey" ? "Journey"
+              : "Lab CWV",
+      )
+      .join(locale === "ja" ? "、" : ", ");
+    return locale === "ja"
+      ? `この session で州を確認して測ったもの: ${confirmed}。それ以外は同じ session の測定ではありません。`
+      : `Measured in the state-verified session: ${confirmed}. Anything else was not measured in that session.`;
+  }
+  if (conditions.geo.state_targeting_rejected === true) {
+    return "State-level proxying unavailable on current provider plan";
+  }
+  return copy.notVerifiedNote;
+}
+
 function requestedSubdivision(regionInput: string): boolean {
   return /^US-[A-Z]{2}$/i.test(regionInput) || /^JP-\d{2}$/i.test(regionInput);
 }
@@ -68,7 +115,11 @@ export function regionalVerification(conditions: CaptureConditionsV1): RegionalV
     return "not_verified";
   }
   if (!conditions.geo.country) return "not_verified";
-  if (requestedSubdivision(conditions.region_input) && !conditions.geo.state) return "not_verified";
+  if (/^US-[A-Z]{2}$/i.test(conditions.region_input)) {
+    if (conditions.geo.state_verified !== true || !conditions.geo.state) return "not_verified";
+  } else if (requestedSubdivision(conditions.region_input) && !conditions.geo.state) {
+    return "not_verified";
+  }
   return "verified";
 }
 
@@ -119,8 +170,8 @@ export function presentCaptureConditions(conditions: CaptureConditionsV1, locale
       capture: scope,
       measured: formatJaDateTime(conditions.captured_at, locale),
       regionalVerification: verification,
-      regionalVerificationLabel: verification === "verified" ? copy.verified : copy.notVerified,
-      regionalNote: verification === "verified" ? null : copy.notVerifiedNote,
+      regionalVerificationLabel: usStateVerificationLabel(conditions, locale, verification, copy),
+      regionalNote: usStateVerificationNote(conditions, locale, verification, copy),
     },
     technical: {
       browser: "Chromium · Headless",

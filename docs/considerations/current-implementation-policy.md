@@ -202,7 +202,7 @@ html_signals の商品化は既存データのみなので、表示の整理は�
 
 Requested と Observed は分けて書く。自己申告の Node 所在地を Observed にしない。US-CA を選んでも国単位で取れたら California と表示しない。見出しは観測事実。区別が必要なときは **Requested / Observed via**。
 
-**State Geo は Starter では保証しない。** US 州を選んだ Observation は、REST `/screenshot` で同じ州の代表都市 `proxyCity` を先に付ける（Scale 未満は 401 になり得る）。失敗したら国単位。都市マップが無いときだけ `proxyState` を試す。フォールバックは **都市 → 州 → 国 → proxyなしを直列**（並列に投げない）。成功した経路だけを `geo` に書く。US-CA を選んでも国単位で取れたら California と表示しない。無効化は `VIEWTRACE_BROWSERLESS_PROXY_STATE=0`。
+**State Geo は Starter では保証しない。** US 州を選んだ Observation は、同じ Browserless セッションで `proxyState` と出口の州を確認する。一致したときだけ、その session で実行した測定を州確認済みにする。Watch は Screenshot と Interaction Check を同じ session で実行する。Journey と Lab CWV は、US 州を指定した実行では同じ確認のあとにその session で測る。`verified_measurements` に入ったものだけを州確認済みとする。州指定の第1 Provider は Browserless 内蔵 `proxyState`。確認できなければ第2 Provider の Decodo Residential（`externalProxyServer`、sticky session）を最大3回試す。Bright Data と Oxylabs はまだ選ばない。それでも出口が一致しなければ国単位で保存する。一致しなければ国単位の residential でその回を保存し、州確認済みにはしない。no-proxy には落とさない。出口が違うだけの未達成は週内に再試行する。プランが `proxyState` を拒否した週は再試行しない。Browserless 単独では週次の州保証にしない。US-CA を選んでも国単位で取れたら California と表示しない。無効化は `VIEWTRACE_BROWSERLESS_PROXY_STATE=0`。
 
 ### 事実以上の商品（Observation の上に載せる）
 

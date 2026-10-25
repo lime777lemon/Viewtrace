@@ -11,6 +11,8 @@ export type ObservationOptionalMetricsCopy = {
   cwvMeasuring: string;
   cwvAgain: string;
   cwvLab: string;
+  cwvLabSession: string;
+  cwvLabSessionNote: string;
   cwvInpUnavailable: string;
   cwvLcp: string;
   cwvCls: string;
@@ -101,6 +103,8 @@ export function observationOptionalMetricsCopyFrom(t: {
   optionalCwvMeasuring: string;
   optionalCwvAgain: string;
   optionalCwvLab: string;
+  optionalCwvLabSession: string;
+  optionalCwvLabSessionNote: string;
   optionalCwvInpUnavailable: string;
   optionalCwvLcp: string;
   optionalCwvCls: string;
@@ -204,6 +208,8 @@ export function observationOptionalMetricsCopyFrom(t: {
     cwvMeasuring: t.optionalCwvMeasuring,
     cwvAgain: t.optionalCwvAgain,
     cwvLab: t.optionalCwvLab,
+    cwvLabSession: t.optionalCwvLabSession,
+    cwvLabSessionNote: t.optionalCwvLabSessionNote,
     cwvInpUnavailable: t.optionalCwvInpUnavailable,
     cwvLcp: t.optionalCwvLcp,
     cwvCls: t.optionalCwvCls,

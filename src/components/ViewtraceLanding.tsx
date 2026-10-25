@@ -16,6 +16,44 @@ function formatOverageUsdLabel(usd: number): string {
   }).format(usd);
 }
 
+function EvidenceMailIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
+      <rect x="3.5" y="5.5" width="17" height="13" rx="2" />
+      <path d="M4 7.5 12 13l8-5.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function EvidenceCalendarIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
+      <rect x="3" y="4.5" width="13" height="15" rx="2" />
+      <path d="M3 9h13M7 3v3M12 3v3" strokeLinecap="round" />
+      <circle cx="17.2" cy="17.2" r="3.6" />
+      <path d="M17.2 15.6V17.4l1.1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function EvidenceLinkFileIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
+      <path d="M7 3.5h6.2L18 8.2V19a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 19V5A1.5 1.5 0 0 1 7 3.5Z" strokeLinejoin="round" />
+      <path d="M13 3.5V8.5h5.2" strokeLinejoin="round" />
+      <path d="M8 13h4.2M8 16h2.4" strokeLinecap="round" />
+      <path d="m15.2 16.4 1.2-1.2a1.6 1.6 0 0 1 2.3 2.3l-1.2 1.2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="m16.6 17.8 1.1-1.1" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+const EVIDENCE_REPORT_POINT_VISUALS = [
+  { well: "bg-[#EEF3FB] text-[#3B6FD8]", Icon: EvidenceMailIcon },
+  { well: "bg-[#E6F6EF] text-[#1C8A6A]", Icon: EvidenceCalendarIcon },
+  { well: "bg-[#F3EEF8] text-[#7A68B0]", Icon: EvidenceLinkFileIcon },
+] as const;
+
 type Props = {
   initialLocale: Locale;
   overagePerObservationUsd: number | null;
@@ -78,12 +116,6 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
               <a href="#pricing" className="transition hover:text-ink">
                 {t.nav.pricing}
               </a>
-              <a href="#regional-behavior" className="transition hover:text-ink">
-                {t.nav.behavior}
-              </a>
-              <a href="#auto-observations" className="transition hover:text-ink">
-                {t.nav.autoWatch}
-              </a>
               <a href="#optional-measures" className="transition hover:text-ink">
                 {t.nav.optionalMeasures}
               </a>
@@ -136,22 +168,6 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                       onClick={() => setMobileNavOpen(false)}
                     >
                       {t.nav.pricing}
-                    </a>
-                    <a
-                      href="#regional-behavior"
-                      role="menuitem"
-                      className="block px-4 py-2.5 text-sm font-medium text-ink-muted transition hover:bg-border/30 hover:text-ink"
-                      onClick={() => setMobileNavOpen(false)}
-                    >
-                      {t.nav.behavior}
-                    </a>
-                    <a
-                      href="#auto-observations"
-                      role="menuitem"
-                      className="block px-4 py-2.5 text-sm font-medium text-ink-muted transition hover:bg-border/30 hover:text-ink"
-                      onClick={() => setMobileNavOpen(false)}
-                    >
-                      {t.nav.autoWatch}
                     </a>
                     <a
                       href="#optional-measures"
@@ -323,22 +339,53 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                 <p className="mt-3 text-sm font-medium leading-relaxed text-ink">{t.verify.behaviorEmphasis}</p>
               </article>
             </div>
-            <article className="mt-4 rounded-2xl border border-border bg-surface p-5 shadow-sm sm:p-6">
-              <h3 className="font-display text-lg font-semibold text-ink">{t.verify.journeyTitle}</h3>
-              <p className="mt-3 max-w-3xl text-sm leading-relaxed text-ink-muted">{t.verify.journeyBody}</p>
-              <p className="mt-4 text-sm font-medium text-ink">{t.verify.journeyLead}</p>
-              <ul className="mt-3 flex flex-wrap gap-2">
-                {t.verify.journeyItems.map((item) => (
-                  <li
-                    key={item}
-                    className="rounded-full border border-border bg-surface-elevated px-3 py-1 text-xs text-ink"
-                  >
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-4 max-w-3xl text-sm leading-relaxed text-ink-muted">{t.verify.journeyOptional}</p>
-              <p className="mt-3 max-w-3xl text-sm font-medium leading-relaxed text-ink">{t.verify.journeyEmphasis}</p>
+            <article className="mt-4 overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
+              <div className="grid lg:grid-cols-2">
+                <div className="border-b border-border p-5 sm:p-6 lg:border-b-0 lg:border-r">
+                  <h3 className="font-display text-lg font-semibold text-ink">{t.verify.journeyTitle}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-ink-muted">{t.verify.journeyBody}</p>
+                  <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#276248]">
+                    {t.verify.journeyExample}
+                  </p>
+                  <ol className="mt-4">
+                    {t.verify.journeySteps.map((step, index) => (
+                      <li key={step} className="relative flex gap-3 pb-4 last:pb-0">
+                        {index < t.verify.journeySteps.length - 1 ? (
+                          <span
+                            className="absolute top-7 bottom-0 left-3.25 w-px bg-[#276248]/40"
+                            aria-hidden
+                          />
+                        ) : null}
+                        <span className="relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#276248] text-xs font-semibold text-white">
+                          {index + 1}
+                        </span>
+                        <span className="pt-1 text-sm font-medium leading-relaxed text-ink">{step}</span>
+                      </li>
+                    ))}
+                  </ol>
+                  <p className="rounded-xl border border-border bg-surface-elevated px-4 py-3 text-sm leading-relaxed text-ink">
+                    {t.verify.journeySafety}
+                  </p>
+                </div>
+                <div className="p-5 sm:p-6">
+                  <p className="text-sm font-medium text-ink">{t.verify.journeyLead}</p>
+                  <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+                    {t.verify.journeyItems.map((item) => (
+                      <li
+                        key={item}
+                        className="flex items-start gap-2.5 rounded-xl border border-border bg-surface-elevated px-3 py-2.5 text-sm leading-snug text-ink"
+                      >
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#276248]" aria-hidden />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-4 rounded-xl border border-dashed border-border px-4 py-3 text-sm leading-relaxed text-ink-muted">
+                    {t.verify.journeyOptional}
+                  </p>
+                  <p className="mt-4 text-sm font-semibold leading-relaxed text-ink">{t.verify.journeyEmphasis}</p>
+                </div>
+              </div>
             </article>
             <div className="mt-10 max-w-3xl">
               <h3 className="font-display text-xl font-semibold leading-snug text-ink sm:text-2xl">
@@ -701,6 +748,81 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
           </div>
         </section>
 
+        <section id="evidence-report" className="border-b border-border bg-surface-elevated">
+          <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-14">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#276248] sm:text-xs">
+              {t.evidenceReportPromo.kicker}
+            </p>
+            <h2 className="font-display mt-3 max-w-3xl text-2xl font-semibold leading-snug text-ink sm:text-3xl">
+              {t.evidenceReportPromo.title}
+            </h2>
+            <p className="mt-4 max-w-3xl text-sm leading-relaxed text-ink-muted sm:text-base">
+              {t.evidenceReportPromo.body}
+            </p>
+            <div className="mt-10 grid items-start gap-4 lg:grid-cols-[minmax(0,42rem)_minmax(16rem,1fr)] lg:gap-8">
+              <div className="grid gap-3">
+                {t.evidenceReportPromo.points.map((item, index) => {
+                  const visual = EVIDENCE_REPORT_POINT_VISUALS[index];
+                  const Icon = visual?.Icon;
+                  return (
+                    <article
+                      key={item.title}
+                      className="flex items-center gap-4 rounded-2xl border border-border bg-surface px-4 py-4 shadow-sm sm:gap-5 sm:px-5 sm:py-5"
+                    >
+                      {Icon ? (
+                        <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-xl ${visual.well}`}>
+                          <Icon />
+                        </span>
+                      ) : null}
+                      <span className="h-12 w-px shrink-0 bg-border" aria-hidden />
+                      <div className="min-w-0">
+                        <h3 className="font-display text-base font-semibold text-ink">
+                          {item.title}
+                        </h3>
+                        <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">
+                          {item.body}
+                        </p>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+              <aside className="rounded-2xl border border-border bg-surface p-6 shadow-sm sm:p-8">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-muted">
+                  {t.evidenceReportPromo.panelKicker}
+                </p>
+                <dl className="mt-6 space-y-5">
+                  <div>
+                    <dt className="text-xs font-medium text-ink-muted">{t.evidenceReportPromo.panelWhen}</dt>
+                    <dd className="mt-1 text-sm font-medium text-ink">{t.evidenceReportPromo.panelWhenValue}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-medium text-ink-muted">{t.evidenceReportPromo.panelScope}</dt>
+                    <dd className="mt-1 text-sm font-medium text-ink">{t.evidenceReportPromo.panelScopeValue}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-medium text-ink-muted">{t.evidenceReportPromo.panelTo}</dt>
+                    <dd className="mt-1 text-sm font-medium text-ink">{t.evidenceReportPromo.panelToValue}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-medium text-ink-muted">{t.evidenceReportPromo.panelOpen}</dt>
+                    <dd className="mt-1 text-sm font-medium text-ink">{t.evidenceReportPromo.panelOpenValue}</dd>
+                  </div>
+                </dl>
+              </aside>
+            </div>
+            <p className="mt-8 max-w-3xl text-sm leading-relaxed text-ink-muted">
+              {t.evidenceReportPromo.note}
+            </p>
+            <Link
+              href="/login?mode=signup"
+              className="mt-6 inline-flex items-center text-sm font-semibold text-accent transition hover:text-accent-hover"
+            >
+              {t.evidenceReportPromo.cta}
+            </Link>
+          </div>
+        </section>
+
         <section id="results-delivery" className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-14">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#276248] sm:text-xs">
@@ -889,6 +1011,11 @@ export function ViewtraceLanding({ initialLocale, overagePerObservationUsd }: Pr
                   <li>
                     <a href="#auto-observations" className="text-surface/80 hover:text-white">
                       {t.footer.links.autoWatch}
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#evidence-report" className="text-surface/80 hover:text-white">
+                      {t.footer.links.evidenceReport}
                     </a>
                   </li>
                   <li>

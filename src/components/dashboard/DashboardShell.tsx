@@ -68,6 +68,7 @@ export function DashboardShell({
     { href: "/dashboard", label: t.nav.overview, tour: "loop" as const },
     { href: "/dashboard/audit", label: t.nav.auditLog, tour: undefined },
     { href: "/dashboard/purchases", label: t.nav.purchases, tour: undefined },
+    { href: "/dashboard/evidence-report", label: t.nav.evidenceReport, tour: undefined },
     { href: "/dashboard/settings", label: t.nav.settings, tour: undefined },
     { href: "/dashboard/help", label: t.nav.help, tour: undefined },
     ...(isAdmin

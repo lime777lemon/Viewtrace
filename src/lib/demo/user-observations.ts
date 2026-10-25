@@ -18,6 +18,8 @@ import { normalizeObservationTags } from "@/lib/observation-tags";
 import { markVerifyLoopFirstObservation } from "@/lib/verify-loop/track";
 import { expireDueObservationScreenshots } from "@/lib/expire-observation-screenshots";
 import { countObservationsThisUtcMonth } from "@/lib/observation-quota";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { recordStateCoverage } from "@/lib/state-coverage";
 import { observationUrlIdentity, observationUrlLookupVariants } from "@/lib/observation-compare";
 
 export const USER_OBSERVATIONS_COOKIE = "viewtrace_user_obs";
@@ -364,6 +366,19 @@ export async function appendUserObservation(
     console.error("[observations] failed to insert", pgErr);
   } else {
     await markVerifyLoopFirstObservation({ userId: user.id, observationId: obs.id });
+    const admin = createSupabaseAdminClient();
+    if (admin && obs.regionValue) {
+      await recordStateCoverage(admin, {
+        userId: user.id,
+        url: obs.url,
+        region: obs.regionValue,
+        capturedAt: obs.capturedAt,
+        observationId: obs.id,
+        stateVerified: obs.captureConditions?.geo.state_verified === true,
+        geoAttempts: obs.captureConditions?.geo.geo_attempts ?? 0,
+        stateTargetingRejected: obs.captureConditions?.geo.state_targeting_rejected === true,
+      });
+    }
   }
 
   // Clear legacy cookie if present

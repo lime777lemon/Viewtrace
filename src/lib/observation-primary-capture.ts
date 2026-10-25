@@ -14,6 +14,7 @@ export async function runObservationPrimaryScreenshot(params: {
   region: string;
   fullPage: boolean;
   viewport?: { width: number; height: number; isMobile: boolean; hasTouch: boolean };
+  interaction?: Record<string, unknown>;
 }): Promise<
   | { engine: "playwright_worker"; result: ObservationWorkerCaptureResult }
   | { engine: "browserless"; result: BrowserlessScreenshotResult }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { OptionalProfileForm } from "@/components/dashboard/OptionalProfileForm";
 import { PlanSwitchForms } from "@/components/dashboard/PlanSwitchForms";
 import { BillingActions } from "@/components/dashboard/BillingActions";
@@ -15,9 +16,28 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function SettingsPage() {
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ report?: string }>;
+}) {
   const locale = await getRequestLocale();
   const t = copy[locale].dashboardSettings;
+  const report = (await searchParams).report;
+  if (
+    report === "saved" ||
+    report === "slack" ||
+    report === "teams" ||
+    report === "pagerduty" ||
+    report === "webhook" ||
+    report === "email" ||
+    report === "send" ||
+    report === "sent" ||
+    report === "sent-unsaved" ||
+    report === "error"
+  ) {
+    redirect(`/dashboard/evidence-report?report=${report}`);
+  }
   const session = await getSession();
   const plan = session ? getPlan(session.plan) : null;
   const labels = session ? getPlanLabels(session.plan, locale) : null;

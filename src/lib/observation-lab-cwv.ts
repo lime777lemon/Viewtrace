@@ -2,12 +2,18 @@
 
 export const LAB_CWV_SCHEMA_VERSION = 1 as const;
 export const LAB_CWV_SOURCE = "browserless_lighthouse" as const;
+export const LAB_CWV_SESSION_SOURCE = "state_verified_session" as const;
+
+export type LabCwvSource = typeof LAB_CWV_SOURCE | typeof LAB_CWV_SESSION_SOURCE;
 
 export type LabCwvRating = "good" | "needs_improvement" | "poor";
 
 export type LabCwvV1 = {
   schema_version: typeof LAB_CWV_SCHEMA_VERSION;
-  source: typeof LAB_CWV_SOURCE;
+  source: LabCwvSource;
+  /** Set when this lab run happened in a state-checked browser session. */
+  state_verified?: boolean;
+  observed_state?: string | null;
   measured_at: string;
   url: string;
   /** Largest Contentful Paint（ミリ秒） */
@@ -135,11 +141,13 @@ export function parseLabCwvFromUnknown(raw: unknown): LabCwvV1 | null {
   if (!raw || typeof raw !== "object") return null;
   const o = raw as Record<string, unknown>;
   if (o.schema_version !== LAB_CWV_SCHEMA_VERSION) return null;
-  if (o.source !== LAB_CWV_SOURCE) return null;
+  if (o.source !== LAB_CWV_SOURCE && o.source !== LAB_CWV_SESSION_SOURCE) return null;
   if (typeof o.measured_at !== "string" || typeof o.url !== "string") return null;
   return {
     schema_version: LAB_CWV_SCHEMA_VERSION,
-    source: LAB_CWV_SOURCE,
+    source: o.source === LAB_CWV_SESSION_SOURCE ? LAB_CWV_SESSION_SOURCE : LAB_CWV_SOURCE,
+    state_verified: o.state_verified === true,
+    observed_state: typeof o.observed_state === "string" ? o.observed_state : null,
     measured_at: o.measured_at,
     url: o.url,
     lcp_ms: finiteOrNull(o.lcp_ms),
@@ -150,6 +158,36 @@ export function parseLabCwvFromUnknown(raw: unknown): LabCwvV1 | null {
     duration_ms: finiteOrNull(o.duration_ms),
     proxy_bytes: finiteOrNull(o.proxy_bytes),
     error: typeof o.error === "string" ? o.error : null,
+  };
+}
+
+export function parseLabCwvFromStateSession(input: {
+  lcpMs: number | null;
+  fcpMs: number | null;
+  cls: number | null;
+  tbtMs: number | null;
+  url: string;
+  measuredAt: string;
+  durationMs: number | null;
+  stateVerified: boolean;
+  observedState: string | null;
+}): LabCwvV1 {
+  const hasAny = [input.lcpMs, input.fcpMs, input.cls, input.tbtMs].some((value) => value != null);
+  return {
+    schema_version: LAB_CWV_SCHEMA_VERSION,
+    source: LAB_CWV_SESSION_SOURCE,
+    state_verified: input.stateVerified,
+    observed_state: input.observedState,
+    measured_at: input.measuredAt,
+    url: input.url,
+    lcp_ms: input.lcpMs != null ? Math.round(input.lcpMs) : null,
+    cls: input.cls != null ? Math.round(input.cls * 1000) / 1000 : null,
+    tbt_ms: input.tbtMs != null ? Math.round(input.tbtMs) : null,
+    fcp_ms: input.fcpMs != null ? Math.round(input.fcpMs) : null,
+    inp_ms: null,
+    duration_ms: input.durationMs,
+    proxy_bytes: null,
+    error: hasAny ? null : "no_audits",
   };
 }
 
