@@ -24,7 +24,7 @@ import {
   ensureObservationVerifyTokenForUser,
 } from "@/lib/observation-verify-token";
 import { loadMonitoringRunForObservation } from "@/lib/monitoring-run-store";
-import { getPlan } from "@/lib/plans";
+import { readScreenshotRetentionDays } from "@/lib/screenshot-retention-store";
 import { visibleSnapshotImageUrl } from "@/lib/observation-screenshot-retention";
 
 type Props = { params: Promise<{ id: string }> };
@@ -139,6 +139,8 @@ export default async function ObservationVerificationReportPage({ params }: Prop
     auditInference: t.auditInference,
   };
 
+  const retentionDays = await readScreenshotRetentionDays(session.userId, session.plan);
+
   return (
     <>
       <style
@@ -183,7 +185,7 @@ export default async function ObservationVerificationReportPage({ params }: Prop
         url={obs.url}
         capturedLabel={capturedLabel}
         status={obs.status}
-        snapshotImageUrl={visibleSnapshotImageUrl(obs, getPlan(session.plan).retentionDays)}
+        snapshotImageUrl={visibleSnapshotImageUrl(obs, retentionDays)}
         snapshotSha256={obs.snapshotSha256}
         contentHash={obs.contentHash}
         verifyUrl={verifyUrl}

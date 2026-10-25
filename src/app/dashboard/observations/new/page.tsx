@@ -9,6 +9,7 @@ import {
 } from "@/lib/demo/user-observations";
 import { getDemoUsageThisMonth } from "@/lib/demo/usage";
 import { getPlan, TRIAL_CONFIG } from "@/lib/plans";
+import { readScreenshotRetentionDays } from "@/lib/screenshot-retention-store";
 import { getSnapshotCapabilityCopy } from "@/lib/plans/snapshot-ui";
 import { getRegionOptions } from "@/lib/regions";
 import { copy } from "@/lib/i18n";
@@ -45,6 +46,7 @@ export default async function NewObservationPage({
   }
 
   const plan = getPlan(session.plan);
+  const retentionDays = await readScreenshotRetentionDays(session.userId, session.plan);
   const locale = await getRequestLocale();
   const tSettings = copy[locale].dashboardSettings;
   const snap = getSnapshotCapabilityCopy(locale, session.plan);
@@ -91,7 +93,7 @@ export default async function NewObservationPage({
           {plan.allUsStates ? "（米国は全州から選択可能）" : "（米国は代表州のみ）"}
         </p>
         <p className="mt-2 text-xs text-ink-muted">
-          スクリーンショット保存の目安: {plan.retentionDays} 日（{plan.name}）。
+          スクリーンショット保存の目安: {retentionDays} 日（{plan.name}）。
         </p>
       </div>
 

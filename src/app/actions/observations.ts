@@ -42,6 +42,7 @@ import {
   type HomepageObservationMode,
 } from "@/lib/observation-homepage-mode";
 import { getPlan, TRIAL_CONFIG } from "@/lib/plans";
+import { readScreenshotRetentionDays } from "@/lib/screenshot-retention-store";
 import { getRegionOptions } from "@/lib/regions";
 import { fetchMicrolinkScreenshotUrl } from "@/lib/microlink-screenshot";
 import { htmlHeadSignalsHasAny, normalizeUserUrlInput } from "@/lib/url-preview";
@@ -595,7 +596,7 @@ async function recordOneObservation(input: {
 
   const supabase = await createSupabaseServerClient();
   const saved = await appendUserObservation(obs, {
-    retentionDays: plan.retentionDays,
+    retentionDays: await readScreenshotRetentionDays(session.userId, session.plan),
     monthlyLimit: plan.monthlyObservations,
   });
   if (!saved.ok && saved.code === "monthly_limit") {

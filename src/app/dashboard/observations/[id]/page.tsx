@@ -54,6 +54,7 @@ import { ObservationWatchPanel } from "@/components/dashboard/ObservationWatchPa
 import { listJourneys } from "@/lib/journey-store";
 import { loadMonitoringRunForObservation } from "@/lib/monitoring-run-store";
 import { getPlan } from "@/lib/plans";
+import { readScreenshotRetentionDays } from "@/lib/screenshot-retention-store";
 import { decodeHtmlText } from "@/lib/url-preview";
 import { isBrowserlessConfigured } from "@/lib/browserless-screenshot";
 import { isCruxConfigured } from "@/lib/crux";
@@ -173,6 +174,7 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
   const verifyUrl = verifyToken ? buildPublicVerifyUrlForObservation(verifyToken) : null;
 
   const plan = getPlan(session.plan);
+  const retentionDays = await readScreenshotRetentionDays(session.userId, session.plan);
   const { data: watchRow } =
     plan.autoObservationWatch && obs.regionValue
       ? await supabase
@@ -201,8 +203,8 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
     parseWatchNotifyMode(String(watchRow?.notify_mode ?? "")) ?? "change_only";
   const watchNotifyOnMetadata = Boolean(watchRow?.notify_on_metadata);
 
-  const screenshotExpired = isObservationScreenshotExpired(obs, plan.retentionDays);
-  const storedVisibleImage = visibleSnapshotImageUrl(obs, plan.retentionDays);
+  const screenshotExpired = isObservationScreenshotExpired(obs, retentionDays);
+  const storedVisibleImage = visibleSnapshotImageUrl(obs, retentionDays);
   const homepageLive = isHomepageLiveCheckObservation(obs);
   const homepageClip = isHomepageClipObservation(obs);
   const live =

@@ -16,7 +16,7 @@ import {
   sameObservationUrlIdentity,
 } from "@/lib/observation-compare";
 import { sanitizeObservationRouteId } from "@/lib/observation-route-id";
-import { getPlan } from "@/lib/plans";
+import { readScreenshotRetentionDays } from "@/lib/screenshot-retention-store";
 
 export const metadata: Metadata = {
   title: "Compare observations | Viewtrace",
@@ -105,7 +105,7 @@ export default async function ObservationComparePage({ searchParams }: Props) {
       ? related.filter((row) => (row.regionValue ?? "") === (left.regionValue ?? ""))
       : related.filter((row) => sameObservationUrlIdentity(row.url, left.url));
   const fields = compareObservations(left, right);
-  const plan = getPlan(session.plan);
+  const retentionDays = await readScreenshotRetentionDays(session.userId, session.plan);
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -121,7 +121,7 @@ export default async function ObservationComparePage({ searchParams }: Props) {
         siblings={siblings}
         fields={fields}
         locale={locale}
-        retentionDays={plan.retentionDays}
+        retentionDays={retentionDays}
         mode={mode}
       />
     </div>

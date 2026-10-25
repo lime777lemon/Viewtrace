@@ -1,10 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { deleteObservationSnapshotByUrl } from "@/lib/observation-snapshot-storage";
-import {
-  isPastScreenshotRetention,
-  screenshotRetentionCutoffIso,
-} from "@/lib/observation-screenshot-retention";
-import { getPlan, parsePlanId } from "@/lib/plans";
+import { screenshotRetentionCutoffIso } from "@/lib/observation-screenshot-retention";
+import { parsePlanId, type PlanId } from "@/lib/plans";
+import { screenshotRetentionDaysFromStored } from "@/lib/screenshot-retention-store";
 
 export type ExpireScreenshotsResult = {
   scanned: number;
@@ -118,28 +116,34 @@ export async function expireDueObservationScreenshots(
   return result;
 }
 
-async function loadProUserIds(admin: SupabaseClient): Promise<Set<string>> {
-  const ids = new Set<string>();
-  const { data, error } = await admin.from("users").select("id").eq("plan", "pro");
-  if (error) {
-    console.warn("[screenshot-retention] list pro users failed", { message: error.message });
-    return ids;
-  }
-  for (const row of data ?? []) {
-    if (row && typeof row === "object" && "id" in row && typeof row.id === "string") {
-      ids.add(row.id);
+async function loadRetentionDaysByUserId(admin: SupabaseClient): Promise<Map<string, number> | null> {
+  const daysByUser = new Map<string, number>();
+  const page = 1000;
+  for (let from = 0; from < 20000; from += page) {
+    const { data, error } = await admin
+      .from("users")
+      .select("id, plan, screenshot_retention_days")
+      .range(from, from + page - 1);
+    if (error) {
+      console.warn("[screenshot-retention] list plans failed", { message: error.message });
+      return null;
     }
+    const rows = data ?? [];
+    for (const row of rows) {
+      if (!row || typeof row !== "object" || !("id" in row) || typeof row.id !== "string") continue;
+      const planRaw = "plan" in row && typeof row.plan === "string" ? row.plan : null;
+      const planId: PlanId = parsePlanId(planRaw);
+      const stored = "screenshot_retention_days" in row ? row.screenshot_retention_days : null;
+      daysByUser.set(row.id, screenshotRetentionDaysFromStored(stored, planId));
+    }
+    if (rows.length < page) break;
   }
-  return ids;
-}
-
-function retentionDaysForUser(userId: string, proIds: Set<string>): number {
-  return getPlan(proIds.has(userId) ? "pro" : parsePlanId("starter")).retentionDays;
+  return daysByUser;
 }
 
 /**
- * Cron: never apply the 7-day window to Pro accounts.
- * Candidates are rows older than Starter’s window; Pro rows stay until 60 days.
+ * Cron: each plan keeps screenshots for its own window.
+ * Free is 30 days, Starter is 90 days, Pro is 365 days.
  */
 export async function expireDueObservationScreenshotsAllPlans(
   admin: SupabaseClient,
@@ -147,35 +151,42 @@ export async function expireDueObservationScreenshotsAllPlans(
 ): Promise<ExpireScreenshotsResult> {
   const result = emptyResult();
   const limit = Math.min(Math.max(opts?.limit ?? DEFAULT_BATCH, 1), 200);
-  const starterDays = getPlan("starter").retentionDays;
-  const cutoff = screenshotRetentionCutoffIso(starterDays);
-  const proIds = await loadProUserIds(admin);
+  const plans = await loadRetentionDaysByUserId(admin);
+  if (!plans) return result;
 
-  const { data, error } = await admin
-    .from("observations")
-    .select("id,user_id,snapshot_image_url,captured_at")
-    .is("snapshot_purged_at", null)
-    .not("snapshot_image_url", "is", null)
-    .lt("captured_at", cutoff)
-    .order("captured_at", { ascending: true })
-    .limit(limit);
-
-  if (error) {
-    console.warn("[screenshot-retention] list due failed", { message: error.message });
-    return result;
+  const userIdsByDays = new Map<number, string[]>();
+  for (const [userId, days] of plans) {
+    const ids = userIdsByDays.get(days) ?? [];
+    ids.push(userId);
+    userIdsByDays.set(days, ids);
   }
 
-  const rows = asDueRows(data);
-  result.scanned = rows.length;
-
-  for (const row of rows) {
-    const retentionDays = retentionDaysForUser(row.user_id, proIds);
-    if (!isPastScreenshotRetention(row.captured_at, retentionDays)) {
-      result.skipped += 1;
-      continue;
+  const due: DueRow[] = [];
+  for (const [days, userIds] of userIdsByDays) {
+    if (due.length >= limit) break;
+    const cutoff = screenshotRetentionCutoffIso(days);
+    for (let index = 0; index < userIds.length && due.length < limit; index += 100) {
+      const slice = userIds.slice(index, index + 100);
+      const { data, error } = await admin
+        .from("observations")
+        .select("id,user_id,snapshot_image_url,captured_at")
+        .in("user_id", slice)
+        .is("snapshot_purged_at", null)
+        .not("snapshot_image_url", "is", null)
+        .lt("captured_at", cutoff)
+        .order("captured_at", { ascending: true })
+        .limit(limit - due.length);
+      if (error) {
+        console.warn("[screenshot-retention] list due failed", { message: error.message });
+        return result;
+      }
+      due.push(...asDueRows(data));
     }
+  }
+
+  result.scanned = due.length;
+  for (const row of due) {
     await purgeRow(admin, row, result);
   }
-
   return result;
 }

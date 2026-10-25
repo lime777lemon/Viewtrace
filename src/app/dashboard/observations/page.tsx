@@ -8,6 +8,7 @@ import { getMergedObservationsForPlan, readUserObservations } from "@/lib/demo/u
 import { copy } from "@/lib/i18n";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { getPlan } from "@/lib/plans";
+import { readScreenshotRetentionDays } from "@/lib/screenshot-retention-store";
 import { listShareCollectionsForUser } from "@/lib/observation-share-collection";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { shouldHideNewObservationForTrial } from "@/lib/trial-observation-access";
@@ -25,6 +26,7 @@ export default async function ObservationsListPage() {
   const t = copy[locale].observationsListPage;
   const csvLabels = copy[locale].observationsCsvExport;
   const plan = session ? getPlan(session.plan) : null;
+  const retentionDays = session ? await readScreenshotRetentionDays(session.userId, session.plan) : undefined;
   const showCsv = plan?.csvExport ?? false;
 
   const planId = session?.plan ?? "freeplan";
@@ -90,7 +92,7 @@ export default async function ObservationsListPage() {
       <ObservationsLibrary
         rows={rows}
         locale={locale}
-        retentionDays={plan?.retentionDays}
+        retentionDays={retentionDays}
         shareCollections={shareCollections}
       />
     </div>

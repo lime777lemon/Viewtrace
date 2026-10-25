@@ -773,7 +773,7 @@ Watch Interaction Check の本番実測を **20〜50 runs** 行う。
 - automatic Regional Interaction Check
 - Watch 最大 1回 / day
 - manual Synthetic 10 / month
-- 7日保存
+- 90日保存
 - full-page capture
 
 ## Pro
@@ -783,7 +783,7 @@ Watch Interaction Check の本番実測を **20〜50 runs** 行う。
 - automatic Regional Interaction Check
 - Watch 最大 4回 / day
 - manual Synthetic 30 / month
-- 60日保存
+- 365日保存
 - full-page capture
 - Region Compare
 - Time Compare

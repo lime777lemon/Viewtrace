@@ -10,6 +10,7 @@ import { copy } from "@/lib/i18n";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { getPlanLabels } from "@/lib/plans/labels";
 import { getOveragePerObservationUsd, getPlan } from "@/lib/plans";
+import { readScreenshotRetentionDays } from "@/lib/screenshot-retention-store";
 import { getSnapshotCapabilityCopy } from "@/lib/plans/snapshot-ui";
 import { shouldHideNewObservationForTrial } from "@/lib/trial-observation-access";
 
@@ -26,6 +27,7 @@ export default async function DashboardHomePage() {
   if (!session) redirect("/login");
 
   const plan = getPlan(session.plan);
+  const retentionDays = await readScreenshotRetentionDays(session.userId, session.plan);
   const planLabels = getPlanLabels(session.plan, locale);
   const snapshotUi = getSnapshotCapabilityCopy(locale, session.plan);
   const overageUsd = getOveragePerObservationUsd();
@@ -57,7 +59,7 @@ export default async function DashboardHomePage() {
           {t.subtitle
             .replace("{plan}", plan.name)
             .replace("{price}", planLabels.priceLabel)
-            .replace("{days}", String(plan.retentionDays))
+            .replace("{days}", String(retentionDays))
             .replace("{limit}", String(plan.monthlyObservations))}
         </p>
       </div>
@@ -78,7 +80,7 @@ export default async function DashboardHomePage() {
           <p className="mt-0.5 text-[11px] leading-snug text-ink-muted">{snapshotUi.technical}</p>
           <p className="mt-3 text-xs text-ink-muted">
             {t.cardPlanMeta
-              .replace("{days}", String(plan.retentionDays))
+              .replace("{days}", String(retentionDays))
               .replace("{limit}", String(plan.monthlyObservations))}
           </p>
           <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2">
@@ -154,7 +156,7 @@ export default async function DashboardHomePage() {
             </Link>
           )}
         </div>
-        <ObservationsTable rows={recent} locale={locale} retentionDays={plan.retentionDays} />
+        <ObservationsTable rows={recent} locale={locale} retentionDays={retentionDays} />
       </section>
 
       <div className="rounded-xl border border-warn/30 bg-warn/10 p-4 text-sm text-ink">

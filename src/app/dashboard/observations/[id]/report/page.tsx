@@ -29,7 +29,7 @@ import { copy } from "@/lib/i18n";
 import { getRequestLocale } from "@/lib/i18n/locale-server";
 import { sanitizeObservationRouteId } from "@/lib/observation-route-id";
 import { resolveObservationCaptureTier } from "@/lib/observation-capture-tier";
-import { getPlan } from "@/lib/plans";
+import { readScreenshotRetentionDays } from "@/lib/screenshot-retention-store";
 import { htmlHeadSignalsHasAny } from "@/lib/url-preview";
 import {
   isObservationScreenshotExpired,
@@ -77,11 +77,9 @@ export default async function ObservationReportPage({ params }: Props) {
     );
   }
 
-  const screenshotExpired = isObservationScreenshotExpired(
-    obs,
-    getPlan(session.plan).retentionDays,
-  );
-  const reportSnapshotUrl = visibleSnapshotImageUrl(obs, getPlan(session.plan).retentionDays);
+  const retentionDays = await readScreenshotRetentionDays(session.userId, session.plan);
+  const screenshotExpired = isObservationScreenshotExpired(obs, retentionDays);
+  const reportSnapshotUrl = visibleSnapshotImageUrl(obs, retentionDays);
   const captureTier = resolveObservationCaptureTier(obs);
   const ct = copy[locale].observationCaptureTier;
   const captureTierBadge =

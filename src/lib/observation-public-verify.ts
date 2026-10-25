@@ -7,6 +7,10 @@ import {
   visibleSnapshotImageUrl,
 } from "@/lib/observation-screenshot-retention";
 import { getPlan, parsePlanId } from "@/lib/plans";
+import {
+  planIdFromUserRow,
+  screenshotRetentionDaysFromStored,
+} from "@/lib/screenshot-retention-store";
 import { sanitizeVerifyTokenParam } from "@/lib/observation-verify-token";
 import type { HtmlHeadSignalsV1 } from "@/lib/url-preview";
 import type { ObservationAiAudit } from "@/lib/observation-ai-audit";
@@ -109,16 +113,25 @@ export async function retentionDaysForOwner(
   admin: NonNullable<ReturnType<typeof createSupabaseAdminClient>>,
   userId: string,
 ): Promise<number> {
+  const { data: row } = await admin
+    .from("users")
+    .select("plan, screenshot_retention_days")
+    .eq("id", userId)
+    .maybeSingle();
+  const plan = planIdFromUserRow(row && typeof row === "object" && "plan" in row ? row.plan : null);
+  const stored =
+    row && typeof row === "object" && "screenshot_retention_days" in row
+      ? row.screenshot_retention_days
+      : null;
+  if (typeof stored === "number" && stored > 0) return screenshotRetentionDaysFromStored(stored, plan);
   try {
     const { data } = await admin.auth.admin.getUserById(userId);
     const raw = data.user?.user_metadata?.plan;
     if (typeof raw === "string") return getPlan(parsePlanId(raw)).retentionDays;
   } catch {
-    /* fall through to users mirror */
+    /* stored plan is enough */
   }
-  const { data: row } = await admin.from("users").select("plan").eq("id", userId).maybeSingle();
-  const planRaw = row && typeof row === "object" && "plan" in row ? row.plan : null;
-  return getPlan(parsePlanId(typeof planRaw === "string" ? planRaw : null)).retentionDays;
+  return screenshotRetentionDaysFromStored(stored, plan);
 }
 
 export async function fetchObservationForPublicVerify(

@@ -5,7 +5,8 @@ import { getPlan, parsePlanId, type PlanId } from "@/lib/plans";
  * Table Editor 用の `public.users` を、課金プランと同じ値に揃える（ベストエフォート）。
  * 正のソースは Supabase Auth の `user_metadata.plan` と `src/lib/plans.ts` の枠。
  *
- * 想定列: `id` (uuid, auth と同一), `plan` (text), `observations_limit` (int)。
+ * 想定列: `id` (uuid, auth と同一), `plan` (text), `observations_limit` (int),
+ * `screenshot_retention_days` (int)。
  * スキーマが違う場合はこの関数はログを出して終了するだけ（決済フローを壊さない）。
  */
 export async function syncPublicUserPlanMirror(
@@ -14,8 +15,12 @@ export async function syncPublicUserPlanMirror(
   planRaw: string,
 ): Promise<void> {
   const planId: PlanId = parsePlanId(planRaw);
-  const observationsLimit = getPlan(planId).monthlyObservations;
-  const patch = { plan: planId, observations_limit: observationsLimit };
+  const plan = getPlan(planId);
+  const patch = {
+    plan: planId,
+    observations_limit: plan.monthlyObservations,
+    screenshot_retention_days: plan.retentionDays,
+  };
 
   const { data: updated, error: upErr } = await admin
     .from("users")
