@@ -7,6 +7,7 @@ import {
 import { parseStoredScroll } from "@/lib/observation-optional-metrics-store";
 import { INTERACTION_CHECK_TYPES, type InteractionCheckType } from "@/lib/observation-regional-interaction";
 import type { ScrollInteractionStatus } from "@/lib/observation-scroll-interaction";
+import { generateObservationVerifyToken, VERIFY_TOKEN_HEX_LENGTH } from "@/lib/observation-verify-token";
 import { sendResendEmail, isResendConfigured } from "@/lib/resend";
 import { getAppOriginForEmailLinks } from "@/lib/site";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -19,6 +20,7 @@ import {
 } from "@/lib/scheduled-evidence-report-deliver";
 import {
   buildWeeklyEvidenceReport,
+  evidenceScreenshotLabel,
   evidenceReportRecipientEmails,
   normalizeOtherWebhookUrl,
   normalizeSlackIncomingWebhookUrl,
@@ -114,6 +116,7 @@ function observationFromRow(row: Record<string, unknown>): EvidenceReportObserva
         }
       : null,
     regionInput: text(row.region_input) || null,
+    verifyToken: verifyTokenFromRow(row.verify_token),
     behavior: null,
   };
 }
@@ -153,7 +156,7 @@ async function listUserIds(admin: SupabaseClient, startIso: string, endIso: stri
 }
 
 const OBSERVATION_SELECT =
-  "id,url,region,region_label,status,captured_at,snapshot_sha256,snapshot_phash,snapshot_image_url,snapshot_purged_at,full_page_requested:capture_conditions->full_page_requested,viewport:capture_conditions->viewport,device_class:capture_conditions->device_class,geo:capture_conditions->geo,region_input:capture_conditions->region_input";
+  "id,url,region,region_label,status,captured_at,verify_token,snapshot_sha256,snapshot_phash,snapshot_image_url,snapshot_purged_at,full_page_requested:capture_conditions->full_page_requested,viewport:capture_conditions->viewport,device_class:capture_conditions->device_class,geo:capture_conditions->geo,region_input:capture_conditions->region_input";
 
 async function loadObservations(
   admin: SupabaseClient,
@@ -289,29 +292,93 @@ async function loadStateCoverage(
   });
 }
 
+function verifyTokenFromRow(value: unknown): string | null {
+  const token = text(value).toLowerCase();
+  return token.length === VERIFY_TOKEN_HEX_LENGTH ? token : null;
+}
+
+export type WeeklyEvidenceObservationRow = EvidenceReportObservationFact & {
+  screenshot: string;
+  detailUrl: string | null;
+};
+
+async function ensureVerifyTokens(
+  admin: SupabaseClient,
+  userId: string,
+  facts: EvidenceReportObservationFact[],
+): Promise<void> {
+  for (const fact of facts) {
+    if (fact.verifyToken) continue;
+    const token = generateObservationVerifyToken();
+    const { data, error } = await admin
+      .from("observations")
+      .update({ verify_token: token, updated_at: new Date().toISOString() })
+      .eq("id", fact.id)
+      .eq("user_id", userId)
+      .is("verify_token", null)
+      .select("verify_token")
+      .maybeSingle();
+    if (!error) {
+      const written = verifyTokenFromRow((data as { verify_token?: unknown } | null)?.verify_token);
+      if (written) {
+        fact.verifyToken = written;
+        continue;
+      }
+    }
+    const again = await admin
+      .from("observations")
+      .select("verify_token")
+      .eq("id", fact.id)
+      .eq("user_id", userId)
+      .maybeSingle();
+    fact.verifyToken = verifyTokenFromRow((again.data as { verify_token?: unknown } | null)?.verify_token);
+  }
+}
+
 export async function composeWeeklyEvidenceReportForUser(
   admin: SupabaseClient,
   userId: string,
   period: EvidenceReportPeriod,
   origin: string,
   publicUrl?: string | null,
-): Promise<{ subject: string; text: string; html: string; observationCount: number }> {
+): Promise<{
+  subject: string;
+  text: string;
+  html: string;
+  observationCount: number;
+  rows: WeeklyEvidenceObservationRow[];
+}> {
   const lookback = new Date(period.start.getTime() - LOOKBACK_MS).toISOString();
   const history = await loadObservations(admin, userId, lookback, period.end.toISOString());
   const observations = history.filter((fact) => fact.capturedAt >= period.start.toISOString());
   await attachBehavior(admin, userId, observations);
+  await ensureVerifyTokens(admin, userId, observations);
+  const originClean = origin.replace(/\/+$/, "");
+  for (const fact of observations) {
+    fact.detailUrl = fact.verifyToken ? `${originClean}/verify/${fact.verifyToken}` : null;
+  }
+  const priorObservations = history.filter((fact) => fact.capturedAt < period.start.toISOString());
+  const judgedAgainst = [...priorObservations, ...observations];
   const journeys = await loadJourneys(admin, userId, period.start.toISOString(), period.end.toISOString());
   const report = buildWeeklyEvidenceReport({
     period,
     observations,
-    priorObservations: history.filter((fact) => fact.capturedAt < period.start.toISOString()),
+    priorObservations,
     journeys,
     stateCoverage: await loadStateCoverage(admin, userId, period.startDate),
     origin,
     publicUrl,
   });
   const html = `<pre style="font-family:ui-sans-serif,system-ui,sans-serif;white-space:pre-wrap">${escapeHtml(report.text)}</pre>`;
-  return { subject: report.subject, text: report.text, html, observationCount: observations.length };
+  const rows = observations
+    .slice()
+    .sort((a, b) => b.capturedAt.localeCompare(a.capturedAt))
+    .map((fact) => ({
+      ...fact,
+      screenshot: evidenceScreenshotLabel(fact, judgedAgainst),
+      detailUrl: fact.detailUrl ?? null,
+    }));
+  return { subject: report.subject, text: report.text, html, observationCount: observations.length, rows };
 }
 
 export async function runScheduledEvidenceReports(now = new Date()): Promise<EvidenceReportRunResult> {

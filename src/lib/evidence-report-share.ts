@@ -39,17 +39,19 @@ export async function insertEvidenceReportShare(
 export async function readEvidenceReportShare(
   admin: SupabaseClient,
   token: string,
-): Promise<{ subject: string; body: string } | null> {
+): Promise<{ subject: string; body: string; userId: string; periodStart: string } | null> {
   const safe = sanitizeEvidenceReportShareToken(token);
   if (!safe) return null;
   const { data, error } = await admin
     .from("evidence_report_shares")
-    .select("subject, body")
+    .select("subject, body, user_id, period_start")
     .eq("token", safe)
     .maybeSingle();
   if (error || !data) return null;
   const subject = typeof data.subject === "string" ? data.subject : "";
   const body = typeof data.body === "string" ? data.body : "";
+  const userId = typeof data.user_id === "string" ? data.user_id : "";
+  const periodStart = typeof data.period_start === "string" ? data.period_start.slice(0, 10) : "";
   if (!subject || !body) return null;
-  return { subject, body };
+  return { subject, body, userId, periodStart };
 }

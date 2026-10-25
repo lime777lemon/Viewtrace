@@ -9,8 +9,6 @@ import { isBlockedPreviewHost } from "@/lib/url-preview";
 
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
-const SHOWN_OBSERVATION_LIMIT = 8;
-
 const GEO_COPY = observationGeoCopyFrom({
   geoRequestedObserved: "指定: {requested} / 実際の取得: {observed}",
 });
@@ -67,6 +65,10 @@ export type EvidenceReportObservationFact = {
     verified_measurements?: Array<"screenshot" | "interaction" | "journey" | "lab_cwv"> | null;
   } | null;
   regionInput?: string | null;
+  /** Login-free `/verify` token. Absent until the row has one. */
+  verifyToken?: string | null;
+  /** Login-free observation detail. Included in the sent report when set. */
+  detailUrl?: string | null;
   /** Null when no interaction check was stored. */
   behavior: EvidenceReportBehaviorFact[] | null;
 };
@@ -87,6 +89,20 @@ export type WeeklyEvidenceReportInput = {
   /** Login-free page for this report. Dashboard URLs are not included. */
   publicUrl?: string | null;
 };
+
+export function evidenceReportPeriodStarting(startDate: string): EvidenceReportPeriod | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(startDate);
+  if (!match) return null;
+  const start = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])) - JST_OFFSET_MS);
+  if (Number.isNaN(start.getTime()) || jstDate(start) !== startDate) return null;
+  const end = new Date(start.getTime() + 7 * DAY_MS);
+  return {
+    start,
+    end,
+    startDate,
+    endDateInclusive: jstDate(new Date(end.getTime() - 1)),
+  };
+}
 
 export function previousJstWeek(now: Date): EvidenceReportPeriod {
   const jst = new Date(now.getTime() + JST_OFFSET_MS);
@@ -386,6 +402,21 @@ function screenshotMailLine(fact: ScreenshotMailFact): string {
   return `Screenshot: Not comparable — ${fact.reason}`;
 }
 
+export function evidenceScreenshotLabel(
+  current: EvidenceReportObservationFact,
+  history: EvidenceReportObservationFact[],
+): string {
+  return screenshotMailLine(screenshotMailFact(current, previousFor(current, history)));
+}
+
+export function evidenceFactCaptureConditions(fact: EvidenceReportObservationFact): CaptureConditionsV1 {
+  const conditions = asObservation(fact).captureConditions;
+  if (!conditions) {
+    throw new Error("evidence fact is missing capture conditions");
+  }
+  return conditions;
+}
+
 function previousFor(
   current: EvidenceReportObservationFact,
   history: EvidenceReportObservationFact[],
@@ -410,22 +441,54 @@ function orderedTypes(rows: EvidenceReportBehaviorFact[]): string[] {
     .map((row) => behaviorTypeLabel(row.type));
 }
 
+const INTERACTION_MAIL_GROUPS: Array<{ status: ScrollInteractionStatus; label: string }> = [
+  { status: "working", label: "Working" },
+  { status: "no_change_observed", label: "No rendered state change observed" },
+  { status: "failed", label: "Execution error" },
+  { status: "blocked_for_safety", label: "Blocked for safety" },
+  { status: "playback_not_verifiable", label: "検出のみ（再生は確認できない）" },
+  { status: "not_detected", label: "Not detected" },
+];
+
 function interactionMailLines(behavior: EvidenceReportBehaviorFact[] | null): string[] {
   if (!behavior || behavior.length === 0) return [];
   const lines: string[] = [];
-  const groups: Array<{ status: ScrollInteractionStatus; label: string }> = [
-    { status: "working", label: "Working" },
-    { status: "no_change_observed", label: "No rendered state change observed" },
-    { status: "failed", label: "Execution error" },
-    { status: "blocked_for_safety", label: "Blocked for safety" },
-    { status: "playback_not_verifiable", label: "検出のみ（再生は確認できない）" },
-    { status: "not_detected", label: "Not detected" },
-  ];
-  for (const group of groups) {
+  for (const group of INTERACTION_MAIL_GROUPS) {
     const names = orderedTypes(behavior.filter((row) => row.status === group.status));
     if (names.length > 0) lines.push(`${group.label}: ${names.join(", ")}`);
   }
   return lines;
+}
+
+function groupedInteractionLines(rows: EvidenceReportObservationFact[]): string[] {
+  const lines: string[] = [];
+  for (const group of INTERACTION_MAIL_GROUPS) {
+    const counts = new Map<string, { label: string; count: number }>();
+    for (const row of rows) {
+      const seen = new Set<string>();
+      for (const item of row.behavior ?? []) {
+        if (item.status !== group.status || seen.has(item.type)) continue;
+        seen.add(item.type);
+        const current = counts.get(item.type) ?? { label: behaviorTypeLabel(item.type), count: 0 };
+        current.count += 1;
+        counts.set(item.type, current);
+      }
+    }
+    if (counts.size === 0) continue;
+    const parts = [...counts.entries()]
+      .sort((a, b) => (TYPE_ORDER.get(a[0]) ?? 99) - (TYPE_ORDER.get(b[0]) ?? 99))
+      .map(([, item]) => (rows.length > 1 && item.count < rows.length ? `${item.label} × ${item.count}` : item.label));
+    lines.push(`${group.label}: ${parts.join(", ")}`);
+  }
+  return lines;
+}
+
+function captureSpan(rows: EvidenceReportObservationFact[]): string {
+  const sorted = rows.slice().sort((a, b) => a.capturedAt.localeCompare(b.capturedAt));
+  const first = formatJstDateTime(sorted[0]?.capturedAt ?? "");
+  const last = formatJstDateTime(sorted[sorted.length - 1]?.capturedAt ?? "");
+  if (sorted.length < 2 || first === last) return first;
+  return `${first.replace(/ JST$/, "")} — ${last}`;
 }
 
 function pageLabel(url: string): string {
@@ -474,18 +537,6 @@ function regionalMailFact(fact: EvidenceReportObservationFact): RegionalMailFact
     stateTargetingRejected: fact.geo?.state_targeting_rejected === true,
     verifiedMeasurements: fact.geo?.verified_measurements ?? [],
   };
-}
-
-function isPriorityObservation(fact: EvidenceReportObservationFact, shot: ScreenshotMailFact): boolean {
-  if (fact.status === "failure") return true;
-  if (shot.verdict === "changed") return true;
-  return (fact.behavior ?? []).some(
-    (row) =>
-      row.status === "no_change_observed" ||
-      row.status === "failed" ||
-      row.status === "blocked_for_safety" ||
-      row.status === "playback_not_verifiable",
-  );
 }
 
 function hasWorking(fact: EvidenceReportObservationFact): boolean {
@@ -566,30 +617,6 @@ export function buildWeeklyEvidenceReport(input: WeeklyEvidenceReportInput): { s
   }
   const regionalFacts = [...regionalByKey.values()].sort((a, b) => a.requested.localeCompare(b.requested));
 
-  const priority: EvidenceReportObservationFact[] = [];
-  const workingOnly = new Map<string, EvidenceReportObservationFact>();
-  for (const row of input.observations) {
-    const shot = shots.get(row.id);
-    if (!shot) continue;
-    if (isPriorityObservation(row, shot)) {
-      priority.push(row);
-      continue;
-    }
-    if (!hasWorking(row)) continue;
-    const identity = observationUrlIdentity(row.url) ?? row.url;
-    const bucket = `${row.regionValue}\n${identity}`;
-    const current = workingOnly.get(bucket);
-    if (!current || Date.parse(row.capturedAt) > Date.parse(current.capturedAt)) workingOnly.set(bucket, row);
-  }
-
-  const ranked = [
-    ...priority.sort((a, b) => Date.parse(b.capturedAt) - Date.parse(a.capturedAt)),
-    ...[...workingOnly.values()].sort((a, b) => Date.parse(b.capturedAt) - Date.parse(a.capturedAt)),
-  ];
-  const shownRows = ranked.slice(0, SHOWN_OBSERVATION_LIMIT);
-  const hidden = input.observations.length - shownRows.length;
-  const shownIds = new Set(shownRows.map((row) => row.id));
-
   const changed = [...shots.values()].filter((shot) => shot.verdict === "changed").length;
   const same = [...shots.values()].filter((shot) => shot.verdict === "same").length;
   const notComparable = [...shots.values()].filter((shot) => shot.verdict === "not_comparable").length;
@@ -624,25 +651,47 @@ export function buildWeeklyEvidenceReport(input: WeeklyEvidenceReportInput): { s
   ].filter((line): line is string => Boolean(line));
   lines.push(...summaryFacts);
 
-  if (shownRows.length > 0) {
+  type MailGroup = {
+    page: string;
+    shot: ScreenshotMailFact;
+    status: EvidenceReportObservationFact["status"];
+    rows: EvidenceReportObservationFact[];
+  };
+  const recordsByRegion = new Map<string, { label: string; regionValue: string; groups: MailGroup[] }>();
+  for (const row of input.observations) {
+    const shot = shots.get(row.id);
+    if (!shot) continue;
+    const regionKey = row.regionValue || row.regionLabel || "—";
+    const region = recordsByRegion.get(regionKey) ?? {
+      label: row.regionLabel || row.regionValue || regionKey,
+      regionValue: row.regionValue,
+      groups: [],
+    };
+    const page = pageLabel(row.url);
+    const identity = observationUrlIdentity(row.url) ?? row.url;
+    const existing = region.groups.find(
+      (group) =>
+        group.page === page &&
+        (observationUrlIdentity(group.rows[0]?.url ?? "") ?? group.rows[0]?.url) === identity &&
+        group.shot.verdict === shot.verdict &&
+        group.shot.reason === shot.reason &&
+        group.status === row.status,
+    );
+    if (existing) existing.rows.push(row);
+    else region.groups.push({ page, shot, status: row.status, rows: [row] });
+    recordsByRegion.set(regionKey, region);
+  }
+  const verdictOrder = { changed: 0, same: 1, not_comparable: 2 } as const;
+  if (recordsByRegion.size > 0) {
     lines.push("", "## 主な記録");
-    const byRegion = new Map<string, EvidenceReportObservationFact[]>();
-    for (const row of shownRows) {
-      const key = row.regionValue || row.regionLabel || "—";
-      const list = byRegion.get(key) ?? [];
-      list.push(row);
-      byRegion.set(key, list);
-    }
-    for (const key of [...byRegion.keys()].sort()) {
-      const rows = (byRegion.get(key) ?? []).slice().sort((a, b) => a.capturedAt.localeCompare(b.capturedAt));
-      const sample = rows[0];
-      if (!sample) continue;
-      lines.push("", sample.regionLabel || sample.regionValue || key);
-      const regional = regionalByKey.get(sample.regionValue);
+    for (const region of [...recordsByRegion.values()].sort((a, b) => a.label.localeCompare(b.label))) {
+      lines.push("", region.label);
+      const regional = regionalByKey.get(region.regionValue);
+      const measuredBehavior = region.groups.some((group) => group.rows.some((row) => (row.behavior?.length ?? 0) > 0));
       if (regional?.stateVerified) {
         lines.push(`確認した測定: ${measurementLabels(regional.verifiedMeasurements).join("、")}`);
         const outside = measurementsOutsideSession(regional.verifiedMeasurements);
-        if (outside.length > 0 && rows.some((row) => (row.behavior?.length ?? 0) > 0)) {
+        if (outside.length > 0 && measuredBehavior) {
           lines.push(`${outside.join("、")} はこの session では測っていません。`);
         }
       } else if (regional?.stateTargetingRejected) {
@@ -651,15 +700,21 @@ export function buildWeeklyEvidenceReport(input: WeeklyEvidenceReportInput): { s
       } else if (regional?.stateUnconfirmed) {
         lines.push(`実際の取得: ${regional.observed}。州単位の確認はできていません。`);
       }
-      for (const row of rows) {
-        if (!shownIds.has(row.id)) continue;
-        const shot = shots.get(row.id);
-        lines.push(pageLabel(row.url));
-        lines.push(formatJstDateTime(row.capturedAt));
-        if (row.status === "failure") lines.push("取得: 失敗");
-        if (row.status === "pending") lines.push("取得: 保留");
-        if (shot) lines.push(screenshotMailLine(shot));
-        lines.push(...interactionMailLines(row.behavior));
+      const pages = [...new Set(region.groups.map((group) => group.page))].sort();
+      for (const page of pages) {
+        lines.push(page);
+        const groups = region.groups
+          .filter((group) => group.page === page)
+          .sort((a, b) => verdictOrder[a.shot.verdict] - verdictOrder[b.shot.verdict] || a.rows[0].capturedAt.localeCompare(b.rows[0].capturedAt));
+        for (const group of groups) {
+          const count = group.rows.length;
+          const shotLine = screenshotMailLine(group.shot);
+          lines.push(count > 1 ? `${shotLine} × ${count}` : shotLine);
+          lines.push(captureSpan(group.rows));
+          if (group.status === "failure") lines.push(count > 1 ? `取得: 失敗 × ${count}` : "取得: 失敗");
+          if (group.status === "pending") lines.push(count > 1 ? `取得: 保留 × ${count}` : "取得: 保留");
+          lines.push(...(count === 1 ? interactionMailLines(group.rows[0]?.behavior ?? null) : groupedInteractionLines(group.rows)));
+        }
       }
     }
   }
@@ -723,7 +778,24 @@ export function buildWeeklyEvidenceReport(input: WeeklyEvidenceReportInput): { s
     }
   }
 
-  if (hidden > 0) lines.push("", `ほか ${hidden} 件はこの週の件数に含まれています。`);
+  const detailRows = input.observations
+    .filter((row) => Boolean(row.detailUrl))
+    .slice()
+    .sort((a, b) => b.capturedAt.localeCompare(a.capturedAt));
+  if (detailRows.length > 0) {
+    lines.push("", "## 各記録");
+    lines.push("各 Observation の詳細です。ログインは不要です。");
+    for (const row of detailRows) {
+      const shot = shots.get(row.id);
+      lines.push("");
+      lines.push(formatJstDateTime(row.capturedAt));
+      lines.push(row.url);
+      lines.push(row.regionLabel || row.regionValue || "—");
+      if (shot) lines.push(screenshotMailLine(shot));
+      lines.push(row.detailUrl ?? "");
+    }
+  }
+
   const publicUrl = input.publicUrl?.trim();
   if (publicUrl) {
     lines.push("", "## このレポート");

@@ -1015,6 +1015,11 @@ export const copy = {
       badge: "Evidence Report",
       title: "Evidence Report",
       subtitle: "ログイン不要です。このリンクを知っている人が、送られたレポートを読めます。",
+      summary: "今週の件数",
+      records: "記録",
+      weekRecords: "１週間の記録",
+      screenshot: "Screenshot",
+      source: "送られた原文",
       missing: "このレポートは見つかりません。",
     },
     publicVerify: {
@@ -3259,6 +3264,11 @@ export const copy = {
       badge: "Evidence Report",
       title: "Evidence Report",
       subtitle: "No login is required. Anyone with this link can read the report that was sent.",
+      summary: "This week",
+      records: "Records",
+      weekRecords: "This week's records",
+      screenshot: "Screenshot",
+      source: "Report text",
       missing: "This report could not be found.",
     },
     publicVerify: {

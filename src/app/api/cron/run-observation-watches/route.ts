@@ -4,8 +4,10 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { runDueJourneyWatches } from "@/lib/journey-store";
 import { runDueMonitoringWatches } from "@/lib/monitoring-watch-store";
 import {
+  applyRequestedDevice,
   buildCaptureConditionsFromBrowserless,
   buildCaptureConditionsFromPlaywrightWorker,
+  REQUESTED_DEVICE_VIEWPORT,
 } from "@/lib/capture-conditions";
 import { runObservationPrimaryScreenshot } from "@/lib/observation-primary-capture";
 import { recordStateCoverage } from "@/lib/state-coverage";
@@ -503,6 +505,7 @@ export async function POST(req: Request) {
 
     const userEmail = await getUserEmail(userId);
     const fullPage = plan.snapshotFullPage;
+    const desktop = REQUESTED_DEVICE_VIEWPORT.desktop;
     const statePlan = /^US-[A-Z]{2}$/i.test(region)
       ? await interactionWatchPlan(svc, {
           userId,
@@ -518,6 +521,12 @@ export async function POST(req: Request) {
       url,
       region,
       fullPage,
+      viewport: {
+        width: desktop.width,
+        height: desktop.height,
+        isMobile: false,
+        hasTouch: false,
+      },
       interaction: statePlan
         ? { url, prior: statePlan.prior, scan: statePlan.scan, environment: { device_class: "desktop" } }
         : undefined,
@@ -709,6 +718,7 @@ export async function POST(req: Request) {
       webFacts: captureConditions.web_facts,
     });
     if (seoFacts) captureConditions = { ...captureConditions, seo_facts: seoFacts };
+    captureConditions = applyRequestedDevice(captureConditions, "desktop");
 
     const obsForHash: Observation = {
       id: obsId,

@@ -12,6 +12,7 @@ import {
   normalizeTeamsWebhookUrl,
   otherWebhookEvidencePayload,
   pagerDutyEvidencePayload,
+  evidenceReportPeriodStarting,
   previousJstWeek,
   slackEvidencePayload,
   teamsEvidencePayload,
@@ -25,8 +26,14 @@ import {
   redactDeliveryResponse,
   settleEvidenceAttempt,
 } from "../src/lib/scheduled-evidence-report-deliver";
+import { parseEvidenceReportBody } from "../src/lib/evidence-report-public-view";
 
 const period = previousJstWeek(new Date("2026-10-26T00:00:00.000Z"));
+const opened = evidenceReportPeriodStarting(period.startDate);
+assert.equal(opened?.startDate, period.startDate);
+assert.equal(opened?.endDateInclusive, period.endDateInclusive);
+assert.equal(opened?.start.toISOString(), period.start.toISOString());
+assert.equal(opened?.end.toISOString(), period.end.toISOString());
 assert.equal(period.start.toISOString(), "2026-10-18T15:00:00.000Z");
 assert.equal(period.end.toISOString(), "2026-10-25T15:00:00.000Z");
 assert.equal(period.startDate, "2026-10-19");
@@ -139,7 +146,7 @@ assert.match(report.text, /Desktop: Passed 2 \/ Failed 1/);
 assert.match(report.text, /- Step: Checkout/);
 assert.match(report.text, /https:\/\/viewtrace\.net\/evidence-report\/abc/);
 assert.match(report.text, /ログインなしで開けます。/);
-assert.match(report.text, /ほか 1 件はこの週の件数に含まれています。/);
+assert.doesNotMatch(report.text, /ほか \d+ 件はこの週の件数に含まれています。/);
 assert.doesNotMatch(report.text, /\/dashboard\//);
 assert.doesNotMatch(report.text, /Menu: Working|Modal: Working|Not measured/);
 assert.doesNotMatch(report.text, /obs-ca/);
@@ -155,7 +162,9 @@ const emptyBehavior = buildWeeklyEvidenceReport({
   origin: "https://viewtrace.net",
 });
 assert.doesNotMatch(emptyBehavior.text, /Not measured|Working|Execution error|失敗: 0|Failed 0/);
-assert.match(emptyBehavior.text, /ほか 1 件はこの週の件数に含まれています。/);
+assert.match(emptyBehavior.text, /example\.com/);
+assert.match(emptyBehavior.text, /Screenshot: Not comparable — 前回の同じ URL × 地域がない/);
+assert.doesNotMatch(emptyBehavior.text, /ほか \d+ 件はこの週の件数に含まれています。/);
 assert.doesNotMatch(emptyBehavior.text, /\/dashboard\//);
 
 const repeatedWorking = buildWeeklyEvidenceReport({
@@ -184,9 +193,83 @@ const repeatedWorking = buildWeeklyEvidenceReport({
 assert.doesNotMatch(repeatedWorking.text, /\/dashboard\/observations\/w2/);
 assert.doesNotMatch(repeatedWorking.text, /\/dashboard\/observations\/w1/);
 assert.match(repeatedWorking.text, /Working: Scroll/);
-assert.match(repeatedWorking.text, /Not detected: Menu/);
-assert.match(repeatedWorking.text, /ほか 1 件はこの週の件数に含まれています。/);
+assert.match(repeatedWorking.text, /Not detected: Menu × 1/);
+assert.match(repeatedWorking.text, /Screenshot: Same × 2/);
+assert.equal(repeatedWorking.text.split("example.com").length - 1, 1);
+const repeatedView = parseEvidenceReportBody(repeatedWorking.text);
+assert.equal(repeatedView.records[0]?.pages.length, 1);
+assert.match(repeatedView.records[0]?.pages[0]?.facts.join("\n") ?? "", /Screenshot: Same × 2/);
+const repeatedMail = [
+  "Viewtrace Evidence Report",
+  "2026-10-12 — 2026-10-18 JST",
+  "Observations: 3",
+  "Screenshot Changed: 2",
+  "Screenshot Same: 1",
+  "",
+  "## 主な記録",
+  "",
+  "US-WA",
+  "実際の取得: 米国。州単位の確認はできていません。",
+  "ipinfo.io",
+  "2026-10-14 08:01 JST",
+  "Screenshot: Changed（screenshot content differs）",
+  "ipinfo.io",
+  "2026-10-15 09:01 JST",
+  "Screenshot: Changed（screenshot content differs）",
+  "ipinfo.io",
+  "2026-10-18 09:01 JST",
+  "Screenshot: Changed（screenshot content differs）",
+  "ipinfo.io",
+  "2026-10-16 08:01 JST",
+  "Screenshot: Same",
+  "",
+  "## このレポート",
+  "ログインなしで開けます。",
+  "http://localhost:3000/evidence-report/abc",
+].join("\n");
+const mailed = parseEvidenceReportBody(repeatedMail);
+assert.equal(mailed.counts.find((item) => item.label === "Observations")?.value, "3");
+assert.equal(mailed.records[0]?.pages.filter((page) => page.name === "ipinfo.io").length, 2);
+assert.match(mailed.records[0]?.pages[0]?.facts.join("\n") ?? "", /× 3/);
+assert.match(mailed.records[0]?.pages[0]?.facts.join("\n") ?? "", /2026-10-14 08:01 — 2026-10-18 09:01 JST/);
+assert.equal(mailed.sections.length, 0);
+assert.doesNotMatch(repeatedWorking.text, /ほか \d+ 件はこの週の件数に含まれています。/);
 assert.doesNotMatch(repeatedWorking.text, /\/dashboard\//);
+
+const withDetail = buildWeeklyEvidenceReport({
+  period,
+  observations: [
+    fact({
+      id: "detail-1",
+      url: "https://ipinfo.io/",
+      regionValue: "US-WA",
+      regionLabel: "US · Washington",
+      capturedAt: "2026-10-20T00:01:00.000Z",
+      snapshotSha256: "e".repeat(64),
+      detailUrl: "https://viewtrace.net/verify/abc123",
+    }),
+  ],
+  priorObservations: [
+    fact({
+      id: "detail-0",
+      url: "https://ipinfo.io/",
+      regionValue: "US-WA",
+      regionLabel: "US · Washington",
+      capturedAt: "2026-10-13T00:00:00.000Z",
+      snapshotSha256: "e".repeat(64),
+    }),
+  ],
+  journeys: [],
+  origin: "https://viewtrace.net",
+});
+assert.match(withDetail.text, /## 各記録/);
+assert.match(withDetail.text, /各 Observation の詳細です。ログインは不要です。/);
+assert.match(withDetail.text, /https:\/\/viewtrace\.net\/verify\/abc123/);
+assert.match(withDetail.text, /Screenshot: Same/);
+assert.doesNotMatch(withDetail.text, /\/dashboard\//);
+const detailView = parseEvidenceReportBody(withDetail.text);
+assert.equal(detailView.sections.find((section) => section.heading === "各記録"), undefined);
+assert.match(detailView.records[0]?.pages[0]?.facts.join("\n") ?? "", /Screenshot: Same/);
 
 assert.equal(normalizeSlackIncomingWebhookUrl("https://hooks.slack.com/services/T/B/x"), "https://hooks.slack.com/services/T/B/x");
 assert.equal(normalizeSlackIncomingWebhookUrl("https://example.com/hook"), null);
