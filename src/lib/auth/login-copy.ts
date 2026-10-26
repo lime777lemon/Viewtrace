@@ -86,7 +86,7 @@ const formEn: LoginFormStrings = {
   errSignupIncomplete: "We could not finish sign-up. Check your email or wait a moment and try again.",
   signupSuccessMessage:
     "We have sent a confirmation email request. You cannot sign in until you confirm your address using the link in that message. If nothing arrives within a few minutes, check your spam folder.",
-  signupReassure: "Free trial · up to 20 observations · 14 days · no credit card",
+  signupReassure: "Free trial · up to 50 observations · 30 days · no credit card",
   signupEmailStepNote: "One quick step after this: tap the link in the email we send, then you're in.",
 };
 
@@ -120,7 +120,7 @@ const formJa: LoginFormStrings = {
     "登録を完了できませんでした。メールアドレスを確認するか、しばらくしてから再度お試しください。",
   signupSuccessMessage:
     "登録用の確認メールの送信をリクエストしました。メール内のリンクでアドレス確認が完了するまでログインできません。数分経っても届かない場合は迷惑メールフォルダもご確認ください。",
-  signupReassure: "無料トライアル・最大20観測・14日間・クレジットカード不要",
+  signupReassure: "無料トライアル・最大50観測・30日間・クレジットカード不要",
   signupEmailStepNote: "この後は1ステップだけ：届いたメールのリンクを開けばすぐ使えます。",
 };
 

@@ -48,7 +48,7 @@ breaks, landing page QA, and a trail for client reviews after something is caugh
 
 ## Pricing
 
-Free trial with up to 20 observations and no credit card. Paid plans (Starter, Pro)
+Free trial with up to 50 observations and no credit card. Paid plans (Starter, Pro)
 scale with observation volume, retention, and scheduling. See ${abs("/#pricing")}.
 
 ## Audience pages

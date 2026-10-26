@@ -46,7 +46,7 @@ export const copy = {
       disclaimer:
         "広告配信やタグ／ピクセルの確認ではありません。取得時点のランディングページの記録です。",
       trial: "無料で始める",
-      trialNote: "無料トライアル・最大20観測・30日・クレジットカード不要",
+      trialNote: "無料トライアル・最大50観測・30日間・クレジットカード不要",
       sample: "地域で試す",
       imageAlt: "同じ着地ページを米国と日本から見たイメージ",
     },
@@ -119,7 +119,7 @@ export const copy = {
     },
     regionSearchSignup: {
       title: "現地の LP を確認するには、登録が必要です",
-      body: "プレビューは見本です。クリックを送っている地域からの取得は、無料トライアル（最大20回・14日間・カード不要）から始められます。",
+      body: "プレビューは見本です。クリックを送っている地域からの取得は、無料トライアル（最大50回・30日間・カード不要）から始められます。",
       ctaPrimary: "無料で始める",
       ctaSecondary: "ログイン",
     },
@@ -584,7 +584,7 @@ export const copy = {
     pricingTrialTitle: "無料トライアル",
     /** FAQ「無料トライアルはどのくらい使えますか？」と同一文言 */
     pricingTrialBody:
-      "20回までオブザベーションを無料でお試しいただけます。クレジットカードは不要です。トライアル期間は14日間で、終了後は Starter または Pro を選択して継続いただけます。無料枠の20回を使い切ると、ログイン後のダッシュボード上部にお申し込み・プラン選択の案内が表示されます。記録の CSV 書き出しも使えます。",
+      "50回までオブザベーションを無料でお試しいただけます。クレジットカードは不要です。トライアル期間は30日間で、終了後は Starter または Pro を選択して継続いただけます。無料枠の50回を使い切ると、ログイン後のダッシュボード上部にお申し込み・プラン選択の案内が表示されます。記録の CSV 書き出しも使えます。",
     plans: [
       {
         name: "Starter",
@@ -642,7 +642,7 @@ export const copy = {
     accountSignup: {
       title: "アカウントを作成",
       intro:
-        "メールアドレスとパスワードで登録すると、無料トライアル（最大20回・14日間）でダッシュボードをご利用いただけます。",
+        "メールアドレスとパスワードで登録すると、無料トライアル（最大50回・30日間）でダッシュボードをご利用いただけます。",
       ctaPrimary: "無料で始める",
       ctaSecondary: "ログイン",
     },
@@ -661,7 +661,7 @@ export const copy = {
       },
       {
         q: "無料トライアルはどのくらい使えますか？",
-        a: "20回までオブザベーションを無料でお試しいただけます。クレジットカードは不要です。トライアル期間は14日間で、終了後は Starter または Pro を選択して継続いただけます。無料枠の20回を使い切ると、ログイン後のダッシュボード上部にお申し込み・プラン選択の案内が表示されます。記録の CSV 書き出しも使えます。",
+        a: "50回までオブザベーションを無料でお試しいただけます。クレジットカードは不要です。トライアル期間は30日間で、終了後は Starter または Pro を選択して継続いただけます。無料枠の50回を使い切ると、ログイン後のダッシュボード上部にお申し込み・プラン選択の案内が表示されます。記録の CSV 書き出しも使えます。",
       },
       {
         q: "クリック後のランディングページを確認できますか？",
@@ -737,7 +737,7 @@ export const copy = {
       trialRedirectExpired:
         "無料トライアルの期間が終了しています。オブザベーションを続けるには、下記から Starter または Pro へお申し込みください。",
       trialRedirectObservationLimit:
-        "無料トライアルのオブザベーション回数（20回）に達しています。続けるにはプランへのお申し込みが必要です。",
+        "無料トライアルのオブザベーション回数（50回）に達しています。続けるにはプランへのお申し込みが必要です。",
       successCtaLogin: "ログイン",
       successCtaHome: "サイトトップへ",
       langJa: "日本語",
@@ -1054,7 +1054,7 @@ export const copy = {
       savePdf: "この記録をPDFで保存",
       ctaTitle: "この記録は Viewtrace で作成されました",
       ctaBody:
-        "地域を指定して取得した画面を、URL・時刻・地域とセットで改ざん検知可能な記録として保存できます。無料で試せます（14日・カード不要）。",
+        "地域を指定して取得した画面を、URL・時刻・地域とセットで改ざん検知可能な記録として保存できます。無料で試せます（30日間・カード不要）。",
       ctaButton: "無料で始める",
       loopCta: "Check your own website with ViewTrace",
       loopHint: "自分のURLを入力すると、最初の観測まで最短で進めます。",
@@ -2299,7 +2299,7 @@ export const copy = {
       disclaimer:
         "Not ad-delivery or tag/pixel verification. Records show the landing page at capture time.",
       trial: "Start for free",
-      trialNote: "Free trial · up to 20 observations · 30 days · no credit card",
+      trialNote: "Free trial · up to 50 observations · 30 days · no credit card",
       sample: "Try by region",
       imageAlt: "The same landing page as seen from the United States and Japan",
     },
@@ -2371,7 +2371,7 @@ export const copy = {
     },
     regionSearchSignup: {
       title: "Sign up to check the landing page from that region",
-      body: "The preview is a sample. Capture from the region you buy in starts with a free trial—up to 20 observations, 14 days, no credit card.",
+      body: "The preview is a sample. Capture from the region you buy in starts with a free trial—up to 50 observations, 30 days, no credit card.",
       ctaPrimary: "Start for free",
       ctaSecondary: "Log in",
     },
@@ -2835,7 +2835,7 @@ export const copy = {
       "If you exceed your monthly allowance, additional observations are billed at {price} each and added to your next invoice. Observations continue after you’ve used your included quota.",
     pricingTrialTitle: "Free trial",
     pricingTrialBody:
-      "Your trial includes up to 20 observations at no charge, with no credit card required. The trial lasts 14 days; afterward, choose Starter or Pro to continue. After you use all 20 trial observations, a banner at the top of the dashboard guides you to subscribe. CSV export of your records is included.",
+      "Your trial includes up to 50 observations at no charge, with no credit card required. The trial lasts 30 days; afterward, choose Starter or Pro to continue. After you use all 50 trial observations, a banner at the top of the dashboard guides you to subscribe. CSV export of your records is included.",
     plans: [
       {
         name: "Starter",
@@ -2895,7 +2895,7 @@ export const copy = {
     accountSignup: {
       title: "Create your account",
       intro:
-        "Sign up with email and password to start your free trial (up to 20 observations, 14 days).",
+        "Sign up with email and password to start your free trial (up to 50 observations, 30 days).",
       ctaPrimary: "Start for free",
       ctaSecondary: "Log in",
     },
@@ -2914,7 +2914,7 @@ export const copy = {
       },
       {
         q: "How does the free trial work?",
-        a: "You can take up to 20 observations at no charge, with no credit card required. The trial lasts 14 days; afterward, choose Starter or Pro to continue. After you use all 20 trial observations, a banner at the top of the dashboard guides you to subscribe. CSV export of your records is included.",
+        a: "You can take up to 50 observations at no charge, with no credit card required. The trial lasts 30 days; afterward, choose Starter or Pro to continue. After you use all 50 trial observations, a banner at the top of the dashboard guides you to subscribe. CSV export of your records is included.",
       },
       {
         q: "Can I see what was waiting after the click?",
@@ -2993,7 +2993,7 @@ export const copy = {
       trialRedirectExpired:
         "Your free trial period has ended. Subscribe to Starter or Pro below to keep recording observations.",
       trialRedirectObservationLimit:
-        "You’ve used all 20 free trial observations. Subscribe to a plan below to continue.",
+        "You’ve used all 50 free trial observations. Subscribe to a plan below to continue.",
       successCtaLogin: "Log in",
       successCtaHome: "Back to site",
       langJa: "日本語",
@@ -3312,7 +3312,7 @@ export const copy = {
       savePdf: "Save this record as PDF",
       ctaTitle: "This record was created with Viewtrace",
       ctaBody:
-        "Capture how a page rendered from a chosen region and save it with URL, time, and region as a tamper-evident record. Free to try (14 days, no card).",
+        "Capture how a page rendered from a chosen region and save it with URL, time, and region as a tamper-evident record. Free to try (30 days, no card).",
       ctaButton: "Start for free",
       loopCta: "Check your own website with ViewTrace",
       loopHint: "Enter your URL to start your first observation.",

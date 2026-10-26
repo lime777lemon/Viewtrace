@@ -24,11 +24,11 @@ type DashboardShellProps = {
   planPriceLabel: string;
   locale?: Locale;
   isAdmin?: boolean;
-  /** トライアル期間（14日など）が終了している */
+  /** トライアル期間（30日など）が終了している */
   trialExpired?: boolean;
   /** トライアル終了予定（ISO文字列） */
   trialEndsAt?: string | null;
-  /** 無料トライアル20回を使い切ったときの課金・プラン選択への誘導 */
+  /** 無料トライアル観測上限を使い切ったときの課金・プラン選択への誘導 */
   trialLimitReached?: boolean;
   trialObservationsUsed?: number;
   trialObservationsLimit?: number;
@@ -48,7 +48,7 @@ export function DashboardShell({
   trialEndsAt = null,
   trialLimitReached = false,
   trialObservationsUsed = 0,
-  trialObservationsLimit = 20,
+  trialObservationsLimit = 50,
   userId,
   observationCount,
   latestObservationId = null,

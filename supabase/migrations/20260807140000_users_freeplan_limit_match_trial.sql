@@ -1,5 +1,5 @@
 -- public.users.observations_limit の「表示値」を、無料登録者の実効上限に一致させる。
--- 実際に効く無料枠は src/lib/plans.ts の TRIAL_CONFIG.freeObservations = 20回 / 14日間。
+-- 実際に効く無料枠は src/lib/plans.ts の TRIAL_CONFIG.freeObservations = 50回 / 30日間。
 -- （users.observations_limit はミラー表示であり、観測回数の判定には使われない）
 -- 対応:
 --   1) 列デフォルトを 20 に変更（新規は freeplan なので 20 で表示）。

@@ -62,7 +62,7 @@ export const AUDIENCE_PAGE_UI: Record<
       "Every observation keeps URL, region, timestamp, and status together—so anyone on the account can reopen the proof later.",
     backToHome: "Back to home",
     breadcrumbHome: "Home",
-    trustNote: "Free trial · up to 20 observations · 14 days · no credit card",
+    trustNote: "Free trial · up to 50 observations · 30 days · no credit card",
   },
   ja: {
     ctaPrimary: "無料で始める（カード不要）",
@@ -72,7 +72,7 @@ export const AUDIENCE_PAGE_UI: Record<
       "各観測は URL・地域・取得日時・ステータスをまとめて保持。アカウントの誰でも、あとから証跡を開き直せます。",
     backToHome: "トップへ戻る",
     breadcrumbHome: "ホーム",
-    trustNote: "無料トライアル・最大20観測・14日間・クレジットカード不要",
+    trustNote: "無料トライアル・最大50観測・30日間・クレジットカード不要",
   },
 };
 
@@ -146,12 +146,12 @@ const EN: Record<AudienceSlug, AudienceBody> = {
       },
       {
         q: "Do you charge per client or per seat?",
-        a: "Plans are based on observation volume and retention, not per client—see pricing. Start free with up to 20 observations, no credit card.",
+        a: "Plans are based on observation volume and retention, not per client—see pricing. Start free with up to 50 observations, no credit card.",
       },
     ],
     ctaTitle: "Give your next client review a trail, not a screenshot",
     ctaBody:
-      "Start free and capture your first geo-routed proof in minutes. No credit card, up to 20 observations.",
+      "Start free and capture your first geo-routed proof in minutes. No credit card, up to 50 observations.",
   },
   "performance-agency": {
     eyebrow: "For performance & paid media agencies",
@@ -222,12 +222,12 @@ const EN: Record<AudienceSlug, AudienceBody> = {
       },
       {
         q: "What does it cost to start?",
-        a: "Free trial with up to 20 observations and no credit card. Paid plans scale with observation volume, retention, and scheduling—see pricing.",
+        a: "Free trial with up to 50 observations and no credit card. Paid plans scale with observation volume, retention, and scheduling—see pricing.",
       },
     ],
     ctaTitle: "Catch the next break. Keep the proof.",
     ctaBody:
-      "Start free and monitor your first buying-region landing page in minutes. No credit card, up to 20 observations.",
+      "Start free and monitor your first buying-region landing page in minutes. No credit card, up to 50 observations.",
   },
 };
 
@@ -300,12 +300,12 @@ const JA: Record<AudienceSlug, AudienceBody> = {
       },
       {
         q: "料金はクライアント単位・席単位ですか？",
-        a: "プランは観測ボリュームと保持期間ベースで、クライアント単位ではありません（料金参照）。最大20観測まで無料・カード不要で始められます。",
+        a: "プランは観測ボリュームと保持期間ベースで、クライアント単位ではありません（料金参照）。最大50観測まで無料・カード不要で始められます。",
       },
     ],
     ctaTitle: "次のレビューに、スクショではなく証跡を",
     ctaBody:
-      "無料で始めて、最初の地理ルート証跡を数分で。カード不要・最大20観測。",
+      "無料で始めて、最初の地理ルート証跡を数分で。カード不要・最大50観測。",
   },
   "performance-agency": {
     eyebrow: "運用型・パフォーマンスマーケ代理店向け",
@@ -375,12 +375,12 @@ const JA: Record<AudienceSlug, AudienceBody> = {
       },
       {
         q: "始めるのにいくらかかりますか？",
-        a: "最大20観測まで無料・カード不要。有料は観測ボリューム・保持期間・スケジュールでスケールします（料金参照）。",
+        a: "最大50観測まで無料・カード不要。有料は観測ボリューム・保持期間・スケジュールでスケールします（料金参照）。",
       },
     ],
     ctaTitle: "次の壊れを見つける。証拠はあとから。",
     ctaBody:
-      "無料で始めて、最初の配信先市場の着地ページを数分で監視。カード不要・最大20観測。",
+      "無料で始めて、最初の配信先市場の着地ページを数分で監視。カード不要・最大50観測。",
   },
 };
 

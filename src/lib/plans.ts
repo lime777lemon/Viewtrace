@@ -54,8 +54,8 @@ export type PlanDefinition = {
 
 /** 無料トライアル（LP・請求設計と一致） */
 export const TRIAL_CONFIG = {
-  freeObservations: 20,
-  trialDays: 14,
+  freeObservations: 50,
+  trialDays: 30,
   creditCardRequired: false,
 } as const;
 

@@ -101,7 +101,7 @@ export const tokushohoPageCopyJa: TokushohoPageCopy = {
     {
       title: "無料トライアル",
       paragraphs: [
-        "所定の期間・観測回数の範囲で無料トライアルを提供します（例：14 日間・観測 20 回まで。クレジットカード登録不要で開始可能）。",
+        "所定の期間・観測回数の範囲で無料トライアルを提供します（例：30 日間・観測 50 回まで。クレジットカード登録不要で開始可能）。",
         "有料プランへ申し込んだ時点から、選択プランに応じた課金が開始されます。",
       ],
     },
@@ -237,7 +237,7 @@ export const tokushohoPageCopyEn: TokushohoPageCopy = {
     {
       title: "Free trial",
       paragraphs: [
-        "We offer a free trial within stated limits (e.g., 14 days and up to 20 observations; no credit card required to start).",
+        "We offer a free trial within stated limits (e.g., 30 days and up to 50 observations; no credit card required to start).",
         "Paid plan charges begin when you subscribe to a paid tier.",
       ],
     },
