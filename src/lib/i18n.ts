@@ -46,7 +46,7 @@ export const copy = {
       disclaimer:
         "広告配信やタグ／ピクセルの確認ではありません。取得時点のランディングページの記録です。",
       trial: "無料で始める",
-      trialNote: "無料トライアル・最大20観測・14日間・クレジットカード不要",
+      trialNote: "無料トライアル・最大20観測・30日・クレジットカード不要",
       sample: "地域で試す",
       imageAlt: "同じ着地ページを米国と日本から見たイメージ",
     },
@@ -2299,7 +2299,7 @@ export const copy = {
       disclaimer:
         "Not ad-delivery or tag/pixel verification. Records show the landing page at capture time.",
       trial: "Start for free",
-      trialNote: "Free trial · up to 20 observations · 14 days · no credit card",
+      trialNote: "Free trial · up to 20 observations · 30 days · no credit card",
       sample: "Try by region",
       imageAlt: "The same landing page as seen from the United States and Japan",
     },
