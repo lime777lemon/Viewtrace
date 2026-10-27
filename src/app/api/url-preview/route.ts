@@ -36,12 +36,14 @@ export async function POST(req: Request) {
   }
 
   const session = await getSession();
+  const screenshotOnly = (body as { screenshotOnly?: unknown }).screenshotOnly === true;
   const fullPageScreenshot = session ? getPlan(session.plan).snapshotFullPage : false;
 
   const result = await runUrlPreviewFetch(target, {
     screenshotFallback: true,
     fullPageScreenshot: marketingPreview ? false : fullPageScreenshot,
     preferScreenshotOverOg: marketingPreview,
+    screenshotOnly,
   });
   if (!result.ok) {
     const status =

@@ -44,7 +44,7 @@ function useHydratedSnapshotImage(
         const res = await fetch("/api/url-preview", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: observationUrl }),
+          body: JSON.stringify({ url: observationUrl, screenshotOnly: true }),
         });
         const data = (await res.json()) as { ok?: boolean; image?: string | null };
         if (cancelled) return;
@@ -178,7 +178,11 @@ export function ObservationSnapshotVisuals({
         {decodeHtmlText(displayTitle) ? (
           <p className="mt-3 text-sm font-medium text-ink">{decodeHtmlText(displayTitle)}</p>
         ) : null}
-        <div className="relative mt-4 overflow-hidden rounded-2xl border border-border bg-surface-elevated">
+        <div
+          className={`relative mt-4 rounded-2xl border border-border bg-surface-elevated ${
+            fullPage ? "" : "overflow-hidden"
+          }`}
+        >
           {showVideo ? (
             <video
               src={serverImageUrl!}
@@ -201,15 +205,17 @@ export function ObservationSnapshotVisuals({
             </div>
           ) : showImg ? (
             <>
-              <div className={fullPage ? "max-h-[min(80vh,960px)] overflow-y-auto overflow-x-hidden overscroll-contain" : ""}>
-                {/* eslint-disable-next-line @next/next/no-img-element -- 外部 OG / Microlink CDN */}
-                <img
-                  src={imageUrl!}
-                  alt=""
-                  className="block h-auto w-full"
-                  loading="eager"
-                />
-              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element -- 外部 OG / Microlink CDN */}
+              <img
+                src={imageUrl!}
+                alt=""
+                className={
+                  fullPage
+                    ? "block h-auto w-full max-w-full"
+                    : "block h-auto max-h-[min(70vh,720px)] w-full object-contain object-top"
+                }
+                loading="eager"
+              />
               <button
                 type="button"
                 onClick={() => setFullscreenOpen(true)}
@@ -243,7 +249,13 @@ export function ObservationSnapshotVisuals({
           )}
         </div>
         <p className="mt-2 text-xs text-ink-muted">
-          {showVideo ? t.videoHint : showLive ? t.liveOnlyHint : fullPage ? t.fullPageScrollHint : t.viewportHint}
+          {showVideo
+            ? t.videoHint
+            : showLive
+              ? t.liveOnlyHint
+              : showImg && fullPage
+                ? t.fullPageScrollHint
+                : t.viewportHint}
         </p>
         <p className="mt-1 text-xs text-ink-muted">{metaLine}</p>
       </section>
@@ -268,10 +280,22 @@ export function ObservationSnapshotVisuals({
             <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
               {t.thisRecord}
             </p>
-            <div className="mt-3 aspect-video overflow-hidden rounded-lg border border-border bg-surface">
+            <div
+              className={
+                fullPage
+                  ? "mt-3 max-h-[min(55vh,28rem)] overflow-y-auto overflow-x-auto rounded-lg border border-border bg-surface overscroll-contain"
+                  : "mt-3 aspect-video overflow-hidden rounded-lg border border-border bg-surface"
+              }
+            >
               {showImg ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={imageUrl!} alt="" className="h-full w-full object-cover object-top" />
+                <img
+                  src={imageUrl!}
+                  alt=""
+                  className={
+                    fullPage ? "block h-auto w-full max-w-full" : "h-full w-full object-contain object-top"
+                  }
+                />
               ) : showLoading ? (
                 <div className="flex h-full items-center justify-center px-4 text-center text-xs text-ink-muted">
                   {t.fetchingShort}
@@ -296,12 +320,22 @@ export function ObservationSnapshotVisuals({
             {comparePrevious ? (
               <>
                 <p className="mt-2 text-xs text-ink-muted">{comparePrevious.capturedAtLabel}</p>
-                <div className="mt-3 aspect-video overflow-hidden rounded-lg border border-border bg-surface">
+                <div
+                  className={
+                    fullPage
+                      ? "mt-3 max-h-[min(55vh,28rem)] overflow-y-auto overflow-x-auto rounded-lg border border-border bg-surface overscroll-contain"
+                      : "mt-3 aspect-video overflow-hidden rounded-lg border border-border bg-surface"
+                  }
+                >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={comparePrevious.snapshotImageUrl}
                     alt=""
-                    className="h-full w-full object-cover object-top"
+                    className={
+                      fullPage
+                        ? "block h-auto w-full max-w-full"
+                        : "h-full w-full object-contain object-top"
+                    }
                   />
                 </div>
                 {publicView ? null : (
@@ -353,7 +387,7 @@ export function ObservationSnapshotVisuals({
             <img
               src={imageUrl!}
               alt=""
-              className="mx-auto block h-auto w-full max-w-4xl"
+              className={`mx-auto block h-auto w-full ${fullPage ? "max-w-full" : "max-w-4xl"}`}
             />
           </div>
         </div>

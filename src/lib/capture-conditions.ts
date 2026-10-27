@@ -528,8 +528,11 @@ export function buildCaptureConditionsFromMicrolink(input: {
   snapshotBytes: number | null;
   snapshotContentType: string | null;
   snapshotSha256Present: boolean;
+  /** Viewport actually sent with the full-page Microlink request. */
+  viewport?: { width: number; height: number } | null;
 }): CaptureConditionsV1 {
   const geo = resolveGeoFromRegion(input.regionInput);
+  const fullPageViewport = input.fullPageRequested ? input.viewport : null;
   return {
     schema_version: CAPTURE_CONDITIONS_SCHEMA_VERSION,
     captured_at: input.capturedAt,
@@ -538,8 +541,8 @@ export function buildCaptureConditionsFromMicrolink(input: {
     full_page_requested: input.fullPageRequested,
     browser: browserBase(),
     viewport: {
-      width: null,
-      height: null,
+      width: fullPageViewport?.width ?? null,
+      height: fullPageViewport?.height ?? null,
       device_scale_factor: 1,
       source: "microlink_default",
     },

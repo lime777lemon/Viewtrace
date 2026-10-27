@@ -9,9 +9,22 @@
 const MICROLINK_TIMEOUT_VIEWPORT_MS = 25_000;
 const MICROLINK_TIMEOUT_FULL_PAGE_MS = 55_000;
 
+/**
+ * Chromium stitches `fullPage` internally and corrupts the shot past about
+ * 16384 device pixels, painting the top of the page again where the footer
+ * should be. Microlink's default scale is 2, so a normal desktop page crosses
+ * that limit. Scale 1 keeps the same page under it. Do not inject a page
+ * script here: that path returned the Open Graph card instead of the page.
+ */
+export const MICROLINK_FULL_PAGE_VIEWPORT = {
+  width: 1440,
+  height: 900,
+  deviceScaleFactor: 1,
+} as const;
+
 export async function fetchMicrolinkScreenshotUrl(
   pageUrl: string,
-  options: { fullPage?: boolean } = {},
+  options: { fullPage?: boolean; viewport?: { width: number; height: number } } = {},
 ): Promise<string | null> {
   const fullPage = options.fullPage === true;
   if (process.env.VIEWTRACE_DISABLE_SCREENSHOT === "1") return null;
@@ -29,6 +42,18 @@ export async function fetchMicrolinkScreenshotUrl(
   api.searchParams.set("meta", "false");
   if (fullPage) {
     api.searchParams.set("screenshot.fullPage", "true");
+    api.searchParams.set(
+      "viewport.width",
+      String(options.viewport?.width ?? MICROLINK_FULL_PAGE_VIEWPORT.width),
+    );
+    api.searchParams.set(
+      "viewport.height",
+      String(options.viewport?.height ?? MICROLINK_FULL_PAGE_VIEWPORT.height),
+    );
+    api.searchParams.set(
+      "viewport.deviceScaleFactor",
+      String(MICROLINK_FULL_PAGE_VIEWPORT.deviceScaleFactor),
+    );
   }
 
   const ac = new AbortController();

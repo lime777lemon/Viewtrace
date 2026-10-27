@@ -23,6 +23,7 @@
     "bundle:interaction-engine-scroll": "node scripts/bundle-interaction-engine-scroll.mjs",
     "bundle:interaction-engine-hover": "node scripts/bundle-interaction-engine-hover.mjs",
     "test:interaction-engine-hover": "tsx scripts/test-interaction-engine-hover.ts",
+    "test:observation-watch-anomaly": "tsx scripts/test-observation-watch-anomaly.ts",
     "email:survey": "node scripts/send-survey-email.mjs"
   },
   "dependencies": {

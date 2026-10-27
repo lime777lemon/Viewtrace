@@ -373,7 +373,7 @@ Linux / Python が効く場所は **A**（hash / parse / diff / classify / 統�
 | 44 | Later（条件つき） | Third-party。「存在した / 消えた」まで。GTM が動いたとは言わない |
 | 48 | Later（条件つき） | Content fingerprint。`content_hash` はある。本文正規化は HTML 保存が先 |
 | 49 | Later | Magnitude。三値の代わりにしない。Minor / Major は根拠必須 |
-| 50 | Later | Anomaly。10 件未満では出さない。Activation UI もいじらない |
+| 50 | 出荷済（Watch ベースライン） | Watch 同一 URL×地域の `interaction_duration_ms` / `proxy_bytes` を中央値+MAD（modified z≥3.5）。10 件未満は UI・メールとも出さない。ML スコアではない。Activation UI もいじらない |
 | 51 | Experimental（内部） | Capture diagnostics。顧客画面ではなく原価用。C に $200 を混ぜない。`proxy_bytes` の 0/null は既存方針 |
 | 45 | Rejected（今は） | Heartbeat。Observation 商品の外。36 / 42 / 38 より先にしない |
 | 46 | Rejected（今は） | HTTP health。Watch の添え書き以上にしない。Uptime 商品にしない |

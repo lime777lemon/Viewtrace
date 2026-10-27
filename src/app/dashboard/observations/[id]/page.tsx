@@ -217,9 +217,7 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
       : null;
 
   const displayTitle = decodeHtmlText(obs.pageTitle ?? live?.title ?? null);
-  const displayImageUrl = homepageLive
-    ? null
-    : storedVisibleImage ?? (screenshotExpired ? null : live?.image ?? null);
+  const displayImageUrl = homepageLive || screenshotExpired ? null : storedVisibleImage ?? null;
   const resolvedCanonical = live?.canonicalUrl ?? null;
 
   const previousRaw =
@@ -517,6 +515,7 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
           behaviorDiff={storedScroll?.behavior_diff ?? null}
           previousCheck={previousStored?.result ?? null}
           watchIncluded={storedScroll?.billing === "watch_included"}
+          watchAnomaly={storedScroll?.watch_anomaly ?? null}
           observationUrl={obs.url}
           journeyTargets={journeyTargets}
         />

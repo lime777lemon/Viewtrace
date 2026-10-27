@@ -20,6 +20,10 @@ import {
   type SyntheticInteractionV1,
 } from "@/lib/observation-synthetic-interaction";
 import { parseBehaviorDiff, type BehaviorDiffV1 } from "@/lib/observation-behavior-diff";
+import {
+  parseWatchAnomalyFromUnknown,
+  type WatchAnomalyV1,
+} from "@/lib/observation-watch-anomaly";
 import { appendScrollRunTime, parseScrollRunTimes } from "@/lib/observation-scroll-interaction";
 import {
   parseRegionalInteractionCheckFromUnknown,
@@ -61,6 +65,7 @@ export type StoredScrollInteraction = {
   quota_run_times: string[];
   billing: InteractionCheckBilling;
   behavior_diff: BehaviorDiffV1 | null;
+  watch_anomaly: WatchAnomalyV1 | null;
 };
 
 function notesArray(raw: unknown): unknown[] {
@@ -99,6 +104,7 @@ export function parseStoredScroll(notes: unknown): StoredScrollInteraction | nul
     quota_run_times,
     billing,
     behavior_diff: parseBehaviorDiff(o.behavior_diff),
+    watch_anomaly: parseWatchAnomalyFromUnknown(o.watch_anomaly),
   };
 }
 
@@ -364,6 +370,7 @@ export async function saveObservationScrollInteraction(
     previousQuotaRunTimes?: string[];
     billing?: InteractionCheckBilling;
     behaviorDiff?: BehaviorDiffV1 | null;
+    watchAnomaly?: WatchAnomalyV1 | null;
   },
 ): Promise<boolean> {
   if (!isObservationUuid(input.observationId)) return false;
@@ -390,6 +397,7 @@ export async function saveObservationScrollInteraction(
         quota_run_times: quotaRunTimes,
         billing,
         behavior_diff: input.behaviorDiff ?? null,
+        watch_anomaly: input.watchAnomaly ?? null,
       },
     ],
   });

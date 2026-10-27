@@ -14,6 +14,7 @@ import {
   isHomepageLiveCheckObservation,
   shouldHydrateObservationSnapshot,
 } from "@/lib/observation-homepage-mode";
+import { observationSnapshotIsFullPage } from "@/lib/observation-snapshot-display";
 
 function defaultHistory(obs: Observation, locale: Locale): ObservationHistoryEvent[] {
   const t = copy[locale].observationDetail;
@@ -118,7 +119,7 @@ export function ObservationDetailSnapshotSection({
           comparePrevious={comparePrevious}
           mediaKind={liveCheck ? "live" : clip ? "video" : "image"}
           clipHref={clipHref}
-          fullPage={obs.captureConditions?.full_page_requested === true}
+          fullPage={observationSnapshotIsFullPage(obs.captureConditions)}
           publicView={publicView}
         />
       </div>

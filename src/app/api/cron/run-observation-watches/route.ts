@@ -46,6 +46,8 @@ import {
   type BehaviorMapDiffV1,
   type BehaviorTransitionV1,
 } from "@/lib/observation-behavior-diff";
+import type { WatchAnomalyV1 } from "@/lib/observation-watch-anomaly";
+import { watchAnomalyEmailCopy } from "@/lib/observation-watch-anomaly-email";
 import { htmlHeadSignalsHasAny } from "@/lib/url-preview";
 import { shouldNotifyWatchOnMetadata } from "@/lib/observation-html-signals-readout";
 import { getPngDimensions } from "@/lib/png-dimensions";
@@ -923,6 +925,7 @@ export async function POST(req: Request) {
 
     let behaviorAlerts: BehaviorTransitionV1[] = [];
     let behaviorMapAlerts: BehaviorMapDiffV1[] = [];
+    let watchAnomaly: WatchAnomalyV1 | null = null;
     if (blobUrl && statePlan && primary.engine === "browserless" && primary.result.ok && primary.result.interaction) {
       try {
         const check = buildRegionalCheckFromSession({
@@ -947,6 +950,7 @@ export async function POST(req: Request) {
           interactionRan += 1;
           behaviorAlerts = behaviorAlertTransitions(persisted.diff);
           behaviorMapAlerts = behaviorMapAlertDiffs(persisted.diff);
+          watchAnomaly = persisted.watchAnomaly;
         }
       } catch (err) {
         console.warn("[cron] state session interaction unavailable", {
@@ -1006,6 +1010,7 @@ export async function POST(req: Request) {
               interactionRan += 1;
               behaviorAlerts = behaviorAlertTransitions(persisted.diff);
               behaviorMapAlerts = behaviorMapAlertDiffs(persisted.diff);
+              watchAnomaly = persisted.watchAnomaly;
               const detected = interaction.check.types.filter((row) => row.detected).length;
               const executed = interaction.check.types.filter(
                 (row) =>
@@ -1301,6 +1306,37 @@ export async function POST(req: Request) {
           await markWatchNotified(watchId);
         } else {
           console.warn("[cron] behavior email failed", { watchId, userId, error: res.error });
+        }
+      }
+    }
+
+    const anomalyCopy = watchAnomaly
+      ? watchAnomalyEmailCopy({ region, anomaly: watchAnomaly, recordUrl: openUrl })
+      : null;
+    if (anomalyCopy) {
+      if (!userEmail) {
+        console.warn("[cron] watch anomaly email skipped: user_email_missing", { watchId, userId });
+      } else if (!isResendConfigured()) {
+        console.warn("[cron] watch anomaly email skipped: resend_not_configured", { watchId, userId });
+      } else {
+        const text = [
+          ...anomalyCopy.text,
+          ...(changeAuditSection ? changeAuditSection.text : []),
+          "",
+          emailAccountHintText(userEmail),
+        ].join("\n");
+        const html = [anomalyCopy.html, changeAuditSection ? changeAuditSection.html : "", emailAccountHintHtml(userEmail)].join("");
+        const res = await sendResendEmail({
+          to: userEmail,
+          subject: anomalyCopy.subject,
+          text,
+          html,
+        });
+        if (res.ok) {
+          notified += 1;
+          await markWatchNotified(watchId);
+        } else {
+          console.warn("[cron] watch anomaly email failed", { watchId, userId, error: res.error });
         }
       }
     }

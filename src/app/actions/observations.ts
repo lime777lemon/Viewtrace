@@ -44,7 +44,7 @@ import {
 import { getPlan, TRIAL_CONFIG } from "@/lib/plans";
 import { readScreenshotRetentionDays } from "@/lib/screenshot-retention-store";
 import { getRegionOptions } from "@/lib/regions";
-import { fetchMicrolinkScreenshotUrl } from "@/lib/microlink-screenshot";
+import { fetchMicrolinkScreenshotUrl, MICROLINK_FULL_PAGE_VIEWPORT } from "@/lib/microlink-screenshot";
 import { htmlHeadSignalsHasAny, normalizeUserUrlInput } from "@/lib/url-preview";
 import { runUrlPreviewFetch } from "@/lib/url-preview-fetch";
 import { stampMeasurement } from "@/lib/measurement-record";
@@ -335,8 +335,12 @@ async function recordOneObservationInner(
      * これにより onamae.com など強いボット保護のサイトでも、少なくとも
      * 画像 URL が記録に残せる可能性が上がる（バイト列は保存しない＝ pHash 比較不可）。
      */
+    const microlinkViewport = input.deviceClass
+      ? REQUESTED_DEVICE_VIEWPORT[input.deviceClass]
+      : { width: MICROLINK_FULL_PAGE_VIEWPORT.width, height: MICROLINK_FULL_PAGE_VIEWPORT.height };
     const microlinkImage = await fetchMicrolinkScreenshotUrl(url, {
       fullPage: plan.snapshotFullPage,
+      viewport: plan.snapshotFullPage ? microlinkViewport : undefined,
     });
     if (microlinkImage && /^https?:\/\//i.test(microlinkImage)) {
       usedMicrolink = true;
@@ -533,6 +537,9 @@ async function recordOneObservationInner(
       regionLabel,
     });
   } else if (usedMicrolink) {
+    const recordedMicrolinkViewport = input.deviceClass
+      ? REQUESTED_DEVICE_VIEWPORT[input.deviceClass]
+      : { width: MICROLINK_FULL_PAGE_VIEWPORT.width, height: MICROLINK_FULL_PAGE_VIEWPORT.height };
     captureConditions = buildCaptureConditionsFromMicrolink({
       capturedAt,
       regionInput: regionValue,
@@ -541,6 +548,7 @@ async function recordOneObservationInner(
       snapshotBytes: snapshotBytes ?? null,
       snapshotContentType: snapshotContentType ?? null,
       snapshotSha256Present: Boolean(snapshotBinarySha256),
+      viewport: plan.snapshotFullPage ? recordedMicrolinkViewport : null,
     });
   } else {
     captureConditions = buildCaptureConditionsFromDirectFetch({

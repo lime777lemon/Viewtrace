@@ -1912,7 +1912,7 @@ export const copy = {
       viewFullscreen: "全画面で見る",
       closeFullscreen: "閉じる",
       fullscreenHint: "全体を上下にスクロールして確認できます。",
-      fullPageScrollHint: "フルページの記録です。枠内をスクロールすると下まで見られます。クリックで全画面。",
+      fullPageScrollHint: "フルページの記録です。ページをスクロールして下まで確認できます。ボタンで全画面表示もできます。",
       viewportHint: "この記録は、開いたときの画面の範囲です。",
       videoTitle: "短い動画",
       videoHint:
@@ -4194,7 +4194,7 @@ export const copy = {
       viewFullscreen: "View full screen",
       closeFullscreen: "Close",
       fullscreenHint: "Scroll up and down to see the whole page.",
-      fullPageScrollHint: "Full-page record. Scroll inside the frame to see below the fold. Click for full screen.",
+      fullPageScrollHint: "Full-page record. Scroll the page to see below the fold, or use the button for full screen.",
       viewportHint: "This record is the screen that was open.",
       videoTitle: "Short clip",
       videoHint:

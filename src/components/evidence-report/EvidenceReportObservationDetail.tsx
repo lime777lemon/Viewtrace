@@ -241,6 +241,7 @@ export function EvidenceReportObservationDetail({ data, locale }: Props) {
           behaviorDiff={storedScroll?.behavior_diff ?? null}
           previousCheck={previousStored?.result ?? null}
           watchIncluded={storedScroll?.billing === "watch_included"}
+          watchAnomaly={storedScroll?.watch_anomaly ?? null}
           observationUrl={obs.url}
           readOnly
         />

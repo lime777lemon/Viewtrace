@@ -472,7 +472,16 @@ export async function runBrowserlessScreenshotWithProxyRetry(params: {
     });
     const shot = browserlessShotFromStateSession(session, params.url);
     log.push(shotToAttemptCost(shot, session.fallbackLevel === "state" ? "state" : "country", true));
-    return withAttemptTotals(shot, log, { usedRetryWithoutProxy: false });
+    if (shot.ok) return withAttemptTotals(shot, log, { usedRetryWithoutProxy: false });
+    // State exit did not return a PNG. Keep a country-level residential screenshot.
+    const country = await runBrowserlessScreenshot({
+      ...params,
+      residentialState: false,
+      residentialCity: false,
+      disableProxy: false,
+    });
+    log.push(shotToAttemptCost(country, "country", true));
+    return withAttemptTotals(country, log, { usedRetryWithoutProxy: false });
   }
 
   if (geo) {

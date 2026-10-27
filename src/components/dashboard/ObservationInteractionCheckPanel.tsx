@@ -28,6 +28,8 @@ import { interactionEvidenceCard } from "@/lib/interaction-evidence-card";
 import { formatResourceRequest } from "@/lib/resource-request";
 import { summarizeInteractionMeasurement } from "@/lib/observation-interaction-plan";
 import { SCROLL_CHECK_MAX_REGIONS, type ScrollInteractionStatus } from "@/lib/observation-scroll-interaction";
+import type { WatchAnomalyV1 } from "@/lib/observation-watch-anomaly";
+import { WatchBaselineAnomalyPanel } from "@/components/dashboard/WatchBaselineAnomalyPanel";
 
 export type InteractionRegionPeer = {
   observationId: string;
@@ -47,6 +49,7 @@ type Props = {
   behaviorDiff?: BehaviorDiffV1 | null;
   previousCheck?: RegionalInteractionCheckV1 | null;
   watchIncluded?: boolean;
+  watchAnomaly?: WatchAnomalyV1 | null;
   observationUrl?: string;
   journeyTargets?: Array<{ id: string; name: string; startUrl: string }>;
   /** 公開 Evidence Report。保存済みの結果と Evidence だけを出し、実行・quota・Journey 追加の操作は出さない。 */
@@ -336,6 +339,7 @@ export function ObservationInteractionCheckPanel({
   behaviorDiff = null,
   previousCheck = null,
   watchIncluded = false,
+  watchAnomaly = null,
   observationUrl = "",
   journeyTargets = [],
   readOnly = false,
@@ -785,6 +789,13 @@ export function ObservationInteractionCheckPanel({
       ) : null}
       {measurement && measurement.notMeasured > 0 ? (
         <p className="mt-2 text-xs text-ink-muted">{t.interactionNotMeasuredNote}</p>
+      ) : null}
+      {watchIncluded &&
+      watchAnomaly &&
+      watchAnomaly.status !== "insufficient_baseline" ? (
+        <div className="mt-4">
+          <WatchBaselineAnomalyPanel anomaly={watchAnomaly} locale={locale} />
+        </div>
       ) : null}
       {behaviorAlerts.length > 0 ? (
         <div className="mt-4">

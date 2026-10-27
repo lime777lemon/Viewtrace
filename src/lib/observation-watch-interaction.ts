@@ -14,6 +14,8 @@ import {
   saveObservationScrollInteraction,
   type InteractionCheckBilling,
 } from "@/lib/observation-optional-metrics-store";
+import { computeWatchAnomaly, type WatchAnomalyV1 } from "@/lib/observation-watch-anomaly";
+import { loadWatchMetricHistory } from "@/lib/observation-watch-anomaly-history";
 
 export const WATCH_INTERACTION_MIN_BUDGET_MS = 120_000;
 export const FULL_DISCOVERY_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -141,7 +143,7 @@ export async function persistRegionalInteractionCheck(
     check: RegionalInteractionCheckV1;
     billing: InteractionCheckBilling;
   },
-): Promise<{ saved: boolean; diff: BehaviorDiffV1 }> {
+): Promise<{ saved: boolean; diff: BehaviorDiffV1; watchAnomaly: WatchAnomalyV1 | null }> {
   const existing = await loadObservationScrollInteraction(supabase, input.userId, input.observationId);
   const previous = await findPreviousInteractionCheck(supabase, {
     userId: input.userId,
@@ -151,6 +153,25 @@ export async function persistRegionalInteractionCheck(
     excludeId: input.observationId,
   });
   const diff = buildBehaviorDiff(previous?.check ?? null, input.check, previous?.observationId ?? null);
+  let watchAnomaly = null;
+  if (input.billing === "watch_included") {
+    const history = await loadWatchMetricHistory(supabase, {
+      userId: input.userId,
+      url: input.url,
+      region: input.region,
+      beforeCapturedAt: input.capturedAt,
+      excludeId: input.observationId,
+    });
+    watchAnomaly = computeWatchAnomaly({
+      measuredAt: input.check.measured_at,
+      current: {
+        measured_at: input.check.measured_at,
+        interaction_duration_ms: input.check.duration_ms,
+        proxy_bytes: input.check.proxy_bytes,
+      },
+      history,
+    });
+  }
   if (input.check.discovery?.rendered_page) {
     const { data } = await supabase
       .from("observations")
@@ -178,6 +199,7 @@ export async function persistRegionalInteractionCheck(
     previousQuotaRunTimes: existing?.quota_run_times,
     billing: input.billing,
     behaviorDiff: diff,
+    watchAnomaly,
   });
-  return { saved, diff };
+  return { saved, diff, watchAnomaly };
 }

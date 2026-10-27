@@ -37,6 +37,8 @@ export type UrlPreviewFetchOptions = {
   screenshotFallback?: boolean;
   /** true のとき Microlink のフルページキャプチャ（遅くなりがち） */
   fullPageScreenshot?: boolean;
+  /** true のとき og:image / twitter:image は返さない。スクリーンショットが取れたときだけ image を入れる。 */
+  screenshotOnly?: boolean;
   /** 例: `US-CA`。設定された地理プロキシを使って取得する */
   regionValue?: string;
   /**
@@ -87,6 +89,7 @@ async function runUrlPreviewFetchInner(
   const regionValue = options.regionValue?.trim();
   const retryWithoutProxyOnFailure = options.retryWithoutProxyOnFailure === true;
   const preferScreenshotOverOg = options.preferScreenshotOverOg === true;
+  const screenshotOnly = options.screenshotOnly === true;
   let parsed: URL;
   try {
     parsed = new URL(target);
@@ -286,8 +289,8 @@ async function runUrlPreviewFetchInner(
     const htmlSampleBytes = Buffer.byteLength(chunk);
     const htmlSampleSha256 = createHash("sha256").update(chunk).digest("hex");
 
-    let imageOut = image;
-    if (screenshotFallback && (preferScreenshotOverOg || !imageOut)) {
+    let imageOut = screenshotOnly ? null : image;
+    if (screenshotFallback && (screenshotOnly || preferScreenshotOverOg || !imageOut)) {
       const shot = await fetchMicrolinkScreenshotUrl(finalUrl, {
         fullPage: preferScreenshotOverOg ? false : fullPageScreenshot,
       });
