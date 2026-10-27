@@ -34,6 +34,10 @@ const ALL_JOBS = [
   { region: "US-CA", kind: "all", mode: "broken" as const },
   { region: "US-CA", kind: "all", mode: "absent" as const },
   { region: "US-CA", kind: "modal", mode: "unsafe" as const },
+  { region: "US-CA", kind: "hover", mode: "working" as const },
+  { region: "US-CA", kind: "hover", mode: "broken" as const },
+  { region: "US-CA", kind: "hover", mode: "absent" as const },
+  { region: "US-CA", kind: "hover", mode: "unsafe" as const },
 ] as const;
 
 const filter = (process.env.FIXTURE_JOB ?? "").trim();

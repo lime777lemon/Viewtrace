@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { runScrollInteractionCheck } from "../src/lib/interaction-engine/run-scroll-interaction-check";
+import { runScrollInteractionCheck } from "../src/lib/interaction-engine/scroll/run-scroll-interaction-check";
 import type { InteractionPage } from "../src/lib/interaction-engine/interaction-page";
 import { verifyScrollTypeRow } from "../src/lib/interaction-engine/scroll/verify";
 import type { ScrollCheckpointSample } from "../src/lib/observation-scroll-interaction";
@@ -35,6 +35,7 @@ function mockPage(handlers: {
       return undefined;
     },
     wait: async () => {},
+    mouseMove: async () => {},
   } as InteractionPage;
 }
 

@@ -1,5 +1,5 @@
 import { interactionPageFromPuppeteer } from "@/lib/interaction-engine/adapters/puppeteer-interaction-page";
-import { runScrollInteractionCheck } from "@/lib/interaction-engine/run-scroll-interaction-check";
+import { runScrollInteractionCheck } from "@/lib/interaction-engine/scroll/run-scroll-interaction-check";
 
 type BrowserlessPage = {
   evaluate<T, A extends unknown[]>(fn: (...args: A) => T | Promise<T>, ...args: A): Promise<T>;

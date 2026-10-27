@@ -55,6 +55,7 @@ async function runOnce(params: {
   scan?: "full" | "light";
   environment?: { device_class?: "desktop" | "mobile" };
   scrollEngine?: "legacy";
+  hoverEngine?: "legacy" | "legacy_passive" | "legacy_active";
 }): Promise<BrowserlessScrollResult> {
   const target = normalizeUserUrlInput(params.url);
   if (!target) return { ok: false, error: "invalid_url", durationMs: 0, proxyBytes: null };
@@ -96,6 +97,7 @@ async function runOnce(params: {
             device_class: params.environment?.device_class === "mobile" ? "mobile" : "desktop",
           },
           ...(params.scrollEngine === "legacy" ? { scroll_engine: "legacy" } : {}),
+          ...(params.hoverEngine ? { hover_engine: params.hoverEngine } : {}),
         },
       }),
       signal: ac.signal,
@@ -152,6 +154,7 @@ type BrowserlessScrollParams = {
   environment?: { device_class?: "desktop" | "mobile" };
   /** Fixture / regression: inline scroll in browserless-interaction-function.ts */
   scrollEngine?: "legacy";
+  hoverEngine?: "legacy" | "legacy_passive" | "legacy_active";
 };
 
 /**

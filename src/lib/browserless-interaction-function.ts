@@ -9,6 +9,7 @@ import { COOKIE_NOISE_PATTERN_SOURCE } from "@/lib/observation-interaction-evide
 import { EXPENSIVE_INTERACTION_TYPES } from "@/lib/observation-interaction-plan";
 import { INTERACTION_UNSAFE_PATTERN_SOURCE } from "@/lib/observation-regional-interaction";
 import { SESSION_PROBE_INSTALL, SESSION_PROBE_READ } from "@/lib/session-signals";
+import { hoverEngineBrowserlessRuntime } from "@/lib/interaction-engine/load-hover-engine-runtime";
 import { scrollEngineBrowserlessRuntime } from "@/lib/interaction-engine/load-scroll-engine-runtime";
 
 /** Same Browserless session: Detect → Execute → Verify. Detected is never Working. */
@@ -2491,7 +2492,24 @@ export function buildInteractionFunctionCode(): string {
     });
   }
 
-  await maybe("hover", async () => { await watchPassive("hover", detect.hover || {}, null); });
+  const hoverEngineMode = String(context && context.hover_engine ? context.hover_engine : "");
+  await maybe("hover", async () => {
+    if (hoverEngineMode === "legacy" || hoverEngineMode === "legacy_passive") {
+      await watchPassive("hover", detect.hover || {}, null);
+      return;
+    }
+    if (hoverEngineMode === "legacy_active") {
+      await runHoverKind("hover", detect.hover || {}, null);
+      return;
+    }
+    const hoverOut = await ViewTraceHoverEngine.runHoverInteractionCheckForBrowserless(page, {
+      hit: detect.hover || {},
+      sleep: sleep,
+    });
+    if (hoverOut.typeRow) {
+      pushType("hover", hoverOut.typeRow.detected, hoverOut.typeRow.status, hoverOut.typeRow.evidence);
+    }
+  });
   await maybe("tooltip", async () => { await watchPassive("tooltip", detect.tooltip || {}, "tooltip"); });
   await maybe("cursor_follow", async () => { await watchPassive("cursor_follow", detect.cursor || {}, null); });
   async function readToggle(kind, selector) {
@@ -4099,6 +4117,8 @@ export function buildInteractionFunctionCode(): string {
   return (
     "export default async function({ page, context }) {\n" +
     scrollEngineBrowserlessRuntime() +
+    "\n" +
+    hoverEngineBrowserlessRuntime() +
     "\n" +
     interactionFunctionBody
   );
