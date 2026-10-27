@@ -54,6 +54,7 @@ async function runOnce(params: {
   prior?: InteractionPriorRow[];
   scan?: "full" | "light";
   environment?: { device_class?: "desktop" | "mobile" };
+  scrollEngine?: "legacy";
 }): Promise<BrowserlessScrollResult> {
   const target = normalizeUserUrlInput(params.url);
   if (!target) return { ok: false, error: "invalid_url", durationMs: 0, proxyBytes: null };
@@ -94,6 +95,7 @@ async function runOnce(params: {
           environment: {
             device_class: params.environment?.device_class === "mobile" ? "mobile" : "desktop",
           },
+          ...(params.scrollEngine === "legacy" ? { scroll_engine: "legacy" } : {}),
         },
       }),
       signal: ac.signal,
@@ -148,6 +150,8 @@ type BrowserlessScrollParams = {
   prior?: InteractionPriorRow[];
   scan?: "full" | "light";
   environment?: { device_class?: "desktop" | "mobile" };
+  /** Fixture / regression: inline scroll in browserless-interaction-function.ts */
+  scrollEngine?: "legacy";
 };
 
 /**

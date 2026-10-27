@@ -18,6 +18,9 @@
     "test:observation-seo-facts": "tsx scripts/test-observation-seo-facts.ts",
     "test:observation-behavior-diff": "tsx scripts/test-observation-behavior-diff.ts",
     "test:interaction-schedule": "tsx scripts/test-interaction-schedule.ts",
+    "test:interaction-engine-scroll": "tsx scripts/test-interaction-engine-scroll.ts",
+    "test:observation-scroll-interaction": "tsx scripts/test-observation-scroll-interaction.ts",
+    "bundle:interaction-engine-scroll": "node scripts/bundle-interaction-engine-scroll.mjs",
     "email:survey": "node scripts/send-survey-email.mjs"
   },
   "dependencies": {

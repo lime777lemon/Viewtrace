@@ -9,6 +9,7 @@ import { COOKIE_NOISE_PATTERN_SOURCE } from "@/lib/observation-interaction-evide
 import { EXPENSIVE_INTERACTION_TYPES } from "@/lib/observation-interaction-plan";
 import { INTERACTION_UNSAFE_PATTERN_SOURCE } from "@/lib/observation-regional-interaction";
 import { SESSION_PROBE_INSTALL, SESSION_PROBE_READ } from "@/lib/session-signals";
+import { scrollEngineBrowserlessRuntime } from "@/lib/interaction-engine/load-scroll-engine-runtime";
 
 /** Same Browserless session: Detect → Execute → Verify. Detected is never Working. */
 export function buildInteractionFunctionCode(): string {
@@ -26,8 +27,7 @@ export function buildInteractionFunctionCode(): string {
   const jsMarkerSelector = JSON.stringify(
     "[data-framer-component],[data-framer-name],[data-framer-appear-id],[class*='framer-'],[data-gsap],[data-js-anim],[data-animate],[data-w-id]",
   );
-  return `export default async function({ page, context }) {
-  const url = String(context && context.url ? context.url : "");
+  const interactionFunctionBody = `  const url = String(context && context.url ? context.url : "");
   const html = String(context && context.html ? context.html : "");
   let pageHtml = html;
   const fracs = [0, 0.25, 0.5, 0.75, 1];
@@ -3033,7 +3033,23 @@ export function buildInteractionFunctionCode(): string {
   const checkpoints = [];
   let reveal = false;
   let lazyWork = false;
+  const scrollEngineLegacy = String(context && context.scroll_engine ? context.scroll_engine : "") === "legacy";
   await maybe("scroll", async () => {
+    if (!scrollEngineLegacy) {
+      const scrollOut = await ViewTraceScrollEngine.runScrollInteractionCheckForBrowserless(page, {
+        fracs: fracs,
+        detectScrollHint: Boolean(detect.scroll),
+        sleep: sleep,
+      });
+      section = scrollOut.section;
+      for (const cp of scrollOut.checkpoints) checkpoints.push(cp);
+      reveal = scrollOut.reveal;
+      lazyWork = scrollOut.lazyWork;
+      if (scrollOut.typeRow) {
+        pushType("scroll", scrollOut.typeRow.detected, scrollOut.typeRow.status, scrollOut.typeRow.evidence);
+      }
+      return;
+    }
     const imgs0 = await page.evaluate(() => Array.from(document.images).filter((img) => img.complete && img.naturalWidth > 0).length);
     section = await page.evaluate(() => {
       const vh = window.innerHeight;
@@ -4079,4 +4095,11 @@ export function buildInteractionFunctionCode(): string {
     },
   };
 }`;
+
+  return (
+    "export default async function({ page, context }) {\n" +
+    scrollEngineBrowserlessRuntime() +
+    "\n" +
+    interactionFunctionBody
+  );
 }

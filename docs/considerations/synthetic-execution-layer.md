@@ -24,7 +24,7 @@ RegionalInteractionCheckV1  (+ optional execution {})
 | `src/lib/synthetic/providers/self-hosted-playwright-provider.ts` | Worker 未接続時は stub エラー |
 | `src/lib/synthetic/region-route.ts` | `resolveGeoProxyUrl` ラップ |
 
-Detection / Execute / Verify の本体はまだ `browserless-interaction-function.ts`（生成 JS）内。**Phase ②** で `interaction-engine/` + `InteractionPage` に抽出する。
+**Phase ②（scroll slice）:** `interaction-engine/` + `InteractionPage`。scroll の Detect → Execute → Verify は共有 TS。Browserless は `ViewTraceScrollEngine.runScrollInteractionCheckForBrowserless`（`bundle:interaction-engine-scroll` で IIFE 生成）。`context.scroll_engine=legacy` で旧 inline scroll に戻せる。他タイプは引き続き生成 JS 内。
 
 ## 環境変数
 
