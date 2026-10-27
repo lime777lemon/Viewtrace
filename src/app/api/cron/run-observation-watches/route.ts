@@ -25,7 +25,7 @@ import { stampMeasurement } from "@/lib/measurement-record";
 import { seoFactsForObservation } from "@/lib/observation-seo-facts";
 import { collectObservationWebFacts } from "@/lib/observation-web-facts";
 import { isBrowserlessConfigured } from "@/lib/browserless-screenshot";
-import { runBrowserlessScrollWithProxyRetry } from "@/lib/browserless-scroll-interaction";
+import { runRegionalSyntheticCheck } from "@/lib/synthetic/run-regional-synthetic-check";
 import { buildRegionalCheckFromSession } from "@/lib/observation-regional-interaction";
 import {
   interactionWatchPlan,
@@ -978,7 +978,7 @@ export async function POST(req: Request) {
             excludeId: obsId,
             htmlChanged,
           });
-          const interaction = await runBrowserlessScrollWithProxyRetry({
+          const interaction = await runRegionalSyntheticCheck({
             url,
             region,
             prior: watchPlan.prior,

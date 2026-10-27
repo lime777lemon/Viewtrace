@@ -47,6 +47,8 @@ import {
   type DiscoverySource,
 } from "@/lib/observation-behavior-discovery";
 import { SYNTHETIC_UNSAFE_PATTERN_SOURCE } from "@/lib/observation-synthetic-interaction";
+import { parseRegionalInteractionExecution } from "@/lib/synthetic/execution-meta";
+import type { RegionalInteractionExecutionV1 } from "@/lib/synthetic/browser-provider";
 
 export const INTERACTION_UNSAFE_PATTERN_SOURCE =
   SYNTHETIC_UNSAFE_PATTERN_SOURCE +
@@ -199,6 +201,8 @@ export type RegionalInteractionCheckV1 = {
   duration_ms: number | null;
   proxy_bytes: number | null;
   discovery?: BehaviorDiscoveryV1 | null;
+  /** どの execution backend で測ったか（optional・後方互換） */
+  execution?: RegionalInteractionExecutionV1 | null;
 };
 
 function emptyRows(): InteractionTypeRow[] {
@@ -553,6 +557,7 @@ export function parseRegionalInteractionCheckFromUnknown(
       duration_ms: typeof o.duration_ms === "number" && Number.isFinite(o.duration_ms) ? o.duration_ms : null,
       proxy_bytes: typeof o.proxy_bytes === "number" && Number.isFinite(o.proxy_bytes) ? o.proxy_bytes : null,
       discovery: finalizeDiscovery(parseDiscovery(o.discovery), types),
+      execution: parseRegionalInteractionExecution(o.execution),
     };
   }
   const legacy = parseScrollInteractionFromUnknown(raw);

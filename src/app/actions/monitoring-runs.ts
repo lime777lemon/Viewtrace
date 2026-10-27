@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { recordObservationForRegionAction } from "@/app/actions/observations";
 import { getSession } from "@/lib/auth/session";
 import { isBrowserlessConfigured } from "@/lib/browserless-screenshot";
-import { runBrowserlessScrollWithProxyRetry } from "@/lib/browserless-scroll-interaction";
+import { runRegionalSyntheticCheck } from "@/lib/synthetic/run-regional-synthetic-check";
 import { executeJourney, saveJourney } from "@/lib/journey-store";
 import {
   parseJourneySteps,
@@ -155,7 +155,7 @@ export async function runMonitoringCheckAction(
       }
       linkedObservations.push({ observationId: recorded.id, region });
       if (isBrowserlessConfigured()) {
-        const interaction = await runBrowserlessScrollWithProxyRetry({
+        const interaction = await runRegionalSyntheticCheck({
           url: startUrl,
           region,
           scan: "full",

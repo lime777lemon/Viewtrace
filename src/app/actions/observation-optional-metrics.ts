@@ -10,7 +10,8 @@ import { sanitizeObservationRouteId } from "@/lib/observation-route-id";
 import { getPlan } from "@/lib/plans";
 import { isBrowserlessConfigured } from "@/lib/browserless-screenshot";
 import { runBrowserlessPerformanceWithProxyRetry } from "@/lib/browserless-performance";
-import { runBrowserlessScrollWithProxyRetry } from "@/lib/browserless-scroll-interaction";
+import { runRegionalSyntheticCheck } from "@/lib/synthetic/run-regional-synthetic-check";
+import { isSyntheticInteractionConfigured } from "@/lib/synthetic/synthetic-config";
 import {
   persistRegionalInteractionCheck,
   previousInteractionPrior,
@@ -331,7 +332,7 @@ export async function runObservationScrollInteractionAction(
 
   const observationId = sanitizeObservationRouteId(observationIdRaw);
   if (!observationId) return { ok: false, error: "invalid_id" };
-  if (!isBrowserlessConfigured()) return { ok: false, error: "browserless_not_configured" };
+  if (!isSyntheticInteractionConfigured()) return { ok: false, error: "browserless_not_configured" };
 
   const obs = await getObservationMergedForPlan(observationId, session.plan);
   if (!obs?.url) return { ok: false, error: "not_found" };
@@ -351,7 +352,7 @@ export async function runObservationScrollInteractionAction(
     capturedAt: obs.capturedAt,
     excludeId: observationId,
   });
-  const result = await runBrowserlessScrollWithProxyRetry({
+  const result = await runRegionalSyntheticCheck({
     url: obs.url,
     region: obs.regionValue,
     prior,
