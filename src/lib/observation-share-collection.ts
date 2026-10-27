@@ -12,6 +12,7 @@ import {
 } from "@/lib/observation-compare";
 import {
   mapObservationRowToPublicVerify,
+  planAndRetentionForOwner,
   PUBLIC_OBSERVATION_ROW_SELECT,
   retentionDaysForOwner,
   type PublicVerifyObservation,
@@ -22,6 +23,10 @@ import {
 } from "@/lib/observation-verify-token";
 import { getAppOriginForEmailLinks } from "@/lib/site";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import {
+  loadEvidenceReportObservationDetails,
+  type EvidenceReportObservationDetailData,
+} from "@/lib/evidence-report-observation-detail";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   SHARE_COLLECTION_MAX_ITEMS,
@@ -47,6 +52,77 @@ export type PublicShareCollection = {
   createdAt: string;
   items: PublicShareCollectionItem[];
 };
+
+/**
+ * 公開 Share Collection の各記録を、1件の公開ページと同じ材料で読む。
+ * 再計測はしない。Collection の並び（取得が古い順）を保つ。
+ */
+export async function loadPublicShareCollectionRecords(
+  tokenRaw: string,
+): Promise<{ createdAt: string; records: EvidenceReportObservationDetailData[] } | null> {
+  const token = sanitizeVerifyTokenParam(tokenRaw);
+  if (!token) return null;
+  const admin = createSupabaseAdminClient();
+  if (!admin) return null;
+
+  const { data: collection, error: collectionError } = await admin
+    .from("observation_share_collections")
+    .select("id,user_id,created_at")
+    .eq("token", token)
+    .maybeSingle();
+  if (collectionError || !collection) return null;
+
+  const ownerUserId = typeof collection.user_id === "string" ? collection.user_id : "";
+  if (!ownerUserId) return null;
+
+  const { data: itemRows, error: itemsError } = await admin
+    .from("observation_share_collection_items")
+    .select("observation_id")
+    .eq("collection_id", collection.id);
+  if (itemsError || !itemRows?.length) return null;
+
+  const observationIds = itemRows
+    .map((row) => (typeof row.observation_id === "string" ? row.observation_id : ""))
+    .filter(Boolean);
+  if (observationIds.length === 0) return null;
+
+  const { data: observationRows, error: obsError } = await admin
+    .from("observations")
+    .select("id,verify_token,captured_at")
+    .eq("user_id", ownerUserId)
+    .in("id", observationIds);
+  if (obsError || !observationRows?.length) return null;
+
+  const rows = observationRows
+    .map((row) => {
+      const id = typeof row.id === "string" ? row.id : "";
+      if (!id) return null;
+      const verifyToken = sanitizeVerifyTokenParam(
+        typeof row.verify_token === "string" ? row.verify_token : "",
+      );
+      const capturedAt = typeof row.captured_at === "string" ? row.captured_at : "";
+      return { id, verifyToken, capturedAt };
+    })
+    .filter((row): row is { id: string; verifyToken: string | null; capturedAt: string } => row != null)
+    .sort((a, b) => Date.parse(a.capturedAt) - Date.parse(b.capturedAt));
+  if (rows.length === 0) return null;
+
+  const owner = await planAndRetentionForOwner(admin, ownerUserId);
+  const records = await loadEvidenceReportObservationDetails({
+    admin,
+    userId: ownerUserId,
+    plan: owner.plan,
+    retentionDays: owner.retentionDays,
+    appOrigin: getAppOriginForEmailLinks(),
+    rows: rows.map((row) => ({ id: row.id, verifyToken: row.verifyToken })),
+  });
+  if (records.length === 0) return null;
+
+  return {
+    createdAt: typeof collection.created_at === "string" ? collection.created_at : "",
+    records,
+  };
+}
 
 export function buildPublicShareCollectionUrl(token: string): string {
   const origin = getAppOriginForEmailLinks().replace(/\/+$/, "");

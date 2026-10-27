@@ -1071,6 +1071,8 @@ export const copy = {
       subtitle:
         "ログイン不要の提出用ページです。この日時・この地域で、このように表示されていた記録を、リンクを知っている人に渡せます。新しい Observation は作りません。",
       itemHeading: "Observation {n} / {total}",
+      showRecord: "この記録を表示",
+      hideRecord: "この記録を閉じる",
       screenshotVsPrevious: "この Collection 内の、同じ URL の直前の記録との比較です。",
       noPreviousInCollection: "この Collection 内に、同じ URL の直前の記録はありません。",
       fieldRequestedRegion: "指定した地域",
@@ -3329,6 +3331,8 @@ export const copy = {
       subtitle:
         "A login-free delivery page. Anyone with the link can see how these pages rendered at these times and from these regions. No new Observation is created.",
       itemHeading: "Observation {n} of {total}",
+      showRecord: "Show this record",
+      hideRecord: "Hide this record",
       screenshotVsPrevious: "Compared with the previous record of the same URL in this collection.",
       noPreviousInCollection: "No earlier record of the same URL in this collection.",
       fieldRequestedRegion: "Requested region",
