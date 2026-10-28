@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { Locale } from "@/lib/i18n";
 import {
   AI_AUDIT_EVIDENCE_IDS,
+  type AiAuditEvidenceId,
   type AiAuditNote,
 } from "@/lib/observation-ai-audit";
 
@@ -121,6 +122,67 @@ export async function tryLlmPageAudit(input: {
       "[observation-ai-audit] llm failed",
       error instanceof Error ? error.message : error,
     );
+    return null;
+  }
+}
+
+const questionSchema = z.object({
+  answer: z.string().min(1).max(700),
+  evidence: z.array(z.enum(AI_AUDIT_EVIDENCE_IDS)).max(4),
+});
+
+/**
+ * 1件の記録への質問。画像は送らない。事実に無いことは「記録に無い」と返す。
+ */
+export async function askRecordEvidence(input: {
+  facts: Record<string, unknown>;
+  question: string;
+  locale: Locale;
+}): Promise<{ answer: string; evidence: AiAuditEvidenceId[]; model: string } | null> {
+  if (process.env.VIEWTRACE_AI_AUDIT === "0") return null;
+  const resolved = resolveAuditModel();
+  if (!resolved) return null;
+  const { model, label } = resolved;
+  const ja = input.locale === "ja";
+  const system = ja
+    ? [
+        "あなたは ViewTrace の提出用の読みです。渡された1件の記録だけを読む。再計測しない。",
+        "観測事実を名乗らない。回答の先頭は『推定:』にする。",
+        "Page changed とは書かない。スコア、円グラフ、Core Web Vitals、Performance / SEO の数字は出さない。",
+        "スクリーンショットは Same / Changed / Not comparable のどれかだけ。Changed は screenshot content differs の意味に限る。",
+        "操作は渡された previous → current だけを書く。原因（JavaScript が壊れている等）は証拠が無ければ書かない。",
+        "requested_region の US-XX を観測した州として書かない。",
+        "質問の答えが記録に無ければ、記録に無いと書く。",
+        "evidence には答えの根拠にした id だけを入れる。",
+      ].join("\n")
+    : [
+        "You read one ViewTrace record for a client handoff. Do not recapture.",
+        "Do not claim to be Observed. Start the answer with 'Inference:'.",
+        "Do not say Page changed. Do not invent scores, charts, Core Web Vitals, or Performance/SEO numbers.",
+        "Screenshot status is only Same, Changed, or Not comparable. Changed means screenshot content differs.",
+        "For behavior, repeat only the given previous → current. Do not invent a cause.",
+        "Do not treat a requested US-XX code as an observed state.",
+        "If the record does not contain the answer, say it is not in the record.",
+        "evidence lists only the ids that support the answer.",
+      ].join("\n");
+
+  try {
+    const result = await generateText({
+      model,
+      output: Output.object({ schema: questionSchema }),
+      system,
+      messages: [
+        {
+          role: "user",
+          content: `${ja ? "記録" : "Record"}:\n${JSON.stringify(input.facts)}\n\n${ja ? "質問" : "Question"}:\n${input.question}`,
+        },
+      ],
+    });
+    const output = result.output;
+    if (!output) return null;
+    return { answer: output.answer, evidence: output.evidence, model: label };
+  } catch (error) {
+    console.warn("[evidence-agent] llm failed", error instanceof Error ? error.message : error);
     return null;
   }
 }

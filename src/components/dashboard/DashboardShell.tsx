@@ -62,6 +62,7 @@ export function DashboardShell({
     { href: "/dashboard/region-search", label: t.nav.regionSearch, tour: "observe" as const },
     { href: "/dashboard/observations", label: t.nav.observations, tour: "records" as const },
     { href: "/dashboard/attention", label: t.nav.lastHour, tour: undefined },
+    { href: "/dashboard/evidence-agent", label: t.nav.handoff, tour: undefined },
     { href: "/dashboard/journeys", label: t.nav.journeys, tour: "journeys" as const },
     ...(plan.autoObservationWatch
       ? [{ href: "/dashboard/auto-observations" as const, label: t.nav.autoObservations, tour: undefined }]
@@ -71,6 +72,7 @@ export function DashboardShell({
     { href: "/dashboard/purchases", label: t.nav.purchases, tour: undefined },
     { href: "/dashboard/evidence-report", label: t.nav.evidenceReport, tour: undefined },
     { href: "/dashboard/settings", label: t.nav.settings, tour: undefined },
+    { href: "/dashboard/connections", label: t.nav.connections, tour: undefined },
     { href: "/dashboard/help", label: t.nav.help, tour: undefined },
     ...(isAdmin
       ? [{ href: "/dashboard/admin/verify-funnel" as const, label: t.nav.verifyFunnel, tour: undefined }]

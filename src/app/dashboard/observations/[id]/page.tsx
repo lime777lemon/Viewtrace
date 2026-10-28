@@ -26,6 +26,9 @@ import { ObservationDetailSnapshotSection } from "@/components/dashboard/Observa
 import { ObservationDigitalSeal } from "@/components/dashboard/ObservationDigitalSeal";
 import { ObservationEvidenceJsonDownload } from "@/components/dashboard/ObservationEvidenceJsonDownload";
 import { ObservationAiAuditPanel } from "@/components/dashboard/ObservationAiAuditPanel";
+import { EvidenceAgentQuestion } from "@/components/dashboard/EvidenceAgentQuestion";
+import { buildEvidenceReview, evidenceReviewObservationIds, evidenceReviewSentence } from "@/lib/evidence-agent";
+import { loadInteractionChecks } from "@/lib/evidence-agent-load";
 import {
   ObservationPageSignalsPanel,
   observationPageSignalsCopyFrom,
@@ -33,7 +36,7 @@ import {
 import { ObservationOptionalMetricsPanel } from "@/components/dashboard/ObservationOptionalMetricsPanel";
 import { observationOptionalMetricsCopyFrom } from "@/lib/observation-optional-metrics-copy";
 import { observationAiAuditCopyFrom } from "@/lib/observation-ai-audit-copy";
-import { auditEvidenceDomId } from "@/lib/observation-ai-audit";
+import { AI_AUDIT_EVIDENCE_IDS, auditEvidenceDomId, type AiAuditEvidenceId } from "@/lib/observation-ai-audit";
 import { loadObservationAiAudit } from "@/lib/observation-ai-audit-store";
 import { ObservationCheckSummary } from "@/components/dashboard/ObservationCheckSummary";
 import { ObservationLpVerdictCard } from "@/components/dashboard/ObservationLpVerdictCard";
@@ -292,6 +295,17 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
     journeyPeers.map((row) => row.id),
   );
   const existingAudit = await loadObservationAiAudit(supabase, session.userId, obs.id);
+  const reviewChecks = await loadInteractionChecks(
+    supabase,
+    session.userId,
+    evidenceReviewObservationIds(compareSiblings),
+  );
+  const recordReview = buildEvidenceReview({
+    now: new Date(),
+    observations: compareSiblings,
+    checks: reviewChecks,
+  });
+  const reviewHere = [...recordReview.open, ...recordReview.matched].filter((item) => item.observationId === obs.id);
   const pack = buildObservationEvidencePack({
     obs,
     verifyUrl,
@@ -607,6 +621,47 @@ export default async function ObservationDetailPage({ params, searchParams }: Pa
         locale={locale}
         initialAudit={existingAudit}
       />
+
+      <section aria-labelledby="observation-agent-heading" className="rounded-xl border border-border bg-surface-elevated p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 id="observation-agent-heading" className="font-display text-lg font-semibold text-ink">
+            {copy[locale].evidenceAgent.title}
+          </h2>
+          <Link href="/dashboard/evidence-agent" className="text-sm font-semibold text-accent hover:text-accent-hover">
+            {copy[locale].evidenceAgent.openQueue}
+          </Link>
+        </div>
+        <p className="mt-1 text-sm leading-relaxed text-ink-muted">{copy[locale].evidenceAgent.detailHint}</p>
+        {reviewHere.length > 0 ? (
+          <ul className="mt-3 space-y-1 text-sm text-ink">
+            {reviewHere.flatMap((item) =>
+              item.checks.map((check) => (
+                <li key={`${item.state}-${check.kind}-${check.label}`}>{evidenceReviewSentence(check, locale)}</li>
+              )),
+            )}
+          </ul>
+        ) : null}
+        {plan.watchChangeAuditMonthly > 0 ? (
+          <EvidenceAgentQuestion
+            observationId={obs.id}
+            locale={locale}
+            askLabel={copy[locale].evidenceAgent.ask}
+            askingLabel={copy[locale].evidenceAgent.asking}
+            placeholder={copy[locale].evidenceAgent.placeholder}
+            inferenceLabel={copy[locale].evidenceAgent.inference}
+            recordLabel={copy[locale].evidenceAgent.record}
+            evidenceLabel={copy[locale].evidenceAgent.evidenceBack}
+            evidenceNames={
+              Object.fromEntries(
+                AI_AUDIT_EVIDENCE_IDS.map((id) => [id, copy[locale].evidenceAgent.evidence[id]]),
+              ) as Record<AiAuditEvidenceId, string>
+            }
+            errors={copy[locale].evidenceAgent.errors}
+          />
+        ) : (
+          <p className="mt-4 text-xs leading-relaxed text-ink-muted">{copy[locale].evidenceAgent.proQuestions}</p>
+        )}
+      </section>
 
       <section className="space-y-6" aria-labelledby="observation-share-heading">
         <h2 id="observation-share-heading" className="sr-only">
